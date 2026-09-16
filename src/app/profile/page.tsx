@@ -31,6 +31,7 @@ import { formatVND } from '@/lib/utils';
 import { getMembershipTier, MembershipTierInfo } from '@/lib/membership';
 import { Product } from '@/types';
 import ProductCard from '@/components/ProductCard';
+import AddressAutocompleteInput from '@/components/AddressAutocompleteInput';
 
 function ProfileContent() {
   const router = useRouter();
@@ -351,65 +352,61 @@ function ProfileContent() {
         {/* TAB 1: MEMBERSHIP TIER & SPENDING STATS */}
         {activeTab === 'tier' && (
           <div className="space-y-8">
-            {/* Stat Cards Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            {/* Compact Stat Cards Row */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {/* Card 1: Total Spent */}
-              <div className="bg-white rounded-[12px] p-5 border border-[#dddddd] shadow-xs space-y-2">
+              <div className="bg-white rounded-[10px] p-3.5 sm:p-4 border border-[#dddddd] shadow-2xs space-y-1">
                 <div className="flex items-center justify-between text-[#9297a0]">
-                  <span className="text-[12px] font-semibold uppercase tracking-wider">Tổng tiền đã tiêu</span>
-                  <CreditCard className="w-4 h-4 text-[#e31837]" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider">Tổng tiền</span>
+                  <CreditCard className="w-3.5 h-3.5 text-[#e31837]" />
                 </div>
-                <div className="text-2xl sm:text-3xl font-bold text-[#e31837]">
+                <div className="text-lg sm:text-xl font-bold text-[#e31837] truncate">
                   {formatVND(stats.totalSpent)}
                 </div>
-                <p className="text-[12px] text-[#41454d]">
-                  Tích lũy từ {stats.completedCount} đơn thành công
+                <p className="text-[11px] text-[#41454d] truncate">
+                  {stats.completedCount} đơn thành công
                 </p>
               </div>
 
-              {/* Card 2: Virtual Wallet */}
-              <div className="bg-gradient-to-br from-white to-[#eff6ff] rounded-[12px] p-5 border border-[#bfdbfe] shadow-xs space-y-2">
-                <div className="flex items-center justify-between text-[#2563eb]">
-                  <span className="text-[12px] font-semibold uppercase tracking-wider">Số dư ví NooNee</span>
-                  <Wallet className="w-4 h-4 text-[#2563eb]" />
-                </div>
-                <div className="text-2xl sm:text-3xl font-bold text-[#2563eb]">
-                  {formatVND(walletBalance)}
-                </div>
-                <p className="text-[12px] text-[#41454d]">
-                  {walletBalance > 0
-                    ? 'Dùng như tiền thật, trừ thẳng vào đơn'
-                    : 'Hoàn tiền tự động khi đơn bị hủy'}
-                </p>
-              </div>
-
-              {/* Card 3: Current Tier */}
-              <div className="bg-white rounded-[12px] p-5 border border-[#dddddd] shadow-xs space-y-2">
+              {/* Card 2: Current Tier */}
+              <div className="bg-white rounded-[10px] p-3.5 sm:p-4 border border-[#dddddd] shadow-2xs space-y-1">
                 <div className="flex items-center justify-between text-[#9297a0]">
-                  <span className="text-[12px] font-semibold uppercase tracking-wider">Hạng hiện tại</span>
-                  <Award className="w-4 h-4 text-[#e31837]" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider">Hạng thành viên</span>
+                  <Award className="w-3.5 h-3.5 text-[#e31837]" />
                 </div>
-                <div className="text-2xl sm:text-3xl font-bold text-[#181d26]">
+                <div className="text-lg sm:text-xl font-bold text-[#181d26] truncate">
                   {tier.name}
                 </div>
-                <p className="text-[12px] text-[#41454d] truncate">
-                  {tier.nextTier
-                    ? `Cần tiêu thêm ${formatVND(tier.amountNeeded)}`
-                    : 'Đã đạt thứ hạng cao nhất!'}
+                <p className="text-[11px] text-[#41454d] truncate">
+                  {tier.nextTier ? `Cần thêm ${formatVND(tier.amountNeeded)}` : 'Hạng cao nhất'}
                 </p>
               </div>
 
-              {/* Card 4: Shipping Discount */}
-              <div className="bg-white rounded-[12px] p-5 border border-[#dddddd] shadow-xs space-y-2">
+              {/* Card 3: Orders Count */}
+              <div className="bg-white rounded-[10px] p-3.5 sm:p-4 border border-[#dddddd] shadow-2xs space-y-1">
                 <div className="flex items-center justify-between text-[#9297a0]">
-                  <span className="text-[12px] font-semibold uppercase tracking-wider">Ưu đãi phí ship</span>
-                  <Truck className="w-4 h-4 text-[#e31837]" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider">Đơn hàng</span>
+                  <ShoppingBag className="w-3.5 h-3.5 text-[#16a34a]" />
                 </div>
-                <div className="text-2xl sm:text-3xl font-bold text-[#16a34a]">
-                  {tier.shippingDiscount > 0 ? `-${formatVND(tier.shippingDiscount)}` : 'Giá gốc'}
+                <div className="text-lg sm:text-xl font-bold text-[#16a34a] truncate">
+                  {stats.completedCount} đơn
                 </div>
-                <p className="text-[12px] text-[#41454d]">
-                  {tier.shippingDiscount > 0 ? 'Tự động trừ trực tiếp khi đặt' : 'Chưa có ưu đãi vận chuyển'}
+                <p className="text-[11px] text-[#41454d] truncate">
+                  {stats.orderCount || stats.completedCount} đơn đã đặt
+                </p>
+              </div>
+
+              {/* Card 4: Virtual Wallet */}
+              <div className="bg-gradient-to-br from-white to-[#eff6ff] rounded-[10px] p-3.5 sm:p-4 border border-[#bfdbfe] shadow-2xs space-y-1">
+                <div className="flex items-center justify-between text-[#2563eb]">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider">Số dư ví</span>
+                  <Wallet className="w-3.5 h-3.5 text-[#2563eb]" />
+                </div>
+                <div className="text-lg sm:text-xl font-bold text-[#2563eb] truncate">
+                  {formatVND(walletBalance)}
+                </div>
+                <p className="text-[11px] text-[#41454d] truncate">
+                  {walletBalance > 0 ? 'Khả dụng trừ đơn' : 'Số dư hoàn tiền'}
                 </p>
               </div>
             </div>
@@ -756,16 +753,14 @@ function ProfileContent() {
                 />
               </div>
 
-              <div>
-                <label className="block text-[13px] font-semibold text-[#181d26] mb-1.5">
+              <div className="space-y-1.5">
+                <label className="block text-[13px] font-semibold text-[#181d26]">
                   Địa chỉ giao hàng mặc định
                 </label>
-                <textarea
+                <AddressAutocompleteInput
                   value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Số nhà, tên đường, phường/xã, quận/huyện..."
-                  rows={3}
-                  className="w-full p-3.5 bg-white border border-[#dddddd] rounded-[8px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                  onChange={(addr) => setAddress(addr)}
+                  placeholder="Nhập địa chỉ nhận hàng để tự động gợi ý..."
                 />
               </div>
 
