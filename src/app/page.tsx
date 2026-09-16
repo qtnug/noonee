@@ -57,39 +57,10 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Right Visual Fragment: 3D Carousel Featured Food */}
+            {/* Right Visual Fragment: 3D Interactive Featured Showcase */}
             <div className="lg:col-span-5">
-              <div className="bg-[#fff1f2] p-5 sm:p-6 rounded-[16px] border border-[#fecdd3] relative shadow-xs">
-                <div className="bg-white rounded-[12px] border border-[#dddddd] p-4 shadow-xs space-y-3">
-                  <div className="flex items-center justify-between border-b border-[#dddddd] pb-3">
-                    <div>
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#e31837]">
-                        Món ăn nổi bật
-                      </span>
-                      <h4 className="text-[16px] font-semibold text-[#181d26]">Cơm Tấm Sườn Bì Chả Đặc Biệt</h4>
-                    </div>
-                    <span className="text-[16px] font-bold text-[#e31837]">38.000 ₫</span>
-                  </div>
-
-                  {/* 3D Interactive 360 Food Carousel */}
-                  <div className="w-full flex items-center justify-center overflow-hidden">
-                    <Carousel360 />
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9]">
-                    <span className="text-[12px] text-[#41454d] flex items-center gap-1">
-                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      <span className="font-medium">5.0 (280+ đánh giá)</span>
-                    </span>
-                    <Link
-                      href="/menu?search=c%C6%A1m%20t%E1%BA%A5m"
-                      className="h-8 px-3 rounded-[6px] bg-[#e31837] hover:bg-[#be0e27] text-white text-[12px] font-medium inline-flex items-center gap-1 transition"
-                    >
-                      <span>Xem món ngay</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </Link>
-                  </div>
-                </div>
+              <div className="bg-[#fff1f2] p-3 sm:p-5 rounded-[20px] border border-[#fecdd3] relative shadow-xs">
+                <Carousel360 items={featuredProducts.length > 0 ? featuredProducts : undefined} />
               </div>
             </div>
           </div>
