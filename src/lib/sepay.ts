@@ -7,11 +7,15 @@ export interface VietQRConfig {
 }
 
 export function getVietQRImageUrl(config: VietQRConfig): string {
-  const bank = config.bankId || process.env.SEPAY_BANK_NAME || 'MB';
-  const acc = config.accountNo || process.env.SEPAY_BANK_ACCOUNT || '0822123346';
-  const name = encodeURIComponent(config.accountName || process.env.SEPAY_ACCOUNT_NAME || 'HOANG KHOI NGUYEN');
+  const bank = config.bankId || process.env.SEPAY_BANK_NAME || '';
+  const acc = config.accountNo || process.env.SEPAY_BANK_ACCOUNT || '';
+  const name = encodeURIComponent(config.accountName || process.env.SEPAY_ACCOUNT_NAME || '');
   const memo = encodeURIComponent(config.memo);
   const amount = Math.round(config.amount);
+
+  if (!bank || !acc) {
+    console.warn('⚠️ SEPAY_BANK_NAME and SEPAY_BANK_ACCOUNT must be configured in environment variables');
+  }
 
   // Standard VietQR QuickLink image endpoint
   return `https://api.vietqr.io/image/${bank}-${acc}-compact2.jpg?amount=${amount}&addInfo=${memo}&accountName=${name}`;

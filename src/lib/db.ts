@@ -1,17 +1,21 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import sql from 'mssql';
+import bcrypt from 'bcrypt';
 import { Category, Product, Order, OrderItem, User, Review, SupportMessage } from '@/types';
 
-const execAsync = promisify(exec);
+function parseToppingsField(raw: any): any[] {
+  if (!raw) return [];
+  try {
+    return typeof raw === 'string' ? JSON.parse(raw) : raw;
+  } catch { return []; }
+}
 
 // Cloud Database Configuration from environment (.env.local)
 const dbConfig = {
-  user: process.env.SQLSERVER_USER || 'db68391',
-  password: process.env.SQLSERVER_PASSWORD || '7Em_Ze#3-8yA',
-  server: process.env.SQLSERVER_HOST || 'db68391.public.databaseasp.net',
+  user: process.env.SQLSERVER_USER,
+  password: process.env.SQLSERVER_PASSWORD,
+  server: process.env.SQLSERVER_HOST,
   port: parseInt(process.env.SQLSERVER_PORT || '1433'),
-  database: process.env.SQLSERVER_DATABASE || 'db68391',
+  database: process.env.SQLSERVER_DATABASE,
   options: {
     encrypt: true,
     trustServerCertificate: true,
@@ -24,6 +28,9 @@ const dbConfig = {
     idleTimeoutMillis: 30000,
   },
 };
+if (!dbConfig.user || !dbConfig.password || !dbConfig.server) {
+  console.warn('⚠️ Database credentials not configured. Set SQLSERVER_USER, SQLSERVER_PASSWORD, SQLSERVER_HOST in .env.local');
+}
 
 // Global pool singleton for Next.js hot reloading
 declare global {
@@ -32,11 +39,12 @@ declare global {
 
 let poolPromise: Promise<any> | null = null;
 
-let schemaChecked = false;
+let schemaPromise: Promise<void> | null = null;
 async function ensureSchemaColumns(pool: any) {
-  if (schemaChecked || !pool) return;
-  schemaChecked = true;
-  try {
+  if (!pool) return;
+  if (schemaPromise) return schemaPromise;
+  schemaPromise = (async () => {
+    try {
     await pool.request().query(`
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'walletBalance')
         ALTER TABLE Users ADD walletBalance DECIMAL(18, 0) DEFAULT 0;
@@ -50,9 +58,11 @@ async function ensureSchemaColumns(pool: any) {
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'refundStatus')
         ALTER TABLE Orders ADD refundStatus NVARCHAR(50) DEFAULT 'None';
     `);
-  } catch (err: any) {
-    console.warn('Schema check note:', err.message);
-  }
+    } catch (err: any) {
+      console.warn('Schema check note:', err.message);
+    }
+  })();
+  return schemaPromise;
 }
 
 async function getCloudPool(): Promise<any> {
@@ -101,35 +111,7 @@ let inMemoryProducts: Product[] = [
 
 let inMemoryOrders: Order[] = [];
 
-let inMemoryUsers: User[] = [
-  { id: 1, username: 'admin', fullName: 'Quản Trị Viên', email: 'admin@quanan.vn', phone: '0988888888', address: '123 Đường Ẩm Thực, Q1', role: 'admin', walletBalance: 0 },
-  { id: 2, username: 'khachhang', fullName: 'Nguyễn Văn An', email: 'an.nguyen@gmail.com', phone: '0912345678', address: '45 Lê Lợi, Q1', role: 'customer', walletBalance: 0 }
-];
-
-// Fallback local sqlcmd query
-async function queryLocalSqlCmd(query: string): Promise<any> {
-  const safeQuery = query.replace(/"/g, '""');
-  const command = `sqlcmd -S "localhost\\SQLEXPRESS" -d FoodOrderingDB -E -C -Q "${safeQuery}" -y 0 -w 8000`;
-  try {
-    const { stdout } = await execAsync(command);
-    const match = stdout.match(/\[[\s\S]*\]/);
-    if (match) return JSON.parse(match[0]);
-    return null;
-  } catch (err) {
-    return null;
-  }
-}
-
-async function executeLocalSqlCmd(sqlCommand: string): Promise<boolean> {
-  const safeCommand = sqlCommand.replace(/"/g, '""');
-  const command = `sqlcmd -S "localhost\\SQLEXPRESS" -d FoodOrderingDB -E -C -Q "${safeCommand}"`;
-  try {
-    await execAsync(command);
-    return true;
-  } catch (err) {
-    return false;
-  }
-}
+let inMemoryUsers: User[] = [];
 
 // ==========================================
 // PUBLIC DATABASE APIS (Cloud-First Architecture)
@@ -148,11 +130,6 @@ export async function getCategories(): Promise<Category[]> {
     console.error('Error fetching categories from cloud:', err);
   }
 
-  // Fallback to local / in-memory
-  const localRows = await queryLocalSqlCmd('SELECT id, name, slug, description, icon, createdAt FROM Categories FOR JSON PATH;');
-  if (localRows && Array.isArray(localRows) && localRows.length > 0) {
-    return localRows;
-  }
   return inMemoryCategories;
 }
 
@@ -188,8 +165,6 @@ export async function createCategory(data: { name: string; slug: string; descrip
     console.error('Error creating category in cloud:', err);
   }
 
-  // Local fallback
-  await executeLocalSqlCmd(`INSERT INTO Categories (name, slug, description, icon) VALUES (N'${data.name.replace(/'/g, "''")}', '${data.slug.replace(/'/g, "''")}', N'${(data.description || '').replace(/'/g, "''")}', '${(data.icon || 'Utensils').replace(/'/g, "''")}');`);
   return newCat;
 }
 
@@ -232,15 +207,6 @@ export async function updateCategory(id: number, data: { name?: string; slug?: s
     console.error('Error updating category in cloud:', err);
   }
 
-  // Local fallback
-  const updates: string[] = [];
-  if (data.name) updates.push(`name = N'${data.name.replace(/'/g, "''")}'`);
-  if (data.slug) updates.push(`slug = '${data.slug.replace(/'/g, "''")}'`);
-  if (data.description !== undefined) updates.push(`description = N'${data.description.replace(/'/g, "''")}'`);
-  if (data.icon) updates.push(`icon = '${data.icon.replace(/'/g, "''")}'`);
-  if (updates.length > 0) {
-    await executeLocalSqlCmd(`UPDATE Categories SET ${updates.join(', ')} WHERE id = ${id};`);
-  }
   return true;
 }
 
@@ -250,21 +216,23 @@ export async function deleteCategory(id: number): Promise<boolean> {
   try {
     const pool = await getCloudPool();
     if (pool) {
-      const req = pool.request();
-      req.input('id', sql.Int, id);
-      await req.query('UPDATE Products SET categoryId = NULL WHERE categoryId = @id');
-      await req.query('DELETE FROM Categories WHERE id = @id');
+      const req1 = pool.request();
+      req1.input('id', sql.Int, id);
+      await req1.query('UPDATE Products SET categoryId = NULL WHERE categoryId = @id');
+      
+      const req2 = pool.request();
+      req2.input('id', sql.Int, id);
+      await req2.query('DELETE FROM Categories WHERE id = @id');
       return true;
     }
   } catch (err) {
     console.error('Error deleting category in cloud:', err);
   }
 
-  await executeLocalSqlCmd(`UPDATE Products SET categoryId = NULL WHERE categoryId = ${id}; DELETE FROM Categories WHERE id = ${id};`);
   return true;
 }
 
-export async function getProducts(options?: { categoryId?: number; search?: string; isFeatured?: boolean }): Promise<Product[]> {
+export async function getProducts(options?: { categoryId?: number; search?: string; isFeatured?: boolean; page?: number; limit?: number }): Promise<Product[]> {
   try {
     const pool = await getCloudPool();
     if (pool) {
@@ -289,16 +257,18 @@ export async function getProducts(options?: { categoryId?: number; search?: stri
         query += ` AND (p.name LIKE @search OR p.description LIKE @search)`;
       }
       query += ` ORDER BY p.isFeatured DESC, p.id ASC`;
+      
+      const page = options?.page || 1;
+      const limit = options?.limit || 50;
+      const offset = (page - 1) * limit;
+      req.input('offset', sql.Int, offset);
+      req.input('limit', sql.Int, limit);
+      query += ` OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`;
 
       const result = await req.query(query);
       if (result.recordset && result.recordset.length > 0) {
         return result.recordset.map((r: any) => {
-          let parsedToppings = [];
-          if (r.toppings) {
-            try {
-              parsedToppings = typeof r.toppings === 'string' ? JSON.parse(r.toppings) : r.toppings;
-            } catch (e) {}
-          }
+          let parsedToppings = parseToppingsField(r.toppings);
           return {
             ...r,
             toppings: parsedToppings,
@@ -312,40 +282,7 @@ export async function getProducts(options?: { categoryId?: number; search?: stri
     console.error('Error querying products from cloud:', err);
   }
 
-  // Local fallback
-  let query = `
-    SELECT p.id, p.categoryId, c.name AS categoryName, p.name, p.slug, p.description, 
-           CAST(p.price AS INT) AS price, p.image, p.isAvailable, p.isFeatured, 
-           CAST(p.rating AS FLOAT) AS rating, p.toppings, p.createdAt 
-    FROM Products p 
-    LEFT JOIN Categories c ON p.categoryId = c.id
-    WHERE 1=1
-  `;
-  if (options?.categoryId) query += ` AND p.categoryId = ${options.categoryId}`;
-  if (options?.isFeatured) query += ` AND p.isFeatured = 1`;
-  if (options?.search) {
-    const s = options.search.replace(/'/g, "''");
-    query += ` AND (p.name LIKE N'%${s}%' OR p.description LIKE N'%${s}%')`;
-  }
-  query += ' ORDER BY p.isFeatured DESC, p.id ASC FOR JSON PATH;';
 
-  const rows = await queryLocalSqlCmd(query);
-  if (rows && Array.isArray(rows) && rows.length > 0) {
-    return rows.map((r: any) => {
-      let parsedToppings = [];
-      if (r.toppings) {
-        try {
-          parsedToppings = typeof r.toppings === 'string' ? JSON.parse(r.toppings) : r.toppings;
-        } catch (e) {}
-      }
-      return {
-        ...r,
-        toppings: parsedToppings,
-        isAvailable: Boolean(r.isAvailable),
-        isFeatured: Boolean(r.isFeatured),
-      };
-    });
-  }
 
   // In-memory fallback
   let result = [...inMemoryProducts];
@@ -355,7 +292,9 @@ export async function getProducts(options?: { categoryId?: number; search?: stri
     const q = options.search.toLowerCase();
     result = result.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
   }
-  return result;
+  const page = options?.page || 1;
+  const limit = options?.limit || 50;
+  return result.slice((page - 1) * limit, page * limit);
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -374,12 +313,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       `);
       if (res.recordset && res.recordset[0]) {
         const row = res.recordset[0];
-        let parsedToppings = [];
-        if (row.toppings) {
-          try {
-            parsedToppings = typeof row.toppings === 'string' ? JSON.parse(row.toppings) : row.toppings;
-          } catch (e) {}
-        }
+        let parsedToppings = parseToppingsField(row.toppings);
         return {
           ...row,
           toppings: parsedToppings,
@@ -392,32 +326,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     console.error('Error fetching product by slug from cloud:', err);
   }
 
-  // Local fallback
-  const query = `
-    SELECT p.id, p.categoryId, c.name AS categoryName, p.name, p.slug, p.description, 
-           CAST(p.price AS INT) AS price, p.image, p.isAvailable, p.isFeatured, 
-           CAST(p.rating AS FLOAT) AS rating, p.toppings, p.createdAt 
-    FROM Products p 
-    LEFT JOIN Categories c ON p.categoryId = c.id
-    WHERE p.slug = '${slug.replace(/'/g, "''")}'
-    FOR JSON PATH;
-  `;
-  const rows = await queryLocalSqlCmd(query);
-  if (rows && Array.isArray(rows) && rows.length > 0) {
-    const row = rows[0];
-    let parsedToppings = [];
-    if (row.toppings) {
-      try {
-        parsedToppings = typeof row.toppings === 'string' ? JSON.parse(row.toppings) : row.toppings;
-      } catch (e) {}
-    }
-    return {
-      ...row,
-      toppings: parsedToppings,
-      isAvailable: Boolean(row.isAvailable),
-      isFeatured: Boolean(row.isFeatured),
-    };
-  }
+
   return inMemoryProducts.find(p => p.slug === slug) || null;
 }
 
@@ -465,12 +374,6 @@ export async function createProduct(data: Omit<Product, 'id'>): Promise<Product>
     console.error('Error creating product in cloud:', err);
   }
 
-  // Local fallback
-  const safeSql = `
-    INSERT INTO Products (categoryId, name, slug, description, price, image, isAvailable, isFeatured, rating)
-    VALUES (${data.categoryId}, N'${data.name.replace(/'/g, "''")}', '${data.slug.replace(/'/g, "''")}', N'${(data.description || '').replace(/'/g, "''")}', ${data.price}, '${data.image}', ${data.isAvailable ? 1 : 0}, ${data.isFeatured ? 1 : 0}, ${data.rating || 5});
-  `;
-  await executeLocalSqlCmd(safeSql);
   return newProduct;
 }
 
@@ -526,18 +429,6 @@ export async function updateProduct(id: number, data: Partial<Product>): Promise
     console.error('Error updating product in cloud:', err);
   }
 
-  // Local fallback
-  const updates: string[] = [];
-  if (data.name) updates.push(`name = N'${data.name.replace(/'/g, "''")}'`);
-  if (data.description !== undefined) updates.push(`description = N'${data.description.replace(/'/g, "''")}'`);
-  if (data.price !== undefined) updates.push(`price = ${data.price}`);
-  if (data.image) updates.push(`image = '${data.image}'`);
-  if (data.isAvailable !== undefined) updates.push(`isAvailable = ${data.isAvailable ? 1 : 0}`);
-  if (data.isFeatured !== undefined) updates.push(`isFeatured = ${data.isFeatured ? 1 : 0}`);
-
-  if (updates.length > 0) {
-    await executeLocalSqlCmd(`UPDATE Products SET ${updates.join(', ')} WHERE id = ${id};`);
-  }
   return true;
 }
 
@@ -556,7 +447,6 @@ export async function deleteProduct(id: number): Promise<boolean> {
     console.error('Error deleting product in cloud:', err);
   }
 
-  await executeLocalSqlCmd(`DELETE FROM Products WHERE id = ${id};`);
   return true;
 }
 
@@ -612,71 +502,80 @@ export async function createOrder(data: {
   try {
     const pool = await getCloudPool();
     if (pool) {
-      const req = pool.request();
-      req.input('code', sql.NVarChar(50), data.orderCode);
-      req.input('userId', sql.Int, data.userId || null);
-      req.input('name', sql.NVarChar(100), data.customerName);
-      req.input('phone', sql.NVarChar(20), data.customerPhone);
-      req.input('address', sql.NVarChar(255), data.deliveryAddress);
-      req.input('notes', sql.NVarChar(500), data.notes || '');
-      req.input('amount', sql.Decimal(18, 0), data.totalAmount);
-      req.input('discount', sql.Decimal(18, 2), data.discountAmount || 0);
-      req.input('coupon', sql.NVarChar(50), data.couponCode || null);
-      req.input('method', sql.NVarChar(50), data.paymentMethod || 'Sepay');
-      req.input('payStatus', sql.NVarChar(50), data.paymentStatus || 'Unpaid');
-      req.input('walletAmount', sql.Decimal(18, 0), data.walletAmountUsed || 0);
-
-      const orderRes = await req.query(`
-        INSERT INTO Orders (orderCode, userId, customerName, customerPhone, deliveryAddress, notes, totalAmount, discountAmount, couponCode, status, paymentMethod, paymentStatus, walletAmountUsed)
-        OUTPUT INSERTED.id
-        VALUES (@code, @userId, @name, @phone, @address, @notes, @amount, @discount, @coupon, 'Pending', @method, @payStatus, @walletAmount)
-      `);
-
-      const orderId = orderRes.recordset[0]?.id;
-      if (orderId) {
-        newOrder.id = orderId;
-        for (const it of data.items) {
-          const itemReq = pool.request();
-          itemReq.input('orderId', sql.Int, orderId);
-          itemReq.input('prodId', sql.Int, it.productId);
-          itemReq.input('prodName', sql.NVarChar(150), it.productName);
-          itemReq.input('price', sql.Decimal(18, 0), it.price);
-          itemReq.input('qty', sql.Int, it.quantity);
-          itemReq.input('total', sql.Decimal(18, 0), it.price * it.quantity);
-          itemReq.input('note', sql.NVarChar(500), it.note || null);
-          itemReq.input('toppings', sql.NVarChar(1000), it.toppings || null);
-
-          await itemReq.query(`
-            INSERT INTO OrderItems (orderId, productId, productName, price, quantity, total, note, toppings)
-            VALUES (@orderId, @prodId, @prodName, @price, @qty, @total, @note, @toppings)
+      const transaction = new sql.Transaction(pool);
+      await transaction.begin();
+      try {
+        if (data.walletAmountUsed && data.walletAmountUsed > 0 && data.userId) {
+          const wReq = new sql.Request(transaction);
+          wReq.input('userId', sql.Int, data.userId);
+          wReq.input('amount', sql.Decimal(18, 0), data.walletAmountUsed);
+          const wRes = await wReq.query(`
+            UPDATE Users SET walletBalance = walletBalance - @amount 
+            OUTPUT INSERTED.walletBalance
+            WHERE id = @userId AND walletBalance >= @amount
           `);
+          if (!wRes.recordset || wRes.recordset.length === 0) {
+            throw new Error('Insufficient wallet balance');
+          }
+        }
+
+        const req = new sql.Request(transaction);
+        req.input('code', sql.NVarChar(50), data.orderCode);
+        req.input('userId', sql.Int, data.userId || null);
+        req.input('name', sql.NVarChar(100), data.customerName);
+        req.input('phone', sql.NVarChar(20), data.customerPhone);
+        req.input('address', sql.NVarChar(255), data.deliveryAddress);
+        req.input('notes', sql.NVarChar(500), data.notes || '');
+        req.input('amount', sql.Decimal(18, 0), data.totalAmount);
+        req.input('discount', sql.Decimal(18, 2), data.discountAmount || 0);
+        req.input('coupon', sql.NVarChar(50), data.couponCode || null);
+        req.input('method', sql.NVarChar(50), data.paymentMethod || 'Sepay');
+        req.input('payStatus', sql.NVarChar(50), data.paymentStatus || 'Unpaid');
+        req.input('walletAmount', sql.Decimal(18, 0), data.walletAmountUsed || 0);
+
+        const orderRes = await req.query(`
+          INSERT INTO Orders (orderCode, userId, customerName, customerPhone, deliveryAddress, notes, totalAmount, discountAmount, couponCode, status, paymentMethod, paymentStatus, walletAmountUsed)
+          OUTPUT INSERTED.id
+          VALUES (@code, @userId, @name, @phone, @address, @notes, @amount, @discount, @coupon, 'Pending', @method, @payStatus, @walletAmount)
+        `);
+
+        const orderId = orderRes.recordset[0]?.id;
+        if (orderId) {
+          newOrder.id = orderId;
+          for (const it of data.items) {
+            const itemReq = new sql.Request(transaction);
+            itemReq.input('orderId', sql.Int, orderId);
+            itemReq.input('prodId', sql.Int, it.productId);
+            itemReq.input('prodName', sql.NVarChar(150), it.productName);
+            itemReq.input('price', sql.Decimal(18, 0), it.price);
+            itemReq.input('qty', sql.Int, it.quantity);
+            itemReq.input('total', sql.Decimal(18, 0), it.price * it.quantity);
+            itemReq.input('note', sql.NVarChar(500), it.note || null);
+            itemReq.input('toppings', sql.NVarChar(1000), it.toppings || null);
+
+            await itemReq.query(`
+              INSERT INTO OrderItems (orderId, productId, productName, price, quantity, total, note, toppings)
+              VALUES (@orderId, @prodId, @prodName, @price, @qty, @total, @note, @toppings)
+            `);
+          }
+        }
+        await transaction.commit();
+        
+        // Update in-memory user wallet if needed
+        if (data.walletAmountUsed && data.walletAmountUsed > 0 && data.userId) {
+          const u = inMemoryUsers.find(u => u.id === data.userId);
+          if (u && (u.walletBalance || 0) >= data.walletAmountUsed) {
+            u.walletBalance = (u.walletBalance || 0) - data.walletAmountUsed;
+          }
         }
         return newOrder;
+      } catch (err) {
+        await transaction.rollback();
+        console.error('Error inserting order in cloud, transaction rolled back:', err);
       }
     }
   } catch (err) {
     console.error('Error inserting order in cloud:', err);
-  }
-
-  // 2. Local fallback
-  try {
-    const safeOrderSql = `
-      INSERT INTO Orders (orderCode, userId, customerName, customerPhone, deliveryAddress, notes, totalAmount, discountAmount, couponCode, status, paymentMethod, paymentStatus, walletAmountUsed)
-      OUTPUT INSERTED.id
-      VALUES ('${data.orderCode}', ${data.userId ? data.userId : 'NULL'}, N'${data.customerName.replace(/'/g, "''")}', '${data.customerPhone.replace(/'/g, "''")}', N'${data.deliveryAddress.replace(/'/g, "''")}', N'${(data.notes || '').replace(/'/g, "''")}', ${data.totalAmount}, ${data.discountAmount || 0}, ${data.couponCode ? `'${data.couponCode}'` : 'NULL'}, 'Pending', '${data.paymentMethod || 'Sepay'}', '${data.paymentStatus || 'Unpaid'}', ${data.walletAmountUsed || 0});
-    `;
-    const insertRes = await queryLocalSqlCmd(safeOrderSql + ' FOR JSON PATH;');
-    const orderId = insertRes && insertRes[0] ? insertRes[0].id : null;
-    if (orderId) {
-      for (const it of data.items) {
-        await executeLocalSqlCmd(`
-          INSERT INTO OrderItems (orderId, productId, productName, price, quantity, total, note, toppings)
-          VALUES (${orderId}, ${it.productId}, N'${it.productName.replace(/'/g, "''")}', ${it.price}, ${it.quantity}, ${it.price * it.quantity}, N'${(it.note || '').replace(/'/g, "''")}', N'${(it.toppings || '').replace(/'/g, "''")}');
-        `);
-      }
-    }
-  } catch (err) {
-    // fallback maintained
   }
 
   return newOrder;
@@ -718,32 +617,11 @@ export async function getOrderByCode(code: string): Promise<Order | null> {
     console.error('Error fetching order from cloud:', err);
   }
 
-  // Local fallback
-  const orderQuery = `
-    SELECT o.id, o.orderCode, o.userId, o.customerName, o.customerPhone, o.deliveryAddress, 
-           o.notes, CAST(o.totalAmount AS INT) AS totalAmount,
-           CAST(ISNULL(o.discountAmount, 0) AS INT) AS discountAmount, o.couponCode,
-           o.status, o.paymentMethod, o.paymentStatus,
-           o.cancelReason, CAST(ISNULL(o.walletAmountUsed, 0) AS INT) AS walletAmountUsed,
-           ISNULL(o.refundStatus, 'None') AS refundStatus,
-           o.createdAt, o.updatedAt,
-           (SELECT oi.id, oi.orderId, oi.productId, oi.productName, CAST(oi.price AS INT) AS price, 
-                   oi.quantity, CAST(oi.total AS INT) AS total 
-            FROM OrderItems oi 
-            WHERE oi.orderId = o.id 
-            FOR JSON PATH) AS items
-    FROM Orders o
-    WHERE o.orderCode = '${cleanCode.replace(/'/g, "''")}'
-    FOR JSON PATH;
-  `;
-  const rows = await queryLocalSqlCmd(orderQuery);
-  if (rows && Array.isArray(rows) && rows.length > 0) {
-    return rows[0];
-  }
+
   return inMemoryOrders.find(o => o.orderCode === cleanCode) || null;
 }
 
-export async function getOrders(filter?: { status?: string; search?: string; userId?: number }): Promise<Order[]> {
+export async function getOrders(filter?: { status?: string; search?: string; userId?: number; page?: number; limit?: number }): Promise<Order[]> {
   const cleanSearch = (filter?.search || '').trim().replace(/^#+/, '');
   try {
     const pool = await getCloudPool();
@@ -773,6 +651,13 @@ export async function getOrders(filter?: { status?: string; search?: string; use
         query += ` AND (o.orderCode LIKE @search OR o.customerName LIKE @search OR o.customerPhone LIKE @search)`;
       }
       query += ` ORDER BY o.id DESC`;
+      
+      const page = filter?.page || 1;
+      const limit = filter?.limit || 50;
+      const offset = (page - 1) * limit;
+      req.input('offset', sql.Int, offset);
+      req.input('limit', sql.Int, limit);
+      query += ` OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`;
 
       const result = await req.query(query);
       if (result.recordset) {
@@ -783,34 +668,7 @@ export async function getOrders(filter?: { status?: string; search?: string; use
     console.error('Error fetching orders from cloud:', err);
   }
 
-  // Local fallback
-  let query = `
-    SELECT o.id, o.orderCode, o.userId, o.customerName, o.customerPhone, o.deliveryAddress, 
-           o.notes, CAST(o.totalAmount AS INT) AS totalAmount,
-           CAST(ISNULL(o.discountAmount, 0) AS INT) AS discountAmount, o.couponCode,
-           o.status, o.paymentMethod, o.paymentStatus,
-           o.cancelReason, CAST(ISNULL(o.walletAmountUsed, 0) AS INT) AS walletAmountUsed,
-           ISNULL(o.refundStatus, 'None') AS refundStatus,
-           o.createdAt, o.updatedAt
-    FROM Orders o
-    WHERE 1=1
-  `;
-  if (filter?.userId) {
-    query += ` AND o.userId = ${filter.userId}`;
-  }
-  if (filter?.status && filter.status !== 'all') {
-    query += ` AND o.status = '${filter.status.replace(/'/g, "''")}'`;
-  }
-  if (cleanSearch) {
-    const s = cleanSearch.replace(/'/g, "''");
-    query += ` AND (o.orderCode LIKE '%${s}%' OR o.customerName LIKE N'%${s}%' OR o.customerPhone LIKE '%${s}%')`;
-  }
-  query += ' ORDER BY o.id DESC FOR JSON PATH;';
 
-  const rows = await queryLocalSqlCmd(query);
-  if (rows && Array.isArray(rows) && rows.length > 0) {
-    return rows;
-  }
 
   let res = [...inMemoryOrders];
   if (filter?.userId) {
@@ -823,7 +681,9 @@ export async function getOrders(filter?: { status?: string; search?: string; use
     const s = cleanSearch.toLowerCase();
     res = res.filter(o => o.orderCode.toLowerCase().includes(s) || o.customerName.toLowerCase().includes(s) || o.customerPhone.includes(s));
   }
-  return res;
+  const page = filter?.page || 1;
+  const limit = filter?.limit || 50;
+  return res.slice((page - 1) * limit, page * limit);
 }
 
 export async function hasUserPaidFirstVietqr(userId: number): Promise<boolean> {
@@ -890,15 +750,6 @@ export async function updateOrderStatus(
     console.error('Error updating order status in cloud:', err);
   }
 
-  const updates = [`status = '${status.replace(/'/g, "''")}'`, `updatedAt = GETDATE()`];
-  if (paymentStatus) {
-    updates.push(`paymentStatus = '${paymentStatus.replace(/'/g, "''")}'`);
-  }
-  if (cancelReason !== undefined) {
-    updates.push(`cancelReason = N'${cancelReason.replace(/'/g, "''")}'`);
-  }
-
-  await executeLocalSqlCmd(`UPDATE Orders SET ${updates.join(', ')} WHERE orderCode = '${cleanCode.replace(/'/g, "''")}';`);
   return true;
 }
 
@@ -1054,16 +905,7 @@ export async function cancelOrder(orderCode: string, cancelReason: string): Prom
     inMem.updatedAt = new Date().toISOString();
   }
 
-  try {
-    await executeLocalSqlCmd(`
-      UPDATE Orders 
-      SET status = 'Cancelled', 
-          cancelReason = N'${(cancelReason || '').replace(/'/g, "''")}',
-          refundStatus = '${refundStatus}',
-          updatedAt = GETDATE()
-      WHERE orderCode = '${cleanCode.replace(/'/g, "''")}';
-    `);
-  } catch {}
+
 
   return {
     success: true,
@@ -1073,6 +915,30 @@ export async function cancelOrder(orderCode: string, cancelReason: string): Prom
 }
 
 export async function getAdminStats() {
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const res = await pool.request().query(`
+        SELECT 
+          CAST(ISNULL(SUM(CASE WHEN paymentStatus = 'Paid' THEN totalAmount ELSE 0 END), 0) AS INT) AS totalRevenue,
+          COUNT(*) AS totalOrders,
+          COUNT(CASE WHEN status = 'Pending' THEN 1 END) AS pendingOrders,
+          COUNT(CASE WHEN status = 'Delivering' THEN 1 END) AS deliveringOrders
+        FROM Orders
+      `);
+      const prodRes = await pool.request().query('SELECT COUNT(*) AS cnt FROM Products');
+      const recentRes = await pool.request().query(`
+        SELECT TOP 5 id, orderCode, customerName, CAST(totalAmount AS INT) AS totalAmount, status, createdAt
+        FROM Orders ORDER BY id DESC
+      `);
+      return {
+        ...res.recordset[0],
+        totalProducts: prodRes.recordset[0].cnt,
+        recentOrders: recentRes.recordset || []
+      };
+    }
+  } catch (e) { console.error('Admin stats error:', e); }
+  
   const orders = await getOrders();
   const products = await getProducts();
   const totalRevenue = orders.reduce((sum, o) => (o.paymentStatus === 'Paid' ? sum + o.totalAmount : sum), 0);
@@ -1119,37 +985,14 @@ export async function checkDatabaseHealth(): Promise<{
     console.warn('Cloud health check failed:', err.message);
   }
 
-  // Fallback check to local
-  try {
-    const testRes = await queryLocalSqlCmd(`
-      SELECT 
-        (SELECT COUNT(*) FROM Categories) AS categoryCount,
-        (SELECT COUNT(*) FROM Products) AS productCount,
-        (SELECT COUNT(*) FROM Orders) AS orderCount
-      FOR JSON PATH;
-    `);
-
-    if (testRes && testRes[0]) {
-      return {
-        connected: true,
-        engine: 'Microsoft SQL Server 2025 Express (Local SQLEXPRESS Fallback)',
-        database: 'FoodOrderingDB',
-        categoryCount: testRes[0].categoryCount || 0,
-        productCount: testRes[0].productCount || 0,
-        orderCount: testRes[0].orderCount || 0,
-        details: 'Đang kết nối tới SQL Server cục bộ FoodOrderingDB trên máy chủ (Fallback).'
-      };
-    }
-  } catch (err: any) {}
-
   return {
-    connected: true,
-    engine: 'In-Memory Fallback & SQL Bridge',
+    connected: false,
+    engine: 'In-Memory Fallback',
     database: 'FoodOrderingDB (Hybrid)',
     categoryCount: inMemoryCategories.length,
     productCount: inMemoryProducts.length,
     orderCount: inMemoryOrders.length,
-    details: 'Đang hoạt động qua lớp đệm dự phòng hybrid ổn định cao.'
+    details: 'Mất kết nối CSDL, đang hoạt động qua lớp đệm dự phòng hybrid.'
   };
 }
 
@@ -1158,6 +1001,29 @@ export async function checkDatabaseHealth(): Promise<{
 // ==========================================
 
 export async function getUserByUsername(username: string): Promise<User | null> {
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('username', sql.NVarChar(50), username);
+      const res = await req.query(`
+        SELECT id, username, fullName, email, phone, address, role, CAST(ISNULL(walletBalance, 0) AS INT) AS walletBalance, createdAt
+        FROM Users
+        WHERE username = @username
+      `);
+      if (res.recordset && res.recordset.length > 0) {
+        return res.recordset[0];
+      }
+    }
+  } catch (err) {
+    console.error('Error querying user from cloud:', err);
+  }
+  const u = inMemoryUsers.find((u) => u.username === username);
+  if (u) { const { password, ...safeU } = u as any; return safeU as any; }
+  return null;
+}
+
+export async function getUserByUsernameWithPassword(username: string): Promise<User | null> {
   try {
     const pool = await getCloudPool();
     if (pool) {
@@ -1175,8 +1041,6 @@ export async function getUserByUsername(username: string): Promise<User | null> 
   } catch (err) {
     console.error('Error querying user from cloud:', err);
   }
-
-  // Fallback
   return inMemoryUsers.find((u) => u.username === username) || null;
 }
 
@@ -1195,7 +1059,8 @@ export async function createUser(data: {
     if (pool) {
       const req = pool.request();
       req.input('username', sql.NVarChar(50), data.username);
-      req.input('password', sql.NVarChar(255), data.password);
+      const hashedPassword = await bcrypt.hash(data.password, 12);
+      req.input('password', sql.NVarChar(255), hashedPassword);
       req.input('fullName', sql.NVarChar(100), data.fullName);
       req.input('phone', sql.NVarChar(20), data.phone || '');
       req.input('address', sql.NVarChar(255), data.address || '');
@@ -1232,9 +1097,9 @@ export async function createUser(data: {
 }
 
 export async function verifyUserCredentials(username: string, password: string): Promise<User | null> {
-  const user = await getUserByUsername(username);
+  const user = await getUserByUsernameWithPassword(username);
   if (!user) return null;
-  if ((user as any).password === password) {
+  if (await bcrypt.compare(password, (user as any).password)) {
     const { password: _, ...safeUser } = user as any;
     return safeUser;
   }
@@ -1242,6 +1107,29 @@ export async function verifyUserCredentials(username: string, password: string):
 }
 
 export async function getUserById(userId: number): Promise<User | null> {
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('id', sql.Int, userId);
+      const res = await req.query(`
+        SELECT id, username, fullName, email, phone, address, role, CAST(ISNULL(walletBalance, 0) AS INT) AS walletBalance, createdAt
+        FROM Users
+        WHERE id = @id
+      `);
+      if (res.recordset && res.recordset.length > 0) {
+        return res.recordset[0];
+      }
+    }
+  } catch (err) {
+    console.error('Error querying user by id from cloud:', err);
+  }
+  const u = inMemoryUsers.find((u) => u.id === userId);
+  if (u) { const { password, ...safeU } = u as any; return safeU as any; }
+  return null;
+}
+
+export async function getUserByIdWithPassword(userId: number): Promise<User | null> {
   try {
     const pool = await getCloudPool();
     if (pool) {
@@ -1259,7 +1147,6 @@ export async function getUserById(userId: number): Promise<User | null> {
   } catch (err) {
     console.error('Error querying user by id from cloud:', err);
   }
-
   return inMemoryUsers.find((u) => u.id === userId) || null;
 }
 
@@ -1311,12 +1198,12 @@ export async function updateUserPassword(
   currentPass: string,
   newPass: string
 ): Promise<{ success: boolean; message: string }> {
-  const user = await getUserById(userId);
+  const user = await getUserByIdWithPassword(userId);
   if (!user) {
     return { success: false, message: 'Không tìm thấy tài khoản người dùng' };
   }
 
-  if ((user as any).password !== currentPass) {
+  if (!(await bcrypt.compare(currentPass, (user as any).password))) {
     return { success: false, message: 'Mật khẩu hiện tại không chính xác' };
   }
 
@@ -1325,7 +1212,8 @@ export async function updateUserPassword(
     if (pool) {
       const req = pool.request();
       req.input('userId', sql.Int, userId);
-      req.input('password', sql.NVarChar(255), newPass);
+      const hashedNewPass = await bcrypt.hash(newPass, 12);
+      req.input('password', sql.NVarChar(255), hashedNewPass);
       await req.query(`UPDATE Users SET password = @password WHERE id = @userId`);
     }
   } catch (err: any) {
@@ -1335,7 +1223,7 @@ export async function updateUserPassword(
   // Update in-memory fallback
   const inMem = inMemoryUsers.find((u) => u.id === userId);
   if (inMem) {
-    (inMem as any).password = newPass;
+    (inMem as any).password = await bcrypt.hash(newPass, 12);
   }
 
   return { success: true, message: 'Đổi mật khẩu thành công!' };

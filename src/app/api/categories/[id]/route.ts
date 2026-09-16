@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateCategory, deleteCategory } from '@/lib/db';
+import { requireAdmin, AuthError } from '@/lib/auth';
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    try {
+      requireAdmin(request);
+    } catch (authErr) {
+      if (authErr instanceof AuthError) {
+        return NextResponse.json({ success: false, message: authErr.message }, { status: authErr.status });
+      }
+      throw authErr;
+    }
+
     const id = parseInt(params.id);
     if (!id || isNaN(id)) {
       return NextResponse.json({ success: false, message: 'ID danh mục không hợp lệ' }, { status: 400 });
@@ -25,7 +35,8 @@ export async function PUT(
     const success = await updateCategory(id, payload);
     return NextResponse.json({ success, message: 'Cập nhật danh mục thành công' });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Error updating category:', error);
+    return NextResponse.json({ success: false, message: 'Đã xảy ra lỗi khi cập nhật danh mục' }, { status: 500 });
   }
 }
 
@@ -34,14 +45,24 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    try {
+      requireAdmin(request);
+    } catch (authErr) {
+      if (authErr instanceof AuthError) {
+        return NextResponse.json({ success: false, message: authErr.message }, { status: authErr.status });
+      }
+      throw authErr;
+    }
+
     const id = parseInt(params.id);
     if (!id || isNaN(id)) {
       return NextResponse.json({ success: false, message: 'ID danh mục không hợp lệ' }, { status: 400 });
     }
 
     const success = await deleteCategory(id);
-    return NextResponse.json({ success, message: 'Đã xoá danh mục thành công' });
+    return NextResponse.json({ success, message: 'Đã xóa danh mục thành công' });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Error deleting category:', error);
+    return NextResponse.json({ success: false, message: 'Đã xảy ra lỗi khi xóa danh mục' }, { status: 500 });
   }
 }

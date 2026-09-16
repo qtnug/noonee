@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getReviewsByProduct, upsertReview, hasUserOrderedProduct, getUserReview } from '@/lib/db';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
+import { authenticateRequest, requireAuth, AuthError } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +11,9 @@ export async function GET(request: NextRequest) {
     const productId = searchParams.get('productId');
     const userIdParam = searchParams.get('userId');
     const orderCode = searchParams.get('orderCode') || undefined;
-    const userId = userIdParam ? parseInt(userIdParam) : undefined;
+    
+    const authUser = authenticateRequest(request);
+    const userId = authUser ? authUser.userId : (userIdParam ? parseInt(userIdParam) : undefined);
 
     if (!productId) {
       return NextResponse.json({ success: false, message: 'Thiếu productId' }, { status: 400 });
@@ -42,7 +45,8 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Error fetching reviews:', error);
+    return NextResponse.json({ success: false, message: 'Đã xảy ra lỗi khi lấy đánh giá món ăn' }, { status: 500 });
   }
 }
 
@@ -57,8 +61,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let authUser;
+    try {
+      authUser = requireAuth(request);
+    } catch (authErr) {
+      if (authErr instanceof AuthError) {
+        return NextResponse.json({ success: false, message: authErr.message }, { status: authErr.status });
+      }
+      throw authErr;
+    }
+
     const body = await request.json();
-    const { productId, userId, customerName, rating, comment, orderCode } = body;
+    const { productId, customerName, rating, comment, orderCode } = body;
 
     if (!productId || !customerName || !rating || !comment) {
       return NextResponse.json(
@@ -68,15 +82,7 @@ export async function POST(request: NextRequest) {
     }
 
     const prodId = parseInt(String(productId));
-    const userIdNum = userId ? parseInt(String(userId)) : null;
-
-    // Requirement: User must be logged in or have orderCode
-    if (!userIdNum && !orderCode) {
-      return NextResponse.json(
-        { success: false, message: 'Vui lòng đăng nhập tài khoản trước khi gửi đánh giá món ăn' },
-        { status: 401 }
-      );
-    }
+    const userIdNum = authUser.userId;
 
     // Requirement: User MUST have ordered the product
     const hasOrdered = await hasUserOrderedProduct(prodId, userIdNum, orderCode);
@@ -105,7 +111,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upsert review (updates existing review if already reviewed; inserts if first time)
     const { review, isUpdate } = await upsertReview({
       productId: prodId,
       userId: userIdNum,
@@ -128,6 +133,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: any) {
     console.error('Error submitting review:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Đã xảy ra lỗi khi gửi đánh giá' }, { status: 500 });
   }
 }

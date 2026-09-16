@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserByUsername, createUser } from '@/lib/db';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
+import { generateToken } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -92,7 +93,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 7. Check if username already exists in SQL Server
+    // 7. Validate Email format if provided
+    let cleanEmail = email ? String(email).trim() : undefined;
+    if (cleanEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanEmail)) {
+        return NextResponse.json(
+          { success: false, message: 'Địa chỉ email không đúng định dạng hợp lệ' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 8. Check if username already exists in SQL Server
     const existingUser = await getUserByUsername(cleanUsername);
     if (existingUser) {
       return NextResponse.json(
@@ -101,34 +114,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 8. Create user in SQL Server
+    // 9. Create user in SQL Server
     const newUser = await createUser({
       username: cleanUsername,
       password: cleanPassword,
       fullName: cleanFullName,
       phone: cleanPhone,
       address: address ? String(address).trim() : '',
-      email: email ? String(email).trim() : undefined,
+      email: cleanEmail,
       role: 'customer',
     });
 
-    return NextResponse.json(
+    const token = generateToken(newUser);
+
+    const response = NextResponse.json(
       {
         success: true,
         message: 'Đăng ký tài khoản thành công',
+        token,
         user: {
           id: newUser.id,
           username: newUser.username,
           fullName: newUser.fullName,
+          email: newUser.email,
           phone: newUser.phone,
           address: newUser.address,
           role: newUser.role,
+          walletBalance: 0,
+          token,
         },
       },
       { status: 201 }
     );
+
+    // Set auth_token cookie
+    response.cookies.set('auth_token', token, {
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60,
+      sameSite: 'lax',
+    });
+
+    return response;
   } catch (error: any) {
     console.error('Register error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Đã xảy ra lỗi hệ thống trong quá trình đăng ký' }, { status: 500 });
   }
 }

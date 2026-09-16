@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyUserCredentials } from '@/lib/db';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
+import { generateToken } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,9 +36,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
+    const token = generateToken(user);
+
+    const response = NextResponse.json({
       success: true,
       message: 'Đăng nhập thành công',
+      token,
       user: {
         id: user.id,
         username: user.username,
@@ -46,10 +50,21 @@ export async function POST(request: NextRequest) {
         phone: user.phone,
         address: user.address,
         role: user.role,
+        walletBalance: user.walletBalance,
+        token,
       },
     });
+
+    // Set auth_token cookie
+    response.cookies.set('auth_token', token, {
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60,
+      sameSite: 'lax',
+    });
+
+    return response;
   } catch (error: any) {
     console.error('Login error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Đã xảy ra lỗi hệ thống trong quá trình đăng nhập' }, { status: 500 });
   }
 }

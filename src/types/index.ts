@@ -7,6 +7,7 @@ export interface User {
   address?: string | null;
   role: 'admin' | 'customer';
   walletBalance?: number;
+  token?: string;
   createdAt?: string;
 }
 

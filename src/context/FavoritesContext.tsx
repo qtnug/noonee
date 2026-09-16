@@ -10,6 +10,7 @@ interface FavoritesContextType {
   isFavorite: (productId: number) => boolean;
   clearFavorites: () => void;
   favoriteCount: number;
+  isLoaded: boolean;
 }
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
@@ -81,6 +82,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         isFavorite,
         clearFavorites,
         favoriteCount: favorites.length,
+        isLoaded,
       }}
     >
       {children}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupportMessages, createSupportMessage } from '@/lib/db';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
+import { authenticateRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,8 @@ export async function GET(request: NextRequest) {
     const messages = await getSupportMessages({ orderCode, userId });
     return NextResponse.json({ success: true, data: messages });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Error fetching support messages:', error);
+    return NextResponse.json({ success: false, message: 'Đã xảy ra lỗi khi tải tin nhắn hỗ trợ' }, { status: 500 });
   }
 }
 
@@ -39,10 +41,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Prevent role spoofing (H12)
+    // Only verified admin users can post with senderRole === 'admin'
+    const authUser = authenticateRequest(request);
+    let resolvedRole: 'admin' | 'customer' = 'customer';
+    if (senderRole === 'admin' && authUser && authUser.role === 'admin') {
+      resolvedRole = 'admin';
+    }
+
+    const resolvedUserId = authUser ? authUser.userId : (userId ? parseInt(String(userId)) : null);
+
     const newMsg = await createSupportMessage({
       orderCode: orderCode ? String(orderCode).trim() : null,
-      userId: userId ? parseInt(String(userId)) : null,
-      senderRole: senderRole === 'admin' ? 'admin' : 'customer',
+      userId: resolvedUserId,
+      senderRole: resolvedRole,
       senderName: String(senderName).trim(),
       message: String(message).trim(),
       isComplaint: Boolean(isComplaint),
@@ -51,6 +63,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: newMsg }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating support message:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Đã xảy ra lỗi khi gửi tin nhắn hỗ trợ' }, { status: 500 });
   }
 }

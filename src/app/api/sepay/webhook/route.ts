@@ -4,25 +4,36 @@ import { updateOrderStatus, getOrderByCode } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Verify SePay API Key / Token if configured
+    // 1. Strict verification of SePay API Key / Token (C9)
     const expectedToken = process.env.SEPAY_API_TOKEN;
-    const authHeader = request.headers.get('authorization') || '';
+    if (!expectedToken || expectedToken === 'demo_sepay_token' || expectedToken.trim() === '') {
+      console.error('[Sepay Webhook] SEPAY_API_TOKEN is not configured securely');
+      return NextResponse.json(
+        { success: false, message: 'Cổng thanh toán chưa được cấu hình khóa bảo mật' },
+        { status: 500 }
+      );
+    }
 
-    if (expectedToken && expectedToken !== 'demo_sepay_token' && expectedToken.trim() !== '') {
-      const isAuthorized = authHeader.includes(expectedToken.trim());
-      if (!isAuthorized) {
-        console.warn('[Sepay Webhook] Unauthorized: Invalid or missing API Key');
-        return NextResponse.json(
-          { success: false, message: 'Sai mã xác thực SePay API Key (Unauthorized)' },
-          { status: 401 }
-        );
-      }
+    const authHeader = (request.headers.get('authorization') || '').trim();
+    // Sepay sends authorization as "Apikey <TOKEN>" or raw token
+    const tokenFromHeader = authHeader.startsWith('Apikey ') ? authHeader.slice(7).trim() : authHeader;
+
+    if (tokenFromHeader !== expectedToken.trim()) {
+      console.warn('[Sepay Webhook] Unauthorized: Token mismatch');
+      return NextResponse.json(
+        { success: false, message: 'Sai mã xác thực SePay API Key (Unauthorized)' },
+        { status: 401 }
+      );
     }
 
     const payload = await request.json();
-    console.log('[Sepay Webhook Received]:', payload);
+    console.log('[Sepay Webhook Received]:', {
+      id: payload.id,
+      gateway: payload.gateway,
+      amount: payload.transferAmount || payload.amount,
+      content: payload.content,
+    });
 
-    // Payload fields from Sepay: { id, gateway, transactionDate, accountNumber, content, transferAmount, code, description, ... }
     const content = String(payload.content || payload.description || payload.code || '');
     const orderCode = parseOrderCodeFromMemo(content);
 
@@ -41,13 +52,33 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Verify transfer amount if provided
-    const transferAmount = payload.transferAmount || payload.amount;
-    if (transferAmount && Number(transferAmount) < order.totalAmount) {
-      console.warn(`[Sepay] Amount paid (${transferAmount}) is less than order total (${order.totalAmount})`);
+    // Check if order is already cancelled or already paid
+    if (order.status === 'Cancelled') {
+      return NextResponse.json({
+        success: false,
+        message: `Đơn hàng ${orderCode} đã bị hủy trước đó`,
+      });
     }
 
-    // Update order payment status to Paid, but keep status as Pending (Wait for Admin to confirm to Processing)
+    if (order.paymentStatus === 'Paid') {
+      return NextResponse.json({
+        success: true,
+        message: `Đơn hàng ${orderCode} đã được thanh toán trước đó`,
+        orderCode,
+      });
+    }
+
+    // Verify transfer amount strictly (H3)
+    const transferAmount = Number(payload.transferAmount || payload.amount || 0);
+    if (transferAmount < order.totalAmount) {
+      console.warn(`[Sepay] Underpaid: Received ${transferAmount}, expected ${order.totalAmount} for order ${orderCode}`);
+      return NextResponse.json({
+        success: false,
+        message: `Số tiền chuyển khoản (${transferAmount}đ) không đủ so với tổng tiền đơn hàng (${order.totalAmount}đ)`,
+      }, { status: 400 });
+    }
+
+    // Update order payment status to Paid
     await updateOrderStatus(orderCode, 'Pending', 'Paid');
 
     return NextResponse.json({
@@ -57,6 +88,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('[Sepay Webhook Error]:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Đã xảy ra lỗi xử lý webhook' }, { status: 500 });
   }
 }

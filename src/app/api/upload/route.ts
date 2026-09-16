@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import cloudinary from '@/lib/cloudinary';
+import { requireAdmin, AuthError } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
+    try {
+      requireAdmin(request);
+    } catch (authErr) {
+      if (authErr instanceof AuthError) {
+        return NextResponse.json({ success: false, message: authErr.message }, { status: authErr.status });
+      }
+      throw authErr;
+    }
+
     // Verify Cloudinary configuration
     const isConfigured = Boolean(
       process.env.CLOUDINARY_URL ||
@@ -18,7 +28,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           message:
-            'Chưa cấu hình Cloudinary trong .env.local. Vui lòng thêm CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET (hoặc CLOUDINARY_URL).',
+            'Chưa cấu hình Cloudinary trong .env.local. Vui lòng thêm CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET.',
         },
         { status: 500 }
       );
@@ -78,7 +88,6 @@ export async function POST(request: NextRequest) {
             if (error || !result) {
               reject(error || new Error('Upload lên Cloudinary thất bại'));
             } else {
-              // Generate explicitly transformed 1:1 square URL
               const squareUrl = cloudinary.url(result.public_id, {
                 transformation: [
                   { width: 800, height: 800, crop: 'fill', gravity: 'auto', quality: 'auto', fetch_format: 'auto' }
@@ -107,7 +116,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: error.message || 'Có lỗi xảy ra khi xử lý và lưu trữ ảnh lên Cloud',
+        message: 'Có lỗi xảy ra khi xử lý và lưu trữ ảnh',
       },
       { status: 500 }
     );

@@ -11,13 +11,12 @@ export default function CartDrawer() {
 
   useEffect(() => {
     if (isCartOpen) {
+      const prevOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
     }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
   }, [isCartOpen]);
 
   if (!isCartOpen) return null;

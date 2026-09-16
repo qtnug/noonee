@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: error.message || 'Lỗi tính khoảng cách và phí vận chuyển',
+        message: 'Lỗi tính khoảng cách và phí vận chuyển',
       },
       { status: 500 }
     );
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: error.message || 'Lỗi tính khoảng cách và phí vận chuyển',
+        message: 'Lỗi tính khoảng cách và phí vận chuyển',
       },
       { status: 500 }
     );

@@ -28,11 +28,23 @@ export function formatDate(dateStr: string | Date | undefined): string {
   }).format(date);
 }
 
+export function removeVietnameseTones(str: string): string {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D');
+}
+
+export function generateSlug(name: string): string {
+  return removeVietnameseTones(name)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 export function generateOrderCode(): string {
-  const chars = '0123456789';
-  let rand = '';
-  for (let i = 0; i < 4; i++) {
-    rand += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return `DH${Date.now().toString().slice(-4)}${rand}`;
+  const now = Date.now();
+  const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `DH${now.toString().slice(-6)}${randomPart}`;
 }

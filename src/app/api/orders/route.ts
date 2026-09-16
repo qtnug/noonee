@@ -1,22 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOrders, createOrder } from '@/lib/db';
+import { getOrders, createOrder, getProducts, hasUserPaidFirstVietqr, getUserSpendingStats } from '@/lib/db';
 import { generateOrderCode } from '@/lib/utils';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
+import { requireAuth, requireAdmin, authenticateRequest, AuthError } from '@/lib/auth';
+import { validateCoupon } from '@/lib/coupons';
+import { getMembershipTier } from '@/lib/membership';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    const authUser = authenticateRequest(request);
+    if (!authUser) {
+      return NextResponse.json({ success: false, message: 'Vui lòng đăng nhập để xem danh sách đơn hàng' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || undefined;
     const search = searchParams.get('search') || undefined;
     const userIdParam = searchParams.get('userId');
-    const userId = userIdParam ? parseInt(userIdParam) : undefined;
+    const page = searchParams.get('page') ? parseInt(searchParams.get('page')!) : undefined;
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
 
-    const orders = await getOrders({ status, search, userId });
+    let targetUserId: number | undefined;
+
+    if (authUser.role === 'admin') {
+      targetUserId = userIdParam ? parseInt(userIdParam) : undefined;
+    } else {
+      // Regular customer can only see their own orders
+      targetUserId = authUser.userId;
+    }
+
+    const orders = await getOrders({ status, search, userId: targetUserId, page, limit });
     return NextResponse.json({ success: true, data: orders });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Error fetching orders:', error);
+    return NextResponse.json({ success: false, message: 'Đã xảy ra lỗi khi tải danh sách đơn hàng' }, { status: 500 });
   }
 }
 
@@ -31,40 +50,115 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { customerName, customerPhone, deliveryAddress, notes, items, paymentMethod, userId, couponCode } = body;
-
-    // Requirement: User must be logged in to order
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, message: 'Vui lòng đăng nhập tài khoản trước khi đặt hàng' },
-        { status: 401 }
-      );
+    let authUser;
+    try {
+      authUser = requireAuth(request);
+    } catch (authErr) {
+      if (authErr instanceof AuthError) {
+        return NextResponse.json({ success: false, message: authErr.message }, { status: authErr.status });
+      }
+      throw authErr;
     }
 
-    if (!customerName || !customerPhone || !deliveryAddress || !items || items.length === 0) {
+    const body = await request.json();
+    const { customerName, customerPhone, deliveryAddress, notes, items, paymentMethod, couponCode, useWallet } = body;
+
+    // Use authenticated user ID directly
+    const userId = authUser.userId;
+
+    if (!customerName || !customerPhone || !deliveryAddress || !items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
         { success: false, message: 'Vui lòng cung cấp đầy đủ thông tin nhận hàng và món ăn' },
         { status: 400 }
       );
     }
 
-    const subtotal = items.reduce(
-      (sum: number, it: any) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 1),
-      0
-    );
+    // Validate phone number format (Vietnamese mobile 10 digits)
+    const phoneRegex = /^(0)(3|5|7|8|9)[0-9]{8}$/;
+    if (!phoneRegex.test(String(customerPhone).trim())) {
+      return NextResponse.json(
+        { success: false, message: 'Số điện thoại nhận hàng không đúng định dạng (10 chữ số, bắt đầu bằng 03, 05, 07, 08, 09)' },
+        { status: 400 }
+      );
+    }
 
+    // SERVER-SIDE PRICE VALIDATION (C8, H17)
+    // Fetch products from database to ensure genuine prices
+    const dbProducts = await getProducts();
+    const validatedItems: {
+      productId: number;
+      productName: string;
+      price: number;
+      quantity: number;
+      toppings?: string | null;
+      note?: string | null;
+    }[] = [];
+
+    let subtotal = 0;
+
+    for (const it of items) {
+      const pId = Number(it.productId);
+      const qty = parseInt(it.quantity);
+
+      if (!pId || isNaN(pId) || !qty || isNaN(qty) || qty <= 0) {
+        return NextResponse.json(
+          { success: false, message: 'Thông tin món ăn hoặc số lượng không hợp lệ' },
+          { status: 400 }
+        );
+      }
+
+      const dbProduct = dbProducts.find((p) => p.id === pId);
+      if (!dbProduct) {
+        return NextResponse.json(
+          { success: false, message: `Món ăn có ID ${pId} không tồn tại trong hệ thống` },
+          { status: 400 }
+        );
+      }
+
+      if (!dbProduct.isAvailable) {
+        return NextResponse.json(
+          { success: false, message: `Món "${dbProduct.name}" hiện tạm thời ngưng phục vụ` },
+          { status: 400 }
+        );
+      }
+
+      // Calculate toppings price securely from product toppings definition
+      let toppingsExtra = 0;
+      let toppingsStr: string | null = null;
+      if (it.toppings) {
+        toppingsStr = typeof it.toppings === 'string' ? it.toppings : JSON.stringify(it.toppings);
+        if (Array.isArray(dbProduct.toppings) && Array.isArray(it.selectedToppings)) {
+          for (const st of it.selectedToppings) {
+            const matchedTop = dbProduct.toppings.find((t) => t.id === st.id);
+            if (matchedTop) {
+              toppingsExtra += matchedTop.price || 0;
+            }
+          }
+        }
+      }
+
+      const finalItemUnitPrice = dbProduct.price + toppingsExtra;
+      const lineTotal = finalItemUnitPrice * qty;
+      subtotal += lineTotal;
+
+      validatedItems.push({
+        productId: dbProduct.id,
+        productName: dbProduct.name,
+        price: finalItemUnitPrice,
+        quantity: qty,
+        toppings: toppingsStr,
+        note: it.note ? String(it.note).trim() : null,
+      });
+    }
+
+    // Validate Coupon
     let discountAmount = 0;
     let validCouponCode: string | null = null;
 
     if (couponCode) {
-      const { validateCoupon } = await import('@/lib/coupons');
-      const { hasUserPaidFirstVietqr, getUserSpendingStats } = await import('@/lib/db');
-      const { getMembershipTier } = await import('@/lib/membership');
-      const parsedUserId = parseInt(String(userId));
       const [isFirstPaid, spendingStats] = await Promise.all([
-        hasUserPaidFirstVietqr(parsedUserId),
-        getUserSpendingStats(parsedUserId),
+        hasUserPaidFirstVietqr(userId),
+        getUserSpendingStats(userId),
       ]);
       const userTier = getMembershipTier(spendingStats.totalSpent).tier;
       const isNewUser = !isFirstPaid;
@@ -75,21 +169,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const shippingFee = typeof body.shippingFee === 'number' ? Math.max(0, body.shippingFee) : 0;
-    const couponDiscountExcludingFreeship = validCouponCode === 'FREESHIP' ? 0 : discountAmount;
-    const totalBeforeWallet = Math.max(0, subtotal - couponDiscountExcludingFreeship + shippingFee);
+    const shippingFee = typeof body.shippingFee === 'number' ? Math.max(0, Math.round(body.shippingFee)) : 0;
+    
+    // Calculate total: subtotal minus discount plus shipping
+    const totalBeforeWallet = Math.max(0, subtotal - discountAmount + shippingFee);
 
     // Handle Virtual Wallet Balance Deduction
     let walletAmountUsed = 0;
-    const parsedUserId = parseInt(String(userId));
-    if (body.useWallet && parsedUserId) {
-      const { getUserWalletBalance, deductUserWallet } = await import('@/lib/db');
-      const currentWallet = await getUserWalletBalance(parsedUserId);
+    if (useWallet && userId) {
+      const { getUserWalletBalance } = await import('@/lib/db');
+      const currentWallet = await getUserWalletBalance(userId);
       if (currentWallet > 0) {
         walletAmountUsed = Math.min(currentWallet, totalBeforeWallet);
-        if (walletAmountUsed > 0) {
-          await deductUserWallet(parsedUserId, walletAmountUsed);
-        }
       }
     }
 
@@ -99,7 +190,7 @@ export async function POST(request: NextRequest) {
 
     const order = await createOrder({
       orderCode,
-      userId: parsedUserId,
+      userId,
       customerName: String(customerName).trim(),
       customerPhone: String(customerPhone).trim(),
       deliveryAddress: String(deliveryAddress).trim(),
@@ -110,17 +201,20 @@ export async function POST(request: NextRequest) {
       paymentMethod: isFullyPaidByWallet ? 'Wallet' : (paymentMethod || 'Sepay'),
       paymentStatus: isFullyPaidByWallet ? 'Paid' : 'Unpaid',
       walletAmountUsed,
-      items,
+      items: validatedItems,
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      data: order,
-      fullyPaidByWallet: isFullyPaidByWallet,
-      walletAmountUsed,
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        data: order,
+        fullyPaidByWallet: isFullyPaidByWallet,
+        walletAmountUsed,
+      },
+      { status: 201 }
+    );
   } catch (error: any) {
     console.error('Error in POST /api/orders:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Đã xảy ra lỗi hệ thống khi tạo đơn hàng' }, { status: 500 });
   }
 }

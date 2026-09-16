@@ -38,7 +38,7 @@ function ProfileContent() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') || 'tier';
 
-  const { user, login } = useAuth();
+  const { user, login, getAuthHeader } = useAuth();
   const { favorites } = useFavorites();
 
   const [activeTab, setActiveTab] = useState<'tier' | 'favorites' | 'password' | 'info'>('tier');
@@ -87,7 +87,7 @@ function ProfileContent() {
 
       const fetchProfileStats = async () => {
         try {
-          const res = await fetch(`/api/user/profile?userId=${user?.id}`);
+          const res = await fetch(`/api/user/profile?userId=${user?.id}`, { headers: getAuthHeader() });
           const data = await res.json();
           if (data.success && data.data) {
             setProfileData({

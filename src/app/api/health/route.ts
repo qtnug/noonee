@@ -9,13 +9,13 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       database: dbHealth,
       sepay: {
-        configured: Boolean(process.env.SEPAY_API_TOKEN),
-        bank: process.env.SEPAY_BANK_NAME || 'MB',
-        account: process.env.SEPAY_BANK_ACCOUNT || '0388889999',
+        configured: Boolean(process.env.SEPAY_API_TOKEN && process.env.SEPAY_BANK_ACCOUNT),
+        bank: process.env.SEPAY_BANK_NAME || 'Not configured',
         mode: process.env.NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION === 'true' ? 'Sandbox / Simulation' : 'Live'
       }
     });
   } catch (error: any) {
-    return NextResponse.json({ status: 'error', error: error.message }, { status: 500 });
+    console.error('Health check error:', error);
+    return NextResponse.json({ status: 'error', message: 'Hệ thống đang gặp sự cố' }, { status: 500 });
   }
 }

@@ -97,9 +97,7 @@ export function calculateShippingFeeByKm(distanceKm: number): number {
  */
 export function getGoongApiKey(): string {
   return (
-    process.env.GOONG_API_KEY ||
-    process.env.NEXT_PUBLIC_GOONG_API_KEY ||
-    ''
+    process.env.GOONG_API_KEY || ''
   ).trim();
 }
 

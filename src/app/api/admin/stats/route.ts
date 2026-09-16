@@ -1,13 +1,24 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getAdminStats } from '@/lib/db';
+import { requireAdmin, AuthError } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    try {
+      requireAdmin(request);
+    } catch (authErr) {
+      if (authErr instanceof AuthError) {
+        return NextResponse.json({ success: false, message: authErr.message }, { status: authErr.status });
+      }
+      throw authErr;
+    }
+
     const stats = await getAdminStats();
     return NextResponse.json({ success: true, data: stats });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Error fetching admin stats:', error);
+    return NextResponse.json({ success: false, message: 'Đã xảy ra lỗi khi lấy thống kê quản trị' }, { status: 500 });
   }
 }

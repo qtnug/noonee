@@ -1,24 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateCoupon } from '@/lib/coupons';
-import { hasUserPaidFirstVietqr } from '@/lib/db';
+import { hasUserPaidFirstVietqr, getUserSpendingStats } from '@/lib/db';
+import { getMembershipTier } from '@/lib/membership';
+import { authenticateRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    const authUser = authenticateRequest(request);
     const { code, subtotal, paymentMethod, userId } = await request.json();
 
+    const targetUserId = authUser ? authUser.userId : (userId ? Number(userId) : null);
+
     let isNewUser = true;
-    if (userId) {
-      const hasPaid = await hasUserPaidFirstVietqr(Number(userId));
+    let userTier = null;
+
+    if (targetUserId) {
+      const [hasPaid, stats] = await Promise.all([
+        hasUserPaidFirstVietqr(targetUserId),
+        getUserSpendingStats(targetUserId),
+      ]);
       isNewUser = !hasPaid;
+      userTier = getMembershipTier(stats.totalSpent).tier;
     }
 
     const result = validateCoupon(
       code,
       Number(subtotal) || 0,
       paymentMethod || 'Sepay',
-      isNewUser
+      isNewUser,
+      userTier
     );
 
     if (!result.valid) {
@@ -39,8 +51,9 @@ export async function POST(request: NextRequest) {
       coupon: result.coupon,
     });
   } catch (error: any) {
+    console.error('Coupon validation error:', error);
     return NextResponse.json(
-      { success: false, message: error.message || 'Lỗi kiểm tra mã giảm giá' },
+      { success: false, message: 'Đã xảy ra lỗi khi kiểm tra mã giảm giá' },
       { status: 500 }
     );
   }

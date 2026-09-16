@@ -3,6 +3,18 @@ import { updateOrderStatus, getOrderByCode } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
+    // Disable payment simulation in production environment (C10)
+    const isSimulationAllowed = 
+      process.env.NODE_ENV !== 'production' && 
+      process.env.NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION === 'true';
+
+    if (!isSimulationAllowed) {
+      return NextResponse.json(
+        { success: false, message: 'Chức năng giả lập thanh toán bị vô hiệu hóa trong môi trường thực tế' },
+        { status: 403 }
+      );
+    }
+
     const { orderCode, amount } = await request.json();
 
     if (!orderCode) {
@@ -14,7 +26,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Đơn hàng không tồn tại' }, { status: 404 });
     }
 
-    // Keep order in Pending (Wait for Admin to confirm to Processing)
+    if (order.status === 'Cancelled') {
+      return NextResponse.json({ success: false, message: 'Không thể thanh toán cho đơn hàng đã bị hủy' }, { status: 400 });
+    }
+
     await updateOrderStatus(orderCode, 'Pending', 'Paid');
 
     return NextResponse.json({
@@ -24,6 +39,7 @@ export async function POST(request: NextRequest) {
       paidAmount: amount || order.totalAmount,
     });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Simulate payment error:', error);
+    return NextResponse.json({ success: false, message: 'Đã xảy ra lỗi khi giả lập thanh toán' }, { status: 500 });
   }
 }

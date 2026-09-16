@@ -37,6 +37,7 @@ export default function AddressAutocompleteInput({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Sync internal input value with outer prop
   useEffect(() => {
@@ -45,7 +46,7 @@ export default function AddressAutocompleteInput({
     }
   }, [value]);
 
-  // Handle click outside to close dropdown
+  // Handle click outside to close dropdown & cleanup timers on unmount
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -55,6 +56,12 @@ export default function AddressAutocompleteInput({
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
   }, []);
 
@@ -68,6 +75,9 @@ export default function AddressAutocompleteInput({
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
 
     if (!text.trim() || text.trim().length < 2) {
       setPredictions([]);
@@ -77,15 +87,21 @@ export default function AddressAutocompleteInput({
 
     setIsSearching(true);
     debounceTimerRef.current = setTimeout(async () => {
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
       try {
-        const res = await fetch(`/api/goong/autocomplete?input=${encodeURIComponent(text.trim())}`);
+        const res = await fetch(`/api/goong/autocomplete?input=${encodeURIComponent(text.trim())}`, {
+          signal: controller.signal,
+        });
         const data = await res.json();
         if (data.success && Array.isArray(data.predictions)) {
           setPredictions(data.predictions);
           setIsOpen(true);
         }
-      } catch (err) {
-        console.error('Error fetching autocomplete:', err);
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error('Error fetching autocomplete:', err);
+        }
       } finally {
         setIsSearching(false);
       }
@@ -115,26 +131,23 @@ export default function AddressAutocompleteInput({
     }
   };
 
-  // When user selects a prediction from the dropdown
-  const handleSelectPrediction = (item: GoongPrediction) => {
-    const selectedText = item.description || item.main_text;
-    setInputValue(selectedText);
-    onChange(selectedText);
+  const handleSelectPrediction = (p: GoongPrediction) => {
+    const selected = p.description || p.main_text;
+    setInputValue(selected);
+    onChange(selected);
     setIsOpen(false);
     setPredictions([]);
-    calculateDistance({
-      placeId: item.place_id,
-      address: selectedText,
-    });
+    setSelectedIndex(-1);
+    calculateDistance({ placeId: p.place_id, address: selected });
   };
 
-  // Clear input
   const handleClear = () => {
     setInputValue('');
     onChange('');
     setPredictions([]);
-    setDistanceInfo(null);
     setIsOpen(false);
+    setDistanceInfo(null);
+    setSelectedIndex(-1);
   };
 
   // Keyboard navigation
@@ -194,6 +207,10 @@ export default function AddressAutocompleteInput({
           }}
           onBlur={handleBlur}
           placeholder={placeholder}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={isOpen}
+          aria-controls="address-predictions-list"
           className="w-full h-11 pl-11 pr-10 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition placeholder:text-gray-400"
         />
 
@@ -206,6 +223,7 @@ export default function AddressAutocompleteInput({
               onClick={handleClear}
               className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition"
               title="Xóa"
+              aria-label="Xóa địa chỉ"
             >
               <X className="w-4 h-4" />
             </button>
@@ -213,14 +231,20 @@ export default function AddressAutocompleteInput({
         </div>
       </div>
 
-      {/* Autocomplete Predictions Dropdown: only results, no headers */}
+      {/* Autocomplete Predictions Dropdown */}
       {isOpen && predictions.length > 0 && (
-        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-[#dddddd] rounded-[8px] shadow-lg max-h-64 overflow-y-auto divide-y divide-gray-100">
+        <div
+          id="address-predictions-list"
+          role="listbox"
+          className="absolute z-50 left-0 right-0 mt-1 bg-white border border-[#dddddd] rounded-[8px] shadow-lg max-h-64 overflow-y-auto divide-y divide-gray-100"
+        >
           {predictions.map((p, idx) => {
             const isSelected = idx === selectedIndex;
             return (
               <div
                 key={p.place_id || idx}
+                role="option"
+                aria-selected={isSelected}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   handleSelectPrediction(p);
@@ -261,7 +285,7 @@ export default function AddressAutocompleteInput({
         </div>
       )}
 
-      {/* Compact Distance & Fee Bar: only distance and shipping fee */}
+      {/* Compact Distance & Fee Bar */}
       {distanceInfo && !isCalculating && (
         <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border border-gray-200 rounded-[6px] text-[12px]">
           <div className="flex items-center gap-1.5 text-gray-600">

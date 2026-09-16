@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: error.message || 'Lỗi khi tìm kiếm địa chỉ',
+        message: 'Lỗi khi tìm kiếm địa chỉ',
         predictions: [],
       },
       { status: 500 }

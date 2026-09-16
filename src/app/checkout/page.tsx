@@ -29,7 +29,7 @@ import { DistanceCalculationResult } from '@/lib/goong';
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, totalPrice, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, isLoading, getAuthHeader } = useAuth();
 
   const [customerName, setCustomerName] = useState(user?.fullName || '');
   const [customerPhone, setCustomerPhone] = useState(user?.phone || '');
@@ -53,14 +53,14 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (user?.id) {
-      fetch(`/api/user/promo-status?userId=${user.id}`)
+      fetch(`/api/user/promo-status?userId=${user.id}`, { headers: getAuthHeader() })
         .then((r) => r.json())
         .then((d) => {
           if (d.success) setIsNewUser(Boolean(d.isNewUser));
         })
         .catch(() => {});
 
-      fetch(`/api/user/profile?userId=${user.id}`)
+      fetch(`/api/user/profile?userId=${user.id}`, { headers: getAuthHeader() })
         .then((r) => r.json())
         .then((d) => {
           if (d.success && d.data?.tier) setTierInfo(d.data.tier);
@@ -123,6 +123,15 @@ export default function CheckoutPage() {
   const walletDeduction = useWallet && walletBalance > 0 ? Math.min(walletBalance, totalBeforeWallet) : 0;
   const finalTotal = Math.max(0, totalBeforeWallet - walletDeduction);
   const isFullyCoveredByWallet = useWallet && walletDeduction > 0 && finalTotal === 0;
+
+  if (isLoading) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-24 text-center">
+        <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#e31837]" />
+        <p className="text-[14px] text-[#41454d] mt-3">Đang tải thông tin...</p>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -204,7 +213,7 @@ export default function CheckoutPage() {
 
       const res = await fetch('/api/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         body: JSON.stringify(payload),
       });
 

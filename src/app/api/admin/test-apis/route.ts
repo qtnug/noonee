@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCategories } from '@/lib/db';
 import { getGoongApiKey } from '@/lib/goong';
+import { requireAdmin, AuthError } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,8 +18,17 @@ export interface ApiTestResult {
 }
 
 export async function GET(request: NextRequest) {
+  try {
+    requireAdmin(request);
+  } catch (authErr) {
+    if (authErr instanceof AuthError) {
+      return NextResponse.json({ success: false, message: authErr.message }, { status: authErr.status });
+    }
+    throw authErr;
+  }
+
   const { searchParams } = new URL(request.url);
-  const target = searchParams.get('target'); // optional: test single api or all
+  const target = searchParams.get('target');
 
   const results: ApiTestResult[] = [];
 
@@ -28,28 +38,29 @@ export async function GET(request: NextRequest) {
     try {
       const cats = await getCategories();
       const latency = Date.now() - start;
+      const host = process.env.SQLSERVER_HOST || 'Configured SQL Server';
       results.push({
         id: 'database',
-        name: 'Microsoft SQL Server (Cloud Database)',
+        name: 'Microsoft SQL Server (Database)',
         category: 'Database',
         status: 'online',
         latencyMs: latency,
         statusCode: 200,
         details: `Truy vấn thành công ${cats.length} danh mục. Kết nối cơ sở dữ liệu ổn định.`,
-        endpoint: 'db68391.public.databaseasp.net:1433',
+        endpoint: host,
         lastTested: new Date().toLocaleTimeString('vi-VN'),
       });
     } catch (err: any) {
       const latency = Date.now() - start;
       results.push({
         id: 'database',
-        name: 'Microsoft SQL Server (Cloud Database)',
+        name: 'Microsoft SQL Server (Database)',
         category: 'Database',
         status: 'warning',
         latencyMs: latency,
         statusCode: 500,
-        details: `Lỗi kết nối hoặc dùng bộ nhớ đệm: ${err.message}`,
-        endpoint: 'db68391.public.databaseasp.net:1433',
+        details: 'Không thể kết nối CSDL, hệ thống đang dùng bộ nhớ đệm dự phòng.',
+        endpoint: 'SQL Server Database',
         lastTested: new Date().toLocaleTimeString('vi-VN'),
       });
     }
@@ -73,8 +84,8 @@ export async function GET(request: NextRequest) {
             status: 'online',
             latencyMs: latency,
             statusCode: res.status,
-            details: `API hoạt động chuẩn xác. Đã test gợi ý thành công (${data.predictions?.length || 0} kết quả).`,
-            endpoint: 'rsapi.goong.io/Place/AutoComplete',
+            details: `API hoạt động chuẩn xác. Đã kiểm tra gợi ý địa chỉ thành công (${data.predictions?.length || 0} kết quả).`,
+            endpoint: 'rsapi.goong.io',
             lastTested: new Date().toLocaleTimeString('vi-VN'),
           });
         } else {
@@ -85,8 +96,8 @@ export async function GET(request: NextRequest) {
             status: 'warning',
             latencyMs: latency,
             statusCode: res.status,
-            details: `Phản hồi từ Goong: ${data.error_message || data.status || 'Chưa hợp lệ'} (Hệ thống tự động kích hoạt bộ dự phòng).`,
-            endpoint: 'rsapi.goong.io/Place/AutoComplete',
+            details: `Phản hồi từ Goong: ${data.error_message || data.status || 'Chưa hợp lệ'}. Hệ thống tự động kích hoạt bộ định tuyến dự phòng.`,
+            endpoint: 'rsapi.goong.io',
             lastTested: new Date().toLocaleTimeString('vi-VN'),
           });
         }
@@ -98,7 +109,7 @@ export async function GET(request: NextRequest) {
           category: 'Maps & Routing',
           status: 'warning',
           latencyMs: latency,
-          details: `Lỗi mạng khi gọi Goong API: ${e.message}`,
+          details: 'Không thể kết nối tới Goong API, đang sử dụng bộ định tuyến dự phòng.',
           endpoint: 'rsapi.goong.io',
           lastTested: new Date().toLocaleTimeString('vi-VN'),
         });
@@ -111,7 +122,7 @@ export async function GET(request: NextRequest) {
         status: 'online',
         latencyMs: 1,
         statusCode: 200,
-        details: 'Đang chạy chế độ Dự phòng Thông minh (Hanoi Built-in Geocoding & Haversine Router).',
+        details: 'Đang chạy chế độ Dự phòng Nội bộ (Hanoi Built-in Geocoding & Haversine Router).',
         endpoint: 'Local Routing Engine',
         lastTested: new Date().toLocaleTimeString('vi-VN'),
       });
@@ -121,36 +132,47 @@ export async function GET(request: NextRequest) {
   // 3. Test Sepay VietQR Payment Gateway
   if (!target || target === 'sepay') {
     const start = Date.now();
-    const bank = process.env.SEPAY_BANK_NAME || 'MB';
-    const acc = process.env.SEPAY_BANK_ACCOUNT || '0822123346';
-    const name = process.env.SEPAY_ACCOUNT_NAME || 'HOANG KHOI NGUYEN';
+    const bank = process.env.SEPAY_BANK_NAME;
+    const acc = process.env.SEPAY_BANK_ACCOUNT;
 
-    try {
-      // Test generating VietQR image endpoint from VietQR.io
-      const qrTestUrl = `https://img.vietqr.io/image/${bank}-${acc}-compact.png?amount=10000&addInfo=TEST`;
-      const res = await fetch(qrTestUrl, { method: 'HEAD' });
-      const latency = Date.now() - start;
+    if (bank && acc) {
+      try {
+        const qrTestUrl = `https://img.vietqr.io/image/${bank}-${acc}-compact.png?amount=10000&addInfo=TEST`;
+        const res = await fetch(qrTestUrl, { method: 'HEAD' });
+        const latency = Date.now() - start;
+        results.push({
+          id: 'sepay',
+          name: 'Cổng thanh toán Sepay (VietQR)',
+          category: 'Payment Gateway',
+          status: 'online',
+          latencyMs: latency,
+          statusCode: res.status,
+          details: `Cổng thanh toán VietQR sẵn sàng (Ngân hàng: ${bank}).`,
+          endpoint: 'api.vietqr.io',
+          lastTested: new Date().toLocaleTimeString('vi-VN'),
+        });
+      } catch (e: any) {
+        const latency = Date.now() - start;
+        results.push({
+          id: 'sepay',
+          name: 'Cổng thanh toán Sepay (VietQR)',
+          category: 'Payment Gateway',
+          status: 'warning',
+          latencyMs: latency,
+          details: 'Không thể kiểm tra dịch vụ VietQR ngoại vi.',
+          endpoint: 'Sepay Webhook Gateway',
+          lastTested: new Date().toLocaleTimeString('vi-VN'),
+        });
+      }
+    } else {
       results.push({
         id: 'sepay',
         name: 'Cổng thanh toán Sepay (VietQR)',
         category: 'Payment Gateway',
-        status: 'online',
-        latencyMs: latency,
-        statusCode: res.status,
-        details: `Cổng thanh toán sẵn sàng (Hỗ trợ song song Sandbox & Giao dịch thực tế qua ngân hàng ${bank} - ${acc} - ${name}).`,
-        endpoint: `api.vietqr.io / ${bank}`,
-        lastTested: new Date().toLocaleTimeString('vi-VN'),
-      });
-    } catch (e: any) {
-      const latency = Date.now() - start;
-      results.push({
-        id: 'sepay',
-        name: 'Cổng thanh toán Sepay (VietQR)',
-        category: 'Payment Gateway',
-        status: 'online',
-        latencyMs: latency,
-        details: `Hệ thống VietQR nội bộ sẵn sàng (${bank} - ${acc}).`,
-        endpoint: 'Sepay Webhook Gateway',
+        status: 'warning',
+        latencyMs: 0,
+        details: 'Chưa cấu hình biến môi trường SEPAY_BANK_NAME hoặc SEPAY_BANK_ACCOUNT trong .env.local.',
+        endpoint: 'Sepay VietQR',
         lastTested: new Date().toLocaleTimeString('vi-VN'),
       });
     }
@@ -159,32 +181,45 @@ export async function GET(request: NextRequest) {
   // 4. Test Cloudinary Media API
   if (!target || target === 'cloudinary') {
     const start = Date.now();
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'h2776qfi';
-    try {
-      const cloudPingUrl = `https://res.cloudinary.com/${cloudName}/image/upload/sample.jpg`;
-      const res = await fetch(cloudPingUrl, { method: 'HEAD' });
-      const latency = Date.now() - start;
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    if (cloudName) {
+      try {
+        const cloudPingUrl = `https://res.cloudinary.com/${cloudName}/image/upload/sample.jpg`;
+        const res = await fetch(cloudPingUrl, { method: 'HEAD' });
+        const latency = Date.now() - start;
+        results.push({
+          id: 'cloudinary',
+          name: 'Cloudinary CDN (Lưu trữ ảnh)',
+          category: 'Media CDN',
+          status: 'online',
+          latencyMs: latency,
+          statusCode: res.status,
+          details: 'Kết nối CDN Cloudinary hoạt động bình thường. Sẵn sàng upload ảnh món ăn.',
+          endpoint: 'res.cloudinary.com',
+          lastTested: new Date().toLocaleTimeString('vi-VN'),
+        });
+      } catch (e: any) {
+        const latency = Date.now() - start;
+        results.push({
+          id: 'cloudinary',
+          name: 'Cloudinary CDN (Lưu trữ ảnh)',
+          category: 'Media CDN',
+          status: 'warning',
+          latencyMs: latency,
+          details: 'Lỗi kết nối kiểm tra CDN Cloudinary.',
+          endpoint: 'res.cloudinary.com',
+          lastTested: new Date().toLocaleTimeString('vi-VN'),
+        });
+      }
+    } else {
       results.push({
         id: 'cloudinary',
-        name: 'Cloudinary CDN (Lưu trữ ảnh & Crop 1:1)',
-        category: 'Media CDN',
-        status: 'online',
-        latencyMs: latency,
-        statusCode: res.status,
-        details: `Kết nối CDN Cloudinary (${cloudName}) hoạt động tốc độ cao. Sẵn sàng upload ảnh món ăn.`,
-        endpoint: `res.cloudinary.com/${cloudName}`,
-        lastTested: new Date().toLocaleTimeString('vi-VN'),
-      });
-    } catch (e: any) {
-      const latency = Date.now() - start;
-      results.push({
-        id: 'cloudinary',
-        name: 'Cloudinary CDN (Lưu trữ ảnh & Crop 1:1)',
+        name: 'Cloudinary CDN (Lưu trữ ảnh)',
         category: 'Media CDN',
         status: 'warning',
-        latencyMs: latency,
-        details: `Lỗi kết nối CDN Cloudinary: ${e.message}`,
-        endpoint: `res.cloudinary.com/${cloudName}`,
+        latencyMs: 0,
+        details: 'Chưa cấu hình CLOUDINARY_CLOUD_NAME trong .env.local.',
+        endpoint: 'Cloudinary CDN',
         lastTested: new Date().toLocaleTimeString('vi-VN'),
       });
     }

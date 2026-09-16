@@ -25,7 +25,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
   }
 
   // 2. User is logged in AND is admin -> Render Admin UI
-  if (user && user.role === 'admin') {
+  if (user && user.role === 'admin' && user.token) {
     return <>{children}</>;
   }
 
