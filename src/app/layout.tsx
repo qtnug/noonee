@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import localFont from 'next/font/local';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -6,6 +7,12 @@ import CartDrawer from '@/components/CartDrawer';
 import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
+
+const friemFont = localFont({
+  src: '../../public/fonts/Friem-Regular.ttf',
+  variable: '--font-friem',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'NooNee Food - Quán Ăn Online Chuẩn Vị & Đặt Món Nhanh',
@@ -18,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi">
+    <html lang="vi" className={friemFont.variable}>
       <body className="flex flex-col min-h-screen">
         <AuthProvider>
           <FavoritesProvider>

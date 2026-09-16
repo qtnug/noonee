@@ -20,7 +20,7 @@ export default function Footer() {
           {/* Col 1: Brand & Description */}
           <div className="space-y-3">
             <Link href="/" className="inline-block">
-              <span className="text-xl font-semibold tracking-tight text-[#181d26]">
+              <span className="font-friem text-3xl tracking-wide text-[#181d26]">
                 NooNee<span className="text-[#e31837]">.</span>
               </span>
             </Link>

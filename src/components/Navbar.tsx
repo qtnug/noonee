@@ -55,7 +55,7 @@ export default function Navbar() {
         {/* Left: Brand Wordmark + Primary Nav */}
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 group">
-            <span className="font-bold text-2xl tracking-tight text-[#181d26]">
+            <span className="font-friem text-3xl tracking-wide text-[#181d26]">
               NooNee<span className="text-[#e31837]">.</span>
             </span>
           </Link>

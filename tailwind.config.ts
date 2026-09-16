@@ -59,6 +59,7 @@ const config: Config = {
       fontFamily: {
         sans: ["Haas", "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
         display: ["Haas Groot Disp", "Haas", "Inter", "sans-serif"],
+        friem: ["var(--font-friem)", "Friem", "cursive", "sans-serif"],
       },
       spacing: {
         section: "96px",

@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Friem';
+  src: url('/fonts/Friem-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-friem {
+  font-family: 'Friem', var(--font-friem), cursive, sans-serif;
+  letter-spacing: 0.04em;
+}
+
 @layer base {
   body {
     background-color: #ffffff;

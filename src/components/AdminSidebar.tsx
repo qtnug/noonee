@@ -37,8 +37,8 @@ export default function AdminSidebar() {
           <ShieldCheck className="w-4 h-4" />
         </div>
         <div>
-          <h1 className="text-[#181d26] font-medium text-[15px] tracking-tight leading-tight">
-            NooNee Workspace
+          <h1 className="text-[#181d26] font-medium text-[16px] tracking-tight leading-tight">
+            <span className="font-friem text-[18px]">NooNee</span> Workspace
           </h1>
           <span className="text-[11px] font-medium uppercase tracking-wider text-[#9297a0]">
             Cổng quản trị

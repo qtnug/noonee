@@ -132,7 +132,7 @@ function LoginContent() {
         {/* Brand */}
         <div className="text-center space-y-2">
           <Link href="/" className="inline-block">
-            <span className="text-2xl font-semibold tracking-tight text-[#181d26]">
+            <span className="font-friem text-3xl tracking-wide text-[#181d26]">
               NooNee<span className="text-[#e31837]">.</span>
             </span>
           </Link>
