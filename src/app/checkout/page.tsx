@@ -606,7 +606,7 @@ export default function CheckoutPage() {
                         {appliedCoupon?.code === 'FREESHIP'
                           ? '(Voucher FREESHIP)'
                           : tierInfo && tierInfo.shippingDiscount >= baseShippingFee
-                          ? `(${tierInfo.badge})`
+                          ? `(Đã giảm ${formatVND(tierInfo.shippingDiscount)} ${tierInfo.badge})`
                           : ''}
                       </span>
                     </div>

@@ -168,9 +168,9 @@ export function getMembershipTier(totalSpent: number): MembershipTierInfo {
     nextSpent: 3500000,
     progress: 100,
     amountNeeded: 0,
-    shippingDiscount: 25000, // Freeship tối đa 25.000đ
+    shippingDiscount: 25000, // Giảm 25.000đ phí vận chuyển
     benefits: [
-      'Miễn phí vận chuyển 100% (Freeship tối đa 25.000 ₫/đơn)',
+      'Giảm ngay 25.000 ₫ phí vận chuyển cho mỗi đơn hàng',
       'Tặng Voucher độc quyền DIAMOND50 giảm 50.000 ₫ đơn từ 200k',
       'Tặng Voucher DIAMONDVIP giảm 20% đơn từ 250k',
       'Ưu tiên giao hàng siêu tốc và hỗ trợ CSKH VIP',

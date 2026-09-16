@@ -384,7 +384,7 @@ function ProfileContent() {
                   {tier.shippingDiscount > 0 ? `-${formatVND(tier.shippingDiscount)} / đơn` : 'Chuẩn giá gốc'}
                 </div>
                 <p className="text-[12px] text-[#41454d]">
-                  {tier.shippingDiscount >= 25000 ? 'Miễn phí ship 100% mọi đơn' : 'Tự động trừ khi thanh toán'}
+                  {tier.shippingDiscount > 0 ? 'Tự động trừ trực tiếp khi đặt món' : 'Chưa có ưu đãi vận chuyển'}
                 </p>
               </div>
             </div>
