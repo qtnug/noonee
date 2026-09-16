@@ -23,6 +23,7 @@ import {
   EyeOff,
   Clock,
   ArrowRight,
+  Wallet,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
@@ -44,6 +45,7 @@ function ProfileContent() {
     stats: { totalSpent: number; orderCount: number; completedCount: number };
     tier: MembershipTierInfo;
   } | null>(null);
+  const [walletBalance, setWalletBalance] = useState<number>(user?.walletBalance || 0);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   // Products for favorites tab
@@ -91,6 +93,9 @@ function ProfileContent() {
               stats: data.data.stats,
               tier: data.data.tier,
             });
+            if (data.data.user?.walletBalance !== undefined) {
+              setWalletBalance(Number(data.data.user.walletBalance) || 0);
+            }
           }
         } catch (err) {
           console.error('Lỗi tải thông tin chi tiêu:', err);
@@ -276,7 +281,11 @@ function ProfileContent() {
             </div>
 
             {/* Quick Actions */}
-            <div className="flex items-center gap-2 self-start sm:self-auto">
+            <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+              <div className="flex items-center gap-1.5 h-10 px-3.5 rounded-[8px] bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe] text-[13px] font-semibold shadow-2xs">
+                <Wallet className="w-4 h-4 text-[#2563eb]" />
+                <span>Ví: {formatVND(walletBalance)}</span>
+              </div>
               <Link
                 href="/orders"
                 className="inline-flex items-center gap-1.5 h-10 px-4 rounded-[8px] bg-[#fff1f2] hover:bg-[#ffe4e6] text-[#e31837] border border-[#fecdd3] text-[13px] font-medium transition"
@@ -343,7 +352,7 @@ function ProfileContent() {
         {activeTab === 'tier' && (
           <div className="space-y-8">
             {/* Stat Cards Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
               {/* Card 1: Total Spent */}
               <div className="bg-white rounded-[12px] p-5 border border-[#dddddd] shadow-xs space-y-2">
                 <div className="flex items-center justify-between text-[#9297a0]">
@@ -354,11 +363,27 @@ function ProfileContent() {
                   {formatVND(stats.totalSpent)}
                 </div>
                 <p className="text-[12px] text-[#41454d]">
-                  Tích lũy từ {stats.completedCount} đơn hàng thành công
+                  Tích lũy từ {stats.completedCount} đơn thành công
                 </p>
               </div>
 
-              {/* Card 2: Current Tier */}
+              {/* Card 2: Virtual Wallet */}
+              <div className="bg-gradient-to-br from-white to-[#eff6ff] rounded-[12px] p-5 border border-[#bfdbfe] shadow-xs space-y-2">
+                <div className="flex items-center justify-between text-[#2563eb]">
+                  <span className="text-[12px] font-semibold uppercase tracking-wider">Số dư ví NooNee</span>
+                  <Wallet className="w-4 h-4 text-[#2563eb]" />
+                </div>
+                <div className="text-2xl sm:text-3xl font-bold text-[#2563eb]">
+                  {formatVND(walletBalance)}
+                </div>
+                <p className="text-[12px] text-[#41454d]">
+                  {walletBalance > 0
+                    ? 'Dùng như tiền thật, trừ thẳng vào đơn'
+                    : 'Hoàn tiền tự động khi đơn bị hủy'}
+                </p>
+              </div>
+
+              {/* Card 3: Current Tier */}
               <div className="bg-white rounded-[12px] p-5 border border-[#dddddd] shadow-xs space-y-2">
                 <div className="flex items-center justify-between text-[#9297a0]">
                   <span className="text-[12px] font-semibold uppercase tracking-wider">Hạng hiện tại</span>
@@ -367,24 +392,24 @@ function ProfileContent() {
                 <div className="text-2xl sm:text-3xl font-bold text-[#181d26]">
                   {tier.name}
                 </div>
-                <p className="text-[12px] text-[#41454d]">
+                <p className="text-[12px] text-[#41454d] truncate">
                   {tier.nextTier
-                    ? `Cần tiêu thêm ${formatVND(tier.amountNeeded)} để thăng hạng`
+                    ? `Cần tiêu thêm ${formatVND(tier.amountNeeded)}`
                     : 'Đã đạt thứ hạng cao nhất!'}
                 </p>
               </div>
 
-              {/* Card 3: Shipping Discount */}
+              {/* Card 4: Shipping Discount */}
               <div className="bg-white rounded-[12px] p-5 border border-[#dddddd] shadow-xs space-y-2">
                 <div className="flex items-center justify-between text-[#9297a0]">
-                  <span className="text-[12px] font-semibold uppercase tracking-wider">Ưu đãi phí giao hàng</span>
+                  <span className="text-[12px] font-semibold uppercase tracking-wider">Ưu đãi phí ship</span>
                   <Truck className="w-4 h-4 text-[#e31837]" />
                 </div>
                 <div className="text-2xl sm:text-3xl font-bold text-[#16a34a]">
-                  {tier.shippingDiscount > 0 ? `-${formatVND(tier.shippingDiscount)} / đơn` : 'Chuẩn giá gốc'}
+                  {tier.shippingDiscount > 0 ? `-${formatVND(tier.shippingDiscount)}` : 'Giá gốc'}
                 </div>
                 <p className="text-[12px] text-[#41454d]">
-                  {tier.shippingDiscount > 0 ? 'Tự động trừ trực tiếp khi đặt món' : 'Chưa có ưu đãi vận chuyển'}
+                  {tier.shippingDiscount > 0 ? 'Tự động trừ trực tiếp khi đặt' : 'Chưa có ưu đãi vận chuyển'}
                 </p>
               </div>
             </div>

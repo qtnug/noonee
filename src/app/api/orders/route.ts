@@ -77,24 +77,48 @@ export async function POST(request: NextRequest) {
 
     const shippingFee = typeof body.shippingFee === 'number' ? Math.max(0, body.shippingFee) : 0;
     const couponDiscountExcludingFreeship = validCouponCode === 'FREESHIP' ? 0 : discountAmount;
-    const totalAmount = Math.max(0, subtotal - couponDiscountExcludingFreeship + shippingFee);
+    const totalBeforeWallet = Math.max(0, subtotal - couponDiscountExcludingFreeship + shippingFee);
+
+    // Handle Virtual Wallet Balance Deduction
+    let walletAmountUsed = 0;
+    const parsedUserId = parseInt(String(userId));
+    if (body.useWallet && parsedUserId) {
+      const { getUserWalletBalance, deductUserWallet } = await import('@/lib/db');
+      const currentWallet = await getUserWalletBalance(parsedUserId);
+      if (currentWallet > 0) {
+        walletAmountUsed = Math.min(currentWallet, totalBeforeWallet);
+        if (walletAmountUsed > 0) {
+          await deductUserWallet(parsedUserId, walletAmountUsed);
+        }
+      }
+    }
+
+    const finalAmountToPay = Math.max(0, totalBeforeWallet - walletAmountUsed);
+    const isFullyPaidByWallet = walletAmountUsed > 0 && finalAmountToPay === 0;
     const orderCode = generateOrderCode();
 
     const order = await createOrder({
       orderCode,
-      userId: parseInt(String(userId)),
+      userId: parsedUserId,
       customerName: String(customerName).trim(),
       customerPhone: String(customerPhone).trim(),
       deliveryAddress: String(deliveryAddress).trim(),
       notes: notes ? String(notes).trim() : '',
-      totalAmount,
+      totalAmount: finalAmountToPay,
       discountAmount,
       couponCode: validCouponCode,
-      paymentMethod: paymentMethod || 'Sepay',
+      paymentMethod: isFullyPaidByWallet ? 'Wallet' : (paymentMethod || 'Sepay'),
+      paymentStatus: isFullyPaidByWallet ? 'Paid' : 'Unpaid',
+      walletAmountUsed,
       items,
     });
 
-    return NextResponse.json({ success: true, data: order }, { status: 201 });
+    return NextResponse.json({ 
+      success: true, 
+      data: order,
+      fullyPaidByWallet: isFullyPaidByWallet,
+      walletAmountUsed,
+    }, { status: 201 });
   } catch (error: any) {
     console.error('Error in POST /api/orders:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

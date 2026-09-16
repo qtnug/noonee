@@ -264,15 +264,21 @@ export default function OrderTrackingPage() {
                 <h1 className="text-2xl font-normal text-[#181d26]">
                   Đơn hàng <span className="text-[#e31837] font-bold">#{order.orderCode}</span>
                 </h1>
-                <span
-                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-[4px] border ${
-                    order.paymentStatus === 'Paid'
-                      ? 'bg-[#f8fafc] text-[#006400] border-[#39bf45]'
-                      : 'bg-[#fff1f2] text-[#e31837] border-[#fecdd3]'
-                  }`}
-                >
-                  {order.paymentStatus === 'Paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
-                </span>
+                {order.status === 'Cancelled' ? (
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-[4px] border bg-[#fff1f2] text-[#e31837] border-[#fecdd3]">
+                    Đã hủy đơn
+                  </span>
+                ) : (
+                  <span
+                    className={`text-[11px] font-semibold px-2 py-0.5 rounded-[4px] border ${
+                      order.paymentStatus === 'Paid'
+                        ? 'bg-[#f8fafc] text-[#006400] border-[#39bf45]'
+                        : 'bg-[#fff1f2] text-[#e31837] border-[#fecdd3]'
+                    }`}
+                  >
+                    {order.paymentStatus === 'Paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                  </span>
+                )}
               </div>
               <p className="text-[13px] text-[#41454d] mt-0.5">
                 Thời gian đặt: {formatDate(order.createdAt)}
@@ -289,7 +295,7 @@ export default function OrderTrackingPage() {
               <span>Khiếu nại / Chat Quán</span>
             </button>
 
-            {order.paymentStatus === 'Unpaid' && order.paymentMethod === 'Sepay' && (
+            {order.status !== 'Cancelled' && order.paymentStatus === 'Unpaid' && order.paymentMethod === 'Sepay' && (
               <Link
                 href={`/payment/${order.orderCode}`}
                 className="h-10 px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white rounded-[6px] text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs"
@@ -301,52 +307,91 @@ export default function OrderTrackingPage() {
           </div>
         </div>
 
-        {/* Realtime Progress Stepper */}
-        <div className="bg-white rounded-[10px] p-6 sm:p-8 border border-[#dddddd] space-y-6 shadow-xs">
-          <h2 className="text-[16px] font-semibold text-[#181d26]">
-            Tiến độ giao hàng thời gian thực
-          </h2>
+        {/* Realtime Progress Stepper or Cancellation Banner */}
+        {order.status === 'Cancelled' ? (
+          <div className="bg-[#fff1f2] rounded-[10px] p-6 sm:p-8 border border-[#fecdd3] space-y-4 shadow-xs">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-[8px] bg-[#e31837] text-white flex items-center justify-center shrink-0 shadow-xs">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div className="flex-1 space-y-1.5">
+                <h2 className="text-lg font-bold text-[#e31837]">
+                  Đơn hàng này đã bị hủy
+                </h2>
+                {order.cancelReason ? (
+                  <p className="text-[14px] text-[#181d26]">
+                    <strong>Lý do từ quán:</strong> {order.cancelReason}
+                  </p>
+                ) : (
+                  <p className="text-[13px] text-[#41454d]">
+                    Đơn hàng đã được hủy bởi nhà hàng hoặc theo yêu cầu của quý khách.
+                  </p>
+                )}
 
-          <div className="grid grid-cols-4 gap-2 sm:gap-4 relative">
-            {steps.map((s, idx) => {
-              const Icon = s.icon;
-              const isFinished = idx <= currentStep;
-              const isCurrent = idx === currentStep;
-
-              return (
-                <div key={s.key} className="flex flex-col items-center text-center space-y-2">
-                  <div
-                    className={`w-11 h-11 rounded-[6px] flex items-center justify-center transition shadow-xs ${
-                      isCurrent
-                        ? 'bg-[#e31837] text-white animate-pulse'
-                        : isFinished
-                        ? 'bg-[#fff1f2] border border-[#fecdd3] text-[#e31837]'
-                        : 'bg-[#f8fafc] border border-[#dddddd] text-[#9297a0]'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
+                {order.refundStatus === 'Refunded' && (
+                  <div className="mt-3 p-3 bg-white rounded-[6px] border border-[#fecdd3] text-[13px] text-[#166534] font-medium flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#16a34a] shrink-0" />
+                    <span>
+                      Số tiền {formatVND(order.totalAmount + (order.walletAmountUsed || 0))} đã được hoàn trả 100% vào <strong>Số Dư Ví NooNee</strong> của bạn. Bạn có thể sử dụng trừ thẳng cho các đơn hàng tiếp theo!
+                    </span>
                   </div>
-                  <div>
-                    <h4
-                      className={`text-[13px] font-medium ${
+                )}
+
+                {order.couponCode && (
+                  <p className="text-[12px] text-[#41454d] mt-1">
+                    * Voucher ưu đãi <strong>{order.couponCode}</strong> đã được hoàn lại tài khoản của bạn.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-[10px] p-6 sm:p-8 border border-[#dddddd] space-y-6 shadow-xs">
+            <h2 className="text-[16px] font-semibold text-[#181d26]">
+              Tiến độ giao hàng thời gian thực
+            </h2>
+
+            <div className="grid grid-cols-4 gap-2 sm:gap-4 relative">
+              {steps.map((s, idx) => {
+                const Icon = s.icon;
+                const isFinished = idx <= currentStep;
+                const isCurrent = idx === currentStep;
+
+                return (
+                  <div key={s.key} className="flex flex-col items-center text-center space-y-2">
+                    <div
+                      className={`w-11 h-11 rounded-[6px] flex items-center justify-center transition shadow-xs ${
                         isCurrent
-                          ? 'text-[#e31837] font-bold'
+                          ? 'bg-[#e31837] text-white animate-pulse'
                           : isFinished
-                          ? 'text-[#181d26]'
-                          : 'text-[#9297a0]'
+                          ? 'bg-[#fff1f2] border border-[#fecdd3] text-[#e31837]'
+                          : 'bg-[#f8fafc] border border-[#dddddd] text-[#9297a0]'
                       }`}
                     >
-                      {s.label}
-                    </h4>
-                    <p className="text-[11px] text-[#9297a0] hidden sm:block mt-0.5">
-                      {s.desc}
-                    </p>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4
+                        className={`text-[13px] font-medium ${
+                          isCurrent
+                            ? 'text-[#e31837] font-bold'
+                            : isFinished
+                            ? 'text-[#181d26]'
+                            : 'text-[#9297a0]'
+                        }`}
+                      >
+                        {s.label}
+                      </h4>
+                      <p className="text-[11px] text-[#9297a0] hidden sm:block mt-0.5">
+                        {s.desc}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Details Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -410,6 +455,12 @@ export default function OrderTrackingPage() {
                     <span className="font-semibold">- {formatVND(order.discountAmount)}</span>
                   </div>
                 </>
+              ) : null}
+              {order.walletAmountUsed && order.walletAmountUsed > 0 ? (
+                <div className="flex justify-between text-[#2563eb]">
+                  <span>Đã trừ từ số dư ví:</span>
+                  <span className="font-semibold">- {formatVND(order.walletAmountUsed)}</span>
+                </div>
               ) : null}
               <div className="flex justify-between text-[15px] font-bold text-[#181d26] pt-3 border-t border-[#dddddd]">
                 <span>Tổng thanh toán:</span>

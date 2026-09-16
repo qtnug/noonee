@@ -14,7 +14,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Đơn hàng không tồn tại' }, { status: 404 });
     }
 
-    await updateOrderStatus(orderCode, 'Processing', 'Paid');
+    // Keep order in Pending (Wait for Admin to confirm to Processing)
+    await updateOrderStatus(orderCode, 'Pending', 'Paid');
 
     return NextResponse.json({
       success: true,

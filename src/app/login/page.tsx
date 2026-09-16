@@ -1,16 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { User, Lock, ArrowRight, Check, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, ArrowRight, Check, AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const searchParams = useSearchParams();
+  const { user, login } = useAuth();
 
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login';
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -20,6 +22,17 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Prevent logged in users from visiting login/register page
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') {
+        router.replace('/admin');
+      } else {
+        router.replace('/');
+      }
+    }
+  }, [user, router]);
 
   // Password strength calculation
   const hasMinLength = password.length >= 8;
@@ -103,6 +116,15 @@ export default function LoginPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (user) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin text-[#e31837]" />
+        <p className="text-[14px] text-gray-600 font-medium">Bạn đã đăng nhập. Đang chuyển hướng...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-16 bg-[#ffffff]">

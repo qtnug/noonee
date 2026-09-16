@@ -15,6 +15,7 @@ import {
   ChevronDown,
   ChevronUp,
   Award,
+  Wallet,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -47,6 +48,8 @@ export default function CheckoutPage() {
   const [showCouponsList, setShowCouponsList] = useState(false);
   const [isNewUser, setIsNewUser] = useState(true);
   const [tierInfo, setTierInfo] = useState<MembershipTierInfo | null>(null);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [useWallet, setUseWallet] = useState<boolean>(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -61,6 +64,9 @@ export default function CheckoutPage() {
         .then((r) => r.json())
         .then((d) => {
           if (d.success && d.data?.tier) setTierInfo(d.data.tier);
+          if (d.success && d.data?.user?.walletBalance !== undefined) {
+            setWalletBalance(Number(d.data.user.walletBalance) || 0);
+          }
         })
         .catch(() => {});
     }
@@ -112,7 +118,11 @@ export default function CheckoutPage() {
   const shippingFeeAfterMember = Math.max(0, baseShippingFee - memberShippingDiscount);
   const effectiveShippingFee = appliedCoupon?.code === 'FREESHIP' ? 0 : shippingFeeAfterMember;
   const couponDiscountExcludingFreeship = appliedCoupon?.code === 'FREESHIP' ? 0 : discountAmount;
-  const finalTotal = Math.max(0, totalPrice - couponDiscountExcludingFreeship + effectiveShippingFee);
+  const totalBeforeWallet = Math.max(0, totalPrice - couponDiscountExcludingFreeship + effectiveShippingFee);
+
+  const walletDeduction = useWallet && walletBalance > 0 ? Math.min(walletBalance, totalBeforeWallet) : 0;
+  const finalTotal = Math.max(0, totalBeforeWallet - walletDeduction);
+  const isFullyCoveredByWallet = useWallet && walletDeduction > 0 && finalTotal === 0;
 
   if (!user) {
     return (
@@ -174,9 +184,11 @@ export default function CheckoutPage() {
         customerPhone: customerPhone.trim(),
         deliveryAddress: deliveryAddress.trim(),
         notes: notes.trim(),
-        paymentMethod,
+        paymentMethod: isFullyCoveredByWallet ? 'Wallet' : paymentMethod,
         couponCode: appliedCoupon ? appliedCoupon.code : null,
         shippingFee: effectiveShippingFee,
+        useWallet: useWallet && walletDeduction > 0,
+        walletAmountUsed: walletDeduction,
         items: cart.map((it) => ({
           productId: it.product.id,
           productName: it.product.name,
@@ -205,7 +217,9 @@ export default function CheckoutPage() {
       clearCart();
 
       // Redirect based on payment method
-      if (paymentMethod === 'Sepay') {
+      if (data.fullyPaidByWallet || isFullyCoveredByWallet) {
+        router.push(`/orders/${data.data.orderCode}`);
+      } else if (paymentMethod === 'Sepay') {
         router.push(`/payment/${data.data.orderCode}`);
       } else {
         router.push(`/orders/${data.data.orderCode}`);
@@ -578,6 +592,38 @@ export default function CheckoutPage() {
                 </div>
               )}
 
+              {/* Virtual Wallet Box */}
+              {walletBalance > 0 && (
+                <div className="p-3.5 rounded-[8px] bg-gradient-to-r from-[#eff6ff] to-[#f0fdf4] border border-[#bfdbfe] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Wallet className="w-4 h-4 text-[#2563eb]" />
+                      <span className="text-[13px] font-semibold text-[#181d26]">Số dư ví ảo NooNee</span>
+                    </div>
+                    <span className="text-[13px] font-bold text-[#16a34a]">{formatVND(walletBalance)}</span>
+                  </div>
+                  <label className="flex items-center gap-2 text-[12px] text-[#333840] cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={useWallet}
+                      onChange={(e) => setUseWallet(e.target.checked)}
+                      className="w-4 h-4 text-[#e31837] rounded accent-[#e31837] cursor-pointer"
+                    />
+                    <span>Sử dụng số dư ví để trừ vào đơn này</span>
+                  </label>
+                  {useWallet && walletDeduction > 0 && (
+                    <div className="text-[11px] text-[#2563eb] font-medium bg-white/80 p-2 rounded border border-[#bfdbfe]">
+                      Đã trừ <strong>{formatVND(walletDeduction)}</strong> từ số dư ví.
+                      {isFullyCoveredByWallet && (
+                        <span className="block text-[#16a34a] font-semibold mt-0.5">
+                          ✓ Đơn hàng đã được thanh toán đủ 100% bằng ví!
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Totals Calculation */}
               <div className="space-y-2 pt-4 border-t border-[#fecdd3] text-[13px]">
                 <div className="flex justify-between text-[#41454d]">
@@ -626,6 +672,14 @@ export default function CheckoutPage() {
                     </div>
                   )}
                 </div>
+
+                {useWallet && walletDeduction > 0 && (
+                  <div className="flex justify-between text-[#2563eb] font-semibold">
+                    <span>Trừ từ số dư ví ảo</span>
+                    <span>- {formatVND(walletDeduction)}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between text-[16px] font-bold text-[#181d26] pt-3 border-t border-[#fecdd3]">
                   <span>Tổng thanh toán</span>
                   <span className="text-[#e31837] text-lg">{formatVND(finalTotal)}</span>
@@ -644,7 +698,13 @@ export default function CheckoutPage() {
                   </>
                 ) : (
                   <>
-                    <span>{paymentMethod === 'Sepay' ? 'Thanh toán qua VietQR' : 'Xác nhận đặt hàng'}</span>
+                    <span>
+                      {isFullyCoveredByWallet
+                        ? 'Thanh toán bằng số dư ví (0₫)'
+                        : paymentMethod === 'Sepay'
+                        ? 'Thanh toán qua VietQR'
+                        : 'Xác nhận đặt hàng'}
+                    </span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}

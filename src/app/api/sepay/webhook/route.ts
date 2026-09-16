@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
       console.warn(`[Sepay] Amount paid (${transferAmount}) is less than order total (${order.totalAmount})`);
     }
 
-    // Update order status to Processing & Paid
-    await updateOrderStatus(orderCode, 'Processing', 'Paid');
+    // Update order payment status to Paid, but keep status as Pending (Wait for Admin to confirm to Processing)
+    await updateOrderStatus(orderCode, 'Pending', 'Paid');
 
     return NextResponse.json({
       success: true,

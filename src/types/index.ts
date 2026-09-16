@@ -6,6 +6,7 @@ export interface User {
   phone?: string | null;
   address?: string | null;
   role: 'admin' | 'customer';
+  walletBalance?: number;
   createdAt?: string;
 }
 
@@ -51,7 +52,7 @@ export interface CartItem {
 
 export type OrderStatus = 'Pending' | 'Processing' | 'Delivering' | 'Completed' | 'Cancelled';
 export type PaymentStatus = 'Unpaid' | 'Paid' | 'Failed';
-export type PaymentMethod = 'Sepay' | 'COD';
+export type PaymentMethod = 'Sepay' | 'COD' | 'Wallet';
 
 export interface OrderItem {
   id?: number;
@@ -79,6 +80,9 @@ export interface Order {
   status: OrderStatus;
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
+  cancelReason?: string | null;
+  walletAmountUsed?: number;
+  refundStatus?: 'None' | 'Refunded';
   createdAt: string;
   updatedAt: string;
   items?: OrderItem[];

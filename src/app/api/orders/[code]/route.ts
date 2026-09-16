@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOrderByCode, updateOrderStatus } from '@/lib/db';
+import { getOrderByCode, updateOrderStatus, cancelOrder } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,9 +24,21 @@ export async function PATCH(
 ) {
   try {
     const body = await request.json();
-    const { status, paymentStatus } = body;
+    const { status, paymentStatus, cancelReason, action } = body;
 
-    const success = await updateOrderStatus(params.code, status, paymentStatus);
+    if (status === 'Cancelled' || action === 'cancel') {
+      const result = await cancelOrder(params.code, cancelReason || 'Hủy theo yêu cầu');
+      if (!result.success) {
+        return NextResponse.json({ success: false, message: result.message }, { status: 400 });
+      }
+      return NextResponse.json({ 
+        success: true, 
+        message: result.message, 
+        refundedAmount: result.refundedAmount 
+      });
+    }
+
+    const success = await updateOrderStatus(params.code, status, paymentStatus, cancelReason);
     return NextResponse.json({ success });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
