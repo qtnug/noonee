@@ -3,17 +3,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   MapPin,
-  Search,
   Loader2,
   X,
   Navigation,
-  Clock,
-  Bike,
-  Sparkles,
-  Info,
-  CheckCircle2,
 } from 'lucide-react';
-import { GoongPrediction, DistanceCalculationResult, STORE_ADDRESS } from '@/lib/goong';
+import { GoongPrediction, DistanceCalculationResult } from '@/lib/goong';
 import { formatVND } from '@/lib/utils';
 
 interface Props {
@@ -25,19 +19,11 @@ interface Props {
   disabled?: boolean;
 }
 
-const QUICK_PLACES = [
-  { label: 'Gần quán (Yên Lãng)', query: '120 Phố Yên Lãng, Đống Đa' },
-  { label: 'ĐH Thủy Lợi (Tây Sơn)', query: 'Đại học Thủy Lợi, 175 Tây Sơn' },
-  { label: 'Royal City (Nguyễn Trãi)', query: 'Royal City, 72A Nguyễn Trãi' },
-  { label: 'Keangnam 72 (Phạm Hùng)', query: 'Keangnam Landmark 72, Phạm Hùng' },
-  { label: 'Bách Khoa (Đại Cồ Việt)', query: 'Đại học Bách Khoa Hà Nội' },
-];
-
 export default function AddressAutocompleteInput({
   value,
   onChange,
   onDistanceCalculated,
-  placeholder = 'Nhập số nhà, tên đường, phường/xã (VD: 120 Yên Lãng, Đống Đa)...',
+  placeholder = 'Nhập số nhà, tên đường, phường/xã...',
   required = false,
   disabled = false,
 }: Props) {
@@ -106,7 +92,7 @@ export default function AddressAutocompleteInput({
     }, 280);
   };
 
-  // Calculate distance from 120 Yên Lãng
+  // Calculate distance
   const calculateDistance = async (params: { placeId?: string; address?: string }) => {
     setIsCalculating(true);
     try {
@@ -140,14 +126,6 @@ export default function AddressAutocompleteInput({
       placeId: item.place_id,
       address: selectedText,
     });
-  };
-
-  // When user clicks a quick suggestion chip
-  const handleSelectQuickPlace = (chip: { label: string; query: string }) => {
-    setInputValue(chip.query);
-    onChange(chip.query);
-    setIsOpen(false);
-    calculateDistance({ address: chip.query });
   };
 
   // Clear input
@@ -189,7 +167,6 @@ export default function AddressAutocompleteInput({
   };
 
   const handleBlur = () => {
-    // If user typed an address manually and hasn't calculated yet
     if (inputValue.trim() && !distanceInfo && !isCalculating) {
       setTimeout(() => {
         calculateDistance({ address: inputValue.trim() });
@@ -198,7 +175,7 @@ export default function AddressAutocompleteInput({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full space-y-2.5">
+    <div ref={containerRef} className="relative w-full space-y-2">
       {/* Input wrapper */}
       <div className="relative flex items-center">
         <div className="absolute left-3.5 text-[#e31837] pointer-events-none">
@@ -217,7 +194,7 @@ export default function AddressAutocompleteInput({
           }}
           onBlur={handleBlur}
           placeholder={placeholder}
-          className="w-full h-12 pl-11 pr-20 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[8px] focus:outline-none focus:border-[#e31837] focus:ring-2 focus:ring-[#e31837]/15 transition placeholder:text-gray-400"
+          className="w-full h-11 pl-11 pr-10 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition placeholder:text-gray-400"
         />
 
         <div className="absolute right-3 flex items-center gap-1.5">
@@ -228,43 +205,28 @@ export default function AddressAutocompleteInput({
               type="button"
               onClick={handleClear}
               className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition"
-              title="Xóa địa chỉ"
+              title="Xóa"
             >
               <X className="w-4 h-4" />
             </button>
           )}
-
-          <div
-            className="hidden sm:flex items-center text-[11px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200"
-            title="Được hỗ trợ bởi Goong Maps"
-          >
-            Goong
-          </div>
         </div>
       </div>
 
-      {/* Autocomplete Predictions Dropdown */}
+      {/* Autocomplete Predictions Dropdown: only results, no headers */}
       {isOpen && predictions.length > 0 && (
-        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-[#dddddd] rounded-[10px] shadow-lg max-h-72 overflow-y-auto divide-y divide-gray-100 animate-in fade-in slide-in-from-top-1 duration-150">
-          <div className="px-3.5 py-2 bg-gray-50/80 text-[11px] font-medium text-[#41454d] flex items-center justify-between">
-            <span className="flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-[#e31837]" />
-              Gợi ý địa chỉ từ Goong Maps (Hà Nội)
-            </span>
-            <span className="text-[10px] text-gray-400">Chọn để tính khoảng cách</span>
-          </div>
-
+        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-[#dddddd] rounded-[8px] shadow-lg max-h-64 overflow-y-auto divide-y divide-gray-100">
           {predictions.map((p, idx) => {
             const isSelected = idx === selectedIndex;
             return (
               <div
                 key={p.place_id || idx}
                 onMouseDown={(e) => {
-                  e.preventDefault(); // prevent blur
+                  e.preventDefault();
                   handleSelectPrediction(p);
                 }}
                 onMouseEnter={() => setSelectedIndex(idx)}
-                className={`px-3.5 py-2.5 cursor-pointer flex items-start gap-3 text-left transition ${
+                className={`px-3.5 py-2.5 cursor-pointer flex items-start gap-2.5 text-left transition ${
                   isSelected ? 'bg-[#fff1f2] text-[#e31837]' : 'hover:bg-gray-50 text-[#181d26]'
                 }`}
               >
@@ -276,7 +238,7 @@ export default function AddressAutocompleteInput({
                   <MapPin className="w-3.5 h-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[13px] font-semibold truncate">
+                  <div className="text-[13px] font-medium truncate">
                     {p.main_text || p.description}
                   </div>
                   {p.secondary_text && (
@@ -291,82 +253,26 @@ export default function AddressAutocompleteInput({
         </div>
       )}
 
-      {/* Quick Select Chips */}
-      <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-        <span className="text-[11px] text-[#9297a0] font-medium flex items-center gap-1 shrink-0">
-          <Navigation className="w-3 h-3 text-[#e31837]" />
-          Gợi ý nhanh:
-        </span>
-        {QUICK_PLACES.map((chip) => (
-          <button
-            key={chip.label}
-            type="button"
-            onClick={() => handleSelectQuickPlace(chip)}
-            className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 hover:bg-[#fff1f2] text-[#41454d] hover:text-[#e31837] border border-gray-200 hover:border-[#fecdd3] transition whitespace-nowrap"
-          >
-            {chip.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Calculating Indicator */}
+      {/* Calculating Indicator: compact */}
       {isCalculating && (
-        <div className="p-3 bg-[#f8fafc] border border-gray-200 rounded-[8px] flex items-center gap-2.5 text-[12px] text-[#41454d] animate-pulse">
-          <Loader2 className="w-4 h-4 text-[#e31837] animate-spin" />
-          <span>Đang tính khoảng cách đường đi thực tế từ <strong>120 Yên Lãng</strong>...</span>
+        <div className="flex items-center gap-2 text-[12px] text-gray-500 py-0.5">
+          <Loader2 className="w-3.5 h-3.5 text-[#e31837] animate-spin" />
+          <span>Đang tính khoảng cách & phí giao hàng...</span>
         </div>
       )}
 
-      {/* Calculated Distance & Fee Card */}
+      {/* Compact Distance & Fee Bar: only distance and shipping fee */}
       {distanceInfo && !isCalculating && (
-        <div className="p-3.5 bg-[#f0fdf4] border border-[#bbf7d0] rounded-[10px] space-y-2 text-[#15803d] animate-in fade-in duration-200">
-          <div className="flex items-center justify-between text-[12px] font-bold border-b border-[#bbf7d0]/70 pb-2">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-[#16a34a]" />
-              <span>Đã xác thực khoảng cách giao hàng</span>
-            </div>
-            <span className="text-[11px] font-normal text-gray-500">
-              Xuất phát từ <strong>120 Yên Lãng</strong>
-            </span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 pt-0.5 text-center">
-            <div className="p-2 rounded-[6px] bg-white/80 border border-[#bbf7d0]/60">
-              <div className="text-[10px] text-gray-500 font-medium flex items-center justify-center gap-1">
-                <Navigation className="w-3 h-3 text-[#16a34a]" />
-                Khoảng cách
-              </div>
-              <div className="text-[14px] font-bold text-[#181d26] mt-0.5">
-                {distanceInfo.distanceText}
-              </div>
-            </div>
-
-            <div className="p-2 rounded-[6px] bg-white/80 border border-[#bbf7d0]/60">
-              <div className="text-[10px] text-gray-500 font-medium flex items-center justify-center gap-1">
-                <Clock className="w-3 h-3 text-amber-600" />
-                Thời gian giao
-              </div>
-              <div className="text-[13px] font-bold text-[#181d26] mt-0.5">
-                {distanceInfo.deliveryEstimateText}
-              </div>
-            </div>
-
-            <div className="p-2 rounded-[6px] bg-white/80 border border-[#bbf7d0]/60">
-              <div className="text-[10px] text-gray-500 font-medium flex items-center justify-center gap-1">
-                <Bike className="w-3 h-3 text-[#e31837]" />
-                Phí ship gốc
-              </div>
-              <div className="text-[14px] font-bold text-[#e31837] mt-0.5">
-                {formatVND(distanceInfo.shippingFee)}
-              </div>
-            </div>
-          </div>
-
-          <div className="text-[11px] text-gray-500 flex items-center gap-1 pt-0.5">
-            <Info className="w-3 h-3 text-gray-400 shrink-0" />
+        <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border border-gray-200 rounded-[6px] text-[12px]">
+          <div className="flex items-center gap-1.5 text-gray-600">
+            <Navigation className="w-3.5 h-3.5 text-[#e31837]" />
             <span>
-              Cước phí tính theo tuyến đường xe máy Goong Maps (≤2km: 15.000₫, 2-10km: +5.000₫/km, &gt;10km: +7.000₫/km).
+              Khoảng cách: <strong className="text-[#181d26]">{distanceInfo.distanceText}</strong>
             </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-gray-500">Phí ship:</span>
+            <span className="font-bold text-[#e31837]">{formatVND(distanceInfo.shippingFee)}</span>
           </div>
         </div>
       )}

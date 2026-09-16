@@ -23,7 +23,7 @@ import { AVAILABLE_COUPONS, validateCoupon } from '@/lib/coupons';
 import { Coupon } from '@/types';
 import { MembershipTierInfo } from '@/lib/membership';
 import AddressAutocompleteInput from '@/components/AddressAutocompleteInput';
-import { DistanceCalculationResult, STORE_ADDRESS } from '@/lib/goong';
+import { DistanceCalculationResult } from '@/lib/goong';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -285,14 +285,9 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[13px] font-medium text-[#181d26]">
-                      Địa chỉ nhận món (Hà Nội) <span className="text-[#e31837]">*</span>
-                    </label>
-                    <span className="text-[11px] text-[#e31837] font-medium">
-                      Giao từ: <strong>{STORE_ADDRESS}</strong>
-                    </span>
-                  </div>
+                  <label className="text-[13px] font-medium text-[#181d26]">
+                    Địa chỉ nhận món <span className="text-[#e31837]">*</span>
+                  </label>
                   <AddressAutocompleteInput
                     value={deliveryAddress}
                     onChange={(addr) => setDeliveryAddress(addr)}
@@ -600,7 +595,7 @@ export default function CheckoutPage() {
                     <span>Phí giao hàng</span>
                     {distanceData && (
                       <span className="text-[11px] text-gray-500 block font-normal">
-                        Cách quán: {distanceData.distanceText} (~{distanceData.deliveryEstimateText})
+                        Khoảng cách: {distanceData.distanceText}
                       </span>
                     )}
                   </div>
