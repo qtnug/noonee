@@ -75,27 +75,7 @@ let inMemoryProducts: Product[] = [
   { id: 11, categoryId: 4, categoryName: 'Món Đặc Biệt Quán', name: 'Combo Trưa Hoàn Hảo (Cơm sườn + Trà đào)', slug: 'combo-trua-hoan-hao', description: 'Set ăn trưa dinh dưỡng gồm 1 đĩa cơm tấm sườn nướng mật ong và 1 ly trà đào mát lạnh giải nhiệt.', price: 85000, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80', isAvailable: true, isFeatured: true, rating: 5.0 }
 ];
 
-let inMemoryOrders: Order[] = [
-  {
-    id: 1,
-    orderCode: 'DH1001',
-    userId: 2,
-    customerName: 'Nguyễn Văn An',
-    customerPhone: '0912345678',
-    deliveryAddress: '45 Lê Lợi, Quận 1, TP.HCM',
-    notes: 'Ít đá vào nước uống nhé quán',
-    totalAmount: 97000,
-    status: 'Delivering',
-    paymentMethod: 'Sepay',
-    paymentStatus: 'Paid',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    items: [
-      { productId: 1, productName: 'Phở Bò Đặc Biệt Hà Nội', price: 65000, quantity: 1, total: 65000 },
-      { productId: 8, productName: 'Trà Đào Cam Sả Tươi Mát', price: 32000, quantity: 1, total: 32000 }
-    ]
-  }
-];
+let inMemoryOrders: Order[] = [];
 
 let inMemoryUsers: User[] = [
   { id: 1, username: 'admin', fullName: 'Quản Trị Viên', email: 'admin@quanan.vn', phone: '0988888888', address: '123 Đường Ẩm Thực, Q1', role: 'admin' },
