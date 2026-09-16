@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #ffffff;
+    color: #1f2937;
+    font-family: Haas, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: #181d26;
+    font-weight: 500;
+  }
+}
+
+/* Red & White Tone Component Utility Classes */
+@layer components {
+  .airtable-btn-primary {
+    @apply inline-flex items-center justify-center bg-[#e31837] text-white font-medium text-[16px] leading-[1.4] px-6 py-3.5 rounded-[12px] transition-colors hover:bg-[#be0e27] active:bg-[#a50b20] disabled:opacity-50 disabled:cursor-not-allowed shadow-xs;
+  }
+
+  .airtable-btn-secondary {
+    @apply inline-flex items-center justify-center bg-white text-[#e31837] font-medium text-[16px] leading-[1.4] px-6 py-3.5 rounded-[12px] border border-[#e31837] transition-colors hover:bg-[#fff1f2] active:bg-[#ffe4e6] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .airtable-btn-secondary-on-dark {
+    @apply inline-flex items-center justify-center bg-white text-[#e31837] font-medium text-[16px] leading-[1.4] px-6 py-3.5 rounded-[12px] transition-colors hover:bg-[#fff1f2] active:bg-[#ffe4e6];
+  }
+
+  .airtable-btn-sm {
+    @apply inline-flex items-center justify-center bg-[#e31837] text-white font-medium text-[14px] leading-[1.3] px-4 py-2 rounded-[6px] transition-colors hover:bg-[#be0e27] active:bg-[#a50b20];
+  }
+
+  .airtable-btn-sm-secondary {
+    @apply inline-flex items-center justify-center bg-white text-[#e31837] font-medium text-[14px] leading-[1.3] px-4 py-2 rounded-[6px] border border-[#dddddd] hover:border-[#e31837] transition-colors hover:bg-[#fff1f2];
+  }
+
+  .airtable-input {
+    @apply w-full h-[44px] bg-white text-[#181d26] text-[14px] px-4 rounded-[6px] border border-[#dddddd] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition-colors placeholder:text-[#9297a0];
+  }
+
+  .airtable-card {
+    @apply bg-white border border-[#dddddd] rounded-[10px] p-4;
+  }
+
+  .airtable-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-[4px] text-[12px] font-medium bg-[#fff1f2] text-[#e31837] border border-[#fecdd3];
+  }
+}
+
+/* Custom scrollbar matching clean red-white aesthetic */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
