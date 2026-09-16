@@ -380,7 +380,7 @@ export async function getProducts(options?: { categoryId?: number; search?: stri
       query += ` ORDER BY p.isFeatured DESC, p.id ASC`;
       
       const page = options?.page || 1;
-      const limit = options?.limit || 50;
+      const limit = options?.limit || 200;
       const offset = (page - 1) * limit;
       req.input('offset', sql.Int, offset);
       req.input('limit', sql.Int, limit);
@@ -414,7 +414,7 @@ export async function getProducts(options?: { categoryId?: number; search?: stri
     result = result.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
   }
   const page = options?.page || 1;
-  const limit = options?.limit || 50;
+  const limit = options?.limit || 200;
   return result.slice((page - 1) * limit, page * limit);
 }
 

@@ -26,7 +26,7 @@ function MenuPageContent() {
     async function loadData() {
       try {
         const [prodRes, catRes] = await Promise.all([
-          fetch('/api/products').then((r) => r.json()),
+          fetch('/api/products?limit=200').then((r) => r.json()),
           fetch('/api/categories').then((r) => r.json()),
         ]);
         if (prodRes.success) setProducts(prodRes.data);

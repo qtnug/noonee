@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || undefined;
     const isFeatured = searchParams.get('featured') === 'true';
     const page = searchParams.get('page') ? parseInt(searchParams.get('page')!) : undefined;
-    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 200;
 
     const products = await getProducts({ categoryId, search, isFeatured, page, limit });
     return NextResponse.json({ success: true, data: products });
