@@ -65,7 +65,7 @@ export default async function HomePage() {
                     <span className="text-[16px] font-bold text-[#e31837]">60.000 ₫</span>
                   </div>
 
-                  <div className="h-44 w-full rounded-[6px] overflow-hidden bg-[#f8fafc]">
+                  <div className="aspect-square w-full rounded-[6px] overflow-hidden bg-[#f8fafc]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=700&q=80"

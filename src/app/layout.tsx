@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import CartDrawer from '@/components/CartDrawer';
 import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { FavoritesProvider } from '@/context/FavoritesContext';
 
 export const metadata: Metadata = {
   title: 'NooNee Food - Quán Ăn Online Chuẩn Vị & Đặt Món Nhanh',
@@ -20,12 +21,14 @@ export default function RootLayout({
     <html lang="vi">
       <body className="flex flex-col min-h-screen">
         <AuthProvider>
-          <CartProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <CartDrawer />
-          </CartProvider>
+          <FavoritesProvider>
+            <CartProvider>
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+              <CartDrawer />
+            </CartProvider>
+          </FavoritesProvider>
         </AuthProvider>
       </body>
     </html>

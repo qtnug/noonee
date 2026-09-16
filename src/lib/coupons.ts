@@ -49,6 +49,52 @@ export const AVAILABLE_COUPONS: Coupon[] = [
     minOrderAmount: 120000,
     badge: 'Freeship 15k',
   },
+  // Exclusive Membership Tier Vouchers
+  {
+    code: 'SILVER10',
+    name: 'Voucher Thành Viên Bạc - Giảm 10k',
+    description: 'Đặc quyền thành viên Bạc: Giảm 10.000đ cho đơn từ 80.000đ.',
+    discountType: 'fixed',
+    discountValue: 10000,
+    minOrderAmount: 80000,
+    badge: 'Đặc quyền Bạc',
+  },
+  {
+    code: 'GOLD25',
+    name: 'Voucher Thành Viên Vàng - Giảm 25k',
+    description: 'Đặc quyền thành viên Vàng: Giảm 25.000đ cho đơn từ 150.000đ.',
+    discountType: 'fixed',
+    discountValue: 25000,
+    minOrderAmount: 150000,
+    badge: 'Đặc quyền Vàng',
+  },
+  {
+    code: 'GOLDVIP',
+    name: 'Voucher VIP Vàng - Giảm 15%',
+    description: 'Đặc quyền thành viên Vàng: Giảm 15% (tối đa 40k) cho đơn từ 200.000đ.',
+    discountType: 'percentage',
+    discountValue: 15,
+    minOrderAmount: 200000,
+    badge: 'VIP Vàng 15%',
+  },
+  {
+    code: 'DIAMOND50',
+    name: 'Voucher VIP Kim Cương - Giảm 50k',
+    description: 'Đặc quyền thành viên Kim Cương: Giảm 50.000đ cho đơn từ 200.000đ.',
+    discountType: 'fixed',
+    discountValue: 50000,
+    minOrderAmount: 200000,
+    badge: 'VIP Kim Cương',
+  },
+  {
+    code: 'DIAMONDVIP',
+    name: 'Voucher VIP Kim Cương - Giảm 20%',
+    description: 'Đặc quyền thành viên Kim Cương: Giảm 20% cho đơn từ 250.000đ.',
+    discountType: 'percentage',
+    discountValue: 20,
+    minOrderAmount: 250000,
+    badge: 'VIP Kim Cương 20%',
+  },
 ];
 
 export interface ValidateCouponResult {

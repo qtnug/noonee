@@ -278,7 +278,7 @@ export default function AdminProductsPage() {
                         <img
                           src={p.image}
                           alt={p.name}
-                          className="w-12 h-12 rounded-[6px] object-cover border border-[#dddddd] shrink-0 bg-white"
+                          className="w-12 h-12 aspect-square rounded-[6px] object-cover border border-[#dddddd] shrink-0 bg-white"
                         />
                         <div>
                           <div className="font-medium text-[#181d26]">{p.name}</div>
@@ -456,7 +456,7 @@ export default function AdminProductsPage() {
                     className="flex-1 h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
                   />
                   {formImage && (
-                    <div className="w-10 h-10 rounded-[6px] border border-[#dddddd] overflow-hidden shrink-0 bg-[#f8fafc]">
+                    <div className="w-10 h-10 aspect-square rounded-[6px] border border-[#dddddd] overflow-hidden shrink-0 bg-[#f8fafc]">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={formImage}

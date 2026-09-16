@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Star } from 'lucide-react';
+import { Plus, Star, Heart } from 'lucide-react';
 import { Product } from '@/types';
 import { formatVND } from '@/lib/utils';
+import { useFavorites } from '@/context/FavoritesContext';
 import ProductOptionsModal from './ProductOptionsModal';
 
 export default function ProductCard({
@@ -15,22 +16,43 @@ export default function ProductCard({
   badgeText?: string;
 }) {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorited = isFavorite(product.id);
 
   return (
     <div className="bg-white rounded-[10px] border border-[#dddddd] hover:border-[#fecdd3] hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden relative">
       {/* Red Highlight Badge */}
       {product.isFeatured && (
-        <div className="absolute top-3 left-3 z-10">
+        <div className="absolute top-3 left-3 z-10 pointer-events-none">
           <span className="bg-[#e31837] text-white text-[11px] font-bold px-2 py-0.5 rounded-[4px] shadow-xs">
             {badgeText}
           </span>
         </div>
       )}
 
-      {/* Product Image Container */}
+      {/* Favorite Heart Button */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleFavorite(product.id);
+        }}
+        className={`absolute top-3 right-3 z-10 p-1.5 rounded-full border shadow-xs transition cursor-pointer ${
+          favorited
+            ? 'bg-white text-[#e31837] border-[#fecdd3]'
+            : 'bg-white/90 hover:bg-white text-[#9297a0] hover:text-[#e31837] border-[#dddddd]'
+        }`}
+        aria-label={favorited ? 'Bỏ thích món' : 'Yêu thích món'}
+        title={favorited ? 'Đã yêu thích' : 'Thêm vào yêu thích'}
+      >
+        <Heart className={`w-3.5 h-3.5 ${favorited ? 'fill-[#e31837] text-[#e31837]' : ''}`} />
+      </button>
+
+      {/* Product Image Container (1:1 Square) */}
       <Link
         href={`/product/${product.slug}`}
-        className="relative h-48 w-full overflow-hidden bg-[#fdf2f2]/30 border-b border-[#dddddd] flex items-center justify-center p-2 block group"
+        className="relative aspect-square w-full overflow-hidden bg-[#fdf2f2]/30 border-b border-[#dddddd] flex items-center justify-center p-2 block group"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

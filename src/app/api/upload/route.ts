@@ -62,14 +62,31 @@ export async function POST(request: NextRequest) {
           {
             folder: 'noonee_products',
             resource_type: 'image',
-            transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+            transformation: [
+              {
+                width: 800,
+                height: 800,
+                crop: 'fill',
+                gravity: 'auto',
+                aspect_ratio: '1.0',
+                quality: 'auto',
+                fetch_format: 'auto',
+              },
+            ],
           },
           (error, result) => {
             if (error || !result) {
               reject(error || new Error('Upload lên Cloudinary thất bại'));
             } else {
+              // Generate explicitly transformed 1:1 square URL
+              const squareUrl = cloudinary.url(result.public_id, {
+                transformation: [
+                  { width: 800, height: 800, crop: 'fill', gravity: 'auto', quality: 'auto', fetch_format: 'auto' }
+                ],
+                secure: true
+              });
               resolve({
-                secure_url: result.secure_url,
+                secure_url: squareUrl || result.secure_url,
                 public_id: result.public_id,
               });
             }

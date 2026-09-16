@@ -936,6 +936,144 @@ export async function verifyUserCredentials(username: string, password: string):
   return null;
 }
 
+export async function getUserById(userId: number): Promise<User | null> {
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('id', sql.Int, userId);
+      const res = await req.query(`
+        SELECT id, username, password, fullName, email, phone, address, role, createdAt
+        FROM Users
+        WHERE id = @id
+      `);
+      if (res.recordset && res.recordset.length > 0) {
+        return res.recordset[0];
+      }
+    }
+  } catch (err) {
+    console.error('Error querying user by id from cloud:', err);
+  }
+
+  return inMemoryUsers.find((u) => u.id === userId) || null;
+}
+
+export async function getUserSpendingStats(userId: number): Promise<{
+  totalSpent: number;
+  orderCount: number;
+  completedCount: number;
+}> {
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('userId', sql.Int, userId);
+      const res = await req.query(`
+        SELECT 
+          COUNT(*) AS orderCount,
+          ISNULL(SUM(CASE WHEN paymentStatus = 'Paid' OR status = 'Completed' THEN totalAmount ELSE 0 END), 0) AS totalSpent,
+          COUNT(CASE WHEN paymentStatus = 'Paid' OR status = 'Completed' THEN 1 END) AS completedCount
+        FROM Orders
+        WHERE userId = @userId
+      `);
+      if (res.recordset && res.recordset[0]) {
+        return {
+          totalSpent: Number(res.recordset[0].totalSpent) || 0,
+          orderCount: Number(res.recordset[0].orderCount) || 0,
+          completedCount: Number(res.recordset[0].completedCount) || 0,
+        };
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching user spending stats:', err);
+  }
+
+  // Fallback to in-memory orders
+  const userOrders = inMemoryOrders.filter((o) => o.userId === userId);
+  const completed = userOrders.filter(
+    (o) => o.paymentStatus === 'Paid' || o.status === 'Completed'
+  );
+  const totalSpent = completed.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  return {
+    totalSpent,
+    orderCount: userOrders.length,
+    completedCount: completed.length,
+  };
+}
+
+export async function updateUserPassword(
+  userId: number,
+  currentPass: string,
+  newPass: string
+): Promise<{ success: boolean; message: string }> {
+  const user = await getUserById(userId);
+  if (!user) {
+    return { success: false, message: 'Không tìm thấy tài khoản người dùng' };
+  }
+
+  if ((user as any).password !== currentPass) {
+    return { success: false, message: 'Mật khẩu hiện tại không chính xác' };
+  }
+
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('userId', sql.Int, userId);
+      req.input('password', sql.NVarChar(255), newPass);
+      await req.query(`UPDATE Users SET password = @password WHERE id = @userId`);
+    }
+  } catch (err: any) {
+    console.error('Error updating password in cloud:', err);
+  }
+
+  // Update in-memory fallback
+  const inMem = inMemoryUsers.find((u) => u.id === userId);
+  if (inMem) {
+    (inMem as any).password = newPass;
+  }
+
+  return { success: true, message: 'Đổi mật khẩu thành công!' };
+}
+
+export async function updateUserProfile(
+  userId: number,
+  data: { fullName?: string; phone?: string; address?: string }
+): Promise<User | null> {
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('userId', sql.Int, userId);
+      req.input('fullName', sql.NVarChar(100), data.fullName || '');
+      req.input('phone', sql.NVarChar(20), data.phone || '');
+      req.input('address', sql.NVarChar(255), data.address || '');
+      const res = await req.query(`
+        UPDATE Users 
+        SET fullName = COALESCE(NULLIF(@fullName, ''), fullName),
+            phone = COALESCE(NULLIF(@phone, ''), phone),
+            address = COALESCE(NULLIF(@address, ''), address)
+        OUTPUT INSERTED.id, INSERTED.username, INSERTED.fullName, INSERTED.email, INSERTED.phone, INSERTED.address, INSERTED.role, INSERTED.createdAt
+        WHERE id = @userId
+      `);
+      if (res.recordset && res.recordset[0]) {
+        return res.recordset[0];
+      }
+    }
+  } catch (err) {
+    console.error('Error updating user profile in cloud:', err);
+  }
+
+  const inMem = inMemoryUsers.find((u) => u.id === userId);
+  if (inMem) {
+    if (data.fullName) inMem.fullName = data.fullName;
+    if (data.phone) inMem.phone = data.phone;
+    if (data.address) inMem.address = data.address;
+    return inMem;
+  }
+  return null;
+}
+
 // ==========================================
 // REVIEWS & RATINGS (Cloud SQL Server)
 // ==========================================

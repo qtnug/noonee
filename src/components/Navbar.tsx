@@ -11,6 +11,9 @@ import {
   Menu,
   X,
   ChevronDown,
+  Heart,
+  KeyRound,
+  LogOut,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -119,41 +122,84 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* User Account / Auth Dropdown */}
+          {/* User Account / Avatar Dropdown (Icon Only, No Name) */}
           {user ? (
             <div className="relative">
               <button
+                type="button"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-2 h-10 px-3 rounded-[6px] border border-[#dddddd] text-[#181d26] text-[13px] font-medium hover:bg-[#fff1f2] hover:border-[#fecdd3] transition"
+                className="w-10 h-10 rounded-full border border-[#dddddd] hover:border-[#e31837] flex items-center justify-center bg-white hover:bg-[#fff1f2] transition shadow-2xs cursor-pointer p-0.5"
+                aria-label="Hồ sơ tài khoản"
+                title={`Tài khoản: ${user.fullName || user.username}`}
               >
-                <div className="w-6 h-6 rounded-full bg-[#e31837] text-white flex items-center justify-center text-[11px] font-bold">
-                  {user.fullName.charAt(0).toUpperCase()}
+                <div className="w-8 h-8 rounded-full bg-[#e31837] text-white flex items-center justify-center text-[13px] font-bold shadow-xs">
+                  {user.fullName ? user.fullName.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
                 </div>
-                <span className="hidden sm:inline max-w-[100px] truncate">{user.fullName}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-[#41454d]" />
               </button>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-white rounded-[10px] shadow-lg border border-[#dddddd] py-2 z-50 text-[13px]">
-                  <div className="px-4 py-2 border-b border-[#dddddd] text-[#41454d]">
-                    Đăng nhập là <strong className="text-[#181d26] block font-medium">{user.username}</strong>
+                <div className="absolute right-0 mt-2 w-60 bg-white rounded-[12px] shadow-xl border border-[#dddddd] py-2 z-50 text-[13px] divide-y divide-[#f0f0f0]">
+                  <div className="px-4 py-3">
+                    <p className="font-semibold text-[#181d26] text-[14px] truncate">{user.fullName}</p>
+                    <p className="text-[12px] text-[#9297a0] truncate">@{user.username}</p>
                   </div>
-                  <Link
-                    href="/orders"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="block px-4 py-2 text-[#333840] hover:bg-[#f8fafc]"
-                  >
-                    Đơn hàng của tôi
-                  </Link>
-                  <button
-                    onClick={() => {
-                      setUserMenuOpen(false);
-                      logout();
-                    }}
-                    className="w-full text-left px-4 py-2 text-[#e31837] hover:bg-[#fff1f2] border-t border-[#dddddd] mt-1 font-medium"
-                  >
-                    Đăng xuất
-                  </button>
+                  <div className="py-1">
+                    <Link
+                      href="/profile"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-[#333840] hover:bg-[#fff1f2] hover:text-[#e31837] transition font-medium"
+                    >
+                      <UserIcon className="w-4 h-4 text-[#e31837]" />
+                      <span>Hồ sơ & Hạng thành viên</span>
+                    </Link>
+                    <Link
+                      href="/profile?tab=favorites"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#e31837] transition font-medium"
+                    >
+                      <Heart className="w-4 h-4 text-[#e31837]" />
+                      <span>Món ăn yêu thích</span>
+                    </Link>
+                    <Link
+                      href="/profile?tab=password"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#e31837] transition font-medium"
+                    >
+                      <KeyRound className="w-4 h-4 text-[#e31837]" />
+                      <span>Đổi mật khẩu</span>
+                    </Link>
+                    <Link
+                      href="/orders"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#f8fafc] transition"
+                    >
+                      <ShoppingBag className="w-4 h-4 text-[#9297a0]" />
+                      <span>Đơn hàng của tôi</span>
+                    </Link>
+                    {user.role === 'admin' && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-[#e31837] hover:bg-[#fff1f2] transition font-semibold border-t border-[#f1f5f9] mt-1 pt-2"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-[#e31837]" />
+                        <span>Trang quản trị (Admin)</span>
+                      </Link>
+                    )}
+                  </div>
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        logout();
+                      }}
+                      className="w-full text-left flex items-center gap-2.5 px-4 py-2 text-[#e31837] hover:bg-[#fff1f2] font-medium transition cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Đăng xuất</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -208,6 +254,46 @@ export default function Navbar() {
               {link.name}
             </Link>
           ))}
+
+          {user && (
+            <div className="pt-2 space-y-1">
+              <Link
+                href="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 py-2 text-[14px] font-medium text-[#e31837] border-b border-[#f1f5f9]"
+              >
+                <UserIcon className="w-4 h-4" />
+                <span>Hồ sơ & Hạng thành viên</span>
+              </Link>
+              <Link
+                href="/profile?tab=favorites"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 py-2 text-[14px] text-[#333840] hover:text-[#e31837] border-b border-[#f1f5f9]"
+              >
+                <Heart className="w-4 h-4" />
+                <span>Món ăn yêu thích</span>
+              </Link>
+              <Link
+                href="/profile?tab=password"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 py-2 text-[14px] text-[#333840] hover:text-[#e31837] border-b border-[#f1f5f9]"
+              >
+                <KeyRound className="w-4 h-4" />
+                <span>Đổi mật khẩu</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  logout();
+                }}
+                className="w-full text-left flex items-center gap-2 py-2 text-[14px] text-[#e31837] font-medium"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Đăng xuất ({user.fullName})</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </header>

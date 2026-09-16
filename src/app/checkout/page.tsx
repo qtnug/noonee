@@ -14,12 +14,14 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronUp,
+  Award,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatVND } from '@/lib/utils';
 import { AVAILABLE_COUPONS, validateCoupon } from '@/lib/coupons';
 import { Coupon } from '@/types';
+import { MembershipTierInfo } from '@/lib/membership';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -42,6 +44,7 @@ export default function CheckoutPage() {
   const [couponSuccess, setCouponSuccess] = useState('');
   const [showCouponsList, setShowCouponsList] = useState(false);
   const [isNewUser, setIsNewUser] = useState(true);
+  const [tierInfo, setTierInfo] = useState<MembershipTierInfo | null>(null);
 
   useEffect(() => {
     if (user?.id) {
@@ -49,6 +52,13 @@ export default function CheckoutPage() {
         .then((r) => r.json())
         .then((d) => {
           if (d.success) setIsNewUser(Boolean(d.isNewUser));
+        })
+        .catch(() => {});
+
+      fetch(`/api/user/profile?userId=${user.id}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.success && d.data?.tier) setTierInfo(d.data.tier);
         })
         .catch(() => {});
     }
@@ -93,7 +103,12 @@ export default function CheckoutPage() {
     setCouponError('');
   };
 
-  const finalTotal = Math.max(0, totalPrice - discountAmount);
+  const baseShippingFee = 15000;
+  const memberShippingDiscount = tierInfo ? Math.min(baseShippingFee, tierInfo.shippingDiscount) : 0;
+  const shippingFeeAfterMember = Math.max(0, baseShippingFee - memberShippingDiscount);
+  const effectiveShippingFee = appliedCoupon?.code === 'FREESHIP' ? 0 : shippingFeeAfterMember;
+  const couponDiscountExcludingFreeship = appliedCoupon?.code === 'FREESHIP' ? 0 : discountAmount;
+  const finalTotal = Math.max(0, totalPrice - couponDiscountExcludingFreeship + effectiveShippingFee);
 
   if (!user) {
     return (
@@ -545,21 +560,50 @@ export default function CheckoutPage() {
                 )}
               </div>
 
+              {/* Member Tier Perks Box */}
+              {tierInfo && (
+                <div className="flex items-center justify-between p-3 rounded-[8px] bg-white border border-[#fecdd3] shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-4 h-4 text-[#e31837]" />
+                    <span className="text-[12px] font-bold text-[#181d26]">{tierInfo.badge}</span>
+                  </div>
+                  <span className="text-[11px] text-[#16a34a] font-semibold">
+                    {memberShippingDiscount > 0
+                      ? `Được giảm ${formatVND(memberShippingDiscount)} ship`
+                      : 'Thành viên NooNee'}
+                  </span>
+                </div>
+              )}
+
               {/* Totals Calculation */}
               <div className="space-y-2 pt-4 border-t border-[#fecdd3] text-[13px]">
                 <div className="flex justify-between text-[#41454d]">
                   <span>Tạm tính ({cart.length} món)</span>
                   <span className="font-semibold text-[#181d26]">{formatVND(totalPrice)}</span>
                 </div>
-                {discountAmount > 0 && (
+                {couponDiscountExcludingFreeship > 0 && (
                   <div className="flex justify-between text-[#e31837] font-medium">
-                    <span>Giảm giá ({appliedCoupon?.code})</span>
-                    <span>- {formatVND(discountAmount)}</span>
+                    <span>Giảm giá voucher ({appliedCoupon?.code})</span>
+                    <span>- {formatVND(couponDiscountExcludingFreeship)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-[#41454d]">
                   <span>Phí giao hàng</span>
-                  <span className="text-[#006400] font-semibold">Miễn phí</span>
+                  {effectiveShippingFee === 0 ? (
+                    <span className="text-[#16a34a] font-semibold">
+                      Miễn phí {tierInfo && tierInfo.shippingDiscount >= 15000 ? `(${tierInfo.badge})` : appliedCoupon?.code === 'FREESHIP' ? '(Voucher)' : ''}
+                    </span>
+                  ) : (
+                    <div className="text-right">
+                      <span className="line-through text-gray-400 text-[11px] mr-1.5">15.000 ₫</span>
+                      <span className="font-semibold text-[#181d26]">{formatVND(effectiveShippingFee)}</span>
+                      {memberShippingDiscount > 0 && (
+                        <span className="text-[10px] text-[#16a34a] block font-medium">
+                          - {formatVND(memberShippingDiscount)} ({tierInfo?.name})
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-between text-[16px] font-bold text-[#181d26] pt-3 border-t border-[#fecdd3]">
                   <span>Tổng thanh toán</span>

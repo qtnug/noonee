@@ -7,6 +7,7 @@ import { formatVND } from '@/lib/utils';
 import ProductDetailActions from './ProductDetailActions';
 import ProductCard from '@/components/ProductCard';
 import ProductReviewsSection from '@/components/ProductReviewsSection';
+import FavoriteButton from '@/components/FavoriteButton';
 
 export const revalidate = 0;
 
@@ -41,8 +42,8 @@ export default async function ProductDetailPage({
 
         {/* Main Product Card */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 bg-white rounded-[12px] p-6 sm:p-10 border border-[#dddddd] shadow-xs">
-          {/* Left: Image Container */}
-          <div className="md:col-span-6 relative rounded-[10px] overflow-hidden bg-[#fff1f2]/20 h-80 sm:h-[420px] border border-[#dddddd]">
+          {/* Left: Image Container (1:1 Square) */}
+          <div className="md:col-span-6 relative rounded-[10px] overflow-hidden bg-[#fff1f2]/20 aspect-square w-full border border-[#dddddd] shadow-xs">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={product.image}
@@ -52,6 +53,11 @@ export default async function ProductDetailPage({
             <span className="absolute top-4 left-4 bg-white text-[#e31837] text-[12px] font-bold px-3 py-1 rounded-[4px] border border-[#fecdd3] shadow-xs">
               {product.categoryName || 'Món ăn'}
             </span>
+            <FavoriteButton
+              productId={product.id}
+              className="absolute top-4 right-4 z-10 p-2.5 rounded-full border"
+              size="md"
+            />
           </div>
 
           {/* Right: Details & Order CTA */}
