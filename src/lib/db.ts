@@ -169,6 +169,77 @@ export async function createCategory(data: { name: string; slug: string; descrip
   return newCat;
 }
 
+export async function updateCategory(id: number, data: { name?: string; slug?: string; description?: string; icon?: string }): Promise<boolean> {
+  const idx = inMemoryCategories.findIndex(c => c.id === id);
+  if (idx !== -1) {
+    inMemoryCategories[idx] = { ...inMemoryCategories[idx], ...data };
+  }
+
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('id', sql.Int, id);
+      const setClauses: string[] = [];
+
+      if (data.name !== undefined) {
+        req.input('name', sql.NVarChar(100), data.name);
+        setClauses.push('name = @name');
+      }
+      if (data.slug !== undefined) {
+        req.input('slug', sql.NVarChar(100), data.slug);
+        setClauses.push('slug = @slug');
+      }
+      if (data.description !== undefined) {
+        req.input('desc', sql.NVarChar(255), data.description);
+        setClauses.push('description = @desc');
+      }
+      if (data.icon !== undefined) {
+        req.input('icon', sql.NVarChar(50), data.icon);
+        setClauses.push('icon = @icon');
+      }
+
+      if (setClauses.length > 0) {
+        await req.query(`UPDATE Categories SET ${setClauses.join(', ')} WHERE id = @id`);
+        return true;
+      }
+    }
+  } catch (err) {
+    console.error('Error updating category in cloud:', err);
+  }
+
+  // Local fallback
+  const updates: string[] = [];
+  if (data.name) updates.push(`name = N'${data.name.replace(/'/g, "''")}'`);
+  if (data.slug) updates.push(`slug = '${data.slug.replace(/'/g, "''")}'`);
+  if (data.description !== undefined) updates.push(`description = N'${data.description.replace(/'/g, "''")}'`);
+  if (data.icon) updates.push(`icon = '${data.icon.replace(/'/g, "''")}'`);
+  if (updates.length > 0) {
+    await executeLocalSqlCmd(`UPDATE Categories SET ${updates.join(', ')} WHERE id = ${id};`);
+  }
+  return true;
+}
+
+export async function deleteCategory(id: number): Promise<boolean> {
+  inMemoryCategories = inMemoryCategories.filter(c => c.id !== id);
+
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('id', sql.Int, id);
+      await req.query('UPDATE Products SET categoryId = NULL WHERE categoryId = @id');
+      await req.query('DELETE FROM Categories WHERE id = @id');
+      return true;
+    }
+  } catch (err) {
+    console.error('Error deleting category in cloud:', err);
+  }
+
+  await executeLocalSqlCmd(`UPDATE Products SET categoryId = NULL WHERE categoryId = ${id}; DELETE FROM Categories WHERE id = ${id};`);
+  return true;
+}
+
 export async function getProducts(options?: { categoryId?: number; search?: string; isFeatured?: boolean }): Promise<Product[]> {
   try {
     const pool = await getCloudPool();
