@@ -1,5 +1,5 @@
 import sql from 'mssql';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { Category, Product, Order, OrderItem, User, Review, SupportMessage } from '@/types';
 
 function parseToppingsField(raw: any): any[] {
@@ -46,6 +46,9 @@ async function ensureSchemaColumns(pool: any) {
   schemaPromise = (async () => {
     try {
     await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'toppings')
+        ALTER TABLE Products ADD toppings NVARCHAR(MAX) NULL;
+
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'walletBalance')
         ALTER TABLE Users ADD walletBalance DECIMAL(18, 0) DEFAULT 0;
 
@@ -66,22 +69,33 @@ async function ensureSchemaColumns(pool: any) {
 }
 
 async function getCloudPool(): Promise<any> {
+  // If credentials are not configured, directly return null without attempting connect
+  if (!dbConfig.user || !dbConfig.password || !dbConfig.server) {
+    return null;
+  }
+
   if (global._sqlPool && global._sqlPool.connected) {
     return global._sqlPool;
   }
 
   if (!poolPromise) {
-    poolPromise = (sql as any).connect(dbConfig)
-      .then((pool: any) => {
-        global._sqlPool = pool;
-        ensureSchemaColumns(pool);
-        return pool;
-      })
-      .catch((err: any) => {
-        console.warn('⚠️ Cloud SQL Server connection failed, using fallback:', err.message);
-        poolPromise = null;
-        return null;
-      });
+    try {
+      poolPromise = (sql as any).connect(dbConfig)
+        .then((pool: any) => {
+          global._sqlPool = pool;
+          ensureSchemaColumns(pool);
+          return pool;
+        })
+        .catch((err: any) => {
+          console.warn('⚠️ Cloud SQL Server connection failed, using fallback:', err.message);
+          poolPromise = null;
+          return null;
+        });
+    } catch (err: any) {
+      console.warn('⚠️ Cloud SQL Server sync connect error:', err.message);
+      poolPromise = null;
+      return null;
+    }
   }
 
   return poolPromise;

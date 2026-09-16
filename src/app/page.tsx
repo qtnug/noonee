@@ -16,7 +16,12 @@ import PromoBanner from '@/components/PromoBanner';
 export const revalidate = 0; // Dynamic
 
 export default async function HomePage() {
-  const featuredProducts = await getProducts({ isFeatured: true });
+  let featuredProducts: any[] = [];
+  try {
+    featuredProducts = await getProducts({ isFeatured: true });
+  } catch (e) {
+    console.error('Error loading featured products:', e);
+  }
 
   return (
     <div className="bg-white min-h-screen">
