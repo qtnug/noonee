@@ -68,7 +68,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const totalAmount = Math.max(0, subtotal - discountAmount);
+    const shippingFee = typeof body.shippingFee === 'number' ? Math.max(0, body.shippingFee) : 0;
+    const couponDiscountExcludingFreeship = validCouponCode === 'FREESHIP' ? 0 : discountAmount;
+    const totalAmount = Math.max(0, subtotal - couponDiscountExcludingFreeship + shippingFee);
     const orderCode = generateOrderCode();
 
     const order = await createOrder({

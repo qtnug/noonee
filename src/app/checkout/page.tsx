@@ -22,6 +22,8 @@ import { formatVND } from '@/lib/utils';
 import { AVAILABLE_COUPONS, validateCoupon } from '@/lib/coupons';
 import { Coupon } from '@/types';
 import { MembershipTierInfo } from '@/lib/membership';
+import AddressAutocompleteInput from '@/components/AddressAutocompleteInput';
+import { DistanceCalculationResult, STORE_ADDRESS } from '@/lib/goong';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -103,7 +105,9 @@ export default function CheckoutPage() {
     setCouponError('');
   };
 
-  const baseShippingFee = 15000;
+  const [distanceData, setDistanceData] = useState<DistanceCalculationResult | null>(null);
+
+  const baseShippingFee = distanceData ? distanceData.shippingFee : 15000;
   const memberShippingDiscount = tierInfo ? Math.min(baseShippingFee, tierInfo.shippingDiscount) : 0;
   const shippingFeeAfterMember = Math.max(0, baseShippingFee - memberShippingDiscount);
   const effectiveShippingFee = appliedCoupon?.code === 'FREESHIP' ? 0 : shippingFeeAfterMember;
@@ -172,6 +176,7 @@ export default function CheckoutPage() {
         notes: notes.trim(),
         paymentMethod,
         couponCode: appliedCoupon ? appliedCoupon.code : null,
+        shippingFee: effectiveShippingFee,
         items: cart.map((it) => ({
           productId: it.product.id,
           productName: it.product.name,
@@ -280,16 +285,19 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[13px] font-medium text-[#181d26]">
-                    Địa chỉ nhận món (Số nhà, tên đường, phường/xã) <span className="text-[#e31837]">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ví dụ: 123 Lê Lợi, Phường Bến Nghé, Quận 1"
+                  <div className="flex items-center justify-between">
+                    <label className="text-[13px] font-medium text-[#181d26]">
+                      Địa chỉ nhận món (Hà Nội) <span className="text-[#e31837]">*</span>
+                    </label>
+                    <span className="text-[11px] text-[#e31837] font-medium">
+                      Giao từ: <strong>{STORE_ADDRESS}</strong>
+                    </span>
+                  </div>
+                  <AddressAutocompleteInput
                     value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                    className="w-full h-11 px-3.5 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                    onChange={(addr) => setDeliveryAddress(addr)}
+                    onDistanceCalculated={(dist) => setDistanceData(dist)}
+                    required
                   />
                 </div>
 
@@ -588,14 +596,32 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <div className="flex justify-between text-[#41454d]">
-                  <span>Phí giao hàng</span>
+                  <div>
+                    <span>Phí giao hàng</span>
+                    {distanceData && (
+                      <span className="text-[11px] text-gray-500 block font-normal">
+                        Cách quán: {distanceData.distanceText} (~{distanceData.deliveryEstimateText})
+                      </span>
+                    )}
+                  </div>
                   {effectiveShippingFee === 0 ? (
-                    <span className="text-[#16a34a] font-semibold">
-                      Miễn phí {tierInfo && tierInfo.shippingDiscount >= 15000 ? `(${tierInfo.badge})` : appliedCoupon?.code === 'FREESHIP' ? '(Voucher)' : ''}
-                    </span>
+                    <div className="text-right">
+                      <span className="text-[#16a34a] font-semibold">Miễn phí</span>
+                      <span className="text-[10px] text-gray-500 block font-normal">
+                        {appliedCoupon?.code === 'FREESHIP'
+                          ? '(Voucher FREESHIP)'
+                          : tierInfo && tierInfo.shippingDiscount >= baseShippingFee
+                          ? `(${tierInfo.badge})`
+                          : ''}
+                      </span>
+                    </div>
                   ) : (
                     <div className="text-right">
-                      <span className="line-through text-gray-400 text-[11px] mr-1.5">15.000 ₫</span>
+                      {baseShippingFee !== effectiveShippingFee && (
+                        <span className="line-through text-gray-400 text-[11px] mr-1.5">
+                          {formatVND(baseShippingFee)}
+                        </span>
+                      )}
                       <span className="font-semibold text-[#181d26]">{formatVND(effectiveShippingFee)}</span>
                       {memberShippingDiscount > 0 && (
                         <span className="text-[10px] text-[#16a34a] block font-medium">
