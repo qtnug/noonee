@@ -4,11 +4,26 @@ import { updateOrderStatus, getOrderByCode } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
+    // 1. Verify SePay API Key / Token if configured
+    const expectedToken = process.env.SEPAY_API_TOKEN;
+    const authHeader = request.headers.get('authorization') || '';
+
+    if (expectedToken && expectedToken !== 'demo_sepay_token' && expectedToken.trim() !== '') {
+      const isAuthorized = authHeader.includes(expectedToken.trim());
+      if (!isAuthorized) {
+        console.warn('[Sepay Webhook] Unauthorized: Invalid or missing API Key');
+        return NextResponse.json(
+          { success: false, message: 'Sai mã xác thực SePay API Key (Unauthorized)' },
+          { status: 401 }
+        );
+      }
+    }
+
     const payload = await request.json();
     console.log('[Sepay Webhook Received]:', payload);
 
-    // Payload fields from Sepay: { id, gateway, transactionDate, accountNumber, content, transferAmount, ... }
-    const content = payload.content || payload.description || '';
+    // Payload fields from Sepay: { id, gateway, transactionDate, accountNumber, content, transferAmount, code, description, ... }
+    const content = String(payload.content || payload.description || payload.code || '');
     const orderCode = parseOrderCodeFromMemo(content);
 
     if (!orderCode) {
