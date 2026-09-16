@@ -103,24 +103,131 @@ async function getCloudPool(): Promise<any> {
 
 // In-memory fallback cache
 let inMemoryCategories: Category[] = [
-  { id: 1, name: 'Cơm & Bún Phở', slug: 'com-bun-pho', description: 'Các món ăn chính thơm ngon, đậm đà hương vị truyền thống', icon: 'BowlFood' },
-  { id: 2, name: 'Đồ Ăn Nhanh & Món Nhẹ', slug: 'do-an-nhanh', description: 'Bánh mì, nem rán, khoai tây chiên giòn rụm', icon: 'Sandwich' },
-  { id: 3, name: 'Đồ Uống & Tráng Miệng', slug: 'do-uong', description: 'Trà sữa, nước ép trái cây, cà phê nguyên chất mát lạnh', icon: 'Coffee' },
-  { id: 4, name: 'Món Đặc Biệt Quán', slug: 'mon-dac-biet', description: 'Các món Signature được yêu thích nhất', icon: 'Sparkles' }
+  { id: 1, name: 'Cơm & Món chính', slug: 'com-mon-chinh', description: 'Các món cơm rang, bún, phở, mì thơm ngon nóng hổi, chuẩn vị truyền thống', icon: 'Utensils' },
+  { id: 2, name: 'Đồ ăn vặt', slug: 'do-an-vat', description: 'Các món ăn vặt đường phố hấp dẫn, nóng giòn rụm thơm ngon', icon: 'Sandwich' },
+  { id: 3, name: 'Đồ uống', slug: 'do-uong', description: 'Trà sữa, cà phê, sinh tố, nước ép và các món chè thanh mát', icon: 'Coffee' }
 ];
 
 let inMemoryProducts: Product[] = [
-  { id: 1, categoryId: 1, categoryName: 'Cơm & Bún Phở', name: 'Phở Bò Đặc Biệt Hà Nội', slug: 'pho-bo-dac-biet', description: 'Bánh phở tươi mềm mướt, nước dùng hầm xương bò 12 tiếng thơm lừng quế hồi, nạm gầu giòn béo ngậy.', price: 65000, image: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?auto=format&fit=crop&w=800&q=80', isAvailable: true, isFeatured: true, rating: 4.9 },
-  { id: 2, categoryId: 1, categoryName: 'Cơm & Bún Phở', name: 'Bún Chả Hà Nội Nướng Than Hoa', slug: 'bun-cha-ha-noi', description: 'Chả nướng than thơm lừng, thịt ba chỉ tẩm ướp đậm vị, nước mắm dưa góp chua ngọt chuẩn vị phố cổ.', price: 55000, image: 'https://images.unsplash.com/photo-1594041680534-e8c8cdebd659?auto=format&fit=crop&w=800&q=80', isAvailable: true, isFeatured: true, rating: 4.8 },
-  { id: 3, categoryId: 1, categoryName: 'Cơm & Bún Phở', name: 'Cơm Tấm Sườn Bì Chả Trứng', slug: 'com-tam-suon-bi-cha', description: 'Sườn cốt lết nướng mật ong vàng ruộm, chả trứng béo ngậy, bì dai giòn ăn kèm mỡ hành tóp mỡ.', price: 60000, image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80', isAvailable: true, isFeatured: true, rating: 4.9 },
-  { id: 4, categoryId: 1, categoryName: 'Cơm & Bún Phở', name: 'Bún Bò Huế Cay Nồng', slug: 'bun-bo-hue', description: 'Nước dùng cay nồng hương sả ruốc, bắp bò hoa giòn, chả cua Huế và tiết tươi đậm đà.', price: 60000, image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=800&q=80', isAvailable: true, isFeatured: false, rating: 4.7 },
-  { id: 5, categoryId: 2, categoryName: 'Đồ Ăn Nhanh & Món Nhẹ', name: 'Bánh Mì Thập Cẩm Pate Đặc Biệt', slug: 'banh-mi-thap-cam', description: 'Vỏ bánh giòn tan, pate gan béo ngậy nhà làm, xá xíu, chả lụa kèm đồ chua và rau mùi tươi.', price: 35000, image: 'https://images.unsplash.com/photo-1626804475297-41608ea09aeb?auto=format&fit=crop&w=800&q=80', isAvailable: true, isFeatured: true, rating: 4.9 },
-  { id: 6, categoryId: 2, categoryName: 'Đồ Ăn Nhanh & Món Nhẹ', name: 'Nem Rán Hà Nội Giòn Rụm (5 cuốn)', slug: 'nem-ran-ha-noi', description: 'Nem nhân thịt heo, tôm, mộc nhĩ, miến dong cuốn bánh đa nem rán vàng ruộm chấm mắm ớt tỏi.', price: 45000, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80', isAvailable: true, isFeatured: false, rating: 4.8 },
-  { id: 7, categoryId: 2, categoryName: 'Đồ Ăn Nhanh & Món Nhẹ', name: 'Gà Rán Sốt Cay Phô Mai', slug: 'ga-ran-sot-cay', description: 'Cánh gà chiên giòn áo lớp sốt cay ngọt Hàn Quốc quyện phô mai béo ngậy tan chảy.', price: 50000, image: 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=800&q=80', isAvailable: true, isFeatured: false, rating: 4.6 },
-  { id: 8, categoryId: 3, categoryName: 'Đồ Uống & Tráng Miệng', name: 'Trà Đào Cam Sả Tươi Mát', slug: 'tra-dao-cam-sa', description: 'Trà thanh nhẹ kết hợp lát đào giòn sần sật, vị chua dịu của cam vàng và hương sả thơm lừng.', price: 32000, image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=80', isAvailable: true, isFeatured: true, rating: 4.8 },
-  { id: 9, categoryId: 3, categoryName: 'Đồ Uống & Tráng Miệng', name: 'Cà Phê Muối Kem Béo', slug: 'ca-phe-muoi-kem-beo', description: 'Cà phê Robusta Đắk Lắk pha phin nguyên chất phủ lớp kem muối béo mặn hài hòa.', price: 30000, image: 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=800&q=80', isAvailable: true, isFeatured: true, rating: 4.9 },
-  { id: 10, categoryId: 3, categoryName: 'Đồ Uống & Tráng Miệng', name: 'Trà Sữa Trân Châu Đường Đen', slug: 'tra-sua-tran-chau', description: 'Trà sữa béo ngậy chuẩn vị Đài Loan cùng trân châu nấu đường đen dẻo thơm.', price: 35000, image: 'https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=800&q=80', isAvailable: true, isFeatured: false, rating: 4.7 },
-  { id: 11, categoryId: 4, categoryName: 'Món Đặc Biệt Quán', name: 'Combo Trưa Hoàn Hảo (Cơm sườn + Trà đào)', slug: 'combo-trua-hoan-hao', description: 'Set ăn trưa dinh dưỡng gồm 1 đĩa cơm tấm sườn nướng mật ong và 1 ly trà đào mát lạnh giải nhiệt.', price: 85000, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80', isAvailable: true, isFeatured: true, rating: 5.0 }
+  {
+    id: 1,
+    categoryId: 1,
+    categoryName: 'Cơm & Món chính',
+    name: 'Cơm rang dương châu',
+    slug: 'com-rang-duong-chau',
+    description: 'Cơm rang giòn tơi hạt vàng ruộm cùng xá xíu, lạp xưởng, đậu Hà Lan, cà rốt và trứng gà béo ngậy.',
+    price: 35000,
+    image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=800&q=80',
+    isAvailable: true,
+    isFeatured: true,
+    rating: 5.0,
+    toppings: [
+      { id: 1, name: 'Trứng ốp la', price: 5000 },
+      { id: 2, name: 'Chả lụa / Chả trứng', price: 7000 },
+      { id: 3, name: 'Sườn nướng thêm', price: 15000 },
+      { id: 4, name: 'Dưa chua / Kim chi', price: 3000 },
+      { id: 5, name: 'Canh rong biển thịt bằm', price: 5000 }
+    ]
+  },
+  {
+    id: 4,
+    categoryId: 1,
+    categoryName: 'Cơm & Món chính',
+    name: 'Cơm tấm Sài Gòn',
+    slug: 'com-tam-sai-gon',
+    description: 'Cơm tấm hạt nhuyễn truyền thống, sườn cốt lết nướng than hoa thơm lừng, bì sợi dai giòn, chả trứng béo ngậy kèm mỡ hành tóp mỡ.',
+    price: 38000,
+    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+    isAvailable: true,
+    isFeatured: true,
+    rating: 5.0,
+    toppings: [
+      { id: 1, name: 'Trứng ốp la', price: 5000 },
+      { id: 2, name: 'Chả lụa / Chả trứng', price: 7000 },
+      { id: 3, name: 'Sườn nướng thêm', price: 15000 },
+      { id: 4, name: 'Dưa chua / Kim chi', price: 3000 },
+      { id: 5, name: 'Canh rong biển thịt bằm', price: 5000 }
+    ]
+  },
+  {
+    id: 9,
+    categoryId: 1,
+    categoryName: 'Cơm & Món chính',
+    name: 'Phở bò',
+    slug: 'pho-bo',
+    description: 'Bánh phở tươi mềm mướt, nước dùng hầm xương bò 12 tiếng thơm lừng quế hồi, nạm gầu ngọt mềm đậm vị.',
+    price: 40000,
+    image: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?auto=format&fit=crop&w=800&q=80',
+    isAvailable: true,
+    isFeatured: true,
+    rating: 5.0,
+    toppings: [
+      { id: 1, name: 'Trứng chần', price: 5000 },
+      { id: 2, name: 'Quẩy giòn (3 cái)', price: 5000 },
+      { id: 3, name: 'Thịt bò thêm', price: 15000 },
+      { id: 4, name: 'Mọc / Chả viên thêm', price: 10000 },
+      { id: 5, name: 'Tiết luộc mềm', price: 5000 }
+    ]
+  },
+  {
+    id: 21,
+    categoryId: 2,
+    categoryName: 'Đồ ăn vặt',
+    name: 'Bánh tráng trộn',
+    slug: 'banh-trang-tron',
+    description: 'Bánh tráng dai mềm ngấm đều sốt me chua ngọt cay bùi, bò khô cay xé sợi, xoài xanh, trứng cút, đậu phộng rang giòn và rau răm.',
+    price: 20000,
+    image: 'https://images.unsplash.com/photo-1626804475297-41608ea09aeb?auto=format&fit=crop&w=800&q=80',
+    isAvailable: true,
+    isFeatured: true,
+    rating: 5.0,
+    toppings: [
+      { id: 1, name: 'Sốt phô mai béo ngậy', price: 5000 },
+      { id: 2, name: 'Sốt bơ trứng me cay', price: 5000 },
+      { id: 3, name: 'Lắc bột phô mai', price: 4000 },
+      { id: 4, name: 'Thêm xúc xích rán', price: 6000 },
+      { id: 5, name: 'Trứng cút luộc/chiên (3 quả)', price: 5000 }
+    ]
+  },
+  {
+    id: 38,
+    categoryId: 3,
+    categoryName: 'Đồ uống',
+    name: 'Trà sữa (tự chọn topping)',
+    slug: 'tra-sua-tu-chon-topping',
+    description: 'Trà sữa truyền thống ủ từ lá trà đen thơm đậm vị trà, quyện sữa tươi béo thơm dịu mát, dễ dàng tùy chọn topping yêu thích.',
+    price: 25000,
+    image: 'https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=800&q=80',
+    isAvailable: true,
+    isFeatured: true,
+    rating: 5.0,
+    toppings: [
+      { id: 1, name: 'Trân châu đen dẻo', price: 5000 },
+      { id: 2, name: 'Trân châu trắng 3Q', price: 6000 },
+      { id: 3, name: 'Pudding trứng béo mềm', price: 6000 },
+      { id: 4, name: 'Kem Cheese Macchiato', price: 8000 },
+      { id: 5, name: 'Thạch nha đam thanh mát', price: 5000 }
+    ]
+  },
+  {
+    id: 44,
+    categoryId: 3,
+    categoryName: 'Đồ uống',
+    name: 'Trà đào',
+    slug: 'tra-dao',
+    description: 'Trà thanh nhẹ mát rượi hòa quyện miếng đào ngâm giòn sần sật chua ngọt dịu mát.',
+    price: 22000,
+    image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=80',
+    isAvailable: true,
+    isFeatured: true,
+    rating: 5.0,
+    toppings: [
+      { id: 1, name: 'Đào ngâm (2 miếng)', price: 7000 },
+      { id: 2, name: 'Thạch nha đam', price: 5000 },
+      { id: 3, name: 'Hạt chia', price: 4000 },
+      { id: 4, name: 'Trân châu trắng 3Q', price: 6000 }
+    ]
+  }
 ];
 
 let inMemoryOrders: Order[] = [];

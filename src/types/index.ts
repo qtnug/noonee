@@ -21,7 +21,7 @@ export interface Category {
 }
 
 export interface ProductTopping {
-  id: string;
+  id: string | number;
   name: string;
   price: number;
 }

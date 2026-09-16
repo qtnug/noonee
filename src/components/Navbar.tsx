@@ -44,8 +44,8 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Thực đơn', href: '/menu' },
     { name: 'Cơm & Món chính', href: '/menu?categoryId=1' },
-    { name: 'Đồ ăn nhanh', href: '/menu?categoryId=2' },
-    { name: 'Đồ uống & Tráng miệng', href: '/menu?categoryId=3' },
+    { name: 'Đồ ăn vặt', href: '/menu?categoryId=2' },
+    { name: 'Đồ uống', href: '/menu?categoryId=3' },
     { name: 'Đơn hàng', href: '/orders' },
   ];
 

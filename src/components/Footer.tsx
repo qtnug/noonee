@@ -45,22 +45,17 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/menu?categoryId=1" className="hover:text-[#181d26] transition">
-                  Cơm tấm & Món chính
+                  Cơm & Món chính
                 </Link>
               </li>
               <li>
                 <Link href="/menu?categoryId=2" className="hover:text-[#181d26] transition">
-                  Bánh mì & Ăn vặt
+                  Đồ ăn vặt
                 </Link>
               </li>
               <li>
                 <Link href="/menu?categoryId=3" className="hover:text-[#181d26] transition">
                   Đồ uống & Tráng miệng
-                </Link>
-              </li>
-              <li>
-                <Link href="/menu?categoryId=4" className="hover:text-[#181d26] transition">
-                  Combo đặc biệt
                 </Link>
               </li>
             </ul>

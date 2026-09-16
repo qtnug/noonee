@@ -10,6 +10,7 @@ import {
   Star,
 } from 'lucide-react';
 import { getProducts } from '@/lib/db';
+import Carousel360 from '@/components/Carousel360';
 import ProductCard from '@/components/ProductCard';
 import PromoBanner from '@/components/PromoBanner';
 
@@ -27,7 +28,7 @@ export default async function HomePage() {
     <div className="bg-white min-h-screen">
       {/* 1. HERO BAND (Red & White Editorial Theme) */}
       <section className="bg-white border-b border-[#dddddd]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Content Column */}
             <div className="lg:col-span-7 space-y-6">
@@ -36,7 +37,7 @@ export default async function HomePage() {
               </h1>
 
               <p className="text-[16px] text-[#41454d] leading-relaxed max-w-xl">
-                Khám phá danh mục món ăn phong phú từ cơm tấm, bún phở truyền thống đến thức uống giải khát mát lạnh. Đặt món dễ dàng và giao nhanh tận nơi, đảm bảo luôn nóng hổi.
+                Khám phá thực đơn phong phú từ cơm rang, bún phở truyền thống đến các món ăn vặt giòn rụm và thức uống thanh mát. Đặt món dễ dàng, giao nhanh tận nơi, đảm bảo luôn nóng hổi.
               </p>
 
               {/* Red & White CTA Button Pair */}
@@ -56,10 +57,10 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Right Visual Fragment */}
+            {/* Right Visual Fragment: 3D Carousel Featured Food */}
             <div className="lg:col-span-5">
-              <div className="bg-[#fff1f2] p-6 rounded-[12px] border border-[#fecdd3] relative">
-                <div className="bg-white rounded-[10px] border border-[#dddddd] p-4 shadow-xs space-y-4">
+              <div className="bg-[#fff1f2] p-5 sm:p-6 rounded-[16px] border border-[#fecdd3] relative shadow-xs">
+                <div className="bg-white rounded-[12px] border border-[#dddddd] p-4 shadow-xs space-y-3">
                   <div className="flex items-center justify-between border-b border-[#dddddd] pb-3">
                     <div>
                       <span className="text-[11px] font-semibold uppercase tracking-wider text-[#e31837]">
@@ -67,25 +68,21 @@ export default async function HomePage() {
                       </span>
                       <h4 className="text-[16px] font-semibold text-[#181d26]">Cơm Tấm Sườn Bì Chả Đặc Biệt</h4>
                     </div>
-                    <span className="text-[16px] font-bold text-[#e31837]">60.000 ₫</span>
+                    <span className="text-[16px] font-bold text-[#e31837]">38.000 ₫</span>
                   </div>
 
-                  <div className="aspect-square w-full rounded-[6px] overflow-hidden bg-[#f8fafc]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=700&q=80"
-                      alt="Cơm tấm sườn"
-                      className="w-full h-full object-cover"
-                    />
+                  {/* 3D Interactive 360 Food Carousel */}
+                  <div className="w-full flex items-center justify-center overflow-hidden">
+                    <Carousel360 />
                   </div>
 
-                  <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9]">
                     <span className="text-[12px] text-[#41454d] flex items-center gap-1">
                       <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      <span className="font-medium">4.9 (240+ đánh giá)</span>
+                      <span className="font-medium">5.0 (280+ đánh giá)</span>
                     </span>
                     <Link
-                      href="/menu"
+                      href="/menu?search=c%C6%A1m%20t%E1%BA%A5m"
                       className="h-8 px-3 rounded-[6px] bg-[#e31837] hover:bg-[#be0e27] text-white text-[12px] font-medium inline-flex items-center gap-1 transition"
                     >
                       <span>Xem món ngay</span>
@@ -168,7 +165,7 @@ export default async function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredProducts.slice(0, 4).map((product) => (
+          {featuredProducts.slice(0, 8).map((product) => (
             <ProductCard key={product.id} product={product} badgeText="Nổi bật" />
           ))}
         </div>
@@ -181,13 +178,13 @@ export default async function HomePage() {
           <div className="bg-white border border-[#dddddd] hover:border-[#e31837] rounded-[10px] p-6 flex flex-col justify-between h-64 transition-colors group">
             <div>
               <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider">
-                Món ăn chính
+                Cơm & Món chính
               </span>
               <h3 className="text-xl font-semibold text-[#181d26] mt-2 group-hover:text-[#e31837] transition-colors">
-                Cơm tấm & Bún phở gia truyền
+                Cơm rang & Bún phở gia truyền
               </h3>
               <p className="text-[13px] text-[#41454d] mt-2 leading-relaxed">
-                Hương vị truyền thống đậm đà, nước dùng hầm xương kỹ lưỡng mang lại trải nghiệm chuẩn vị.
+                Hương vị truyền thống đậm đà, hạt cơm vàng giòn và nước dùng hầm xương kỹ lưỡng thơm ngon.
               </p>
             </div>
             <Link
@@ -203,13 +200,13 @@ export default async function HomePage() {
           <div className="bg-white border border-[#dddddd] hover:border-[#e31837] rounded-[10px] p-6 flex flex-col justify-between h-64 transition-colors group">
             <div>
               <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider">
-                Đồ ăn nhanh
+                Đồ ăn vặt
               </span>
               <h3 className="text-xl font-semibold text-[#181d26] mt-2 group-hover:text-[#e31837] transition-colors">
-                Bánh mì & Đồ ăn vặt nóng giòn
+                Bánh tráng & Ăn vặt nóng giòn
               </h3>
               <p className="text-[13px] text-[#41454d] mt-2 leading-relaxed">
-                Vỏ bánh giòn rụm, pa-tê nhà làm thơm béo cùng dưa leo và rau ngò tươi ngon.
+                Bánh tráng nướng, bánh tráng trộn, nem chua rán và phô mai que giòn rụm thơm ngon.
               </p>
             </div>
             <Link
@@ -225,13 +222,13 @@ export default async function HomePage() {
           <div className="bg-white border border-[#dddddd] hover:border-[#e31837] rounded-[10px] p-6 flex flex-col justify-between h-64 transition-colors group">
             <div>
               <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider">
-                Giải khát & Tráng miệng
+                Đồ uống & Tráng miệng
               </span>
               <h3 className="text-xl font-semibold text-[#181d26] mt-2 group-hover:text-[#e31837] transition-colors">
-                Trà đào & Cà phê muối đặc sản
+                Trà sữa, Cà phê & Nước ép thanh mát
               </h3>
               <p className="text-[13px] text-[#41454d] mt-2 leading-relaxed">
-                Thức uống pha chế tươi mỗi ngày, sử dụng trà lá tự nhiên và lớp kem muối béo ngậy.
+                Trà sữa tự chọn topping, cà phê sữa phin Đắk Lắk đậm đà cùng các loại chè và sữa chua mát lạnh.
               </p>
             </div>
             <Link

@@ -49,7 +49,7 @@ export default function AdminProductsPage() {
     setNewTopPrice(10000);
   };
 
-  const handleRemoveTopping = (id: string) => {
+  const handleRemoveTopping = (id: string | number) => {
     setFormToppings((prev) => prev.filter((t) => t.id !== id));
   };
 
