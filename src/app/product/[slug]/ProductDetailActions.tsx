@@ -5,6 +5,7 @@ import { Plus, Minus, ShoppingBag, Check, CheckSquare, Square, PenLine, Sparkles
 import { Product, ProductTopping } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { formatVND } from '@/lib/utils';
+import { getAvailableToppings } from '@/components/ProductOptionsModal';
 
 export default function ProductDetailActions({ product }: { product: Product }) {
   const { addToCart } = useCart();
@@ -13,7 +14,7 @@ export default function ProductDetailActions({ product }: { product: Product }) 
   const [itemNote, setItemNote] = useState('');
   const [added, setAdded] = useState(false);
 
-  const toppings: ProductTopping[] = Array.isArray(product.toppings) ? product.toppings : [];
+  const toppings: ProductTopping[] = getAvailableToppings(product);
 
   const toggleTopping = (topping: ProductTopping) => {
     setSelectedToppings((prev) => {

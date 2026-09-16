@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Check, Star } from 'lucide-react';
+import { Plus, Star } from 'lucide-react';
 import { Product } from '@/types';
 import { formatVND } from '@/lib/utils';
-import { useCart } from '@/context/CartContext';
+import ProductOptionsModal from './ProductOptionsModal';
 
 export default function ProductCard({
   product,
@@ -14,16 +14,7 @@ export default function ProductCard({
   product: Product;
   badgeText?: string;
 }) {
-  const { addToCart } = useCart();
-  const [added, setAdded] = useState(false);
-
-  const handleAdd = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addToCart(product, 1);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1200);
-  };
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
 
   return (
     <div className="bg-white rounded-[10px] border border-[#dddddd] hover:border-[#fecdd3] hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden relative">
@@ -88,40 +79,33 @@ export default function ProductCard({
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <Link
-              href={`/product/${product.slug}`}
-              className="h-8 px-2.5 rounded-[6px] text-[11px] font-semibold text-[#e31837] bg-[#fff1f2] hover:bg-[#ffe4e6] border border-[#fecdd3] transition flex items-center"
-            >
-              Tùy chọn
-            </Link>
-            <button
-              onClick={handleAdd}
-              disabled={!product.isAvailable}
-              className={`h-8 px-3 rounded-[6px] text-[12px] font-semibold transition flex items-center gap-1 ${
-                !product.isAvailable
-                  ? 'bg-[#f8fafc] text-[#9297a0] border border-[#dddddd] cursor-not-allowed'
-                  : added
-                  ? 'bg-[#006400] text-white'
-                  : 'bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white shadow-xs'
-              }`}
-              title={product.isAvailable ? 'Thêm nhanh suất cơ bản' : 'Tạm hết hàng'}
-            >
-              {added ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Đã thêm</span>
-                </>
-              ) : (
-                <>
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Thêm</span>
-                </>
-              )}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsOptionsOpen(true);
+            }}
+            disabled={!product.isAvailable}
+            className={`h-8 px-3 rounded-[6px] text-[12px] font-semibold transition flex items-center gap-1.5 ${
+              !product.isAvailable
+                ? 'bg-[#f8fafc] text-[#9297a0] border border-[#dddddd] cursor-not-allowed'
+                : 'bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white shadow-xs cursor-pointer'
+            }`}
+            title={product.isAvailable ? 'Chọn món & Tùy chọn khẩu vị' : 'Tạm hết hàng'}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Thêm</span>
+          </button>
         </div>
       </div>
+
+      {/* Quick Customization & Options Modal */}
+      <ProductOptionsModal
+        product={product}
+        isOpen={isOptionsOpen}
+        onClose={() => setIsOptionsOpen(false)}
+      />
     </div>
   );
 }
