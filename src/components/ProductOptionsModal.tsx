@@ -14,6 +14,7 @@ import {
   Sparkles,
   Star,
   ShieldCheck,
+  Clock,
 } from 'lucide-react';
 import { Product, ProductTopping } from '@/types';
 import { formatVND } from '@/lib/utils';
@@ -197,6 +198,10 @@ export default function ProductOptionsModal({
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-[#e31837] bg-[#fff1f2] px-2 py-0.5 rounded-[4px] border border-[#fecdd3]">
                     {product.categoryName || 'Món ngon'}
+                  </span>
+                  <span className="flex items-center gap-0.5 text-[11px] text-[#41454d] bg-[#f8fafc] border border-[#dddddd] px-1.5 py-0.5 rounded-[4px]">
+                    <Clock className="w-3 h-3 text-[#e31837]" />
+                    <span>{product.prepTime || 15}p</span>
                   </span>
                   <span className="flex items-center gap-1 text-[12px] text-[#41454d]">
                     <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />

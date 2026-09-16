@@ -49,6 +49,9 @@ async function ensureSchemaColumns(pool: any) {
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'toppings')
         ALTER TABLE Products ADD toppings NVARCHAR(MAX) NULL;
 
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'prepTime')
+        ALTER TABLE Products ADD prepTime INT DEFAULT 15;
+
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'walletBalance')
         ALTER TABLE Users ADD walletBalance DECIMAL(18, 0) DEFAULT 0;
 
@@ -360,7 +363,7 @@ export async function getProducts(options?: { categoryId?: number; search?: stri
       let query = `
         SELECT p.id, p.categoryId, c.name AS categoryName, p.name, p.slug, p.description, 
                CAST(p.price AS INT) AS price, p.image, p.isAvailable, p.isFeatured, 
-               CAST(p.rating AS FLOAT) AS rating, p.toppings, p.createdAt 
+               CAST(p.rating AS FLOAT) AS rating, ISNULL(p.prepTime, 15) AS prepTime, p.toppings, p.createdAt 
         FROM Products p 
         LEFT JOIN Categories c ON p.categoryId = c.id
         WHERE 1=1
@@ -392,6 +395,7 @@ export async function getProducts(options?: { categoryId?: number; search?: stri
           let parsedToppings = parseToppingsField(r.toppings);
           return {
             ...r,
+            prepTime: r.prepTime || 15,
             toppings: parsedToppings,
             isAvailable: Boolean(r.isAvailable),
             isFeatured: Boolean(r.isFeatured),
@@ -427,7 +431,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       const res = await req.query(`
         SELECT p.id, p.categoryId, c.name AS categoryName, p.name, p.slug, p.description, 
                CAST(p.price AS INT) AS price, p.image, p.isAvailable, p.isFeatured, 
-               CAST(p.rating AS FLOAT) AS rating, p.toppings, p.createdAt 
+               CAST(p.rating AS FLOAT) AS rating, ISNULL(p.prepTime, 15) AS prepTime, p.toppings, p.createdAt 
         FROM Products p 
         LEFT JOIN Categories c ON p.categoryId = c.id
         WHERE p.slug = @slug
@@ -437,6 +441,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
         let parsedToppings = parseToppingsField(row.toppings);
         return {
           ...row,
+          prepTime: row.prepTime || 15,
           toppings: parsedToppings,
           isAvailable: Boolean(row.isAvailable),
           isFeatured: Boolean(row.isFeatured),
@@ -474,17 +479,19 @@ export async function createProduct(data: Omit<Product, 'id'>): Promise<Product>
       req.input('rat', sql.Decimal(3, 1), data.rating || 5.0);
       const topStr = data.toppings ? (typeof data.toppings === 'string' ? data.toppings : JSON.stringify(data.toppings)) : null;
       req.input('toppings', sql.NVarChar(sql.MAX), topStr);
+      req.input('prepTime', sql.Int, data.prepTime ? Number(data.prepTime) : 15);
 
       const res = await req.query(`
-        INSERT INTO Products (categoryId, name, slug, description, price, image, isAvailable, isFeatured, rating, toppings)
+        INSERT INTO Products (categoryId, name, slug, description, price, image, isAvailable, isFeatured, rating, toppings, prepTime)
         OUTPUT INSERTED.id, INSERTED.categoryId, INSERTED.name, INSERTED.slug, INSERTED.description, 
                CAST(INSERTED.price AS INT) AS price, INSERTED.image, INSERTED.isAvailable, INSERTED.isFeatured, 
-               CAST(INSERTED.rating AS FLOAT) AS rating, INSERTED.toppings, INSERTED.createdAt
-        VALUES (@catId, @name, @slug, @desc, @price, @img, @avail, @feat, @rat, @toppings)
+               CAST(INSERTED.rating AS FLOAT) AS rating, ISNULL(INSERTED.prepTime, 15) AS prepTime, INSERTED.toppings, INSERTED.createdAt
+        VALUES (@catId, @name, @slug, @desc, @price, @img, @avail, @feat, @rat, @toppings, @prepTime)
       `);
       if (res.recordset && res.recordset[0]) {
         return {
           ...res.recordset[0],
+          prepTime: res.recordset[0].prepTime || 15,
           toppings: data.toppings || [],
           isAvailable: Boolean(res.recordset[0].isAvailable),
           isFeatured: Boolean(res.recordset[0].isFeatured),
@@ -534,6 +541,10 @@ export async function updateProduct(id: number, data: Partial<Product>): Promise
       if (data.isFeatured !== undefined) {
         req.input('feat', sql.Bit, data.isFeatured ? 1 : 0);
         setClauses.push('isFeatured = @feat');
+      }
+      if (data.prepTime !== undefined) {
+        req.input('prepTime', sql.Int, Number(data.prepTime));
+        setClauses.push('prepTime = @prepTime');
       }
       if (data.toppings !== undefined) {
         const topStr = typeof data.toppings === 'string' ? data.toppings : JSON.stringify(data.toppings);
@@ -1049,7 +1060,8 @@ export async function getAdminStats() {
       `);
       const prodRes = await pool.request().query('SELECT COUNT(*) AS cnt FROM Products');
       const recentRes = await pool.request().query(`
-        SELECT TOP 5 id, orderCode, customerName, CAST(totalAmount AS INT) AS totalAmount, status, createdAt
+        SELECT TOP 10 id, orderCode, customerName, customerPhone, CAST(totalAmount AS INT) AS totalAmount, 
+               paymentMethod, paymentStatus, status, createdAt
         FROM Orders ORDER BY id DESC
       `);
       return {

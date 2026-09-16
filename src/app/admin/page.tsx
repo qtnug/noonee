@@ -241,15 +241,25 @@ export default function AdminOverviewPage() {
                     {formatVND(order.totalAmount)}
                   </td>
                   <td className="py-3.5">
-                    <span className="px-2 py-0.5 rounded-[4px] bg-[#f8fafc] border border-[#dddddd] text-[#333840] text-[11px] font-medium">
-                      {order.paymentMethod}
-                    </span>
+                    {(() => {
+                      const methodLabels: Record<string, string> = {
+                        Sepay: 'Chuyển khoản (VietQR)',
+                        COD: 'Tiền mặt (COD)',
+                        Wallet: 'Ví NooNee',
+                      };
+                      const label = methodLabels[order.paymentMethod] || order.paymentMethod || 'Chuyển khoản';
+                      return (
+                        <span className="px-2 py-0.5 rounded-[4px] bg-[#f8fafc] border border-[#dddddd] text-[#333840] text-[11px] font-medium whitespace-nowrap">
+                          {label}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="py-3.5">
                     <span
-                      className={`px-2 py-0.5 rounded-[4px] text-[11px] font-medium border ${
+                      className={`px-2 py-0.5 rounded-[4px] text-[11px] font-medium border whitespace-nowrap ${
                         order.paymentStatus === 'Paid'
-                          ? 'bg-[#f8fafc] text-[#006400] border-[#39bf45]'
+                          ? 'bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]'
                           : 'bg-[#fff1f2] text-[#e31837] border-[#fecdd3]'
                       }`}
                     >

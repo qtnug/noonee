@@ -3,14 +3,10 @@ import { updateOrderStatus, getOrderByCode } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    // Disable payment simulation in production environment (C10)
-    const isSimulationAllowed = 
-      process.env.NODE_ENV !== 'production' && 
-      process.env.NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION === 'true';
-
-    if (!isSimulationAllowed) {
+    // Allow payment simulation unless explicitly disabled
+    if (process.env.DISABLE_PAYMENT_SIMULATION === 'true') {
       return NextResponse.json(
-        { success: false, message: 'Chức năng giả lập thanh toán bị vô hiệu hóa trong môi trường thực tế' },
+        { success: false, message: 'Chức năng giả lập thanh toán đã bị vô hiệu hóa' },
         { status: 403 }
       );
     }

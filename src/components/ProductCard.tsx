@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Star, Heart } from 'lucide-react';
+import { Plus, Star, Heart, Clock } from 'lucide-react';
 import { Product } from '@/types';
 import { formatVND } from '@/lib/utils';
 import { useFavorites } from '@/context/FavoritesContext';
@@ -71,10 +71,16 @@ export default function ProductCard({
             <span className="uppercase tracking-wider font-semibold text-[11px] text-[#e31837]">
               {product.categoryName || 'Món ăn'}
             </span>
-            <span className="flex items-center gap-1 text-[#333840] font-medium">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              <span>{product.rating ? product.rating.toFixed(1) : '5.0'}</span>
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="flex items-center gap-0.5 text-[11px] text-[#41454d] bg-[#f8fafc] border border-[#dddddd] px-1.5 py-0.5 rounded-[4px]" title={`Thời gian chuẩn bị khoảng ${product.prepTime || 15} phút`}>
+                <Clock className="w-3 h-3 text-[#e31837]" />
+                <span>{product.prepTime || 15}p</span>
+              </span>
+              <span className="flex items-center gap-1 text-[#333840] font-medium">
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span>{product.rating ? product.rating.toFixed(1) : '5.0'}</span>
+              </span>
+            </div>
           </div>
 
           {/* Title */}

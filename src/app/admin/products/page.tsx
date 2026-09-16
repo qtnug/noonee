@@ -11,6 +11,7 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  Clock,
 } from 'lucide-react';
 import { Product, Category, ProductTopping } from '@/types';
 import { formatVND } from '@/lib/utils';
@@ -29,6 +30,7 @@ export default function AdminProductsPage() {
   const [formName, setFormName] = useState('');
   const [formCategoryId, setFormCategoryId] = useState<number>(1);
   const [formPrice, setFormPrice] = useState<number>(50000);
+  const [formPrepTime, setFormPrepTime] = useState<number>(15);
   const [formImage, setFormImage] = useState('');
   const [formDesc, setFormDesc] = useState('');
   const [formAvailable, setFormAvailable] = useState(true);
@@ -117,6 +119,7 @@ export default function AdminProductsPage() {
     setEditingProduct(null);
     setFormName('');
     setFormPrice(50000);
+    setFormPrepTime(15);
     setFormImage('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80');
     setFormDesc('');
     setFormAvailable(true);
@@ -133,6 +136,7 @@ export default function AdminProductsPage() {
     setFormName(p.name);
     setFormCategoryId(p.categoryId);
     setFormPrice(p.price);
+    setFormPrepTime(p.prepTime || 15);
     setFormImage(p.image);
     setFormDesc(p.description);
     setFormAvailable(p.isAvailable);
@@ -155,6 +159,7 @@ export default function AdminProductsPage() {
             name: formName,
             categoryId: formCategoryId,
             price: formPrice,
+            prepTime: formPrepTime || 15,
             image: formImage,
             description: formDesc,
             isAvailable: formAvailable,
@@ -170,6 +175,7 @@ export default function AdminProductsPage() {
             name: formName,
             categoryId: formCategoryId,
             price: formPrice,
+            prepTime: formPrepTime || 15,
             image: formImage,
             description: formDesc,
             isAvailable: formAvailable,
@@ -292,6 +298,10 @@ export default function AdminProductsPage() {
                       <span className="px-2 py-0.5 rounded-[4px] bg-[#f8fafc] border border-[#dddddd] text-[#333840] font-medium text-[11px]">
                         {p.categoryName || 'Món chính'}
                       </span>
+                      <div className="text-[11px] text-[#9297a0] flex items-center gap-1 mt-1">
+                        <Clock className="w-3 h-3 text-[#e31837]" />
+                        <span>{p.prepTime || 15} phút</span>
+                      </div>
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-[#181d26]">
                       {formatVND(p.price)}
@@ -370,7 +380,7 @@ export default function AdminProductsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="font-medium text-[#181d26]">Danh mục *</label>
                   <select
@@ -395,6 +405,20 @@ export default function AdminProductsPage() {
                     step={1000}
                     value={formPrice}
                     onChange={(e) => setFormPrice(Number(e.target.value))}
+                    className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-medium text-[#181d26]">Thời gian nấu (phút) *</label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    max={180}
+                    placeholder="15"
+                    value={formPrepTime}
+                    onChange={(e) => setFormPrepTime(Number(e.target.value))}
                     className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
                   />
                 </div>

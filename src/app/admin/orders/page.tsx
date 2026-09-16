@@ -236,9 +236,18 @@ export default function AdminOrdersPage() {
                       ) : null}
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className="px-2 py-0.5 rounded-[4px] bg-[#f8fafc] border border-[#dddddd] text-[#333840] text-[11px] font-medium">
-                        {order.paymentMethod}
-                      </span>
+                      {(() => {
+                        const methodLabels: Record<string, string> = {
+                          Sepay: 'Chuyển khoản (VietQR)',
+                          COD: 'Tiền mặt (COD)',
+                          Wallet: 'Ví NooNee',
+                        };
+                        return (
+                          <span className="px-2 py-0.5 rounded-[4px] bg-[#f8fafc] border border-[#dddddd] text-[#333840] text-[11px] font-medium whitespace-nowrap">
+                            {methodLabels[order.paymentMethod] || order.paymentMethod || 'Chuyển khoản'}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="py-3.5 px-4">
                       <select

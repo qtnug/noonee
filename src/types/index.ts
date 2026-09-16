@@ -38,6 +38,7 @@ export interface Product {
   isAvailable: boolean;
   isFeatured: boolean;
   rating: number;
+  prepTime?: number;
   toppings?: ProductTopping[];
   createdAt?: string;
 }

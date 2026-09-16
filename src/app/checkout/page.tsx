@@ -16,6 +16,7 @@ import {
   ChevronUp,
   Award,
   Wallet,
+  AlertCircle,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -112,6 +113,7 @@ export default function CheckoutPage() {
   };
 
   const [distanceData, setDistanceData] = useState<DistanceCalculationResult | null>(null);
+  const isOutOfRange = Boolean(distanceData && (distanceData.isOutOfRange || distanceData.distanceKm > 15));
 
   const baseShippingFee = distanceData ? distanceData.shippingFee : 15000;
   const memberShippingDiscount = tierInfo ? Math.min(baseShippingFee, tierInfo.shippingDiscount) : 0;
@@ -182,6 +184,11 @@ export default function CheckoutPage() {
 
     if (!customerName.trim() || !customerPhone.trim() || !deliveryAddress.trim()) {
       setErrorMsg('Vui lòng điền đầy đủ Họ tên, Số điện thoại và Địa chỉ giao hàng');
+      return;
+    }
+
+    if (isOutOfRange) {
+      setErrorMsg(`Rất tiếc, quán chỉ nhận giao hàng trong bán kính 15km từ cơ sở 120 Yên Lãng, Đống Đa. Địa chỉ hiện tại cách quán ${distanceData?.distanceText}. Vui lòng chọn địa chỉ nhận món gần hơn.`);
       return;
     }
 
@@ -695,10 +702,19 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              {isOutOfRange && (
+                <div className="p-3 bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] rounded-[8px] text-[12px] font-medium flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>
+                    Địa chỉ giao hàng ({distanceData?.distanceText}) vượt quá bán kính phục vụ 15km của quán. Vui lòng đổi địa chỉ gần hơn để đặt món.
+                  </span>
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full h-12 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-semibold text-[14px] rounded-[12px] flex items-center justify-center gap-2 transition disabled:opacity-50 shadow-xs"
+                disabled={isSubmitting || isOutOfRange}
+                className="w-full h-12 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-semibold text-[14px] rounded-[12px] flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-xs cursor-pointer"
               >
                 {isSubmitting ? (
                   <>

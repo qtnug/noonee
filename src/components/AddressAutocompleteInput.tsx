@@ -287,16 +287,34 @@ export default function AddressAutocompleteInput({
 
       {/* Compact Distance & Fee Bar */}
       {distanceInfo && !isCalculating && (
-        <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border border-gray-200 rounded-[6px] text-[12px]">
-          <div className="flex items-center gap-1.5 text-gray-600">
-            <Navigation className="w-3.5 h-3.5 text-[#e31837]" />
+        <div
+          className={`flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-3 py-2 rounded-[6px] text-[12px] border transition ${
+            distanceInfo.isOutOfRange || distanceInfo.distanceKm > 15
+              ? 'bg-[#fff1f2] border-[#fecdd3] text-[#e31837]'
+              : 'bg-gray-50 border-gray-200 text-gray-600'
+          }`}
+        >
+          <div className="flex items-center gap-1.5">
+            <Navigation className="w-3.5 h-3.5 text-[#e31837] shrink-0" />
             <span>
-              Khoảng cách: <strong className="text-[#181d26]">{distanceInfo.distanceText}</strong>
+              Khoảng cách:{' '}
+              <strong className={distanceInfo.isOutOfRange || distanceInfo.distanceKm > 15 ? 'text-[#e31837]' : 'text-[#181d26]'}>
+                {distanceInfo.distanceText}
+              </strong>
+              {(distanceInfo.isOutOfRange || distanceInfo.distanceKm > 15) && (
+                <span className="font-medium ml-1.5 text-[#e31837]">(Vượt quá bán kính 15km của quán)</span>
+              )}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-gray-500">Phí ship:</span>
-            <span className="font-bold text-[#e31837]">{formatVND(distanceInfo.shippingFee)}</span>
+            {distanceInfo.isOutOfRange || distanceInfo.distanceKm > 15 ? (
+              <span className="font-semibold text-[#e31837]">Chưa hỗ trợ giao</span>
+            ) : (
+              <>
+                <span className="text-gray-500">Phí ship:</span>
+                <span className="font-bold text-[#e31837]">{formatVND(distanceInfo.shippingFee)}</span>
+              </>
+            )}
           </div>
         </div>
       )}

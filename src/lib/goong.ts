@@ -2,6 +2,7 @@
 
 export const STORE_ADDRESS = '120 Yên Lãng, Đống Đa, Hà Nội';
 export const STORE_NAME = 'Quán Ăn NooNee (Cơ sở 120 Yên Lãng)';
+export const MAX_DELIVERY_DISTANCE_KM = 15;
 
 // Exact coordinates for 120 Yên Lãng, Thịnh Quang, Đống Đa, Hà Nội
 export const STORE_COORDINATES = {
@@ -26,6 +27,7 @@ export interface DistanceCalculationResult {
   deliveryEstimateText: string;
   shippingFee: number;
   isSimulated?: boolean;
+  isOutOfRange?: boolean;
 }
 
 // Fallback popular landmarks in Hanoi when API key is missing or offline
@@ -310,6 +312,7 @@ export async function calculateDistanceFromStore(params: {
           deliveryEstimateText,
           shippingFee,
           isSimulated: false,
+          isOutOfRange: distanceKm > MAX_DELIVERY_DISTANCE_KM,
         };
       }
     } catch (err) {
@@ -340,5 +343,6 @@ export async function calculateDistanceFromStore(params: {
     deliveryEstimateText,
     shippingFee,
     isSimulated: true,
+    isOutOfRange: distanceKm > MAX_DELIVERY_DISTANCE_KM,
   };
 }

@@ -64,9 +64,12 @@ export default function VietQRCode({
         if (onPaymentSuccess) {
           onPaymentSuccess();
         }
+      } else {
+        alert(data.message || 'Không thể thực hiện giả lập thanh toán');
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Simulation error:', e);
+      alert('Lỗi kết nối giả lập thanh toán: ' + (e.message || 'Vui lòng thử lại'));
     } finally {
       setIsSimulating(false);
     }
@@ -181,31 +184,25 @@ export default function VietQRCode({
         <span>Hệ thống đang tự động kiểm tra giao dịch chuyển khoản...</span>
       </div>
 
-      {/* Testing Simulation Affordance */}
-      <div className="pt-2 border-t border-[#dddddd] text-center">
-        <div className="bg-[#fff1f2]/40 border border-[#fecdd3] rounded-[10px] p-4 space-y-2">
-          <div className="flex items-center justify-center gap-1.5 text-[13px] text-[#e31837] font-semibold">
-            <AlertCircle className="w-4 h-4" />
-            <span>Môi trường thử nghiệm thanh toán (Sandbox)</span>
-          </div>
-          <p className="text-[12px] text-[#41454d]">
-            Dành cho kiểm tra và chấm điểm quy trình đặt món mà không chuyển tiền thật:
-          </p>
-          <button
-            onClick={handleSimulatePayment}
-            disabled={isSimulating}
-            className="w-full h-11 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-semibold text-[13px] rounded-[6px] transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-          >
-            {isSimulating ? (
-              <>
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                <span>Đang xử lý giả lập...</span>
-              </>
-            ) : (
-              <span>⚡ Bấm vào đây để giả lập thanh toán thành công (Sandbox)</span>
-            )}
-          </button>
-        </div>
+      {/* Testing Simulation Affordance - Compact */}
+      <div className="pt-2 border-t border-[#dddddd] flex items-center justify-center gap-2">
+        <span className="text-[11px] text-[#9297a0]">Thử nghiệm:</span>
+        <button
+          type="button"
+          onClick={handleSimulatePayment}
+          disabled={isSimulating}
+          className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-[4px] text-[11px] font-medium transition cursor-pointer disabled:opacity-50"
+          title="Giả lập chuyển khoản thành công để test đơn hàng"
+        >
+          {isSimulating ? (
+            <>
+              <RefreshCw className="w-3 h-3 animate-spin text-amber-800" />
+              <span>Đang xử lý...</span>
+            </>
+          ) : (
+            <span>⚡ Giả lập thanh toán (Sandbox)</span>
+          )}
+        </button>
       </div>
     </div>
   );

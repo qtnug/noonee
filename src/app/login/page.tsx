@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { User, Lock, ArrowRight, Check, AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import AddressAutocompleteInput from '@/components/AddressAutocompleteInput';
 
 function LoginContent() {
   const router = useRouter();
@@ -348,12 +349,10 @@ function LoginContent() {
 
             <div className="space-y-1">
               <label className="font-medium text-[#181d26]">Địa chỉ giao hàng</label>
-              <input
-                type="text"
-                placeholder="Số nhà, tên đường, phường/xã, quận..."
+              <AddressAutocompleteInput
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#e31837] transition"
+                onChange={(addr) => setAddress(addr)}
+                placeholder="Số nhà, tên đường, phường/xã (Goong Map tự động đề xuất)..."
               />
             </div>
 

@@ -23,10 +23,12 @@ import {
 } from 'lucide-react';
 import { Order, SupportMessage, Review } from '@/types';
 import { formatVND, formatDate } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 
 export default function OrderTrackingPage() {
   const params = useParams();
   const orderCode = params.orderCode as string;
+  const { user, getAuthHeader } = useAuth();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,6 +39,18 @@ export default function OrderTrackingPage() {
   const [chatText, setChatText] = useState('');
   const [isComplaint, setIsComplaint] = useState(false);
   const [isSendingChat, setIsSendingChat] = useState(false);
+
+  // Deduplicate items by productId so each dish is only reviewed once per order
+  const uniqueReviewableItems = React.useMemo(() => {
+    if (!order?.items) return [];
+    const map = new Map<number, (typeof order.items)[0]>();
+    for (const item of order.items) {
+      if (!map.has(item.productId)) {
+        map.set(item.productId, item);
+      }
+    }
+    return Array.from(map.values());
+  }, [order?.items]);
 
   // Per-item review state
   const [reviewRatings, setReviewRatings] = useState<{ [key: number]: number }>({});
@@ -65,10 +79,10 @@ export default function OrderTrackingPage() {
     return () => clearInterval(timer);
   }, [orderCode]);
 
-  // Fetch reviews for items in this order
+  // Fetch reviews for unique items in this order
   const fetchOrderReviews = async () => {
-    if (!order?.items || !orderCode) return;
-    for (const item of order.items) {
+    if (!uniqueReviewableItems.length || !orderCode) return;
+    for (const item of uniqueReviewableItems) {
       try {
         const res = await fetch(`/api/reviews?productId=${item.productId}&orderCode=${orderCode}`);
         const data = await res.json();
@@ -84,10 +98,10 @@ export default function OrderTrackingPage() {
   };
 
   useEffect(() => {
-    if (order?.items && order.items.length > 0) {
+    if (uniqueReviewableItems.length > 0) {
       fetchOrderReviews();
     }
-  }, [order?.status, orderCode]);
+  }, [order?.status, orderCode, uniqueReviewableItems]);
 
   // Support chat fetch
   const fetchChatMessages = async () => {
@@ -164,8 +178,8 @@ export default function OrderTrackingPage() {
 
     setReviewSubmitting((prev) => ({ ...prev, [productId]: true }));
     try {
-      let customerName = order?.customerName || 'Khách hàng';
-      let userId = order?.userId;
+      let customerName = user?.fullName || order?.customerName || 'Khách hàng';
+      let userId = user?.id || order?.userId;
       try {
         const stored = localStorage.getItem('noonee_customer');
         if (stored) {
@@ -175,9 +189,10 @@ export default function OrderTrackingPage() {
         }
       } catch {}
 
+      const authHeaders = getAuthHeader ? getAuthHeader() : {};
       const res = await fetch('/api/reviews', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           productId,
           userId,
@@ -546,7 +561,7 @@ export default function OrderTrackingPage() {
             </div>
           ) : (
             <div className="divide-y divide-[#dddddd] space-y-6">
-              {order.items?.map((item) => {
+              {uniqueReviewableItems.map((item) => {
                 const existing = existingReviews[item.productId];
                 const isEditing = editingItem[item.productId];
                 const currentRating = reviewRatings[item.productId] || 5;
@@ -555,12 +570,20 @@ export default function OrderTrackingPage() {
 
                 return (
                   <div key={item.productId} className="pt-6 first:pt-0 space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <span className="font-semibold text-[#181d26] text-[14px]">
-                        {item.productName}
-                      </span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 bg-[#f8fafc] rounded-[8px] border border-[#dddddd]">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-[6px] bg-[#fff1f2] border border-[#fecdd3] flex items-center justify-center text-[#e31837] shrink-0">
+                          <CookingPot className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-[11px] font-medium text-[#9297a0] uppercase tracking-wider">Món ăn cần đánh giá</div>
+                          <span className="font-semibold text-[#181d26] text-[15px]">
+                            {item.productName}
+                          </span>
+                        </div>
+                      </div>
                       {existing && !isEditing ? (
-                        <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#006400] bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-1 rounded-[4px]">
+                        <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#006400] bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-1 rounded-[4px] self-start sm:self-auto">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Đã đánh giá
                         </span>
                       ) : null}

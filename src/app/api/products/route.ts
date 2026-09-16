@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
       isAvailable: body.isAvailable ?? true,
       isFeatured: body.isFeatured ?? false,
       rating: 5.0,
+      prepTime: body.prepTime ? Number(body.prepTime) : 15,
       toppings: body.toppings || [],
     });
 

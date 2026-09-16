@@ -103,7 +103,7 @@ export default async function ProductDetailPage({
               <div className="grid grid-cols-2 gap-3 text-[13px] text-[#41454d]">
                 <div className="flex items-center gap-2.5 p-3 rounded-[6px] bg-[#fff1f2]/50 border border-[#fecdd3]">
                   <Clock className="w-4 h-4 text-[#e31837]" />
-                  <span>Chuẩn bị trong 10-15p</span>
+                  <span>Chuẩn bị trong {product.prepTime || 15} phút</span>
                 </div>
                 <div className="flex items-center gap-2.5 p-3 rounded-[6px] bg-[#fff1f2]/50 border border-[#fecdd3]">
                   <Utensils className="w-4 h-4 text-[#e31837]" />
