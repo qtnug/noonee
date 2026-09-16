@@ -59,9 +59,16 @@ export async function POST(request: NextRequest) {
 
     if (couponCode) {
       const { validateCoupon } = await import('@/lib/coupons');
-      const { hasUserPaidFirstVietqr } = await import('@/lib/db');
-      const isNewUser = !(await hasUserPaidFirstVietqr(parseInt(String(userId))));
-      const validation = validateCoupon(couponCode, subtotal, paymentMethod || 'Sepay', isNewUser);
+      const { hasUserPaidFirstVietqr, getUserSpendingStats } = await import('@/lib/db');
+      const { getMembershipTier } = await import('@/lib/membership');
+      const parsedUserId = parseInt(String(userId));
+      const [isFirstPaid, spendingStats] = await Promise.all([
+        hasUserPaidFirstVietqr(parsedUserId),
+        getUserSpendingStats(parsedUserId),
+      ]);
+      const userTier = getMembershipTier(spendingStats.totalSpent).tier;
+      const isNewUser = !isFirstPaid;
+      const validation = validateCoupon(couponCode, subtotal, paymentMethod || 'Sepay', isNewUser, userTier);
       if (validation.valid) {
         discountAmount = validation.discountAmount;
         validCouponCode = validation.coupon ? validation.coupon.code : String(couponCode).toUpperCase();

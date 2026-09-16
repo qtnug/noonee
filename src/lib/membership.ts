@@ -27,6 +27,60 @@ export interface MembershipTierInfo {
   vouchers: TierVoucher[];
 }
 
+export const SILVER_TIER_VOUCHERS: TierVoucher[] = [
+  {
+    code: 'SILVER10',
+    name: 'Voucher Hạng Bạc - Giảm 10k',
+    description: 'Giảm ngay 10.000 ₫ cho đơn từ 80.000 ₫',
+    discountType: 'fixed',
+    discountValue: 10000,
+    minOrderAmount: 80000,
+    badge: 'Đặc quyền Bạc',
+  },
+];
+
+export const GOLD_TIER_VOUCHERS: TierVoucher[] = [
+  {
+    code: 'GOLD25',
+    name: 'Voucher Hạng Vàng - Giảm 25k',
+    description: 'Giảm 25.000 ₫ cho đơn từ 150.000 ₫',
+    discountType: 'fixed',
+    discountValue: 25000,
+    minOrderAmount: 150000,
+    badge: 'Đặc quyền Vàng',
+  },
+  {
+    code: 'GOLDVIP',
+    name: 'Voucher Hạng Vàng - Giảm 15%',
+    description: 'Giảm 15% tổng tiền cho đơn từ 200.000 ₫',
+    discountType: 'percentage',
+    discountValue: 15,
+    minOrderAmount: 200000,
+    badge: 'VIP Vàng 15%',
+  },
+];
+
+export const DIAMOND_TIER_VOUCHERS: TierVoucher[] = [
+  {
+    code: 'DIAMOND50',
+    name: 'Voucher VIP Kim Cương - Giảm 50k',
+    description: 'Giảm ngay 50.000 ₫ cho đơn từ 200.000 ₫',
+    discountType: 'fixed',
+    discountValue: 50000,
+    minOrderAmount: 200000,
+    badge: 'Đặc quyền Kim Cương',
+  },
+  {
+    code: 'DIAMONDVIP',
+    name: 'Voucher VIP Kim Cương - Giảm 20%',
+    description: 'Giảm 20% cho đơn từ 250.000 ₫',
+    discountType: 'percentage',
+    discountValue: 20,
+    minOrderAmount: 250000,
+    badge: 'VIP Kim Cương 20%',
+  },
+];
+
 export function getMembershipTier(totalSpent: number): MembershipTierInfo {
   const spent = Math.max(0, Number(totalSpent) || 0);
 
@@ -49,7 +103,7 @@ export function getMembershipTier(totalSpent: number): MembershipTierInfo {
       shippingDiscount: 0,
       benefits: [
         'Tích lũy chi tiêu tự động sau mỗi đơn hoàn thành',
-        'Chi tiêu thêm đạt 500.000 ₫ để thăng hạng Bạc và giảm ship',
+        'Chi tiêu thêm đạt 500.000 ₫ để thăng hạng Bạc và nhận mã giảm giá',
       ],
       vouchers: [
         {
@@ -88,20 +142,10 @@ export function getMembershipTier(totalSpent: number): MembershipTierInfo {
       shippingDiscount: 5000, // Giảm 5.000đ ship
       benefits: [
         'Giảm 5.000 ₫ phí vận chuyển cho mọi đơn hàng',
-        'Tặng Voucher độc quyền SILVER10 giảm 10.000 ₫',
+        'Tặng Voucher độc quyền Hạng Bạc (SILVER10: Giảm 10k)',
         'Ưu tiên xử lý đơn hàng trong giờ cao điểm',
       ],
-      vouchers: [
-        {
-          code: 'SILVER10',
-          name: 'Voucher Hạng Bạc - Giảm 10k',
-          description: 'Giảm ngay 10.000 ₫ cho đơn từ 80.000 ₫',
-          discountType: 'fixed',
-          discountValue: 10000,
-          minOrderAmount: 80000,
-          badge: 'Đặc quyền Bạc',
-        },
-      ],
+      vouchers: [...SILVER_TIER_VOUCHERS],
     };
   }
 
@@ -128,30 +172,11 @@ export function getMembershipTier(totalSpent: number): MembershipTierInfo {
       shippingDiscount: 10000, // Giảm 10.000đ ship
       benefits: [
         'Giảm 10.000 ₫ phí vận chuyển cho mọi đơn hàng',
-        'Tặng Voucher độc quyền GOLD25 giảm 25.000 ₫ đơn từ 150k',
-        'Tặng Voucher GOLDVIP giảm 15% (tối đa 40k) đơn từ 200k',
+        'Hưởng toàn bộ voucher Hạng Bạc (SILVER10: Giảm 10k)',
+        'Tặng Voucher độc quyền Hạng Vàng (GOLD25: Giảm 25k, GOLDVIP: Giảm 15%)',
         'Ưu tiên nhà bếp chế biến nhanh',
       ],
-      vouchers: [
-        {
-          code: 'GOLD25',
-          name: 'Voucher Hạng Vàng - Giảm 25k',
-          description: 'Giảm 25.000 ₫ cho đơn từ 150.000 ₫',
-          discountType: 'fixed',
-          discountValue: 25000,
-          minOrderAmount: 150000,
-          badge: 'Đặc quyền Vàng',
-        },
-        {
-          code: 'GOLDVIP',
-          name: 'Voucher Hạng Vàng - Giảm 15%',
-          description: 'Giảm 15% tổng tiền cho đơn từ 200.000 ₫',
-          discountType: 'percentage',
-          discountValue: 15,
-          minOrderAmount: 200000,
-          badge: 'VIP Vàng 15%',
-        },
-      ],
+      vouchers: [...SILVER_TIER_VOUCHERS, ...GOLD_TIER_VOUCHERS],
     };
   }
 
@@ -171,29 +196,14 @@ export function getMembershipTier(totalSpent: number): MembershipTierInfo {
     shippingDiscount: 25000, // Giảm 25.000đ phí vận chuyển
     benefits: [
       'Giảm ngay 25.000 ₫ phí vận chuyển cho mỗi đơn hàng',
-      'Tặng Voucher độc quyền DIAMOND50 giảm 50.000 ₫ đơn từ 200k',
-      'Tặng Voucher DIAMONDVIP giảm 20% đơn từ 250k',
+      'Hưởng trọn vẹn toàn bộ voucher các hạng trước (SILVER10, GOLD25, GOLDVIP)',
+      'Tặng Voucher VIP độc quyền Kim Cương (DIAMOND50: Giảm 50k, DIAMONDVIP: Giảm 20%)',
       'Ưu tiên giao hàng siêu tốc và hỗ trợ CSKH VIP',
     ],
     vouchers: [
-      {
-        code: 'DIAMOND50',
-        name: 'Voucher VIP Kim Cương - Giảm 50k',
-        description: 'Giảm ngay 50.000 ₫ cho đơn từ 200.000 ₫',
-        discountType: 'fixed',
-        discountValue: 50000,
-        minOrderAmount: 200000,
-        badge: 'Đặc quyền Kim Cương',
-      },
-      {
-        code: 'DIAMONDVIP',
-        name: 'Voucher VIP Kim Cương - Giảm 20%',
-        description: 'Giảm 20% cho đơn từ 250.000 ₫',
-        discountType: 'percentage',
-        discountValue: 20,
-        minOrderAmount: 250000,
-        badge: 'VIP Kim Cương 20%',
-      },
+      ...SILVER_TIER_VOUCHERS,
+      ...GOLD_TIER_VOUCHERS,
+      ...DIAMOND_TIER_VOUCHERS,
     ],
   };
 }

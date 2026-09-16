@@ -86,7 +86,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    const res = validateCoupon(code, totalPrice, paymentMethod, isNewUser);
+    const res = validateCoupon(code, totalPrice, paymentMethod, isNewUser, tierInfo?.tier);
     if (!res.valid) {
       setCouponError(res.message || 'Mã không hợp lệ');
       return;
@@ -508,7 +508,7 @@ export default function CheckoutPage() {
                   <div className="space-y-2 pt-2 border-t border-[#fecdd3]/60 max-h-56 overflow-y-auto pr-1">
                     {AVAILABLE_COUPONS.map((c) => {
                       const isApplied = appliedCoupon?.code === c.code;
-                      const check = validateCoupon(c.code, totalPrice, paymentMethod, isNewUser);
+                      const check = validateCoupon(c.code, totalPrice, paymentMethod, isNewUser, tierInfo?.tier);
                       const isEligible = check.valid;
 
                       return (

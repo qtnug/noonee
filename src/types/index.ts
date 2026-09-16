@@ -94,6 +94,7 @@ export interface Coupon {
   requiresVietQR?: boolean;
   forNewUserOnly?: boolean;
   badge?: string;
+  minTier?: 'Bronze' | 'Silver' | 'Gold' | 'Diamond';
 }
 
 export interface PaymentRecord {
