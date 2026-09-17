@@ -223,16 +223,16 @@ export default function AdminCategoriesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-normal text-[#181d26]">Quản lý danh mục món ăn</h1>
-          <p className="text-[14px] text-[#41454d] mt-1">
+          <h1 className="text-xl sm:text-2xl font-normal text-[#181d26]">Quản lý danh mục món ăn</h1>
+          <p className="text-[13px] sm:text-[14px] text-[#41454d] mt-0.5 sm:mt-1">
             Thêm, xem, chỉnh sửa và quản lý phân loại món ăn (CRUD danh mục)
           </p>
         </div>
-        <div className="flex items-center gap-2 text-[13px] text-[#41454d] bg-white px-3.5 py-2 rounded-[8px] border border-[#dddddd]">
+        <div className="flex items-center gap-2 text-[12px] sm:text-[13px] text-[#41454d] bg-white px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-[8px] border border-[#dddddd] self-start sm:self-auto">
           <Layers className="w-4 h-4 text-[#e31837]" />
           <span>Tổng số: <strong>{categories.length} danh mục</strong></span>
         </div>
@@ -259,9 +259,9 @@ export default function AdminCategoriesPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
         {/* Left Form: Create / Edit Category */}
-        <div className="lg:col-span-5 bg-white p-6 rounded-[10px] border border-[#dddddd] space-y-5 shadow-2xs">
+        <div className="lg:col-span-5 bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-4 sm:space-y-5 shadow-2xs">
           <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
             <div className="flex items-center gap-2">
               {editingCategory ? (
@@ -423,7 +423,7 @@ export default function AdminCategoriesPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-[13px]">
+              <table className="w-full text-left text-[13px] min-w-[500px]">
                 <thead className="bg-[#f8fafc] border-b border-[#dddddd] text-[#9297a0] font-medium uppercase tracking-wider text-[11px]">
                   <tr>
                     <th className="py-3 px-4">Tên danh mục</th>

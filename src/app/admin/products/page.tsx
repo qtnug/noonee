@@ -229,19 +229,19 @@ export default function AdminProductsPage() {
   const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-normal text-[#181d26]">Thực đơn & Món ăn</h1>
-          <p className="text-[14px] text-[#41454d] mt-1">
+          <h1 className="text-xl sm:text-2xl font-normal text-[#181d26]">Thực đơn & Món ăn</h1>
+          <p className="text-[13px] sm:text-[14px] text-[#41454d] mt-0.5 sm:mt-1">
             Tổng cộng {products.length} món ăn đang có trong thực đơn quán
           </p>
         </div>
 
         <button
           onClick={openAddModal}
-          className="h-10 px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white font-medium text-[13px] rounded-[6px] flex items-center gap-1.5 transition self-start shadow-xs cursor-pointer"
+          className="h-9 sm:h-10 px-3.5 sm:px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white font-medium text-[12px] sm:text-[13px] rounded-[6px] flex items-center gap-1.5 transition self-start sm:self-auto shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Thêm món ăn mới</span>
@@ -249,9 +249,9 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white p-4 rounded-[10px] border border-[#dddddd] flex items-center">
+      <div className="bg-white p-3.5 sm:p-4 rounded-[10px] border border-[#dddddd] flex items-center">
         <div className="relative w-full max-w-sm">
-          <Search className="w-4 h-4 text-[#9297a0] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#9297a0] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             placeholder="Tìm kiếm món theo tên hoặc mô tả..."
@@ -276,7 +276,7 @@ export default function AdminProductsPage() {
           <div className="p-12 text-center text-[13px] text-[#41454d]">Không tìm thấy món ăn nào.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-[13px]">
+            <table className="w-full text-left text-[13px] min-w-[700px]">
               <thead className="bg-[#f8fafc] border-b border-[#dddddd] text-[#9297a0] font-medium uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="py-3 px-4">Món ăn</th>
@@ -410,8 +410,8 @@ export default function AdminProductsPage() {
 
       {/* Modal Add / Edit Product */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#181d26]/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-[12px] max-w-lg w-full p-6 sm:p-8 shadow-xl border border-[#dddddd] space-y-4">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#181d26]/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-[12px] max-w-lg w-full p-4 sm:p-8 max-h-[92vh] overflow-y-auto shadow-xl border border-[#dddddd] space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
               <h2 className="text-lg font-normal text-[#181d26]">
                 {editingProduct ? 'Chỉnh sửa món ăn' : 'Thêm món ăn mới'}

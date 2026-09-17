@@ -93,29 +93,29 @@ export default function AdminOverviewPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Welcome & Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-normal text-[#181d26]">
+          <h1 className="text-xl sm:text-3xl font-normal text-[#181d26]">
             Tổng quan hoạt động
           </h1>
-          <p className="text-[14px] text-[#41454d] mt-1">
+          <p className="text-[13px] sm:text-[14px] text-[#41454d] mt-0.5 sm:mt-1">
             Theo dõi doanh thu, trạng thái đơn hàng và hiệu suất bán hàng thời gian thực
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Link
             href="/admin/products"
-            className="h-10 px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white text-[13px] font-medium rounded-[6px] flex items-center gap-1.5 transition shadow-xs"
+            className="h-9 sm:h-10 px-3 sm:px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white text-[12px] sm:text-[13px] font-medium rounded-[6px] flex items-center gap-1.5 transition shadow-xs"
           >
             <UtensilsCrossed className="w-4 h-4" />
             <span>Thêm món mới</span>
           </Link>
           <Link
             href="/admin/diagnostics"
-            className="h-10 px-4 bg-white hover:bg-[#f8fafc] text-[#181d26] border border-[#dddddd] text-[13px] font-medium rounded-[6px] flex items-center gap-1.5 transition"
+            className="h-9 sm:h-10 px-3 sm:px-4 bg-white hover:bg-[#f8fafc] text-[#181d26] border border-[#dddddd] text-[12px] sm:text-[13px] font-medium rounded-[6px] flex items-center gap-1.5 transition"
           >
             <Activity className="w-4 h-4 text-[#006400]" />
             <span>CSDL & Chẩn đoán</span>
@@ -131,81 +131,81 @@ export default function AdminOverviewPage() {
         </div>
       )}
 
-      {/* Metric Cards Grid (Airtable 10px cards, hairline borders) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Metric Cards Grid (2-cols on mobile, 4-cols on lg) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {/* Total Revenue */}
-        <div className="bg-white p-6 rounded-[10px] border border-[#dddddd] space-y-2">
-          <div className="flex items-center justify-between text-[13px] text-[#9297a0] font-medium">
+        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
             <span>Tổng doanh thu</span>
-            <div className="w-8 h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#181d26] flex items-center justify-center">
-              <DollarSign className="w-4 h-4" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#181d26] flex items-center justify-center">
+              <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="text-2xl font-semibold text-[#181d26]">
+          <div className="text-lg sm:text-2xl font-semibold text-[#181d26] truncate">
             {stats ? formatVND(stats.totalRevenue) : '...'}
           </div>
-          <span className="text-[12px] text-[#006400] font-medium flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" />
-            Thanh toán thành công
+          <span className="text-[11px] sm:text-[12px] text-[#006400] font-medium flex items-center gap-1">
+            <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Đã thanh toán</span>
           </span>
         </div>
 
         {/* Total Orders */}
-        <div className="bg-white p-6 rounded-[10px] border border-[#dddddd] space-y-2">
-          <div className="flex items-center justify-between text-[13px] text-[#9297a0] font-medium">
+        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
             <span>Tổng đơn hàng</span>
-            <div className="w-8 h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#181d26] flex items-center justify-center">
-              <ShoppingBag className="w-4 h-4" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#181d26] flex items-center justify-center">
+              <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="text-2xl font-semibold text-[#181d26]">
+          <div className="text-lg sm:text-2xl font-semibold text-[#181d26]">
             {stats ? stats.totalOrders : '...'}
           </div>
-          <span className="text-[12px] text-[#9297a0]">
-            Toàn bộ đơn trong hệ thống
+          <span className="text-[11px] sm:text-[12px] text-[#9297a0] truncate block">
+            Toàn bộ đơn hệ thống
           </span>
         </div>
 
         {/* Pending Orders */}
-        <div className="bg-white p-6 rounded-[10px] border border-[#dddddd] space-y-2">
-          <div className="flex items-center justify-between text-[13px] text-[#9297a0] font-medium">
-            <span>Đơn chờ tiếp nhận</span>
-            <div className="w-8 h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#e31837] flex items-center justify-center">
-              <Clock className="w-4 h-4" />
+        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
+            <span>Chờ tiếp nhận</span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#e31837] flex items-center justify-center">
+              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="text-2xl font-semibold text-[#e31837]">
+          <div className="text-lg sm:text-2xl font-semibold text-[#e31837]">
             {stats ? stats.pendingOrders : '...'}
           </div>
-          <span className="text-[12px] text-[#e31837]">
-            Cần vào bếp chế biến ngay
+          <span className="text-[11px] sm:text-[12px] text-[#e31837] truncate block">
+            Cần chế biến ngay
           </span>
         </div>
 
         {/* Delivering Orders */}
-        <div className="bg-white p-6 rounded-[10px] border border-[#dddddd] space-y-2">
-          <div className="flex items-center justify-between text-[13px] text-[#9297a0] font-medium">
+        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
             <span>Đang giao hàng</span>
-            <div className="w-8 h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#254fad] flex items-center justify-center">
-              <Truck className="w-4 h-4" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#254fad] flex items-center justify-center">
+              <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="text-2xl font-semibold text-[#254fad]">
+          <div className="text-lg sm:text-2xl font-semibold text-[#254fad]">
             {stats ? stats.deliveringOrders : '...'}
           </div>
-          <span className="text-[12px] text-[#254fad]">
+          <span className="text-[11px] sm:text-[12px] text-[#254fad] truncate block">
             Shipper đang vận chuyển
           </span>
         </div>
       </div>
 
       {/* Recent Orders Table */}
-      <div className="bg-white rounded-[10px] border border-[#dddddd] p-6 space-y-4">
+      <div className="bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6 space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
-          <h2 className="text-[16px] font-medium text-[#181d26]">Đơn hàng mới nhất</h2>
+          <h2 className="text-[15px] sm:text-[16px] font-medium text-[#181d26]">Đơn hàng mới nhất</h2>
           <Link
             href="/admin/orders"
-            className="text-[13px] font-medium text-[#181d26] hover:text-[#e31837] flex items-center gap-1 transition"
+            className="text-[12px] sm:text-[13px] font-medium text-[#181d26] hover:text-[#e31837] flex items-center gap-1 transition"
           >
             <span>Xem tất cả</span>
             <ArrowRight className="w-4 h-4" />
@@ -213,7 +213,7 @@ export default function AdminOverviewPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-[13px]">
+          <table className="w-full text-left text-[13px] min-w-[700px]">
             <thead>
               <tr className="border-b border-[#dddddd] text-[#9297a0] uppercase tracking-wider font-medium text-[11px]">
                 <th className="pb-3">Mã đơn</th>

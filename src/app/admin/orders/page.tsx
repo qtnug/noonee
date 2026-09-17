@@ -133,19 +133,19 @@ export default function AdminOrdersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-normal text-[#181d26]">Quản lý đơn hàng</h1>
-          <p className="text-[14px] text-[#41454d] mt-1">
+          <h1 className="text-xl sm:text-2xl font-normal text-[#181d26]">Quản lý đơn hàng</h1>
+          <p className="text-[13px] sm:text-[14px] text-[#41454d] mt-0.5 sm:mt-1">
             Xem danh sách đơn hàng, cập nhật trạng thái chế biến và giao hàng
           </p>
         </div>
 
         <button
           onClick={fetchOrders}
-          className="h-10 px-4 bg-white border border-[#dddddd] hover:bg-[#f8fafc] text-[#181d26] text-[13px] font-medium rounded-[6px] flex items-center gap-2 transition self-start"
+          className="h-9 sm:h-10 px-3.5 sm:px-4 bg-white border border-[#dddddd] hover:bg-[#f8fafc] text-[#181d26] text-[12px] sm:text-[13px] font-medium rounded-[6px] flex items-center gap-2 transition self-start sm:self-auto cursor-pointer"
         >
           <RefreshCw className="w-4 h-4 text-[#9297a0]" />
           <span>Làm mới danh sách</span>
@@ -153,10 +153,10 @@ export default function AdminOrdersPage() {
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white p-4 rounded-[10px] border border-[#dddddd] flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white p-3.5 sm:p-4 rounded-[10px] border border-[#dddddd] flex flex-col md:flex-row gap-3 sm:gap-4 items-stretch md:items-center justify-between">
         {/* Search */}
         <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-[#9297a0] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#9297a0] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             placeholder="Tìm theo mã đơn, khách, SĐT..."
@@ -167,7 +167,7 @@ export default function AdminOrdersPage() {
         </div>
 
         {/* Status Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full md:w-auto pb-1 md:pb-0">
           {[
             { key: 'all', label: 'Tất cả' },
             { key: 'Pending', label: 'Chờ tiếp nhận' },
@@ -179,7 +179,7 @@ export default function AdminOrdersPage() {
             <button
               key={tab.key}
               onClick={() => setStatusFilter(tab.key)}
-              className={`h-8 px-3 rounded-[6px] text-[12px] font-medium shrink-0 transition border ${
+              className={`h-8 px-3 rounded-[6px] text-[12px] font-medium shrink-0 transition border cursor-pointer ${
                 statusFilter === tab.key
                   ? 'bg-[#e31837] text-white border-[#e31837] shadow-xs'
                   : 'bg-white text-[#333840] border-[#dddddd] hover:bg-[#f8fafc]'
@@ -202,7 +202,7 @@ export default function AdminOrdersPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-[13px]">
+            <table className="w-full text-left text-[13px] min-w-[750px]">
               <thead className="bg-[#f8fafc] border-b border-[#dddddd] text-[#9297a0] font-medium uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="py-3 px-4">Mã đơn</th>

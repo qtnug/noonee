@@ -10,6 +10,7 @@ import {
   User,
   ShoppingBag,
   Clock,
+  ArrowLeft,
 } from 'lucide-react';
 import { SupportMessage } from '@/types';
 import { formatDate } from '@/lib/utils';
@@ -21,6 +22,7 @@ export default function AdminSupportPage() {
   const [replyText, setReplyText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'complaints' | 'resolved'>('all');
+  const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
 
   const fetchMessages = async () => {
     try {
@@ -103,19 +105,19 @@ export default function AdminSupportPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-normal text-[#181d26]">Khiếu nại & Chăm sóc khách hàng</h1>
-          <p className="text-[14px] text-[#41454d] mt-1">
+          <h1 className="text-xl sm:text-2xl font-normal text-[#181d26]">Khiếu nại & Chăm sóc khách hàng</h1>
+          <p className="text-[13px] sm:text-[14px] text-[#41454d] mt-0.5 sm:mt-1">
             Tiếp nhận khiếu nại về đơn hàng và trao đổi trực tiếp với khách hàng thời gian thực
           </p>
         </div>
 
         <button
           onClick={fetchMessages}
-          className="h-10 px-4 bg-white border border-[#dddddd] hover:bg-[#f8fafc] text-[#181d26] text-[13px] font-medium rounded-[6px] flex items-center gap-2 transition self-start cursor-pointer"
+          className="h-9 sm:h-10 px-3.5 sm:px-4 bg-white border border-[#dddddd] hover:bg-[#f8fafc] text-[#181d26] text-[12px] sm:text-[13px] font-medium rounded-[6px] flex items-center gap-2 transition self-start sm:self-auto cursor-pointer"
         >
           <RefreshCw className={`w-4 h-4 text-[#9297a0] ${loading ? 'animate-spin' : ''}`} />
           <span>Làm mới tin nhắn</span>
@@ -123,20 +125,20 @@ export default function AdminSupportPage() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setFilterType('all')}
-          className={`px-3 py-1.5 rounded-[6px] text-[13px] font-medium transition cursor-pointer border ${
+          className={`px-3 py-1.5 rounded-[6px] text-[12px] sm:text-[13px] font-medium transition cursor-pointer border ${
             filterType === 'all'
               ? 'bg-[#e31837] text-white border-[#e31837] shadow-xs'
               : 'bg-white text-[#41454d] border-[#dddddd] hover:bg-[#f8fafc]'
           }`}
         >
-          Tất cả cuộc trò chuyện ({groupKeys.length})
+          Tất cả ({groupKeys.length})
         </button>
         <button
           onClick={() => setFilterType('complaints')}
-          className={`px-3 py-1.5 rounded-[6px] text-[13px] font-medium transition cursor-pointer border ${
+          className={`px-3 py-1.5 rounded-[6px] text-[12px] sm:text-[13px] font-medium transition cursor-pointer border ${
             filterType === 'complaints'
               ? 'bg-[#e31837] text-white border-[#e31837] shadow-xs'
               : 'bg-white text-[#e31837] border-[#fecdd3] hover:bg-[#fff1f2]'
@@ -147,11 +149,11 @@ export default function AdminSupportPage() {
       </div>
 
       {/* Main chat layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-white rounded-[10px] border border-[#dddddd] overflow-hidden min-h-[550px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 bg-white rounded-[10px] border border-[#dddddd] overflow-hidden min-h-[520px]">
         {/* Left column: List of conversations */}
-        <div className="lg:col-span-4 border-r border-[#dddddd] flex flex-col">
+        <div className={`${mobileView === 'chat' ? 'hidden lg:flex' : 'flex'} lg:col-span-4 border-r border-[#dddddd] flex-col`}>
           <div className="p-3.5 border-b border-[#dddddd] bg-[#f8fafc] text-[13px] font-semibold text-[#181d26]">
-            Danh sách đơn hàng yêu cầu hỗ trợ
+            Danh sách đơn hàng cần hỗ trợ
           </div>
 
           <div className="flex-1 overflow-y-auto divide-y divide-[#dddddd]">
@@ -169,20 +171,23 @@ export default function AdminSupportPage() {
                 return (
                   <button
                     key={key}
-                    onClick={() => setSelectedOrder(key)}
-                    className={`w-full text-left p-4 transition flex flex-col gap-1.5 cursor-pointer ${
+                    onClick={() => {
+                      setSelectedOrder(key);
+                      setMobileView('chat');
+                    }}
+                    className={`w-full text-left p-3.5 sm:p-4 transition flex flex-col gap-1.5 cursor-pointer ${
                       isSelected ? 'bg-[#fff1f2]/60 border-l-4 border-l-[#e31837]' : 'hover:bg-[#f8fafc]'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <ShoppingBag className="w-3.5 h-3.5 text-[#e31837]" />
-                        <span className="font-mono font-bold text-[14px] text-[#181d26]">
+                        <span className="font-mono font-bold text-[13px] sm:text-[14px] text-[#181d26]">
                           {key === 'GENERAL' ? 'Hỗ trợ chung' : `#${key}`}
                         </span>
                       </div>
                       {hasComplaint && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[4px] text-[11px] font-bold bg-[#fff1f2] text-[#e31837] border border-[#fecdd3]">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[4px] text-[10px] sm:text-[11px] font-bold bg-[#fff1f2] text-[#e31837] border border-[#fecdd3]">
                           <AlertTriangle className="w-3 h-3" /> Khiếu nại
                         </span>
                       )}
@@ -192,7 +197,7 @@ export default function AdminSupportPage() {
                       {lastMsg ? `${lastMsg.senderName}: ${lastMsg.message}` : 'Không có tin nhắn'}
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-[#9297a0] pt-1">
+                    <div className="flex items-center justify-between text-[11px] text-[#9297a0] pt-0.5">
                       <span>{msgs.length} tin nhắn</span>
                       <span>{lastMsg ? formatDate(lastMsg.createdAt) : ''}</span>
                     </div>
@@ -204,23 +209,34 @@ export default function AdminSupportPage() {
         </div>
 
         {/* Right column: Chat messages & Reply */}
-        <div className="lg:col-span-8 flex flex-col justify-between">
+        <div className={`${mobileView === 'list' ? 'hidden lg:flex' : 'flex'} lg:col-span-8 flex-col justify-between`}>
           {selectedOrder ? (
             <>
               {/* Chat Header */}
-              <div className="p-4 border-b border-[#dddddd] bg-[#f8fafc] flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-[#181d26] text-[15px] flex items-center gap-2">
-                    <span>Trao đổi về đơn hàng #{selectedOrder}</span>
-                    {currentOrderHasComplaint && (
-                      <span className="text-[11px] font-bold text-[#e31837] bg-[#fff1f2] border border-[#fecdd3] px-2 py-0.5 rounded-[4px]">
-                        Khách khiếu nại
-                      </span>
-                    )}
-                  </h3>
-                  <span className="text-[12px] text-[#41454d]">
-                    Phản hồi giải đáp thắc mắc hoặc hỗ trợ xử lý khiếu nại cho khách hàng
-                  </span>
+              <div className="p-3.5 sm:p-4 border-b border-[#dddddd] bg-[#f8fafc] flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setMobileView('list')}
+                    className="lg:hidden p-1.5 -ml-1 text-gray-600 hover:text-[#e31837] rounded-md hover:bg-gray-100 flex items-center gap-1 text-[12px] font-medium shrink-0 cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Quay lại</span>
+                  </button>
+
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-[#181d26] text-[14px] sm:text-[15px] flex items-center gap-2 flex-wrap truncate">
+                      <span>Đơn hàng #{selectedOrder}</span>
+                      {currentOrderHasComplaint && (
+                        <span className="text-[10px] sm:text-[11px] font-bold text-[#e31837] bg-[#fff1f2] border border-[#fecdd3] px-2 py-0.5 rounded-[4px]">
+                          Khách khiếu nại
+                        </span>
+                      )}
+                    </h3>
+                    <span className="text-[11px] sm:text-[12px] text-[#41454d] truncate block">
+                      Phản hồi giải đáp thắc mắc hoặc hỗ trợ xử lý khiếu nại cho khách hàng
+                    </span>
+                  </div>
                 </div>
               </div>
 
