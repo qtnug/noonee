@@ -162,6 +162,7 @@ function CheckoutContent() {
   };
 
   const [distanceData, setDistanceData] = useState<DistanceCalculationResult | null>(null);
+  const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
   const isOutOfRange = Boolean(distanceData && (distanceData.isOutOfRange || distanceData.distanceKm > 15));
 
   const baseShippingFee = distanceData ? distanceData.shippingFee : 15000;
@@ -237,13 +238,43 @@ function CheckoutContent() {
       return;
     }
 
-    if (isOutOfRange) {
-      setErrorMsg(`Rất tiếc, quán chỉ nhận giao hàng trong bán kính 15km từ cơ sở 120 Yên Lãng, Đống Đa. Địa chỉ hiện tại cách quán ${distanceData?.distanceText}. Vui lòng chọn địa chỉ nhận món gần hơn.`);
+    if (isCalculatingDistance) {
+      setErrorMsg('Hệ thống đang tính khoảng cách và phí giao hàng cho địa chỉ này, vui lòng đợi trong giây lát...');
       return;
     }
 
     setIsSubmitting(true);
     try {
+      // Safety fallback: if distanceData is still not present, calculate it right before submission
+      let currentDistanceData = distanceData;
+      if (!currentDistanceData && deliveryAddress.trim()) {
+        try {
+          const distRes = await fetch('/api/goong/distance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address: deliveryAddress.trim() }),
+          });
+          const distJson = await distRes.json();
+          if (distJson.success && distJson.data) {
+            currentDistanceData = distJson.data;
+            setDistanceData(distJson.data);
+          }
+        } catch (err) {
+          console.error('Fallback distance calculation error:', err);
+        }
+      }
+
+      if (currentDistanceData && (currentDistanceData.isOutOfRange || currentDistanceData.distanceKm > 15)) {
+        setErrorMsg(`Rất tiếc, quán chỉ nhận giao hàng trong bán kính 15km từ cơ sở 120 Yên Lãng, Đống Đa. Địa chỉ hiện tại cách quán ${currentDistanceData.distanceText}. Vui lòng chọn địa chỉ nhận món gần hơn.`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const currentBaseFee = currentDistanceData ? currentDistanceData.shippingFee : baseShippingFee;
+      const currentMemberDisc = tierInfo ? Math.min(currentBaseFee, tierInfo.shippingDiscount) : 0;
+      const currentShippingAfterMember = Math.max(0, currentBaseFee - currentMemberDisc);
+      const finalShippingFee = appliedCoupon?.code === 'FREESHIP' ? 0 : currentShippingAfterMember;
+
       const groupItems = groupOrder
         ? groupOrder.members.flatMap((m) =>
             (m.items || []).map((it) => {
@@ -289,7 +320,7 @@ function CheckoutContent() {
         paymentMethod: isFullyCoveredByWallet ? 'Wallet' : paymentMethod,
         couponCode: appliedCoupon ? appliedCoupon.code : null,
         groupCode: groupOrder ? groupOrder.code : null,
-        shippingFee: effectiveShippingFee,
+        shippingFee: finalShippingFee,
         useWallet: useWallet && walletDeduction > 0,
         walletAmountUsed: walletDeduction,
         items: orderItems,
@@ -401,8 +432,17 @@ function CheckoutContent() {
                   </label>
                   <AddressAutocompleteInput
                     value={deliveryAddress}
-                    onChange={(addr) => setDeliveryAddress(addr)}
-                    onDistanceCalculated={(dist) => setDistanceData(dist)}
+                    onChange={(addr) => {
+                      setDeliveryAddress(addr);
+                      if (!addr.trim()) {
+                        setDistanceData(null);
+                      }
+                    }}
+                    onDistanceCalculated={(dist) => {
+                      setDistanceData(dist);
+                      setIsCalculatingDistance(false);
+                    }}
+                    onCalculatingChange={(isCalc) => setIsCalculatingDistance(isCalc)}
                     required
                   />
                 </div>
@@ -794,13 +834,25 @@ function CheckoutContent() {
                 <div className="flex justify-between text-[#41454d]">
                   <div>
                     <span>Phí giao hàng</span>
-                    {distanceData && (
+                    {isCalculatingDistance ? (
+                      <span className="text-[11px] text-[#e31837] flex items-center gap-1 font-normal mt-0.5">
+                        <Loader2 className="w-3 h-3 animate-spin" /> Đang tính phí theo khoảng cách...
+                      </span>
+                    ) : distanceData ? (
                       <span className="text-[11px] text-gray-500 block font-normal">
                         Khoảng cách: {distanceData.distanceText}
                       </span>
+                    ) : (
+                      <span className="text-[11px] text-gray-400 block font-normal">
+                        (Ước tính theo khoảng cách)
+                      </span>
                     )}
                   </div>
-                  {effectiveShippingFee === 0 ? (
+                  {isCalculatingDistance ? (
+                    <div className="text-right">
+                      <span className="text-[12px] text-gray-400 italic">Đang cập nhật...</span>
+                    </div>
+                  ) : effectiveShippingFee === 0 ? (
                     <div className="text-right">
                       <span className="text-[#16a34a] font-semibold">Miễn phí</span>
                       <span className="text-[10px] text-gray-500 block font-normal">
@@ -837,7 +889,9 @@ function CheckoutContent() {
 
                 <div className="flex justify-between text-[16px] font-bold text-[#181d26] pt-3 border-t border-[#fecdd3]">
                   <span>Tổng thanh toán</span>
-                  <span className="text-[#e31837] text-lg">{formatVND(finalTotal)}</span>
+                  <span className="text-[#e31837] text-lg">
+                    {isCalculatingDistance ? 'Đang cập nhật...' : formatVND(finalTotal)}
+                  </span>
                 </div>
               </div>
 
@@ -852,13 +906,18 @@ function CheckoutContent() {
 
               <button
                 type="submit"
-                disabled={isSubmitting || isOutOfRange}
+                disabled={isSubmitting || isOutOfRange || isCalculatingDistance}
                 className="w-full h-12 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-semibold text-[14px] rounded-[12px] flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-xs cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Đang xử lý đơn hàng...</span>
+                  </>
+                ) : isCalculatingDistance ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Đang tính phí giao hàng...</span>
                   </>
                 ) : (
                   <>
