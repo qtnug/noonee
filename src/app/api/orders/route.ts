@@ -126,13 +126,22 @@ export async function POST(request: NextRequest) {
       // Calculate toppings price securely from product toppings definition
       let toppingsExtra = 0;
       let toppingsStr: string | null = null;
-      if (it.toppings) {
-        toppingsStr = typeof it.toppings === 'string' ? it.toppings : JSON.stringify(it.toppings);
-        if (Array.isArray(dbProduct.toppings) && Array.isArray(it.selectedToppings)) {
-          for (const st of it.selectedToppings) {
-            const matchedTop = dbProduct.toppings.find((t) => t.id === st.id);
-            if (matchedTop) {
-              toppingsExtra += matchedTop.price || 0;
+      if (it.toppings || it.selectedToppings) {
+        toppingsStr = typeof it.toppings === 'string' ? it.toppings : (it.toppings ? JSON.stringify(it.toppings) : null);
+        if (Array.isArray(dbProduct.toppings)) {
+          if (Array.isArray(it.selectedToppings) && it.selectedToppings.length > 0) {
+            for (const st of it.selectedToppings) {
+              const matchedTop = dbProduct.toppings.find((t) => t.id === st.id || t.name === st.name);
+              if (matchedTop) {
+                toppingsExtra += matchedTop.price || 0;
+              }
+            }
+          } else if (typeof it.toppings === 'string' && it.toppings.trim()) {
+            // Fallback: match topping names in toppings string
+            for (const top of dbProduct.toppings) {
+              if (it.toppings.includes(top.name)) {
+                toppingsExtra += top.price || 0;
+              }
             }
           }
         }

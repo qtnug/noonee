@@ -65,6 +65,7 @@ export interface OrderItem {
   quantity: number;
   total: number;
   toppings?: string | null;
+  selectedToppings?: any[] | null;
   note?: string | null;
 }
 

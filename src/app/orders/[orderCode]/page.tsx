@@ -471,18 +471,36 @@ export default function OrderTrackingPage() {
                   {order.paymentStatus === 'Paid' ? 'Đã thanh toán thành công' : 'Chưa thanh toán'}
                 </strong>
               </div>
-              {order.discountAmount && order.discountAmount > 0 ? (
-                <>
-                  <div className="flex justify-between">
-                    <span>Tạm tính món:</span>
-                    <span className="text-[#181d26] font-medium">{formatVND(order.totalAmount + order.discountAmount)}</span>
-                  </div>
-                  <div className="flex justify-between text-[#e31837]">
-                    <span>Ưu đãi ({order.couponCode || 'Giảm giá'}):</span>
-                    <span className="font-semibold">- {formatVND(order.discountAmount)}</span>
-                  </div>
-                </>
-              ) : null}
+              {(() => {
+                const itemsSubtotal = (order.items && order.items.length > 0)
+                  ? order.items.reduce((sum, it) => sum + (it.total || it.price * it.quantity), 0)
+                  : (order.totalAmount + (order.discountAmount || 0));
+                const computedShippingFee = Math.max(
+                  0,
+                  order.totalAmount + (order.walletAmountUsed || 0) + (order.discountAmount || 0) - itemsSubtotal
+                );
+
+                return (
+                  <>
+                    <div className="flex justify-between">
+                      <span>Tạm tính món:</span>
+                      <span className="text-[#181d26] font-medium">{formatVND(itemsSubtotal)}</span>
+                    </div>
+                    {order.discountAmount && order.discountAmount > 0 ? (
+                      <div className="flex justify-between text-[#e31837]">
+                        <span>Ưu đãi ({order.couponCode || 'Giảm giá'}):</span>
+                        <span className="font-semibold">- {formatVND(order.discountAmount)}</span>
+                      </div>
+                    ) : null}
+                    {computedShippingFee > 0 ? (
+                      <div className="flex justify-between">
+                        <span>Phí giao hàng:</span>
+                        <span className="text-[#181d26] font-medium">+ {formatVND(computedShippingFee)}</span>
+                      </div>
+                    ) : null}
+                  </>
+                );
+              })()}
               {order.walletAmountUsed && order.walletAmountUsed > 0 ? (
                 <div className="flex justify-between text-[#2563eb]">
                   <span>Đã trừ từ số dư ví:</span>

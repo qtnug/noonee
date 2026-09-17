@@ -279,17 +279,28 @@ function CheckoutContent() {
         ? groupOrder.members.flatMap((m) =>
             (m.items || []).map((it) => {
               let toppingsStr: string | null = null;
+              let selectedToppings: any[] = [];
               if (it.toppings) {
-                toppingsStr =
-                  typeof it.toppings === 'string' && it.toppings.startsWith('[')
-                    ? JSON.parse(it.toppings).map((t: any) => `${t.name} (+${formatVND(t.price)})`).join(', ')
-                    : String(it.toppings);
+                if (Array.isArray(it.toppings)) {
+                  selectedToppings = it.toppings;
+                  toppingsStr = it.toppings.map((t: any) => `${t.name} (+${formatVND(t.price)})`).join(', ');
+                } else if (typeof it.toppings === 'string' && it.toppings.startsWith('[')) {
+                  try {
+                    selectedToppings = JSON.parse(it.toppings);
+                    toppingsStr = selectedToppings.map((t: any) => `${t.name} (+${formatVND(t.price)})`).join(', ');
+                  } catch {
+                    toppingsStr = String(it.toppings);
+                  }
+                } else {
+                  toppingsStr = String(it.toppings);
+                }
               }
               return {
                 productId: it.productId,
                 productName: it.productName,
                 price: it.price,
                 quantity: it.quantity,
+                selectedToppings,
                 toppings: toppingsStr,
                 note: it.note ? `[Phần của ${m.name}] ${it.note}` : `[Phần của ${m.name}]`,
               };
@@ -304,6 +315,7 @@ function CheckoutContent() {
             productName: it.product.name,
             price: it.itemPrice || it.product.price,
             quantity: it.quantity,
+            selectedToppings: it.selectedToppings || [],
             toppings:
               it.selectedToppings && it.selectedToppings.length > 0
                 ? it.selectedToppings.map((t) => `${t.name} (+${formatVND(t.price)})`).join(', ')
