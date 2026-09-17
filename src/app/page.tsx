@@ -28,29 +28,29 @@ export default async function HomePage() {
     <div className="bg-white min-h-screen">
       {/* 1. HERO BAND (Red & White Editorial Theme) */}
       <section className="bg-white border-b border-[#dddddd]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Left Content Column */}
-            <div className="lg:col-span-7 space-y-6">
-              <h1 className="text-4xl sm:text-5xl lg:text-[44px] font-normal tracking-tight text-[#181d26] leading-[1.15]">
+            <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+              <h1 className="text-3xl sm:text-5xl lg:text-[44px] font-normal tracking-tight text-[#181d26] leading-[1.18]">
                 Hệ thống đặt món ăn trực tuyến nhanh chóng & tiện lợi
               </h1>
 
-              <p className="text-[16px] text-[#41454d] leading-relaxed max-w-xl">
+              <p className="text-[14px] sm:text-[16px] text-[#41454d] leading-relaxed max-w-xl">
                 Khám phá thực đơn phong phú từ cơm rang, bún phở truyền thống đến các món ăn vặt giòn rụm và thức uống thanh mát. Đặt món dễ dàng, giao nhanh tận nơi, đảm bảo luôn nóng hổi.
               </p>
 
               {/* Red & White CTA Button Pair */}
-              <div className="pt-2 flex flex-wrap items-center gap-3">
+              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <Link
                   href="/menu"
-                  className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-medium text-[16px] leading-[1.4] px-7 py-3.5 rounded-[12px] shadow-sm transition"
+                  className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-medium text-[15px] sm:text-[16px] leading-[1.4] px-6 sm:px-7 py-3 sm:py-3.5 rounded-[12px] shadow-sm transition"
                 >
                   Khám phá thực đơn
                 </Link>
                 <Link
                   href="/orders"
-                  className="inline-flex items-center justify-center bg-white hover:bg-[#fff1f2] text-[#e31837] font-medium text-[16px] leading-[1.4] px-7 py-3.5 rounded-[12px] border border-[#e31837] transition"
+                  className="inline-flex items-center justify-center bg-white hover:bg-[#fff1f2] text-[#e31837] font-medium text-[15px] sm:text-[16px] leading-[1.4] px-6 sm:px-7 py-3 sm:py-3.5 rounded-[12px] border border-[#e31837] transition"
                 >
                   Tra cứu đơn hàng
                 </Link>
@@ -135,7 +135,7 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {featuredProducts.slice(0, 16).map((product) => (
             <ProductCard key={product.id} product={product} badgeText="Nổi bật" />
           ))}

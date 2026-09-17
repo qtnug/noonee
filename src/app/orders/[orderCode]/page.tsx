@@ -264,20 +264,20 @@ export default function OrderTrackingPage() {
   const currentStep = getStepIndex(order.status);
 
   return (
-    <div className="bg-white min-h-screen py-10">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+    <div className="bg-white min-h-screen py-6 sm:py-10 pb-20 md:pb-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#dddddd] gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-start sm:items-center gap-3">
             <Link
               href="/orders"
-              className="p-2 text-[#41454d] hover:text-[#e31837] bg-white border border-[#dddddd] rounded-[6px] transition"
+              className="p-2 text-[#41454d] hover:text-[#e31837] bg-white border border-[#dddddd] rounded-[6px] transition shrink-0 mt-0.5 sm:mt-0"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div>
-              <div className="flex items-center gap-2.5">
-                <h1 className="text-2xl font-normal text-[#181d26]">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-normal text-[#181d26]">
                   Đơn hàng <span className="text-[#e31837] font-bold">#{order.orderCode}</span>
                 </h1>
                 {order.status === 'Cancelled' ? (
@@ -304,18 +304,18 @@ export default function OrderTrackingPage() {
                   </Link>
                 )}
               </div>
-              <p className="text-[13px] text-[#41454d] mt-0.5">
+              <p className="text-[12px] sm:text-[13px] text-[#41454d] mt-0.5">
                 Thời gian đặt: {formatDate(order.createdAt)}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Group members do not have the complaint button; only Host or individual order owner */}
             {(!order.groupCode || (user && order.userId === user.id)) && (
               <button
                 onClick={() => setShowChat(true)}
-                className="h-10 px-3.5 bg-white border border-[#e31837] text-[#e31837] hover:bg-[#fff1f2] rounded-[6px] text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                className="h-9 sm:h-10 px-3 sm:px-3.5 bg-white border border-[#e31837] text-[#e31837] hover:bg-[#fff1f2] rounded-[6px] text-[12px] sm:text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Khiếu nại / Chat Quán</span>
@@ -325,7 +325,7 @@ export default function OrderTrackingPage() {
             {order.status !== 'Cancelled' && order.paymentStatus === 'Unpaid' && order.paymentMethod === 'Sepay' && (
               <Link
                 href={`/payment/${order.orderCode}`}
-                className="h-10 px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white rounded-[6px] text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs"
+                className="h-9 sm:h-10 px-3.5 sm:px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white rounded-[6px] text-[12px] sm:text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs"
               >
                 <QrCode className="w-4 h-4" />
                 <span>Thanh toán VietQR</span>
@@ -336,27 +336,27 @@ export default function OrderTrackingPage() {
 
         {/* Realtime Progress Stepper or Cancellation Banner */}
         {order.status === 'Cancelled' ? (
-          <div className="bg-[#fff1f2] rounded-[10px] p-6 sm:p-8 border border-[#fecdd3] space-y-4 shadow-xs">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-[8px] bg-[#e31837] text-white flex items-center justify-center shrink-0 shadow-xs">
-                <AlertTriangle className="w-6 h-6" />
+          <div className="bg-[#fff1f2] rounded-[10px] p-4 sm:p-8 border border-[#fecdd3] space-y-4 shadow-xs">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-[8px] bg-[#e31837] text-white flex items-center justify-center shrink-0 shadow-xs">
+                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div className="flex-1 space-y-1.5">
-                <h2 className="text-lg font-bold text-[#e31837]">
+                <h2 className="text-base sm:text-lg font-bold text-[#e31837]">
                   Đơn hàng này đã bị hủy
                 </h2>
                 {order.cancelReason ? (
-                  <p className="text-[14px] text-[#181d26]">
+                  <p className="text-[13px] sm:text-[14px] text-[#181d26]">
                     <strong>Lý do từ quán:</strong> {order.cancelReason}
                   </p>
                 ) : (
-                  <p className="text-[13px] text-[#41454d]">
+                  <p className="text-[12px] sm:text-[13px] text-[#41454d]">
                     Đơn hàng đã được hủy bởi nhà hàng hoặc theo yêu cầu của quý khách.
                   </p>
                 )}
 
                 {order.refundStatus === 'Refunded' && (
-                  <div className="mt-3 p-3 bg-white rounded-[6px] border border-[#fecdd3] text-[13px] text-[#166534] font-medium flex items-center gap-2">
+                  <div className="mt-3 p-3 bg-white rounded-[6px] border border-[#fecdd3] text-[12px] sm:text-[13px] text-[#166534] font-medium flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-[#16a34a] shrink-0" />
                     <span>
                       Số tiền {formatVND(order.totalAmount + (order.walletAmountUsed || 0))} đã được hoàn trả 100% vào <strong>Số Dư Ví NooNee</strong> của bạn. Bạn có thể sử dụng trừ thẳng cho các đơn hàng tiếp theo!
@@ -373,21 +373,21 @@ export default function OrderTrackingPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-[10px] p-6 sm:p-8 border border-[#dddddd] space-y-6 shadow-xs">
-            <h2 className="text-[16px] font-semibold text-[#181d26]">
+          <div className="bg-white rounded-[10px] p-4 sm:p-8 border border-[#dddddd] space-y-5 sm:space-y-6 shadow-xs">
+            <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
               Tiến độ giao hàng thời gian thực
             </h2>
 
-            <div className="grid grid-cols-4 gap-2 sm:gap-4 relative">
+            <div className="grid grid-cols-4 gap-1 sm:gap-4 relative">
               {steps.map((s, idx) => {
                 const Icon = s.icon;
                 const isFinished = idx <= currentStep;
                 const isCurrent = idx === currentStep;
 
                 return (
-                  <div key={s.key} className="flex flex-col items-center text-center space-y-2">
+                  <div key={s.key} className="flex flex-col items-center text-center space-y-1.5 sm:space-y-2">
                     <div
-                      className={`w-11 h-11 rounded-[6px] flex items-center justify-center transition shadow-xs ${
+                      className={`w-9 h-9 sm:w-11 sm:h-11 rounded-[6px] flex items-center justify-center transition shadow-xs ${
                         isCurrent
                           ? 'bg-[#e31837] text-white animate-pulse'
                           : isFinished
@@ -395,11 +395,11 @@ export default function OrderTrackingPage() {
                           : 'bg-[#f8fafc] border border-[#dddddd] text-[#9297a0]'
                       }`}
                     >
-                      <Icon className="w-5 h-5" />
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <div>
                       <h4
-                        className={`text-[13px] font-medium ${
+                        className={`text-[11px] sm:text-[13px] font-medium leading-tight ${
                           isCurrent
                             ? 'text-[#e31837] font-bold'
                             : isFinished

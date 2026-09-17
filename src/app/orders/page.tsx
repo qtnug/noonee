@@ -95,12 +95,12 @@ export default function OrdersLookupPage() {
   };
 
   return (
-    <div className="bg-white min-h-screen py-10">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+    <div className="bg-white min-h-screen py-6 sm:py-10 pb-20 md:pb-10">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="space-y-2 text-center max-w-xl mx-auto">
-          <h1 className="text-3xl font-normal text-[#181d26]">Đơn hàng của bạn</h1>
-          <p className="text-[14px] text-[#41454d]">
+          <h1 className="text-2xl sm:text-3xl font-normal text-[#181d26]">Đơn hàng của bạn</h1>
+          <p className="text-[13px] sm:text-[14px] text-[#41454d]">
             {user
               ? `Xem danh sách lịch sử đơn hàng của tài khoản ${user.fullName} (${user.username})`
               : 'Đăng nhập tài khoản để xem lịch sử đơn hàng của bạn hoặc tra cứu theo mã đơn'}
@@ -203,21 +203,21 @@ export default function OrdersLookupPage() {
               {filteredOrders.map((order) => (
                 <div
                   key={order.id}
-                  className="bg-white border border-[#dddddd] rounded-[10px] p-6 hover:border-[#e31837] hover:shadow-xs transition space-y-4"
+                  className="bg-white border border-[#dddddd] rounded-[10px] p-4 sm:p-6 hover:border-[#e31837] hover:shadow-xs transition space-y-3 sm:space-y-4"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#dddddd]">
                     <div className="flex items-center gap-3">
-                      <span className="font-mono font-bold text-[16px] text-[#181d26]">
+                      <span className="font-mono font-bold text-[15px] sm:text-[16px] text-[#181d26]">
                         #{order.orderCode}
                       </span>
-                      <span className="text-[12px] text-[#9297a0]">
+                      <span className="text-[11px] sm:text-[12px] text-[#9297a0]">
                         {formatDate(order.createdAt)}
                       </span>
                     </div>
                     <div>{getStatusBadge(order.status)}</div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-[13px]">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 text-[13px]">
                     <div className="space-y-1">
                       <div className="text-[#181d26]">
                         Người nhận: <span className="font-semibold">{order.customerName}</span> ({order.customerPhone})
@@ -236,16 +236,16 @@ export default function OrdersLookupPage() {
                     <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#dddddd]">
                       <div className="text-right">
                         <span className="text-[11px] text-[#9297a0] block">Tổng thanh toán</span>
-                        <span className="text-[17px] font-bold text-[#e31837]">
+                        <span className="text-[16px] sm:text-[17px] font-bold text-[#e31837]">
                           {formatVND(order.totalAmount)}
                         </span>
                       </div>
 
                       <Link
                         href={`/orders/${order.orderCode}`}
-                        className="inline-flex items-center gap-1 text-[13px] font-semibold text-white bg-[#e31837] hover:bg-[#be0e27] px-4 py-2 rounded-[6px] transition cursor-pointer"
+                        className="inline-flex items-center gap-1 text-[12px] sm:text-[13px] font-semibold text-white bg-[#e31837] hover:bg-[#be0e27] px-3.5 sm:px-4 py-2 rounded-[6px] transition cursor-pointer"
                       >
-                        <span>Xem chi tiết & Đánh giá</span>
+                        <span>Chi tiết & Đánh giá</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </Link>
                     </div>

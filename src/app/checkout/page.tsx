@@ -393,21 +393,21 @@ function CheckoutContent() {
   };
 
   return (
-    <div className="bg-white min-h-screen py-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+    <div className="bg-white min-h-screen py-6 sm:py-10 pb-20 md:pb-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         {/* Header */}
-        <div className="flex items-center gap-4 pb-6 border-b border-[#dddddd]">
+        <div className="flex items-center gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-[#dddddd]">
           <Link
             href={groupOrder ? `/group/${groupOrder.code}` : '/cart'}
-            className="p-2 text-[#41454d] hover:text-[#e31837] bg-white border border-[#dddddd] rounded-[6px] transition"
+            className="p-2 text-[#41454d] hover:text-[#e31837] bg-white border border-[#dddddd] rounded-[6px] transition shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-3xl font-normal text-[#181d26]">
+            <h1 className="text-2xl sm:text-3xl font-normal text-[#181d26]">
               {groupOrder ? `Thanh toán Đơn nhóm #${groupOrder.code}` : 'Thông tin giao hàng & thanh toán'}
             </h1>
-            <p className="text-[14px] text-[#41454d] mt-1">
+            <p className="text-[13px] sm:text-[14px] text-[#41454d] mt-0.5 sm:mt-1">
               {groupOrder
                 ? `Trưởng nhóm thanh toán cho ${groupOrder.members.length} thành viên với ưu đãi giảm trực tiếp ${groupOrder.discountPercentage}%`
                 : 'Điền địa chỉ nhận món và chọn phương thức thanh toán thuận tiện'}
@@ -416,7 +416,7 @@ function CheckoutContent() {
         </div>
 
         {errorMsg && (
-          <div className="p-4 bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] rounded-[6px] text-[13px] font-medium">
+          <div className="p-3.5 sm:p-4 bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] rounded-[6px] text-[13px] font-medium">
             {errorMsg}
           </div>
         )}
@@ -433,12 +433,12 @@ function CheckoutContent() {
             autoComplete="off"
           />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
             {/* Form Fields */}
-            <div className="lg:col-span-7 space-y-6">
+            <div className="lg:col-span-7 space-y-5 sm:space-y-6">
               {/* Customer Info Card */}
-              <div className="bg-white rounded-[10px] p-6 sm:p-8 border border-[#dddddd] space-y-5">
-                <h2 className="text-[16px] font-semibold text-[#181d26]">
+              <div className="bg-white rounded-[10px] p-4 sm:p-8 border border-[#dddddd] space-y-4 sm:space-y-5">
+                <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
                   1. Thông tin người nhận ({groupOrder ? 'Trưởng nhóm' : 'Khách hàng'})
                 </h2>
 
@@ -524,8 +524,8 @@ function CheckoutContent() {
               </div>
 
               {/* Payment Method Card */}
-              <div className="bg-white rounded-[10px] p-6 sm:p-8 border border-[#dddddd] space-y-4">
-                <h2 className="text-[16px] font-semibold text-[#181d26]">
+              <div className="bg-white rounded-[10px] p-4 sm:p-8 border border-[#dddddd] space-y-4">
+                <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
                   2. Chọn phương thức thanh toán
                 </h2>
 
@@ -533,30 +533,30 @@ function CheckoutContent() {
                   {/* Sepay Option */}
                   <label
                     onClick={() => handlePaymentMethodChange('Sepay')}
-                    className={`flex items-start gap-4 p-4 rounded-[10px] border cursor-pointer transition ${
+                    className={`flex items-start gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-[10px] border cursor-pointer transition ${
                       paymentMethod === 'Sepay'
                         ? 'border-[#e31837] bg-[#fff1f2]/30 shadow-xs'
                         : 'border-[#dddddd] hover:border-[#9297a0] bg-white'
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-[6px] bg-[#e31837] text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[6px] bg-[#e31837] text-white flex items-center justify-center shrink-0 mt-0.5">
                       <QrCode className="w-5 h-5" />
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[14px] font-semibold text-[#181d26]">
-                          Chuyển khoản Ngân hàng (Mã VietQR)
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <span className="text-[13px] sm:text-[14px] font-semibold text-[#181d26]">
+                          Chuyển khoản VietQR
                         </span>
-                        <span className="bg-[#006400] text-white text-[11px] font-semibold px-2 py-0.5 rounded-[4px]">
+                        <span className="bg-[#006400] text-white text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-[4px]">
                           Tự động
                         </span>
                         {isNewUser && (
-                          <span className="bg-[#e31837] text-white text-[11px] font-semibold px-2 py-0.5 rounded-[4px] animate-pulse">
+                          <span className="bg-[#e31837] text-white text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-[4px] animate-pulse">
                             Giảm 20%
                           </span>
                         )}
                       </div>
-                      <p className="text-[13px] text-[#41454d] mt-1 leading-relaxed">
+                      <p className="text-[12px] sm:text-[13px] text-[#41454d] mt-1 leading-relaxed">
                         Quét mã QR từ bất kỳ ứng dụng ngân hàng di động nào. Hệ thống tự động nhận diện và chuyển đơn vào bếp ngay.
                       </p>
                     </div>
@@ -565,27 +565,27 @@ function CheckoutContent() {
                       name="payment"
                       checked={paymentMethod === 'Sepay'}
                       onChange={() => handlePaymentMethodChange('Sepay')}
-                      className="mt-1 accent-[#e31837]"
+                      className="mt-1 accent-[#e31837] shrink-0"
                     />
                   </label>
 
                   {/* COD Option */}
                   <label
                     onClick={() => handlePaymentMethodChange('COD')}
-                    className={`flex items-start gap-4 p-4 rounded-[10px] border cursor-pointer transition ${
+                    className={`flex items-start gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-[10px] border cursor-pointer transition ${
                       paymentMethod === 'COD'
                         ? 'border-[#e31837] bg-[#fff1f2]/30 shadow-xs'
                         : 'border-[#dddddd] hover:border-[#9297a0] bg-white'
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#181d26] flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#181d26] flex items-center justify-center shrink-0 mt-0.5">
                       <Banknote className="w-5 h-5" />
                     </div>
-                    <div className="flex-1">
-                      <div className="text-[14px] font-semibold text-[#181d26]">
-                        Thanh toán tiền mặt khi nhận hàng (COD)
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] sm:text-[14px] font-semibold text-[#181d26]">
+                        Tiền mặt khi nhận hàng (COD)
                       </div>
-                      <p className="text-[13px] text-[#41454d] mt-1 leading-relaxed">
+                      <p className="text-[12px] sm:text-[13px] text-[#41454d] mt-1 leading-relaxed">
                         Thanh toán trực tiếp bằng tiền mặt cho shipper khi nhận được đồ ăn nóng hổi.
                       </p>
                     </div>
@@ -594,7 +594,7 @@ function CheckoutContent() {
                       name="payment"
                       checked={paymentMethod === 'COD'}
                       onChange={() => handlePaymentMethodChange('COD')}
-                      className="mt-1 accent-[#e31837]"
+                      className="mt-1 accent-[#e31837] shrink-0"
                     />
                   </label>
                 </div>
@@ -602,8 +602,8 @@ function CheckoutContent() {
             </div>
 
             {/* Right Summary */}
-            <div className="lg:col-span-5 bg-[#fdf2f2]/30 rounded-[10px] p-6 sm:p-8 border border-[#fecdd3] space-y-6">
-              <h2 className="text-[16px] font-semibold text-[#181d26] pb-3 border-b border-[#fecdd3]">
+            <div className="lg:col-span-5 bg-[#fdf2f2]/30 rounded-[10px] p-4 sm:p-8 border border-[#fecdd3] space-y-5 sm:space-y-6">
+              <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26] pb-3 border-b border-[#fecdd3]">
                 {groupOrder
                   ? `Đơn nhóm #${groupOrder.code} (${groupOrder.totalQuantity || 0} món)`
                   : `Đơn hàng (${cart.length} món)`}

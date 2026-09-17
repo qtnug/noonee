@@ -129,9 +129,9 @@ export default function ProductDetailActions({ product }: { product: Product }) 
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
           {/* Quantity Stepper */}
-          <div className="flex items-center border border-[#dddddd] rounded-[6px] bg-white h-11 px-1">
+          <div className="flex items-center border border-[#dddddd] rounded-[6px] bg-white h-11 px-1 shrink-0">
             <button
               type="button"
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -140,7 +140,7 @@ export default function ProductDetailActions({ product }: { product: Product }) 
             >
               <Minus className="w-4 h-4" />
             </button>
-            <span className="w-9 text-center text-[15px] font-bold text-[#181d26]">
+            <span className="w-8 sm:w-9 text-center text-[14px] sm:text-[15px] font-bold text-[#181d26]">
               {quantity}
             </span>
             <button
@@ -158,7 +158,7 @@ export default function ProductDetailActions({ product }: { product: Product }) 
             type="button"
             onClick={handleAdd}
             disabled={!product.isAvailable}
-            className={`h-11 px-6 rounded-[8px] font-semibold text-[14px] flex items-center justify-center gap-2 transition cursor-pointer shadow-xs ${
+            className={`h-11 px-4 sm:px-6 rounded-[8px] font-semibold text-[13px] sm:text-[14px] flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 transition cursor-pointer shadow-xs ${
               !product.isAvailable
                 ? 'bg-[#f8fafc] text-[#9297a0] border border-[#dddddd] cursor-not-allowed'
                 : added
@@ -169,12 +169,12 @@ export default function ProductDetailActions({ product }: { product: Product }) 
             {added ? (
               <>
                 <Check className="w-4 h-4" />
-                <span>Đã thêm vào giỏ hàng!</span>
+                <span>Đã thêm vào giỏ!</span>
               </>
             ) : (
               <>
-                <ShoppingBag className="w-4 h-4" />
-                <span>
+                <ShoppingBag className="w-4 h-4 shrink-0" />
+                <span className="truncate">
                   {product.isAvailable ? `Thêm vào giỏ • ${formatVND(totalPrice)}` : 'Món tạm hết hàng'}
                 </span>
               </>

@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CartDrawer from '@/components/CartDrawer';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
@@ -26,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi" className={friemFont.variable}>
-      <body className="flex flex-col min-h-screen">
+      <body className="flex flex-col min-h-screen pb-14 md:pb-0">
         <AuthProvider>
           <FavoritesProvider>
             <CartProvider>
@@ -34,6 +35,7 @@ export default function RootLayout({
               <main className="flex-1">{children}</main>
               <Footer />
               <CartDrawer />
+              <MobileBottomNav />
             </CartProvider>
           </FavoritesProvider>
         </AuthProvider>

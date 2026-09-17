@@ -224,14 +224,14 @@ function MenuPageContent() {
             </div>
           </div>
 
-          {/* Category Horizontal Filter Buttons - Centered */}
-          <div className="flex items-center justify-start sm:justify-center flex-wrap gap-2 pb-1 pt-3 border-t border-[#dddddd]">
+          {/* Category Horizontal Filter Buttons - Swipable on mobile, Centered on desktop */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 sm:py-2 px-0.5 sm:justify-center sm:flex-wrap border-t border-[#dddddd]">
             <button
               onClick={() => {
                 setSelectedCategory(null);
                 setOnlyDeals(false);
               }}
-              className={`h-9 px-4 rounded-[6px] text-[13px] font-semibold shrink-0 transition cursor-pointer ${
+              className={`h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition cursor-pointer ${
                 selectedCategory === null && !onlyDeals
                   ? 'bg-[#e31837] text-white shadow-xs'
                   : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
@@ -246,7 +246,7 @@ function MenuPageContent() {
                   setSelectedCategory(cat.id);
                   setOnlyDeals(false);
                 }}
-                className={`h-9 px-4 rounded-[6px] text-[13px] font-semibold shrink-0 transition cursor-pointer ${
+                className={`h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition cursor-pointer ${
                   selectedCategory === cat.id && !onlyDeals
                     ? 'bg-[#e31837] text-white shadow-xs'
                     : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
@@ -260,13 +260,13 @@ function MenuPageContent() {
 
         {/* Product Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 py-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6 py-4 sm:py-8">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-              <div key={n} className="bg-white rounded-[10px] p-4 border border-[#dddddd] animate-pulse space-y-3">
-                <div className="h-44 bg-[#f8fafc] rounded-[6px]" />
-                <div className="h-4 bg-gray-200 rounded w-3/4" />
-                <div className="h-3 bg-gray-100 rounded w-1/2" />
-                <div className="h-9 bg-gray-200 rounded mt-4" />
+              <div key={n} className="bg-white rounded-[10px] p-3 sm:p-4 border border-[#dddddd] animate-pulse space-y-2 sm:space-y-3">
+                <div className="aspect-square bg-[#f8fafc] rounded-[6px]" />
+                <div className="h-3 sm:h-4 bg-gray-200 rounded w-3/4" />
+                <div className="h-2.5 sm:h-3 bg-gray-100 rounded w-1/2" />
+                <div className="h-7 sm:h-9 bg-gray-200 rounded mt-2 sm:mt-4" />
               </div>
             ))}
           </div>
@@ -291,7 +291,7 @@ function MenuPageContent() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}

@@ -29,19 +29,19 @@ export default function CartDrawer() {
         onClick={() => setIsCartOpen(false)}
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
         <div className="w-screen max-w-md bg-white border-l border-[#dddddd] shadow-2xl flex flex-col">
           {/* Header */}
-          <div className="h-16 px-6 border-b border-[#dddddd] flex items-center justify-between bg-white">
+          <div className="h-14 sm:h-16 px-4 sm:px-6 border-b border-[#dddddd] flex items-center justify-between bg-white">
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-[#e31837]" />
-              <h2 className="text-[16px] font-semibold text-[#181d26]">
+              <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
                 Giỏ hàng <span className="text-[13px] font-normal text-[#9297a0]">({totalItems} món)</span>
               </h2>
             </div>
             <button
               onClick={() => setIsCartOpen(false)}
-              className="p-2 text-[#41454d] hover:text-[#e31837] rounded-[6px] hover:bg-[#fff1f2] transition"
+              className="p-1.5 sm:p-2 text-[#41454d] hover:text-[#e31837] rounded-[6px] hover:bg-[#fff1f2] transition"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -49,7 +49,7 @@ export default function CartDrawer() {
           </div>
 
           {/* Body Items */}
-          <div className="flex-1 overflow-y-auto p-6 divide-y divide-[#dddddd]">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 divide-y divide-[#dddddd]">
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-16">
                 <div className="w-14 h-14 rounded-[12px] bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] flex items-center justify-center mb-4">
@@ -148,7 +148,7 @@ export default function CartDrawer() {
 
           {/* Footer Checkout */}
           {cart.length > 0 && (
-            <div className="p-6 border-t border-[#dddddd] bg-[#f8fafc] space-y-4">
+            <div className="p-4 sm:p-6 border-t border-[#dddddd] bg-[#f8fafc] space-y-3 sm:space-y-4">
               <div className="space-y-1.5 text-[13px]">
                 <div className="flex justify-between text-[#41454d]">
                   <span>Tạm tính</span>

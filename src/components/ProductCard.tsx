@@ -64,20 +64,20 @@ export default function ProductCard({
       </Link>
 
       {/* Product Information */}
-      <div className="p-4 flex-1 flex flex-col justify-between bg-white">
+      <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between bg-white">
         <div>
           {/* Category & Rating */}
-          <div className="flex items-center justify-between text-[12px] text-[#9297a0] mb-1.5">
-            <span className="uppercase tracking-wider font-semibold text-[11px] text-[#e31837]">
+          <div className="flex items-center justify-between text-[11px] sm:text-[12px] text-[#9297a0] mb-1">
+            <span className="uppercase tracking-wider font-semibold text-[10px] sm:text-[11px] text-[#e31837] truncate max-w-[85px] sm:max-w-none">
               {product.categoryName || 'Món ăn'}
             </span>
-            <div className="flex items-center gap-1.5">
-              <span className="flex items-center gap-0.5 text-[11px] text-[#41454d] bg-[#f8fafc] border border-[#dddddd] px-1.5 py-0.5 rounded-[4px]" title={`Thời gian chuẩn bị khoảng ${product.prepTime || 15} phút`}>
-                <Clock className="w-3 h-3 text-[#e31837]" />
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+              <span className="inline-flex items-center gap-0.5 text-[10px] sm:text-[11px] text-[#41454d] bg-[#f8fafc] border border-[#dddddd] px-1 sm:px-1.5 py-0.5 rounded-[4px]" title={`Thời gian chuẩn bị khoảng ${product.prepTime || 15} phút`}>
+                <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#e31837]" />
                 <span>{product.prepTime || 15}p</span>
               </span>
-              <span className="flex items-center gap-1 text-[#333840] font-medium">
-                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+              <span className="flex items-center gap-0.5 sm:gap-1 text-[#333840] font-medium text-[11px] sm:text-[12px]">
+                <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-400 text-amber-400" />
                 <span>{product.rating ? product.rating.toFixed(1) : '5.0'}</span>
               </span>
             </div>
@@ -85,24 +85,24 @@ export default function ProductCard({
 
           {/* Title */}
           <Link href={`/product/${product.slug}`}>
-            <h3 className="font-semibold text-[#181d26] text-[15px] leading-snug line-clamp-1 mb-1.5 hover:text-[#e31837] transition-colors">
+            <h3 className="font-semibold text-[#181d26] text-[13px] sm:text-[15px] leading-snug line-clamp-1 mb-1 hover:text-[#e31837] transition-colors">
               {product.name}
             </h3>
           </Link>
 
           {/* Description */}
-          <p className="text-[13px] text-[#41454d] line-clamp-2 leading-relaxed mb-4">
+          <p className="text-[11px] sm:text-[13px] text-[#41454d] line-clamp-1 sm:line-clamp-2 leading-relaxed mb-2 sm:mb-4">
             {product.description}
           </p>
         </div>
 
         {/* Price & Action Button (Red Button) */}
-        <div className="pt-3 border-t border-[#dddddd] flex items-center justify-between gap-2">
-          <div>
-            <span className="text-[16px] font-bold text-[#e31837] block leading-tight">
+        <div className="pt-2 sm:pt-3 border-t border-[#dddddd] flex items-center justify-between gap-1 sm:gap-2">
+          <div className="min-w-0">
+            <span className="text-[13px] sm:text-[16px] font-bold text-[#e31837] block leading-tight truncate">
               {formatVND(product.price)}
             </span>
-            <span className="text-[11px] text-[#9297a0] block mt-0.5">
+            <span className="text-[10px] sm:text-[11px] text-[#9297a0] block mt-0.5 hidden xs:block">
               Giá cơ bản
             </span>
           </div>
@@ -115,14 +115,14 @@ export default function ProductCard({
               setIsOptionsOpen(true);
             }}
             disabled={!product.isAvailable}
-            className={`h-8 px-3 rounded-[6px] text-[12px] font-semibold transition flex items-center gap-1.5 ${
+            className={`h-7 sm:h-8 px-2 sm:px-3 rounded-[6px] text-[11px] sm:text-[12px] font-semibold transition flex items-center gap-1 shrink-0 ${
               !product.isAvailable
                 ? 'bg-[#f8fafc] text-[#9297a0] border border-[#dddddd] cursor-not-allowed'
                 : 'bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white shadow-xs cursor-pointer'
             }`}
             title={product.isAvailable ? 'Chọn món & Tùy chọn khẩu vị' : 'Tạm hết hàng'}
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             <span>Thêm</span>
           </button>
         </div>

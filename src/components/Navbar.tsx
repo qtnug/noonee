@@ -213,11 +213,11 @@ export default function Navbar() {
         </form>
 
         {/* Right Action Cluster */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* Mobile search button */}
           <Link
             href="/menu"
-            className="md:hidden p-2 text-[#333840] hover:text-[#e31837] rounded-lg hover:bg-red-50 transition"
+            className="md:hidden p-1.5 sm:p-2 text-[#333840] hover:text-[#e31837] rounded-lg hover:bg-red-50 transition"
             aria-label="Tìm kiếm món ăn"
           >
             <Search className="w-5 h-5" />
@@ -226,13 +226,13 @@ export default function Navbar() {
           {/* Cart Drawer Trigger */}
           <button
             onClick={() => setIsCartOpen(true)}
-            className="flex items-center gap-2 h-10 px-3 sm:px-3.5 rounded-lg border border-[#dddddd] hover:border-[#e31837] bg-white text-[#181d26] hover:text-[#e31837] text-[13px] font-medium transition shadow-2xs hover:bg-red-50/30 cursor-pointer"
+            className="flex items-center gap-1.5 sm:gap-2 h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-lg border border-[#dddddd] hover:border-[#e31837] bg-white text-[#181d26] hover:text-[#e31837] text-[13px] font-medium transition shadow-2xs hover:bg-red-50/30 cursor-pointer"
             aria-label="Giỏ hàng"
           >
             <ShoppingBag className="w-4 h-4 text-inherit" />
             <span className="hidden sm:inline">Giỏ hàng</span>
             {totalItems > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold bg-[#e31837] text-white rounded-full animate-bounce">
+              <span className="inline-flex items-center justify-center min-w-[18px] h-4.5 sm:min-w-[20px] sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-[11px] font-bold bg-[#e31837] text-white rounded-full">
                 {totalItems}
               </span>
             )}
@@ -244,11 +244,11 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="h-10 px-2 sm:px-2.5 rounded-lg border border-[#dddddd] hover:border-[#e31837] flex items-center gap-2 bg-white hover:bg-red-50/40 transition shadow-2xs cursor-pointer"
+                className="h-9 sm:h-10 px-2 sm:px-2.5 rounded-lg border border-[#dddddd] hover:border-[#e31837] flex items-center gap-1.5 sm:gap-2 bg-white hover:bg-red-50/40 transition shadow-2xs cursor-pointer"
                 aria-label="Hồ sơ tài khoản"
                 title={`Tài khoản: ${user.fullName || user.username}`}
               >
-                <div className="w-7 h-7 rounded-full bg-[#e31837] text-white flex items-center justify-center text-[12px] font-bold shadow-xs">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#e31837] text-white flex items-center justify-center text-[11px] sm:text-[12px] font-bold shadow-xs">
                   {user.fullName ? user.fullName.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
                 </div>
                 <span className="hidden md:inline text-[13px] font-semibold text-[#181d26] max-w-[100px] truncate">
@@ -326,10 +326,10 @@ export default function Navbar() {
           ) : (
             <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-lg text-[13px] text-[#333840] hover:text-[#e31837] hover:bg-red-50/60 font-medium transition"
+              className="inline-flex items-center gap-1.5 h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-lg text-[13px] text-[#333840] hover:text-[#e31837] hover:bg-red-50/60 font-medium transition"
             >
               <UserIcon className="w-4 h-4" />
-              <span>Đăng nhập</span>
+              <span className="hidden sm:inline">Đăng nhập</span>
             </Link>
           )}
 
@@ -344,7 +344,7 @@ export default function Navbar() {
           {/* Mobile menu toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="xl:hidden p-2 text-[#333840] hover:text-[#e31837] rounded-lg hover:bg-gray-100 transition"
+            className="xl:hidden p-1.5 sm:p-2 text-[#333840] hover:text-[#e31837] rounded-lg hover:bg-gray-100 transition"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
