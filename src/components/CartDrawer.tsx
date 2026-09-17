@@ -59,12 +59,13 @@ export default function CartDrawer() {
                 <p className="text-[13px] text-[#41454d] max-w-xs mb-6">
                   Khám phá thực đơn món ngon và thêm món ăn yêu thích vào giỏ.
                 </p>
-                <button
+                <Link
+                  href="/menu"
                   onClick={() => setIsCartOpen(false)}
-                  className="px-6 py-2.5 bg-[#e31837] hover:bg-[#be0e27] text-white rounded-[12px] text-[14px] font-medium transition"
+                  className="px-6 py-2.5 bg-[#e31837] hover:bg-[#be0e27] text-white rounded-[12px] text-[14px] font-medium transition inline-block text-center"
                 >
                   Xem thực đơn
-                </button>
+                </Link>
               </div>
             ) : (
               <div className="space-y-4">

@@ -20,7 +20,7 @@ export default function ProductCard({
   const favorited = isFavorite(product.id);
 
   return (
-    <div className="bg-white rounded-[10px] border border-[#dddddd] hover:border-[#fecdd3] hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden relative">
+    <div className="bg-white rounded-[10px] border border-[#dddddd] hover:border-[#fecdd3] hover:-translate-y-1 hover:shadow-lg transition-all duration-200 flex flex-col overflow-hidden relative group/card">
       {/* Red Highlight Badge */}
       {product.isFeatured && (
         <div className="absolute top-3 left-3 z-10 pointer-events-none">

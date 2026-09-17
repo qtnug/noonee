@@ -15,7 +15,14 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 200;
 
     const products = await getProducts({ categoryId, search, isFeatured, page, limit });
-    return NextResponse.json({ success: true, data: products });
+    return NextResponse.json(
+      { success: true, data: products },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+        },
+      }
+    );
   } catch (error: any) {
     console.error('Error fetching products:', error);
     return NextResponse.json({ success: false, message: 'Đã xảy ra lỗi khi lấy danh sách món ăn' }, { status: 500 });

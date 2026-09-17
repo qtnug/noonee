@@ -1,0 +1,19 @@
+không chống bot 
+fail responsibility
+không có nút ở navbar, phải ấn vào chữ mới được, nên thêm btn vào (không viền, chỉ đậm tên khi hover)
+navbar để chưa hợp lý, thanh tìm kiếm bé. navbar nên để giỏ hàng, đăng nhập đăng xuất, profile, liên hệ, thực đơn, best seller, vân vân
+danh mục món ăn để dạng dropbox khi hover vào thực đơn trên món ăn, xem thêm về cookie, cache, redis để tăng tốc độ tải món (hiện tại đang chậm).
+sắp xếp hiện là sắp xếp:mặc định. nên đổi thành sắp xếp:best seller và đổi cách sắp xếp
+ở thực đơn, vị trí các nút chưa ở giữa div, còn nhiều khoảng trống để rút gọn/khai thác, còn nhiều khoảng trống ở tiêu đề "Khám phá tất cả món ăn & thức uống", nên đổi font hoặc thêm gì đó vào 
+ở mục đơn hàng, khi chưa đăng nhập vẫn có phần tìm kiếm đơn hàng mặc dù phải đăng nhập mới tìm kiếm được 
+mục đơn nhóm là tính năng hay, nên để ở chỗ có nhiều người thấy hơn để quảng cáo
+web thiếu animation quá
+nên yêu cầu đăng nhập từ sớm trước khi xem các món ăn
+khi ấn vào giỏ hàng trống, có hiện lên nút xem thực đơn, nhưng khi ấn vào thì không ra thực đơn
+ơ mục đăng ký tài khoản, phần nhập địa chỉ, placeholder không hiện thị hết (nên để placeholder ngắn)
+khi thanh toán vietqr, mã đang hiển thị để thanh toán mà back ra thì đơn hàng sẽ ở trạng thái chưa thanh toán và cho phép ấn nút quét vietqr để thanh toán,
+nhưng nên hủy luôn đơn đó đi và đưa lại đồ ăn vào giỏ hàng
+ở trang admin, sidebar của trang quản lý đang kéo dài theo độ dài của trang, không có các cơ chế phân trang
+ở trang thanh toán, trong trường hợp người dùng chưa có địa chỉ, thì lần đầu nhập địa chỉ vào sẽ có nút tick "lưu làm địa chỉ mặc định"
+ui ux chưa thiết kế đủ tốt nên responsive bị lỗi nhiều, cải thiện auto responsive
+

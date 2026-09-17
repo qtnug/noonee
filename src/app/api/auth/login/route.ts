@@ -17,7 +17,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { username, password } = await request.json();
+    const { username, password, hp_bot_trap } = await request.json();
+
+    // Anti-bot honeypot check (STT 1)
+    if (hp_bot_trap) {
+      return NextResponse.json(
+        { success: false, message: 'Yêu cầu bị từ chối do phát hiện bot tự động.' },
+        { status: 400 }
+      );
+    }
 
     if (!username || !password) {
       return NextResponse.json(

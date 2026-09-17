@@ -59,6 +59,19 @@ function CheckoutContent() {
   const [tierInfo, setTierInfo] = useState<MembershipTierInfo | null>(null);
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [useWallet, setUseWallet] = useState<boolean>(false);
+  const [saveAsDefaultAddress, setSaveAsDefaultAddress] = useState(false);
+  const [hpBotTrap, setHpBotTrap] = useState('');
+
+  // Restore coupon if returning from cancelled payment
+  useEffect(() => {
+    try {
+      const restored = localStorage.getItem('noonee_restored_coupon');
+      if (restored) {
+        localStorage.removeItem('noonee_restored_coupon');
+        setTimeout(() => handleApplyCoupon(restored), 300);
+      }
+    } catch (e) {}
+  }, []);
 
   // Fetch Group Order if groupCode param is present
   useEffect(() => {
@@ -336,6 +349,7 @@ function CheckoutContent() {
         useWallet: useWallet && walletDeduction > 0,
         walletAmountUsed: walletDeduction,
         items: orderItems,
+        hp_bot_trap: hpBotTrap,
       };
 
       const res = await fetch('/api/orders', {
@@ -352,6 +366,15 @@ function CheckoutContent() {
       // Clear the individual cart if not a group order
       if (!groupOrder) {
         clearCart();
+      }
+
+      // Save default address if checked
+      if (saveAsDefaultAddress && deliveryAddress.trim() && user?.id) {
+        fetch('/api/user/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+          body: JSON.stringify({ userId: user.id, address: deliveryAddress.trim() }),
+        }).catch(() => {});
       }
 
       // Redirect based on payment method
@@ -399,6 +422,17 @@ function CheckoutContent() {
         )}
 
         <form onSubmit={handleSubmit}>
+          {/* Honeypot Bot Trap (STT 1) */}
+          <input
+            type="text"
+            name="hp_bot_trap"
+            value={hpBotTrap}
+            onChange={(e) => setHpBotTrap(e.target.value)}
+            style={{ display: 'none' }}
+            tabIndex={-1}
+            autoComplete="off"
+          />
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Form Fields */}
             <div className="lg:col-span-7 space-y-6">
@@ -457,6 +491,17 @@ function CheckoutContent() {
                     onCalculatingChange={(isCalc) => setIsCalculatingDistance(isCalc)}
                     required
                   />
+                  {user && (
+                    <label className="flex items-center gap-2 mt-2 text-[13px] text-[#41454d] cursor-pointer hover:text-[#181d26] select-none">
+                      <input
+                        type="checkbox"
+                        checked={saveAsDefaultAddress}
+                        onChange={(e) => setSaveAsDefaultAddress(e.target.checked)}
+                        className="w-4 h-4 rounded text-[#e31837] focus:ring-[#e31837] border-[#dddddd]"
+                      />
+                      <span>Lưu làm địa chỉ nhận hàng mặc định cho tài khoản</span>
+                    </label>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">

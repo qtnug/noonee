@@ -11,6 +11,8 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   // Cancellation Modal state
   const [cancelModalOrder, setCancelModalOrder] = useState<Order | null>(null);
@@ -38,8 +40,12 @@ export default function AdminOrdersPage() {
   };
 
   useEffect(() => {
+    setCurrentPage(1);
     fetchOrders();
   }, [statusFilter, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(orders.length / pageSize));
+  const paginatedOrders = orders.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const [updatingCode, setUpdatingCode] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -209,7 +215,7 @@ export default function AdminOrdersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#dddddd]">
-                {orders.map((order) => (
+                {paginatedOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-[#f8fafc] transition">
                     <td className="py-3.5 px-4 font-mono font-medium text-[#181d26]">
                       <Link href={`/orders/${order.orderCode}`} className="hover:underline">
@@ -381,6 +387,51 @@ export default function AdminOrdersPage() {
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination Controls (STT 16) */}
+            {orders.length > 0 && (
+              <div className="px-6 py-4 border-t border-[#dddddd] bg-[#f8fafc] flex flex-col sm:flex-row items-center justify-between gap-3 text-[13px] text-[#41454d]">
+                <div>
+                  Hiển thị <strong>{Math.min((currentPage - 1) * pageSize + 1, orders.length)}</strong> - <strong>{Math.min(currentPage * pageSize, orders.length)}</strong> trên tổng số <strong>{orders.length}</strong> đơn hàng
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 bg-white border border-[#dddddd] rounded-lg text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                  >
+                    Trước
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                    .map((page, idx, arr) => {
+                      const prevPage = arr[idx - 1];
+                      return (
+                        <React.Fragment key={page}>
+                          {prevPage && page - prevPage > 1 && <span className="px-1 text-[#9297a0]">...</span>}
+                          <button
+                            onClick={() => setCurrentPage(page)}
+                            className={`w-8 h-8 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                              currentPage === page
+                                ? 'bg-[#e31837] text-white'
+                                : 'bg-white border border-[#dddddd] text-[#181d26] hover:bg-gray-50'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        </React.Fragment>
+                      );
+                    })}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 bg-white border border-[#dddddd] rounded-lg text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                  >
+                    Sau
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

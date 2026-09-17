@@ -256,16 +256,39 @@ let inMemoryOrders: Order[] = [];
 
 let inMemoryUsers: User[] = [];
 
+// In-Memory Cache for ultra-fast reading (STT 5)
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+let categoriesCache: CacheEntry<Category[]> | null = null;
+let productsCache: CacheEntry<Product[]> | null = null;
+const CACHE_TTL_MS = 45000; // 45 seconds TTL
+
+export function invalidateProductsCache() {
+  productsCache = null;
+}
+
+export function invalidateCategoriesCache() {
+  categoriesCache = null;
+}
+
 // ==========================================
 // PUBLIC DATABASE APIS (Cloud-First Architecture)
 // ==========================================
 
 export async function getCategories(): Promise<Category[]> {
+  const now = Date.now();
+  if (categoriesCache && (now - categoriesCache.timestamp) < CACHE_TTL_MS) {
+    return categoriesCache.data;
+  }
+
   try {
     const pool = await getCloudPool();
     if (pool) {
       const result = await pool.request().query('SELECT id, name, slug, description, icon, createdAt FROM Categories ORDER BY id ASC');
       if (result.recordset && result.recordset.length > 0) {
+        categoriesCache = { data: result.recordset, timestamp: now };
         return result.recordset;
       }
     }
@@ -273,10 +296,12 @@ export async function getCategories(): Promise<Category[]> {
     console.error('Error fetching categories from cloud:', err);
   }
 
+  categoriesCache = { data: inMemoryCategories, timestamp: now };
   return inMemoryCategories;
 }
 
 export async function createCategory(data: { name: string; slug: string; description?: string; icon?: string }): Promise<Category> {
+  invalidateCategoriesCache();
   const newCat: Category = {
     id: inMemoryCategories.length + 1,
     name: data.name,
@@ -312,6 +337,7 @@ export async function createCategory(data: { name: string; slug: string; descrip
 }
 
 export async function updateCategory(id: number, data: { name?: string; slug?: string; description?: string; icon?: string }): Promise<boolean> {
+  invalidateCategoriesCache();
   const idx = inMemoryCategories.findIndex(c => c.id === id);
   if (idx !== -1) {
     inMemoryCategories[idx] = { ...inMemoryCategories[idx], ...data };
@@ -354,6 +380,7 @@ export async function updateCategory(id: number, data: { name?: string; slug?: s
 }
 
 export async function deleteCategory(id: number): Promise<boolean> {
+  invalidateCategoriesCache();
   inMemoryCategories = inMemoryCategories.filter(c => c.id !== id);
 
   try {
@@ -375,67 +402,59 @@ export async function deleteCategory(id: number): Promise<boolean> {
   return true;
 }
 
-export async function getProducts(options?: { categoryId?: number; search?: string; isFeatured?: boolean; page?: number; limit?: number }): Promise<Product[]> {
+export async function getAllProductsCached(): Promise<Product[]> {
+  const now = Date.now();
+  if (productsCache && (now - productsCache.timestamp) < CACHE_TTL_MS) {
+    return productsCache.data;
+  }
+
   try {
     const pool = await getCloudPool();
     if (pool) {
-      let query = `
+      const query = `
         SELECT p.id, p.categoryId, c.name AS categoryName, p.name, p.slug, p.description, 
                CAST(p.price AS INT) AS price, p.image, p.isAvailable, p.isFeatured, 
                CAST(p.rating AS FLOAT) AS rating, ISNULL(p.prepTime, 15) AS prepTime, p.toppings, p.createdAt 
         FROM Products p 
         LEFT JOIN Categories c ON p.categoryId = c.id
-        WHERE 1=1
+        ORDER BY p.isFeatured DESC, p.id ASC
       `;
-      const req = pool.request();
-      if (options?.categoryId) {
-        req.input('catId', sql.Int, options.categoryId);
-        query += ` AND p.categoryId = @catId`;
-      }
-      if (options?.isFeatured) {
-        query += ` AND p.isFeatured = 1`;
-      }
-      if (options?.search) {
-        req.input('search', sql.NVarChar(150), `%${options.search}%`);
-        query += ` AND (p.name LIKE @search OR p.description LIKE @search)`;
-      }
-      query += ` ORDER BY p.isFeatured DESC, p.id ASC`;
-      
-      const page = options?.page || 1;
-      const limit = options?.limit || 200;
-      const offset = (page - 1) * limit;
-      req.input('offset', sql.Int, offset);
-      req.input('limit', sql.Int, limit);
-      query += ` OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`;
-
-      const result = await req.query(query);
+      const result = await pool.request().query(query);
       if (result.recordset && result.recordset.length > 0) {
-        return result.recordset.map((r: any) => {
-          let parsedToppings = parseToppingsField(r.toppings);
-          return {
-            ...r,
-            prepTime: r.prepTime || 15,
-            toppings: parsedToppings,
-            isAvailable: Boolean(r.isAvailable),
-            isFeatured: Boolean(r.isFeatured),
-          };
-        });
+        const mapped = result.recordset.map((r: any) => ({
+          ...r,
+          prepTime: r.prepTime || 15,
+          toppings: parseToppingsField(r.toppings),
+          isAvailable: Boolean(r.isAvailable),
+          isFeatured: Boolean(r.isFeatured),
+        }));
+        productsCache = { data: mapped, timestamp: now };
+        return mapped;
       }
     }
   } catch (err) {
     console.error('Error querying products from cloud:', err);
   }
 
+  productsCache = { data: inMemoryProducts, timestamp: now };
+  return inMemoryProducts;
+}
 
+export async function getProducts(options?: { categoryId?: number; search?: string; isFeatured?: boolean; page?: number; limit?: number }): Promise<Product[]> {
+  const allProducts = await getAllProductsCached();
+  let result = [...allProducts];
 
-  // In-memory fallback
-  let result = [...inMemoryProducts];
-  if (options?.categoryId) result = result.filter(p => p.categoryId === options.categoryId);
-  if (options?.isFeatured) result = result.filter(p => p.isFeatured);
+  if (options?.categoryId) {
+    result = result.filter(p => p.categoryId === options.categoryId);
+  }
+  if (options?.isFeatured) {
+    result = result.filter(p => p.isFeatured);
+  }
   if (options?.search) {
     const q = options.search.toLowerCase();
-    result = result.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
+    result = result.filter(p => p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q)));
   }
+
   const page = options?.page || 1;
   const limit = options?.limit || 200;
   return result.slice((page - 1) * limit, page * limit);
@@ -476,6 +495,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 }
 
 export async function createProduct(data: Omit<Product, 'id'>): Promise<Product> {
+  invalidateProductsCache();
   const newProduct: Product = {
     ...data,
     id: inMemoryProducts.length + 1,
@@ -525,6 +545,7 @@ export async function createProduct(data: Omit<Product, 'id'>): Promise<Product>
 }
 
 export async function updateProduct(id: number, data: Partial<Product>): Promise<boolean> {
+  invalidateProductsCache();
   const idx = inMemoryProducts.findIndex(p => p.id === id);
   if (idx !== -1) {
     inMemoryProducts[idx] = { ...inMemoryProducts[idx], ...data };
@@ -584,6 +605,7 @@ export async function updateProduct(id: number, data: Partial<Product>): Promise
 }
 
 export async function deleteProduct(id: number): Promise<boolean> {
+  invalidateProductsCache();
   inMemoryProducts = inMemoryProducts.filter(p => p.id !== id);
 
   try {

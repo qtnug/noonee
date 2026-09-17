@@ -15,6 +15,7 @@ interface CartContextType {
   updateQuantity: (cartItemId: string | number, quantity: number) => void;
   updateItemNote: (cartItemId: string, note: string) => void;
   clearCart: () => void;
+  restoreCart: (items: CartItem[]) => void;
   totalItems: number;
   totalPrice: number;
   isCartOpen: boolean;
@@ -146,6 +147,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart([]);
   };
 
+  const restoreCart = (items: CartItem[]) => {
+    setCart(items);
+    try {
+      localStorage.setItem('food_cart', JSON.stringify(items));
+    } catch (e) {
+      // ignore
+    }
+  };
+
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce(
     (sum, item) => sum + (item.itemPrice || item.product.price) * item.quantity,
@@ -161,6 +171,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         updateQuantity,
         updateItemNote,
         clearCart,
+        restoreCart,
         totalItems,
         totalPrice,
         isCartOpen,

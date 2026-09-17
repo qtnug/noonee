@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Search, Tag, UtensilsCrossed } from 'lucide-react';
+import { Search, Tag, UtensilsCrossed, Gift, Zap, Users, Star, Flame, Sparkles } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import { Product, Category } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 function MenuPageContent() {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('categoryId');
   const initialSearch = searchParams.get('search') || '';
@@ -19,8 +22,20 @@ function MenuPageContent() {
   );
   const [onlyDeals, setOnlyDeals] = useState(initialDeal);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
+  const [sortBy, setSortBy] = useState<'best-seller' | 'price-asc' | 'price-desc'>('best-seller');
   const [isLoading, setIsLoading] = useState(true);
+  const [showGuestPrompt, setShowGuestPrompt] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      const dismissed = typeof window !== 'undefined' ? sessionStorage.getItem('noonee_dismiss_guest_prompt') : null;
+      if (!dismissed) {
+        setShowGuestPrompt(true);
+      }
+    } else {
+      setShowGuestPrompt(false);
+    }
+  }, [user]);
 
   useEffect(() => {
     async function loadData() {
@@ -66,7 +81,12 @@ function MenuPageContent() {
       );
     }
 
-    if (sortBy === 'price-asc') {
+    if (sortBy === 'best-seller') {
+      list.sort((a, b) => {
+        if (a.isFeatured !== b.isFeatured) return b.isFeatured ? 1 : -1;
+        return (b.rating || 0) - (a.rating || 0);
+      });
+    } else if (sortBy === 'price-asc') {
       list.sort((a, b) => a.price - b.price);
     } else if (sortBy === 'price-desc') {
       list.sort((a, b) => b.price - a.price);
@@ -78,23 +98,91 @@ function MenuPageContent() {
   return (
     <div className="bg-white min-h-screen pb-24">
       {/* Category Header Band */}
-      <div className="bg-[#fff1f2]/40 border-b border-[#dddddd] py-10 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="text-[12px] font-semibold text-[#e31837] uppercase tracking-wider mb-1">
-              Thực đơn trực tuyến NooNee
+      <div className="bg-gradient-to-b from-[#fff1f2]/60 to-white border-b border-[#dddddd] py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold bg-[#fff1f2] text-[#e31837] border border-[#fecdd3]">
+                <Flame className="w-3.5 h-3.5 text-[#e31837]" />
+                Món ngon tươi nóng mỗi ngày
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                <Zap className="w-3.5 h-3.5 text-amber-500" />
+                Giao nhanh 15-30p
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <Star className="w-3.5 h-3.5 fill-emerald-500 text-emerald-500" />
+                Đánh giá 4.9/5 (1.2k+ lượt)
+              </span>
             </div>
-            <h1 className="text-3xl font-normal tracking-tight text-[#181d26]">
-              Khám phá tất cả món ăn & thức uống
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#181d26]">
+              Khám phá thực đơn NooNee
             </h1>
+            <p className="text-[14px] text-[#41454d] max-w-2xl leading-relaxed">
+              Thực đơn phong phú hơn 50+ món cơm rang vàng ruộm, cơm tấm sườn bì chả, phở bò gia truyền, đồ ăn vặt và đồ uống mát lạnh chuẩn vị.
+            </p>
           </div>
-          <div className="text-[14px] text-[#41454d]">
-            Đang hiển thị <strong className="text-[#e31837] font-bold">{filteredProducts.length}</strong> món ăn
+
+          {/* Group order banner & counter (STT 9) */}
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <Link
+              href="/group"
+              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 hover:border-[#e31837] rounded-xl text-[13px] font-semibold text-[#e31837] shadow-xs transition hover:scale-[1.02]"
+            >
+              <Users className="w-4 h-4" />
+              <span>Đặt theo nhóm tiết kiệm</span>
+              <span className="px-1.5 py-0.5 bg-[#e31837] text-white text-[10px] font-extrabold rounded-full">
+                -10%
+              </span>
+            </Link>
+
+            <div className="px-4 py-2.5 bg-white rounded-xl border border-[#dddddd] text-[13px] text-[#41454d] shadow-2xs font-medium">
+              Đang hiển thị <strong className="text-[#e31837] font-bold">{filteredProducts.length}</strong> món ăn
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+        {/* Early Login Promotion Banner for Guests (STT 11) */}
+        {!user && showGuestPrompt && (
+          <div className="bg-gradient-to-r from-red-50 via-rose-50 to-amber-50 border border-red-200 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm animate-in fade-in duration-300">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-[#e31837] text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Gift className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-bold text-[#181d26]">Chào bạn mới! Nhận ngay ưu đãi:</span>
+                  <span className="text-xs font-extrabold px-2 py-0.5 bg-[#e31837] text-white rounded-full">
+                    Giảm 20.000đ
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-[#41454d] mt-0.5">
+                  Đăng nhập tài khoản sớm để áp dụng voucher ưu đãi cho đơn hàng đầu tiên, tích điểm hạng thành viên và lưu địa chỉ nhận hàng.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
+              <Link
+                href="/login?redirect=/menu"
+                className="px-4 py-2 bg-[#e31837] hover:bg-[#be0e27] text-white text-xs sm:text-sm font-semibold rounded-lg shadow-xs transition hover:scale-105 active:scale-95 cursor-pointer"
+              >
+                Đăng nhập ngay
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowGuestPrompt(false);
+                  sessionStorage.setItem('noonee_dismiss_guest_prompt', 'true');
+                }}
+                className="px-3 py-2 text-xs sm:text-sm text-[#9297a0] hover:text-[#181d26] transition font-medium cursor-pointer"
+              >
+                Để sau
+              </button>
+            </div>
+          </div>
+        )}
         {/* Search & Filter Bar */}
         <div className="bg-white rounded-[10px] border border-[#dddddd] p-5 space-y-4 shadow-xs">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -114,36 +202,36 @@ function MenuPageContent() {
             <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
               <button
                 onClick={() => setOnlyDeals(!onlyDeals)}
-                className={`h-11 px-4 rounded-[6px] text-[13px] font-semibold transition flex items-center gap-1.5 border ${
+                className={`h-11 px-4 rounded-[6px] text-[13px] font-semibold transition flex items-center gap-1.5 border cursor-pointer ${
                   onlyDeals
                     ? 'bg-[#e31837] text-white border-[#e31837] shadow-xs'
                     : 'bg-white text-[#e31837] border-[#fecdd3] hover:bg-[#fff1f2]'
                 }`}
               >
                 <Tag className="w-3.5 h-3.5" />
-                <span>Món ưu đãi</span>
+                <span>Món nổi bật</span>
               </button>
 
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="h-11 text-[13px] bg-white border border-[#dddddd] rounded-[6px] px-3 text-[#181d26] font-medium focus:outline-none focus:border-[#e31837]"
+                className="h-11 text-[13px] bg-white border border-[#dddddd] rounded-[6px] px-3 text-[#181d26] font-medium focus:outline-none focus:border-[#e31837] cursor-pointer"
               >
-                <option value="default">Sắp xếp: Mặc định</option>
+                <option value="best-seller">Sắp xếp: Bán chạy nhất ⭐</option>
                 <option value="price-asc">Giá: Thấp đến Cao</option>
                 <option value="price-desc">Giá: Cao đến Thấp</option>
               </select>
             </div>
           </div>
 
-          {/* Category Horizontal Filter Buttons */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-2 border-t border-[#dddddd]">
+          {/* Category Horizontal Filter Buttons - Centered */}
+          <div className="flex items-center justify-start sm:justify-center flex-wrap gap-2 pb-1 pt-3 border-t border-[#dddddd]">
             <button
               onClick={() => {
                 setSelectedCategory(null);
                 setOnlyDeals(false);
               }}
-              className={`h-9 px-4 rounded-[6px] text-[13px] font-semibold shrink-0 transition ${
+              className={`h-9 px-4 rounded-[6px] text-[13px] font-semibold shrink-0 transition cursor-pointer ${
                 selectedCategory === null && !onlyDeals
                   ? 'bg-[#e31837] text-white shadow-xs'
                   : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
@@ -158,7 +246,7 @@ function MenuPageContent() {
                   setSelectedCategory(cat.id);
                   setOnlyDeals(false);
                 }}
-                className={`h-9 px-4 rounded-[6px] text-[13px] font-semibold shrink-0 transition ${
+                className={`h-9 px-4 rounded-[6px] text-[13px] font-semibold shrink-0 transition cursor-pointer ${
                   selectedCategory === cat.id && !onlyDeals
                     ? 'bg-[#e31837] text-white shadow-xs'
                     : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'

@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Search, ShoppingBag, ArrowRight, User as UserIcon, ShieldAlert } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Order } from '@/types';
 import { formatVND, formatDate } from '@/lib/utils';
 
 export default function OrdersLookupPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [orders, setOrders] = useState<Order[]>([]);
@@ -42,10 +44,15 @@ export default function OrdersLookupPage() {
     e.preventDefault();
     if (!searchQuery.trim()) return;
 
+    const q = searchQuery.trim().replace(/^#+/, '');
+    if (!user) {
+      router.push(`/orders/${encodeURIComponent(q)}`);
+      return;
+    }
+
     setLoading(true);
     try {
       // If user enters specific code, search that order
-      const q = searchQuery.trim();
       const res = await fetch(`/api/orders/${q}`);
       const data = await res.json();
       if (data.success && data.data) {
@@ -99,46 +106,69 @@ export default function OrdersLookupPage() {
               : 'Đăng nhập tài khoản để xem lịch sử đơn hàng của bạn hoặc tra cứu theo mã đơn'}
           </p>
 
-          {/* Search input */}
-          <form onSubmit={handleManualSearch} className="pt-4">
-            <div className="relative max-w-md mx-auto flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9297a0]" />
-                <input
-                  type="text"
-                  placeholder="Nhập mã đơn hàng (ví dụ: DH1001)..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-11 pl-11 pr-4 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition font-mono"
-                />
+          {/* Search input for logged in users */}
+          {user && (
+            <form onSubmit={handleManualSearch} className="pt-4">
+              <div className="relative max-w-md mx-auto flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9297a0]" />
+                  <input
+                    type="text"
+                    placeholder="Tìm theo mã đơn, món ăn, SĐT..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-11 pl-11 pr-4 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition font-mono"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="h-11 px-5 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-medium rounded-[6px] transition cursor-pointer"
+                >
+                  Tìm kiếm
+                </button>
               </div>
-              <button
-                type="submit"
-                className="h-11 px-5 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-medium rounded-[6px] transition cursor-pointer"
-              >
-                Tra cứu
-              </button>
-            </div>
-          </form>
+            </form>
+          )}
         </div>
 
-        {/* Not Logged In Banner */}
+        {/* Not Logged In Banner with Guest Order Lookup */}
         {!user && (
-          <div className="p-6 bg-[#f8fafc] border border-[#dddddd] rounded-[12px] text-center space-y-3 max-w-lg mx-auto">
-            <div className="w-12 h-12 rounded-full bg-[#fff1f2] text-[#e31837] flex items-center justify-center mx-auto border border-[#fecdd3]">
-              <UserIcon className="w-6 h-6" />
+          <div className="p-8 bg-white border border-[#dddddd] rounded-[12px] text-center space-y-5 max-w-lg mx-auto shadow-xs">
+            <div className="w-14 h-14 rounded-full bg-[#fff1f2] text-[#e31837] flex items-center justify-center mx-auto border border-[#fecdd3]">
+              <UserIcon className="w-7 h-7" />
             </div>
-            <h3 className="text-[16px] font-medium text-[#181d26]">Bạn chưa đăng nhập</h3>
-            <p className="text-[13px] text-[#41454d]">
-              Đăng nhập để xem danh sách toàn bộ các món ăn bạn đã từng đặt, trạng thái giao nhận và viết đánh giá món ăn.
-            </p>
+            <div className="space-y-1">
+              <h3 className="text-xl font-normal text-[#181d26]">Bạn chưa đăng nhập tài khoản</h3>
+              <p className="text-[13px] text-[#41454d]">
+                Đăng nhập để xem danh sách toàn bộ các món ăn bạn đã từng đặt, trạng thái giao nhận và viết đánh giá món ăn.
+              </p>
+            </div>
             <div>
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-medium text-[13px] rounded-[6px] transition shadow-xs"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-medium text-[13px] rounded-[8px] transition shadow-xs"
               >
                 Đăng nhập ngay
               </Link>
+            </div>
+
+            <div className="pt-4 border-t border-[#dddddd] space-y-2">
+              <span className="text-[12px] text-[#9297a0] block">Hoặc tra cứu nhanh đơn hàng vãng lai bằng mã:</span>
+              <form onSubmit={handleManualSearch} className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Nhập mã đơn (VD: DH017439...)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 h-10 px-3 text-[13px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] font-mono"
+                />
+                <button
+                  type="submit"
+                  className="h-10 px-4 bg-[#181d26] hover:bg-[#333840] text-white text-[13px] font-medium rounded-[6px] transition cursor-pointer"
+                >
+                  Tra cứu
+                </button>
+              </form>
             </div>
           </div>
         )}

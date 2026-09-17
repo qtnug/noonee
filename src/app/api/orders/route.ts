@@ -62,7 +62,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { customerName, customerPhone, deliveryAddress, notes, items, paymentMethod, couponCode, useWallet, groupCode } = body;
+    const { customerName, customerPhone, deliveryAddress, notes, items, paymentMethod, couponCode, useWallet, groupCode, hp_bot_trap } = body;
+
+    // Anti-bot honeypot check (STT 1)
+    if (hp_bot_trap) {
+      return NextResponse.json(
+        { success: false, message: 'Yêu cầu bị từ chối do phát hiện hành vi bot tự động' },
+        { status: 400 }
+      );
+    }
 
     // Use authenticated user ID directly
     const userId = authUser.userId;

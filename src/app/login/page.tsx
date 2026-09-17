@@ -23,6 +23,7 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hpBotTrap, setHpBotTrap] = useState('');
 
   // Prevent logged in users from visiting login/register page
   useEffect(() => {
@@ -54,7 +55,7 @@ function LoginContent() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim(), password }),
+        body: JSON.stringify({ username: username.trim(), password, hp_bot_trap: hpBotTrap }),
       });
       const data = await res.json();
       if (!data.success) {
@@ -102,6 +103,7 @@ function LoginContent() {
           fullName: fullName.trim(),
           phone: phone.trim(),
           address: address.trim(),
+          hp_bot_trap: hpBotTrap,
         }),
       });
       const data = await res.json();
@@ -185,6 +187,17 @@ function LoginContent() {
         {/* Login Form */}
         {mode === 'login' ? (
           <form onSubmit={handleLogin} className="space-y-4 text-[13px]">
+            {/* Honeypot Bot Trap */}
+            <input
+              type="text"
+              name="hp_bot_trap"
+              value={hpBotTrap}
+              onChange={(e) => setHpBotTrap(e.target.value)}
+              style={{ display: 'none' }}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+
             <div className="space-y-1.5">
               <label className="font-medium text-[#181d26]">Tên đăng nhập</label>
               <div className="relative">
@@ -234,6 +247,17 @@ function LoginContent() {
         ) : (
           /* Register Form */
           <form onSubmit={handleRegister} className="space-y-3.5 text-[13px]">
+            {/* Honeypot Bot Trap */}
+            <input
+              type="text"
+              name="hp_bot_trap"
+              value={hpBotTrap}
+              onChange={(e) => setHpBotTrap(e.target.value)}
+              style={{ display: 'none' }}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+
             <div className="space-y-1">
               <label className="font-medium text-[#181d26]">Họ và tên *</label>
               <input
@@ -352,7 +376,7 @@ function LoginContent() {
               <AddressAutocompleteInput
                 value={address}
                 onChange={(addr) => setAddress(addr)}
-                placeholder="Số nhà, tên đường, phường/xã (Goong Map tự động đề xuất)..."
+                placeholder="VD: 120 Yên Lãng, Đống Đa, Hà Nội..."
               />
             </div>
 

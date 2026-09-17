@@ -80,3 +80,51 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #cbd5e1;
 }
+
+/* Animations & Responsiveness Utilities (STT 10 & 18) */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatBadge {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(227, 24, 55, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(227, 24, 55, 0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-float {
+  animation: floatBadge 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Auto Responsive safety */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}

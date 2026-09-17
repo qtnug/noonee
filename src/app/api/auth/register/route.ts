@@ -17,7 +17,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { username, password, confirmPassword, fullName, phone, address, email } = await request.json();
+    const { username, password, confirmPassword, fullName, phone, address, email, hp_bot_trap } = await request.json();
+
+    // Anti-bot honeypot check (STT 1)
+    if (hp_bot_trap) {
+      return NextResponse.json(
+        { success: false, message: 'Yêu cầu bị từ chối do phát hiện bot tự động.' },
+        { status: 400 }
+      );
+    }
 
     // 1. Validate required fields
     if (!username || !password || !fullName) {

@@ -216,11 +216,17 @@ export default function AdminProductsPage() {
     }
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   const filtered = products.filter((p) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
-    return p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
+    return p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q));
   });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="space-y-6">
@@ -250,7 +256,10 @@ export default function AdminProductsPage() {
             type="text"
             placeholder="Tìm kiếm món theo tên hoặc mô tả..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full h-10 pl-10 pr-4 text-[13px] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] text-[#181d26]"
           />
         </div>
@@ -259,7 +268,10 @@ export default function AdminProductsPage() {
       {/* Products Table */}
       <div className="bg-white rounded-[10px] border border-[#dddddd] overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-[13px] text-[#9297a0]">Đang tải danh sách món ăn...</div>
+          <div className="p-12 text-center text-[13px] text-[#41454d] flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-[#e31837]" />
+            <span>Đang tải danh sách món ăn...</span>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center text-[13px] text-[#41454d]">Không tìm thấy món ăn nào.</div>
         ) : (
@@ -276,7 +288,7 @@ export default function AdminProductsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#dddddd]">
-                {filtered.map((p) => (
+                {paginated.map((p) => (
                   <tr key={p.id} className="hover:bg-[#f8fafc] transition">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
@@ -347,6 +359,51 @@ export default function AdminProductsPage() {
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination Controls (STT 16) */}
+            {filtered.length > 0 && (
+              <div className="px-6 py-4 border-t border-[#dddddd] bg-[#f8fafc] flex flex-col sm:flex-row items-center justify-between gap-3 text-[13px] text-[#41454d]">
+                <div>
+                  Hiển thị <strong>{Math.min((currentPage - 1) * pageSize + 1, filtered.length)}</strong> - <strong>{Math.min(currentPage * pageSize, filtered.length)}</strong> trên tổng số <strong>{filtered.length}</strong> món ăn
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 bg-white border border-[#dddddd] rounded-lg text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                  >
+                    Trước
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                    .map((page, idx, arr) => {
+                      const prevPage = arr[idx - 1];
+                      return (
+                        <React.Fragment key={page}>
+                          {prevPage && page - prevPage > 1 && <span className="px-1 text-[#9297a0]">...</span>}
+                          <button
+                            onClick={() => setCurrentPage(page)}
+                            className={`w-8 h-8 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                              currentPage === page
+                                ? 'bg-[#e31837] text-white'
+                                : 'bg-white border border-[#dddddd] text-[#181d26] hover:bg-gray-50'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        </React.Fragment>
+                      );
+                    })}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 bg-white border border-[#dddddd] rounded-lg text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                  >
+                    Sau
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
