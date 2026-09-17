@@ -108,10 +108,6 @@ export default function GroupOrderLandingPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-10">
         {/* Hero Section */}
         <div className="text-center space-y-4 pt-4">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] text-[13px] font-semibold tracking-wide">
-            <Sparkles className="w-4 h-4" />
-            TÍNH NĂNG MỚI: ĐẶT ĐƠN NHÓM TIỆN LỢI
-          </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#181d26] tracking-tight">
             Cùng Nhau Chọn Món, <span className="text-[#e31837]">Giảm Đến 10%</span>
           </h1>
@@ -249,7 +245,6 @@ export default function GroupOrderLandingPage() {
                 </div>
                 <ul className="list-disc pl-5 space-y-1 text-[#555a64] text-[12px]">
                   <li>Số lượng thành viên: <strong>Tối thiểu 2 người, tối đa 10 người</strong>.</li>
-                  <li>Mọi người trong phòng có thể thấy món ăn mà các thành viên khác đang chọn.</li>
                   <li>Trưởng nhóm là người chốt đơn và tiến hành thanh toán cho cả nhóm.</li>
                 </ul>
               </div>
@@ -337,7 +332,7 @@ export default function GroupOrderLandingPage() {
           <h2 className="text-xl sm:text-2xl font-bold text-[#181d26] text-center mb-8">
             Cách thức hoạt động cực kỳ đơn giản
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-5 rounded-2xl border border-[#e5e7eb] space-y-3">
               <div className="w-10 h-10 rounded-xl bg-[#fee2e2] text-[#e31837] font-bold flex items-center justify-center text-base">
                 1
@@ -361,16 +356,6 @@ export default function GroupOrderLandingPage() {
             <div className="bg-white p-5 rounded-2xl border border-[#e5e7eb] space-y-3">
               <div className="w-10 h-10 rounded-xl bg-[#fee2e2] text-[#e31837] font-bold flex items-center justify-center text-base">
                 3
-              </div>
-              <h3 className="font-bold text-[#181d26] text-[15px]">Xem thực đơn trực tiếp</h3>
-              <p className="text-[13px] text-[#555a64]">
-                Mọi người nhìn thấy nhau đang đặt món gì theo thời gian thực, không lo trùng món.
-              </p>
-            </div>
-
-            <div className="bg-white p-5 rounded-2xl border border-[#e5e7eb] space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[#fee2e2] text-[#e31837] font-bold flex items-center justify-center text-base">
-                4
               </div>
               <h3 className="font-bold text-[#181d26] text-[15px]">Chốt đơn & Giảm giá</h3>
               <p className="text-[13px] text-[#555a64]">
