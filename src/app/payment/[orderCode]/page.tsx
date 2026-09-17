@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, AlertTriangle, ShoppingCart, RefreshCcw } from 'lucide-react';
@@ -22,6 +22,7 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(true);
   const [isPaid, setIsPaid] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const cancellingRef = useRef(false);
 
   useEffect(() => {
     async function fetchOrder() {
@@ -62,13 +63,32 @@ export default function PaymentPage() {
     return () => clearInterval(interval);
   }, [orderCode]);
 
+  // Intercept browser back button to auto-cancel and restore cart (STT 14 & 15)
+  useEffect(() => {
+    if (!order || isPaid || order.paymentStatus === 'Paid') return;
+
+    window.history.pushState({ page: 'payment' }, '', window.location.href);
+
+    const handlePopState = () => {
+      if (!cancellingRef.current && !isPaid && order?.paymentStatus !== 'Paid') {
+        handleCancelAndReturnToCart();
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [order, isPaid]);
+
   const handleCancelAndReturnToCart = async () => {
-    if (!order) return;
+    if (!order || cancellingRef.current) return;
     if (order.paymentStatus === 'Paid') {
       router.push(`/orders/${orderCode}`);
       return;
     }
 
+    cancellingRef.current = true;
     setIsCancelling(true);
     try {
       // 1. Fetch genuine products to rebuild complete CartItem objects
