@@ -27,7 +27,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { memberId, action, item } = body;
+    const { memberId, action, item, requesterMemberId } = body;
 
     if (!memberId) {
       return NextResponse.json(
@@ -43,13 +43,20 @@ export async function POST(
       );
     }
 
-    // Validate genuine price if adding item
+    // Validate genuine price and availability if adding item (Test Case 2.1)
     if (action === 'add' && item?.productId) {
       const dbProducts = await getProducts();
       const genuineProd = dbProducts.find((p) => p.id === Number(item.productId));
       if (!genuineProd) {
         return NextResponse.json(
           { success: false, message: 'Món ăn không tồn tại trong hệ thống' },
+          { status: 400 }
+        );
+      }
+
+      if (!genuineProd.isAvailable) {
+        return NextResponse.json(
+          { success: false, message: `Món "${genuineProd.name}" hiện tạm thời ngưng phục vụ, vui lòng chọn món khác.` },
           { status: 400 }
         );
       }
@@ -68,7 +75,7 @@ export async function POST(
       item.productName = genuineProd.name;
     }
 
-    const result = await updateGroupMemberItem(code, memberId, action, item || {});
+    const result = await updateGroupMemberItem(code, memberId, action, item || {}, requesterMemberId || memberId);
     if (!result.success) {
       return NextResponse.json(
         { success: false, message: result.message },

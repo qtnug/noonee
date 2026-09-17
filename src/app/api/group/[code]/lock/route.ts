@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { lockGroupOrder, unlockGroupOrder } from '@/lib/db';
+import { authenticateRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,15 +17,17 @@ export async function POST(
       );
     }
 
+    const authUser = authenticateRequest(request);
     const body = await request.json();
     const action = body.action || 'lock';
+    const requesterMemberId = body.requesterMemberId || undefined;
 
     if (action === 'unlock') {
-      const res = await unlockGroupOrder(code);
+      const res = await unlockGroupOrder(code, requesterMemberId, authUser?.userId);
       if (!res.success) {
         return NextResponse.json(
           { success: false, message: res.message },
-          { status: 400 }
+          { status: 403 }
         );
       }
       return NextResponse.json({
@@ -34,11 +37,11 @@ export async function POST(
       });
     }
 
-    const res = await lockGroupOrder(code);
+    const res = await lockGroupOrder(code, requesterMemberId, authUser?.userId);
     if (!res.success) {
       return NextResponse.json(
         { success: false, message: res.message },
-        { status: 400 }
+        { status: 403 }
       );
     }
 

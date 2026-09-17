@@ -175,14 +175,26 @@ export async function POST(request: NextRequest) {
     let validatedGroupCode: string | null = null;
     if (groupCode) {
       const group = await getGroupOrderByCode(groupCode);
-      if (group) {
-        validatedGroupCode = group.code;
-        const memberCount = group.members?.length || 0;
-        const groupDisc = calculateGroupDiscount(memberCount);
-        if (groupDisc.percentage > 0) {
-          groupDiscountAmount = Math.round(subtotal * (groupDisc.percentage / 100));
-          discountAmount += groupDiscountAmount;
-        }
+      if (!group) {
+        return NextResponse.json({ success: false, message: 'Nhóm đặt món không tồn tại trong hệ thống.' }, { status: 400 });
+      }
+      if (group.status === 'completed') {
+        return NextResponse.json({ success: false, message: 'Đơn nhóm này đã được hoàn tất thanh toán trước đó!' }, { status: 400 });
+      }
+      // Authorization check (Test Case 4.1): Only the group host can checkout
+      if (group.hostUserId && group.hostUserId !== userId) {
+        return NextResponse.json({ success: false, message: 'Chỉ trưởng nhóm mới có quyền tiến hành thanh toán đơn nhóm này.' }, { status: 403 });
+      }
+      if ((group.members?.length || 0) < 2) {
+        return NextResponse.json({ success: false, message: 'Đơn nhóm cần tối thiểu 2 người để đặt hàng.' }, { status: 400 });
+      }
+
+      validatedGroupCode = group.code;
+      const memberCount = group.members?.length || 0;
+      const groupDisc = calculateGroupDiscount(memberCount);
+      if (groupDisc.percentage > 0) {
+        groupDiscountAmount = Math.round(subtotal * (groupDisc.percentage / 100));
+        discountAmount += groupDiscountAmount;
       }
     }
 

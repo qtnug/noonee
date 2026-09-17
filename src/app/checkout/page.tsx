@@ -117,6 +117,21 @@ function CheckoutContent() {
   const effectiveTotalPrice = groupOrder ? (groupOrder.subtotal || 0) : totalPrice;
   const groupDiscountAmount = groupOrder ? (groupOrder.discountAmount || 0) : 0;
 
+  // Test Case 3.1: Revalidate coupon if subtotal changes or drops below minimum order amount
+  useEffect(() => {
+    if (appliedCoupon && effectiveTotalPrice > 0) {
+      const recheck = validateCoupon(appliedCoupon.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier);
+      if (!recheck.valid) {
+        setAppliedCoupon(null);
+        setDiscountAmount(0);
+        setCouponSuccess('');
+        setCouponError(`Mã giảm giá "${appliedCoupon.code}" đã bị hủy do đơn hàng không còn đủ điều kiện tối thiểu (${formatVND(appliedCoupon.minOrderAmount)}).`);
+      } else {
+        setDiscountAmount(recheck.discountAmount);
+      }
+    }
+  }, [effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, appliedCoupon]);
+
   const handleApplyCoupon = (codeToApply?: string) => {
     const code = (codeToApply || couponInput).trim().toUpperCase();
     setCouponError('');

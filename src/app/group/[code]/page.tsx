@@ -26,6 +26,8 @@ import {
   ExternalLink,
   Crown,
   RefreshCw,
+  Calculator,
+  UserMinus,
 } from 'lucide-react';
 import { GroupOrder, GroupMember, GroupMemberItem, Product, ProductTopping } from '@/types';
 import { formatVND } from '@/lib/utils';
@@ -48,6 +50,10 @@ export default function GroupOrderRoomPage({
   const [myMemberId, setMyMemberId] = useState<string>('');
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  // Split Bill Modal
+  const [showSplitModal, setShowSplitModal] = useState(false);
+  const [copiedSplitText, setCopiedSplitText] = useState(false);
 
   // QR Modal
   const [showQrModal, setShowQrModal] = useState(false);
@@ -110,6 +116,12 @@ export default function GroupOrderRoomPage({
   // Check if current user is in group members
   useEffect(() => {
     if (group && !loading) {
+      // Test Case 4.2: Do not show join modal if group order is already completed
+      if (group.status === 'completed') {
+        setShowJoinModal(false);
+        return;
+      }
+
       if (myMemberId) {
         const exists = group.members?.some((m) => m.id === myMemberId);
         if (!exists) {
@@ -228,6 +240,7 @@ export default function GroupOrderRoomPage({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           memberId: myMemberId,
+          requesterMemberId: myMemberId,
           action: 'add',
           item: {
             productId: selectedProduct.id,
@@ -257,15 +270,22 @@ export default function GroupOrderRoomPage({
     }
   };
 
-  // Update item qty or remove
-  const handleUpdateItem = async (action: 'update_qty' | 'remove', itemId: string, quantity?: number) => {
-    if (!myMemberId) return;
+  // Update item qty or remove (supports host removing items for any member - Test Case 5.1)
+  const handleUpdateItem = async (
+    action: 'update_qty' | 'remove',
+    itemId: string,
+    quantity?: number,
+    targetMemberId?: string
+  ) => {
+    const memId = targetMemberId || myMemberId;
+    if (!memId) return;
     try {
       const res = await fetch(`/api/group/${code}/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          memberId: myMemberId,
+          memberId: memId,
+          requesterMemberId: myMemberId,
           action,
           item: {
             itemId,
@@ -276,9 +296,36 @@ export default function GroupOrderRoomPage({
       const data = await res.json();
       if (data.success) {
         setGroup(data.data);
+      } else {
+        alert(data.message || 'Lỗi khi cập nhật món');
       }
     } catch (err) {
       console.error('Error updating item:', err);
+    }
+  };
+
+  // Remove member from group (Host action - Test Case 5.1 Abandoned cart prevention)
+  const handleRemoveMember = async (memberIdToRemove: string, memberName: string) => {
+    if (!confirm(`Bạn có chắc muốn xóa "${memberName}" và các món của thành viên này khỏi nhóm?`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/group/${code}/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberIdToRemove,
+          requesterMemberId: myMemberId,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setGroup(data.data);
+      } else {
+        alert(data.message || 'Không thể xóa thành viên');
+      }
+    } catch (err) {
+      console.error('Error removing member:', err);
     }
   };
 
@@ -288,8 +335,11 @@ export default function GroupOrderRoomPage({
     try {
       const res = await fetch(`/api/group/${code}/lock`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({
+          action,
+          requesterMemberId: myMemberId,
+        }),
       });
       const data = await res.json();
       if (!data.success) {
@@ -301,6 +351,40 @@ export default function GroupOrderRoomPage({
     } finally {
       setIsActionLoading(false);
     }
+  };
+
+  // Compute Bill Split strictly matching total without rounding errors (Test Case 3.2)
+  const computeBillSplit = () => {
+    if (!group) return [];
+    const discountPct = group.discountPercentage || 0;
+    const finalTotal = group.finalTotal || 0;
+
+    const activeMembers = group.members.filter((m) => (m.items || []).length > 0);
+    if (activeMembers.length === 0) return [];
+
+    let allocatedTotal = 0;
+    const splits = activeMembers.map((m) => {
+      const mSubtotal = (m.items || []).reduce((s, it) => s + it.price * it.quantity, 0);
+      const mDiscount = Math.round(mSubtotal * (discountPct / 100));
+      const mAmount = Math.max(0, mSubtotal - mDiscount);
+      allocatedTotal += mAmount;
+      return {
+        id: m.id,
+        name: m.name,
+        isHost: m.isHost,
+        subtotal: mSubtotal,
+        discount: mDiscount,
+        amountToPay: mAmount,
+      };
+    });
+
+    const diff = finalTotal - allocatedTotal;
+    if (diff !== 0 && splits.length > 0) {
+      const hostSplit = splits.find((s) => s.isHost) || splits[0];
+      hostSplit.amountToPay += diff;
+    }
+
+    return splits;
   };
 
   // Proceed to Checkout (Host only)
@@ -426,6 +510,15 @@ export default function GroupOrderRoomPage({
                 <QrIcon className="w-4 h-4 text-[#e31837]" />
                 Mã QR
               </button>
+
+              <button
+                onClick={() => fetchGroupData()}
+                title="Làm mới dữ liệu giỏ nhóm ngay lập tức"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#e5e7eb] rounded-2xl text-[13px] font-medium text-[#41454d] hover:text-[#e31837] hover:border-[#fecdd3] transition"
+              >
+                <RefreshCw className="w-4 h-4 text-[#717680]" />
+                Làm mới
+              </button>
             </div>
           </div>
 
@@ -529,6 +622,15 @@ export default function GroupOrderRoomPage({
                               Bạn
                             </span>
                           )}
+                          {isHost && !member.isHost && group.status !== 'completed' && (
+                            <button
+                              onClick={() => handleRemoveMember(member.id, member.name)}
+                              title="Xóa thành viên khỏi nhóm"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#fee2e2] hover:bg-[#fca5a5] text-[#b91c1c] text-[11px] font-medium transition cursor-pointer"
+                            >
+                              <UserMinus className="w-3 h-3" /> Mời ra
+                            </button>
+                          )}
                         </div>
                         <span className="text-[12px] text-[#717680]">
                           Đã chọn {member.items?.length || 0} món
@@ -583,29 +685,41 @@ export default function GroupOrderRoomPage({
                                 {formatVND(it.price * it.quantity)}
                               </span>
 
-                              {/* Controls for current member */}
-                              {isMe && group.status === 'active' && (
+                              {/* Controls for current member or Host */}
+                              {group.status === 'active' && (
                                 <div className="flex items-center gap-1.5 ml-2">
-                                  <button
-                                    onClick={() => handleUpdateItem('update_qty', it.id, it.quantity - 1)}
-                                    className="w-6 h-6 rounded-md bg-white border border-[#dddddd] flex items-center justify-center text-xs font-bold hover:bg-[#fee2e2] hover:text-[#e31837] transition"
-                                  >
-                                    -
-                                  </button>
-                                  <span className="text-xs font-bold w-4 text-center">{it.quantity}</span>
-                                  <button
-                                    onClick={() => handleUpdateItem('update_qty', it.id, it.quantity + 1)}
-                                    className="w-6 h-6 rounded-md bg-white border border-[#dddddd] flex items-center justify-center text-xs font-bold hover:bg-[#fee2e2] hover:text-[#e31837] transition"
-                                  >
-                                    +
-                                  </button>
-                                  <button
-                                    onClick={() => handleUpdateItem('remove', it.id)}
-                                    className="p-1 text-[#717680] hover:text-[#e31837] transition ml-1"
-                                    title="Xóa món"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
+                                  {isMe ? (
+                                    <>
+                                      <button
+                                        onClick={() => handleUpdateItem('update_qty', it.id, it.quantity - 1)}
+                                        className="w-6 h-6 rounded-md bg-white border border-[#dddddd] flex items-center justify-center text-xs font-bold hover:bg-[#fee2e2] hover:text-[#e31837] transition cursor-pointer"
+                                      >
+                                        -
+                                      </button>
+                                      <span className="text-xs font-bold w-4 text-center">{it.quantity}</span>
+                                      <button
+                                        onClick={() => handleUpdateItem('update_qty', it.id, it.quantity + 1)}
+                                        className="w-6 h-6 rounded-md bg-white border border-[#dddddd] flex items-center justify-center text-xs font-bold hover:bg-[#fee2e2] hover:text-[#e31837] transition cursor-pointer"
+                                      >
+                                        +
+                                      </button>
+                                      <button
+                                        onClick={() => handleUpdateItem('remove', it.id)}
+                                        className="p-1 text-[#717680] hover:text-[#e31837] transition ml-1 cursor-pointer"
+                                        title="Xóa món"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </>
+                                  ) : isHost ? (
+                                    <button
+                                      onClick={() => handleUpdateItem('remove', it.id, undefined, member.id)}
+                                      className="p-1 text-[#717680] hover:text-[#e31837] transition ml-1 cursor-pointer"
+                                      title="Trưởng nhóm xóa món của thành viên này"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  ) : null}
                                 </div>
                               )}
                             </div>
@@ -652,6 +766,16 @@ export default function GroupOrderRoomPage({
 
           {/* Action Buttons */}
           <div className="pt-3 flex flex-col sm:flex-row gap-3">
+            {/* Split Bill Modal Button (Test Case 3.2) */}
+            <button
+              onClick={() => setShowSplitModal(true)}
+              className="py-3.5 px-4 bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#e2e8f0] text-[#181d26] font-semibold text-[14px] rounded-xl transition flex items-center justify-center gap-2 cursor-pointer"
+              title="Xem bảng chia tiền chính xác từng thành viên"
+            >
+              <Calculator className="w-4 h-4 text-[#e31837]" />
+              Chia tiền
+            </button>
+
             {isHost ? (
               <>
                 {group.status === 'active' ? (
@@ -979,6 +1103,98 @@ export default function GroupOrderRoomPage({
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Split Bill Modal (Test Case 3.2 - Penny Perfect Calculation) */}
+      {showSplitModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full space-y-5 relative shadow-2xl animate-in fade-in zoom-in duration-200">
+            <button
+              onClick={() => setShowSplitModal(false)}
+              className="absolute top-4 right-4 p-2 text-[#717680] hover:text-[#181d26] rounded-full hover:bg-[#f3f4f6] transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fee2e2] text-[#e31837] text-xs font-bold">
+                <Calculator className="w-3.5 h-3.5" /> Bảng Chia Tiền Chính Xác
+              </div>
+              <h3 className="text-xl font-bold text-[#181d26]">Chi tiết phần tiền từng thành viên</h3>
+              <p className="text-[13px] text-[#555a64]">
+                Ưu đãi giảm giá nhóm {group.discountPercentage}% được phân bổ chuẩn xác từng đồng không lệch.
+              </p>
+            </div>
+
+            <div className="divide-y divide-[#f3f4f6] border border-[#e5e7eb] rounded-2xl overflow-hidden max-h-[350px] overflow-y-auto">
+              {computeBillSplit().length === 0 ? (
+                <div className="p-6 text-center text-[13px] text-[#717680]">
+                  Chưa có thành viên nào chọn món để chia tiền.
+                </div>
+              ) : (
+                computeBillSplit().map((split) => (
+                  <div key={split.id} className="p-3.5 flex items-center justify-between hover:bg-[#fcfbf9]">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-[14px] text-[#181d26]">{split.name}</span>
+                        {split.isHost && (
+                          <span className="px-1.5 py-0.5 bg-[#fef3c7] text-[#b45309] text-[10px] font-bold rounded">
+                            Trưởng nhóm
+                          </span>
+                        )}
+                        {split.id === myMemberId && (
+                          <span className="px-1.5 py-0.5 bg-[#fee2e2] text-[#e31837] text-[10px] font-bold rounded">
+                            Bạn
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[12px] text-[#717680]">
+                        Gốc: {formatVND(split.subtotal)} {split.discount > 0 && `(Giảm ${formatVND(split.discount)})`}
+                      </span>
+                    </div>
+                    <span className="font-bold text-[15px] text-[#e31837]">
+                      {formatVND(split.amountToPay)}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-4 bg-[#f8fafc] rounded-2xl flex justify-between items-center text-[14px]">
+              <span className="font-bold text-[#181d26]">Tổng cộng cả nhóm:</span>
+              <span className="font-black text-lg text-[#e31837]">
+                {formatVND(group.finalTotal || 0)}
+              </span>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  const splits = computeBillSplit();
+                  const text = `📋 BẢNG CHIA TIỀN ĐƠN NHÓM NOONEE (${group.code})\n` +
+                    splits.map((s) => `• ${s.name}${s.isHost ? ' (Trưởng nhóm)' : ''}: ${formatVND(s.amountToPay)}`).join('\n') +
+                    `\n👉 Tổng thanh toán: ${formatVND(group.finalTotal || 0)}`;
+                  if (typeof navigator !== 'undefined') {
+                    navigator.clipboard.writeText(text);
+                    setCopiedSplitText(true);
+                    setTimeout(() => setCopiedSplitText(false), 2000);
+                  }
+                }}
+                disabled={computeBillSplit().length === 0}
+                className="flex-1 py-3 bg-[#181d26] hover:bg-black text-white font-semibold text-[14px] rounded-xl transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {copiedSplitText ? <Check className="w-4 h-4 text-[#059669]" /> : <Copy className="w-4 h-4" />}
+                {copiedSplitText ? 'Đã sao chép' : 'Sao chép bảng chia tiền'}
+              </button>
+              <button
+                onClick={() => setShowSplitModal(false)}
+                className="px-5 py-3 border border-[#dddddd] hover:bg-[#f8fafc] text-[#181d26] font-semibold text-[14px] rounded-xl transition cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
           </div>
         </div>
       )}

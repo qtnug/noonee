@@ -1907,7 +1907,8 @@ export async function updateGroupMemberItem(
     quantity?: number;
     toppings?: any[] | string;
     note?: string;
-  }
+  },
+  requesterMemberId?: string
 ): Promise<{ success: boolean; message?: string; group?: GroupOrder }> {
   const group = await getGroupOrderByCode(code);
   if (!group) {
@@ -1916,6 +1917,14 @@ export async function updateGroupMemberItem(
 
   if (group.status !== 'active') {
     return { success: false, message: 'Nhóm đang bị khóa hoặc đã hoàn tất, không thể chỉnh sửa món' };
+  }
+
+  // Authorization check (Test Case 4.1): Only the member themselves or the Host can modify items
+  if (requesterMemberId && requesterMemberId !== memberId) {
+    const requester = group.members.find(m => m.id === requesterMemberId);
+    if (!requester?.isHost) {
+      return { success: false, message: 'Bạn không có quyền chỉnh sửa phần ăn của thành viên khác' };
+    }
   }
 
   const member = group.members.find(m => m.id === memberId);
@@ -1981,9 +1990,50 @@ export async function updateGroupMemberItem(
   return { success: true, group: computeGroupOrderStats(group) };
 }
 
-export async function lockGroupOrder(code: string): Promise<{ success: boolean; message?: string; group?: GroupOrder }> {
+export async function removeGroupMember(
+  code: string,
+  memberIdToRemove: string,
+  requesterMemberId?: string
+): Promise<{ success: boolean; message?: string; group?: GroupOrder }> {
   const group = await getGroupOrderByCode(code);
   if (!group) return { success: false, message: 'Không tìm thấy nhóm' };
+  if (group.status !== 'active') {
+    return { success: false, message: 'Nhóm đang bị khóa hoặc đã hoàn tất, không thể thay đổi thành viên' };
+  }
+
+  const memberToRemove = group.members.find(m => m.id === memberIdToRemove);
+  if (!memberToRemove) return { success: false, message: 'Thành viên không tồn tại trong nhóm' };
+  if (memberToRemove.isHost) return { success: false, message: 'Không thể xóa trưởng nhóm khỏi phòng' };
+
+  if (requesterMemberId) {
+    const requester = group.members.find(m => m.id === requesterMemberId);
+    if (!requester?.isHost && requesterMemberId !== memberIdToRemove) {
+      return { success: false, message: 'Bạn không có quyền xóa thành viên này' };
+    }
+  }
+
+  group.members = group.members.filter(m => m.id !== memberIdToRemove);
+  await saveGroupOrderMembers(group.code, group.members);
+  return { success: true, group: computeGroupOrderStats(group) };
+}
+
+export async function lockGroupOrder(
+  code: string,
+  requesterMemberId?: string,
+  requesterUserId?: number | null
+): Promise<{ success: boolean; message?: string; group?: GroupOrder }> {
+  const group = await getGroupOrderByCode(code);
+  if (!group) return { success: false, message: 'Không tìm thấy nhóm' };
+
+  // Authorization check (Test Case 4.1): Only host can lock
+  if (requesterMemberId || requesterUserId) {
+    const isHost =
+      (requesterMemberId && group.members.some(m => m.id === requesterMemberId && m.isHost)) ||
+      (requesterUserId && group.hostUserId === requesterUserId);
+    if (!isHost) {
+      return { success: false, message: 'Chỉ trưởng nhóm mới có quyền khóa chốt đơn nhóm' };
+    }
+  }
 
   if (group.members.length < MIN_GROUP_MEMBERS) {
     return { success: false, message: `Nhóm cần tối thiểu ${MIN_GROUP_MEMBERS} người để đặt đơn nhóm!` };
@@ -1999,10 +2049,24 @@ export async function lockGroupOrder(code: string): Promise<{ success: boolean; 
   return { success: true, group: computeGroupOrderStats(group) };
 }
 
-export async function unlockGroupOrder(code: string): Promise<{ success: boolean; message?: string; group?: GroupOrder }> {
+export async function unlockGroupOrder(
+  code: string,
+  requesterMemberId?: string,
+  requesterUserId?: number | null
+): Promise<{ success: boolean; message?: string; group?: GroupOrder }> {
   const group = await getGroupOrderByCode(code);
   if (!group) return { success: false, message: 'Không tìm thấy nhóm' };
   if (group.status === 'completed') return { success: false, message: 'Đơn nhóm đã hoàn tất thanh toán, không thể mở lại' };
+
+  // Authorization check: Only host can unlock
+  if (requesterMemberId || requesterUserId) {
+    const isHost =
+      (requesterMemberId && group.members.some(m => m.id === requesterMemberId && m.isHost)) ||
+      (requesterUserId && group.hostUserId === requesterUserId);
+    if (!isHost) {
+      return { success: false, message: 'Chỉ trưởng nhóm mới có quyền mở khóa lại phòng' };
+    }
+  }
 
   group.status = 'active';
   await saveGroupOrderMembers(group.code, group.members, 'active');
