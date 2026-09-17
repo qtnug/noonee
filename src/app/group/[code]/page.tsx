@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, use } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import QRCode from 'qrcode';
 import {
@@ -37,11 +37,12 @@ import { calculateGroupDiscount, MIN_GROUP_MEMBERS, MAX_GROUP_MEMBERS } from '@/
 export default function GroupOrderRoomPage({
   params,
 }: {
-  params: Promise<{ code: string }>;
+  params?: { code?: string };
 }) {
-  const resolvedParams = use(params);
-  const code = (resolvedParams.code || '').toUpperCase();
   const router = useRouter();
+  const routeParams = useParams();
+  const rawCode = (routeParams?.code as string) || params?.code || '';
+  const code = rawCode.toUpperCase();
   const { user, getAuthHeader } = useAuth();
 
   const [group, setGroup] = useState<GroupOrder | null>(null);
