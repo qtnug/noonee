@@ -58,6 +58,14 @@ export default function Footer() {
                   Đồ uống & Tráng miệng
                 </Link>
               </li>
+              <li>
+                <Link href="/group" className="hover:text-[#181d26] transition flex items-center gap-1.5 font-medium">
+                  <span className="text-[#e31837] font-bold text-[11px] bg-[#fff1f2] border border-[#fecdd3] px-1.5 py-0.2 rounded-full">
+                    -10%
+                  </span>
+                  <span>Đặt đơn nhóm</span>
+                </Link>
+              </li>
             </ul>
           </div>
 

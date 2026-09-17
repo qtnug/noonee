@@ -20,6 +20,7 @@ import {
   X,
   ShieldAlert,
   Edit3,
+  Users,
 } from 'lucide-react';
 import { Order, SupportMessage, Review } from '@/types';
 import { formatVND, formatDate } from '@/lib/utils';
@@ -293,6 +294,14 @@ export default function OrderTrackingPage() {
                   >
                     {order.paymentStatus === 'Paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
                   </span>
+                )}
+                {order.groupCode && (
+                  <Link
+                    href={`/group/${order.groupCode}`}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-[4px] border bg-[#fee2e2] text-[#e31837] border-[#fecdd3] hover:bg-[#fecdd3] transition"
+                  >
+                    <Users className="w-3 h-3" /> Đơn nhóm #{order.groupCode}
+                  </Link>
                 )}
               </div>
               <p className="text-[13px] text-[#41454d] mt-0.5">

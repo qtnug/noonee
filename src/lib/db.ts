@@ -1,6 +1,7 @@
 import sql from 'mssql';
 import bcrypt from 'bcryptjs';
-import { Category, Product, Order, OrderItem, User, Review, SupportMessage } from '@/types';
+import { Category, Product, Order, OrderItem, User, Review, SupportMessage, GroupOrder, GroupMember, GroupMemberItem } from '@/types';
+import { generateGroupCode, computeGroupOrderStats, MIN_GROUP_MEMBERS, MAX_GROUP_MEMBERS } from '@/lib/groupOrder';
 
 function parseToppingsField(raw: any): any[] {
   if (!raw) return [];
@@ -63,6 +64,24 @@ async function ensureSchemaColumns(pool: any) {
 
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'refundStatus')
         ALTER TABLE Orders ADD refundStatus NVARCHAR(50) DEFAULT 'None';
+
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'groupCode')
+        ALTER TABLE Orders ADD groupCode NVARCHAR(50) NULL;
+
+      IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'GroupOrders')
+      BEGIN
+        CREATE TABLE GroupOrders (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          code NVARCHAR(50) UNIQUE NOT NULL,
+          hostName NVARCHAR(150) NOT NULL,
+          hostUserId INT NULL,
+          status NVARCHAR(50) DEFAULT 'active',
+          orderCode NVARCHAR(50) NULL,
+          membersData NVARCHAR(MAX) NULL,
+          createdAt DATETIME DEFAULT GETDATE(),
+          updatedAt DATETIME DEFAULT GETDATE()
+        );
+      END;
     `);
     } catch (err: any) {
       console.warn('Schema check note:', err.message);
@@ -592,6 +611,7 @@ export async function createOrder(data: {
   totalAmount: number;
   discountAmount?: number;
   couponCode?: string | null;
+  groupCode?: string | null;
   paymentMethod?: 'Sepay' | 'COD' | 'Wallet';
   paymentStatus?: 'Unpaid' | 'Paid';
   walletAmountUsed?: number;
@@ -615,6 +635,7 @@ export async function createOrder(data: {
     totalAmount: data.totalAmount,
     discountAmount: data.discountAmount || 0,
     couponCode: data.couponCode || null,
+    groupCode: data.groupCode || null,
     status: 'Pending',
     paymentMethod: data.paymentMethod || 'Sepay',
     paymentStatus: data.paymentStatus || 'Unpaid',
@@ -661,14 +682,15 @@ export async function createOrder(data: {
         req.input('amount', sql.Decimal(18, 0), data.totalAmount);
         req.input('discount', sql.Decimal(18, 2), data.discountAmount || 0);
         req.input('coupon', sql.NVarChar(50), data.couponCode || null);
+        req.input('groupCode', sql.NVarChar(50), data.groupCode || null);
         req.input('method', sql.NVarChar(50), data.paymentMethod || 'Sepay');
         req.input('payStatus', sql.NVarChar(50), data.paymentStatus || 'Unpaid');
         req.input('walletAmount', sql.Decimal(18, 0), data.walletAmountUsed || 0);
 
         const orderRes = await req.query(`
-          INSERT INTO Orders (orderCode, userId, customerName, customerPhone, deliveryAddress, notes, totalAmount, discountAmount, couponCode, status, paymentMethod, paymentStatus, walletAmountUsed)
+          INSERT INTO Orders (orderCode, userId, customerName, customerPhone, deliveryAddress, notes, totalAmount, discountAmount, couponCode, groupCode, status, paymentMethod, paymentStatus, walletAmountUsed)
           OUTPUT INSERTED.id
-          VALUES (@code, @userId, @name, @phone, @address, @notes, @amount, @discount, @coupon, 'Pending', @method, @payStatus, @walletAmount)
+          VALUES (@code, @userId, @name, @phone, @address, @notes, @amount, @discount, @coupon, @groupCode, 'Pending', @method, @payStatus, @walletAmount)
         `);
 
         const orderId = orderRes.recordset[0]?.id;
@@ -727,6 +749,7 @@ export async function getOrderByCode(code: string): Promise<Order | null> {
                o.status, o.paymentMethod, o.paymentStatus,
                o.cancelReason, CAST(ISNULL(o.walletAmountUsed, 0) AS INT) AS walletAmountUsed,
                ISNULL(o.refundStatus, 'None') AS refundStatus,
+               o.groupCode,
                o.createdAt, o.updatedAt
         FROM Orders o
         WHERE o.orderCode = @code
@@ -765,6 +788,7 @@ export async function getOrders(filter?: { status?: string; search?: string; use
                o.status, o.paymentMethod, o.paymentStatus,
                o.cancelReason, CAST(ISNULL(o.walletAmountUsed, 0) AS INT) AS walletAmountUsed,
                ISNULL(o.refundStatus, 'None') AS refundStatus,
+               o.groupCode,
                o.createdAt, o.updatedAt
         FROM Orders o
         WHERE 1=1
@@ -1672,5 +1696,325 @@ export async function createSupportMessage(data: {
     status: 'open',
     createdAt: new Date().toISOString(),
   };
+}
+
+// ==========================================
+// GROUP ORDERS (ĐẶT ĐƠN NHÓM)
+// ==========================================
+
+let inMemoryGroupOrders: GroupOrder[] = [];
+
+export async function createGroupOrder(data: {
+  hostName: string;
+  hostUserId?: number | null;
+}): Promise<GroupOrder> {
+  const code = generateGroupCode();
+  const hostMember: GroupMember = {
+    id: `host-${Date.now()}`,
+    name: data.hostName.trim() || 'Trưởng nhóm',
+    isHost: true,
+    userId: data.hostUserId || null,
+    joinedAt: new Date().toISOString(),
+    items: [],
+  };
+
+  const newGroup: GroupOrder = {
+    id: inMemoryGroupOrders.length + 1,
+    code,
+    hostName: data.hostName.trim() || 'Trưởng nhóm',
+    hostUserId: data.hostUserId || null,
+    status: 'active',
+    members: [hostMember],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const enriched = computeGroupOrderStats(newGroup);
+  inMemoryGroupOrders.unshift(enriched);
+
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('code', sql.NVarChar(50), code);
+      req.input('hostName', sql.NVarChar(150), hostMember.name);
+      req.input('hostUserId', sql.Int, data.hostUserId || null);
+      req.input('membersData', sql.NVarChar(sql.MAX), JSON.stringify([hostMember]));
+      const res = await req.query(`
+        INSERT INTO GroupOrders (code, hostName, hostUserId, status, membersData, createdAt, updatedAt)
+        OUTPUT INSERTED.id, INSERTED.code, INSERTED.hostName, INSERTED.hostUserId, INSERTED.status, INSERTED.createdAt, INSERTED.updatedAt
+        VALUES (@code, @hostName, @hostUserId, 'active', @membersData, GETDATE(), GETDATE())
+      `);
+      if (res.recordset && res.recordset[0]) {
+        enriched.id = res.recordset[0].id;
+      }
+    }
+  } catch (err) {
+    console.error('Error creating group order in cloud:', err);
+  }
+
+  return enriched;
+}
+
+export async function getGroupOrderByCode(code: string): Promise<GroupOrder | null> {
+  const cleanCode = (code || '').trim().toUpperCase();
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('code', sql.NVarChar(50), cleanCode);
+      const res = await req.query(`
+        SELECT id, code, hostName, hostUserId, status, orderCode, membersData, createdAt, updatedAt
+        FROM GroupOrders
+        WHERE code = @code
+      `);
+      if (res.recordset && res.recordset[0]) {
+        const row = res.recordset[0];
+        let members: GroupMember[] = [];
+        try {
+          members = row.membersData ? JSON.parse(row.membersData) : [];
+        } catch {
+          members = [];
+        }
+        const group: GroupOrder = {
+          id: row.id,
+          code: row.code,
+          hostName: row.hostName,
+          hostUserId: row.hostUserId,
+          status: row.status,
+          orderCode: row.orderCode,
+          members,
+          createdAt: row.createdAt ? new Date(row.createdAt).toISOString() : new Date().toISOString(),
+          updatedAt: row.updatedAt ? new Date(row.updatedAt).toISOString() : new Date().toISOString(),
+        };
+        const enriched = computeGroupOrderStats(group);
+        const idx = inMemoryGroupOrders.findIndex(g => g.code === cleanCode);
+        if (idx >= 0) inMemoryGroupOrders[idx] = enriched;
+        else inMemoryGroupOrders.unshift(enriched);
+        return enriched;
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching group order from cloud:', err);
+  }
+
+  const inMem = inMemoryGroupOrders.find(g => g.code === cleanCode);
+  return inMem ? computeGroupOrderStats(inMem) : null;
+}
+
+export async function saveGroupOrderMembers(
+  code: string,
+  members: GroupMember[],
+  status?: 'active' | 'locked' | 'completed',
+  orderCode?: string
+): Promise<boolean> {
+  const cleanCode = (code || '').trim().toUpperCase();
+  const membersJson = JSON.stringify(members);
+
+  const inMem = inMemoryGroupOrders.find(g => g.code === cleanCode);
+  if (inMem) {
+    inMem.members = members;
+    if (status) inMem.status = status;
+    if (orderCode) inMem.orderCode = orderCode;
+    inMem.updatedAt = new Date().toISOString();
+  }
+
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('code', sql.NVarChar(50), cleanCode);
+      req.input('membersData', sql.NVarChar(sql.MAX), membersJson);
+      let sqlQuery = `UPDATE GroupOrders SET membersData = @membersData, updatedAt = GETDATE()`;
+      if (status) {
+        req.input('status', sql.NVarChar(50), status);
+        sqlQuery += `, status = @status`;
+      }
+      if (orderCode) {
+        req.input('orderCode', sql.NVarChar(50), orderCode);
+        sqlQuery += `, orderCode = @orderCode`;
+      }
+      sqlQuery += ` WHERE code = @code`;
+      await req.query(sqlQuery);
+      return true;
+    }
+  } catch (err) {
+    console.error('Error saving group order members in cloud:', err);
+  }
+  return true;
+}
+
+export async function joinGroupOrder(
+  code: string,
+  memberName: string,
+  userId?: number | null,
+  memberId?: string
+): Promise<{ success: boolean; message?: string; group?: GroupOrder; member?: GroupMember }> {
+  const group = await getGroupOrderByCode(code);
+  if (!group) {
+    return { success: false, message: 'Không tìm thấy nhóm với mã này' };
+  }
+
+  if (group.status !== 'active') {
+    return { success: false, message: 'Nhóm này đã bị khóa hoặc đã hoàn tất đơn hàng' };
+  }
+
+  const name = memberName.trim();
+  if (!name) {
+    return { success: false, message: 'Vui lòng nhập tên của bạn' };
+  }
+
+  // Check if member already exists by provided memberId or (userId / name)
+  let existingMember = group.members.find(
+    m => (memberId && m.id === memberId) || (userId && m.userId === userId) || m.name.toLowerCase() === name.toLowerCase()
+  );
+
+  if (existingMember) {
+    existingMember.name = name;
+    if (userId && !existingMember.userId) existingMember.userId = userId;
+    await saveGroupOrderMembers(group.code, group.members);
+    return { success: true, group: computeGroupOrderStats(group), member: existingMember };
+  }
+
+  // Check group max limit (10 members)
+  if (group.members.length >= MAX_GROUP_MEMBERS) {
+    return { success: false, message: `Nhóm đã đạt số lượng tối đa (${MAX_GROUP_MEMBERS} người)` };
+  }
+
+  const newMember: GroupMember = {
+    id: `mem-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    name,
+    isHost: false,
+    userId: userId || null,
+    joinedAt: new Date().toISOString(),
+    items: [],
+  };
+
+  group.members.push(newMember);
+  await saveGroupOrderMembers(group.code, group.members);
+  return { success: true, group: computeGroupOrderStats(group), member: newMember };
+}
+
+export async function updateGroupMemberItem(
+  code: string,
+  memberId: string,
+  action: 'add' | 'remove' | 'update_qty',
+  itemData: {
+    itemId?: string;
+    productId?: number;
+    productName?: string;
+    price?: number;
+    quantity?: number;
+    toppings?: any[] | string;
+    note?: string;
+  }
+): Promise<{ success: boolean; message?: string; group?: GroupOrder }> {
+  const group = await getGroupOrderByCode(code);
+  if (!group) {
+    return { success: false, message: 'Không tìm thấy nhóm' };
+  }
+
+  if (group.status !== 'active') {
+    return { success: false, message: 'Nhóm đang bị khóa hoặc đã hoàn tất, không thể chỉnh sửa món' };
+  }
+
+  const member = group.members.find(m => m.id === memberId);
+  if (!member) {
+    return { success: false, message: 'Thành viên không thuộc nhóm này' };
+  }
+
+  if (!member.items) member.items = [];
+
+  if (action === 'add') {
+    if (!itemData.productId || !itemData.productName || !itemData.price) {
+      return { success: false, message: 'Dữ liệu món ăn không hợp lệ' };
+    }
+    const qty = Math.max(1, itemData.quantity || 1);
+    const toppingsStr = typeof itemData.toppings === 'string' ? itemData.toppings : JSON.stringify(itemData.toppings || []);
+    const noteStr = (itemData.note || '').trim();
+
+    // Check if duplicate item (same product, same toppings, same note)
+    const existingIdx = member.items.findIndex(it => 
+      it.productId === itemData.productId &&
+      (it.toppings || '') === toppingsStr &&
+      (it.note || '') === noteStr
+    );
+
+    if (existingIdx >= 0) {
+      member.items[existingIdx].quantity += qty;
+      member.items[existingIdx].total = member.items[existingIdx].price * member.items[existingIdx].quantity;
+    } else {
+      const newItem: GroupMemberItem = {
+        id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        productId: itemData.productId,
+        productName: itemData.productName,
+        price: itemData.price,
+        quantity: qty,
+        toppings: toppingsStr,
+        note: noteStr,
+        total: itemData.price * qty,
+      };
+      member.items.push(newItem);
+    }
+  } else if (action === 'remove') {
+    if (!itemData.itemId) {
+      return { success: false, message: 'Thiếu mã món cần xóa' };
+    }
+    member.items = member.items.filter(it => it.id !== itemData.itemId);
+  } else if (action === 'update_qty') {
+    if (!itemData.itemId) {
+      return { success: false, message: 'Thiếu mã món cần cập nhật' };
+    }
+    const item = member.items.find(it => it.id === itemData.itemId);
+    if (item) {
+      const newQty = itemData.quantity ?? 0;
+      if (newQty <= 0) {
+        member.items = member.items.filter(it => it.id !== itemData.itemId);
+      } else {
+        item.quantity = newQty;
+        item.total = item.price * newQty;
+      }
+    }
+  }
+
+  await saveGroupOrderMembers(group.code, group.members);
+  return { success: true, group: computeGroupOrderStats(group) };
+}
+
+export async function lockGroupOrder(code: string): Promise<{ success: boolean; message?: string; group?: GroupOrder }> {
+  const group = await getGroupOrderByCode(code);
+  if (!group) return { success: false, message: 'Không tìm thấy nhóm' };
+
+  if (group.members.length < MIN_GROUP_MEMBERS) {
+    return { success: false, message: `Nhóm cần tối thiểu ${MIN_GROUP_MEMBERS} người để đặt đơn nhóm!` };
+  }
+
+  const enriched = computeGroupOrderStats(group);
+  if ((enriched.totalQuantity || 0) === 0) {
+    return { success: false, message: 'Nhóm chưa chọn món ăn nào!' };
+  }
+
+  group.status = 'locked';
+  await saveGroupOrderMembers(group.code, group.members, 'locked');
+  return { success: true, group: computeGroupOrderStats(group) };
+}
+
+export async function unlockGroupOrder(code: string): Promise<{ success: boolean; message?: string; group?: GroupOrder }> {
+  const group = await getGroupOrderByCode(code);
+  if (!group) return { success: false, message: 'Không tìm thấy nhóm' };
+  if (group.status === 'completed') return { success: false, message: 'Đơn nhóm đã hoàn tất thanh toán, không thể mở lại' };
+
+  group.status = 'active';
+  await saveGroupOrderMembers(group.code, group.members, 'active');
+  return { success: true, group: computeGroupOrderStats(group) };
+}
+
+export async function completeGroupOrder(code: string, orderCode: string): Promise<boolean> {
+  const group = await getGroupOrderByCode(code);
+  if (!group) return false;
+  group.status = 'completed';
+  group.orderCode = orderCode;
+  await saveGroupOrderMembers(group.code, group.members, 'completed', orderCode);
+  return true;
 }
 

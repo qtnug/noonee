@@ -41,11 +41,12 @@ export default function Navbar() {
     }
   };
 
-  const navLinks = [
+  const navLinks: { name: string; href: string; badge?: string }[] = [
     { name: 'Thực đơn', href: '/menu' },
     { name: 'Cơm & Món chính', href: '/menu?categoryId=1' },
     { name: 'Đồ ăn vặt', href: '/menu?categoryId=2' },
     { name: 'Đồ uống', href: '/menu?categoryId=3' },
+    { name: 'Đơn nhóm', href: '/group', badge: '-10%' },
     { name: 'Đơn hàng', href: '/orders' },
   ];
 
@@ -68,11 +69,16 @@ export default function Navbar() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`transition-colors py-1 hover:text-[#e31837] ${
+                  className={`transition-colors py-1 hover:text-[#e31837] flex items-center gap-1.5 ${
                     isActive ? 'text-[#e31837] font-semibold border-b-2 border-[#e31837]' : 'text-[#41454d]'
                   }`}
                 >
-                  {link.name}
+                  <span>{link.name}</span>
+                  {link.badge && (
+                    <span className="text-[10px] font-extrabold px-1.5 py-0.5 bg-[#e31837] text-white rounded-full leading-none animate-pulse">
+                      {link.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -249,9 +255,14 @@ export default function Navbar() {
               key={link.name}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-[14px] text-[#333840] hover:text-[#e31837] border-b border-[#f1f5f9]"
+              className="flex items-center justify-between py-2 text-[14px] text-[#333840] hover:text-[#e31837] border-b border-[#f1f5f9]"
             >
-              {link.name}
+              <span>{link.name}</span>
+              {link.badge && (
+                <span className="text-[10px] font-extrabold px-2 py-0.5 bg-[#e31837] text-white rounded-full leading-none">
+                  {link.badge}
+                </span>
+              )}
             </Link>
           ))}
 

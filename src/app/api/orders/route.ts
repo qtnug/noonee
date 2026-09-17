@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOrders, createOrder, getProducts, hasUserPaidFirstVietqr, getUserSpendingStats } from '@/lib/db';
+import { getOrders, createOrder, getProducts, hasUserPaidFirstVietqr, getUserSpendingStats, getGroupOrderByCode, completeGroupOrder } from '@/lib/db';
 import { generateOrderCode } from '@/lib/utils';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { requireAuth, requireAdmin, authenticateRequest, AuthError } from '@/lib/auth';
 import { validateCoupon } from '@/lib/coupons';
 import { getMembershipTier } from '@/lib/membership';
+import { calculateGroupDiscount } from '@/lib/groupOrder';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { customerName, customerPhone, deliveryAddress, notes, items, paymentMethod, couponCode, useWallet } = body;
+    const { customerName, customerPhone, deliveryAddress, notes, items, paymentMethod, couponCode, useWallet, groupCode } = body;
 
     // Use authenticated user ID directly
     const userId = authUser.userId;
@@ -169,6 +170,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Direct Group Discount (giảm trực tiếp không cần voucher: 3 người -> 2%, 5 người -> 5%, 10 người -> 10%)
+    let groupDiscountAmount = 0;
+    let validatedGroupCode: string | null = null;
+    if (groupCode) {
+      const group = await getGroupOrderByCode(groupCode);
+      if (group) {
+        validatedGroupCode = group.code;
+        const memberCount = group.members?.length || 0;
+        const groupDisc = calculateGroupDiscount(memberCount);
+        if (groupDisc.percentage > 0) {
+          groupDiscountAmount = Math.round(subtotal * (groupDisc.percentage / 100));
+          discountAmount += groupDiscountAmount;
+        }
+      }
+    }
+
     const shippingFee = typeof body.shippingFee === 'number' ? Math.max(0, Math.round(body.shippingFee)) : 0;
     
     // Calculate total: subtotal minus discount plus shipping
@@ -198,16 +215,22 @@ export async function POST(request: NextRequest) {
       totalAmount: finalAmountToPay,
       discountAmount,
       couponCode: validCouponCode,
+      groupCode: validatedGroupCode,
       paymentMethod: isFullyPaidByWallet ? 'Wallet' : (paymentMethod || 'Sepay'),
       paymentStatus: isFullyPaidByWallet ? 'Paid' : 'Unpaid',
       walletAmountUsed,
       items: validatedItems,
     });
 
+    if (validatedGroupCode) {
+      await completeGroupOrder(validatedGroupCode, orderCode);
+    }
+
     return NextResponse.json(
       {
         success: true,
         data: order,
+        groupDiscountAmount,
         fullyPaidByWallet: isFullyPaidByWallet,
         walletAmountUsed,
       },

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   QrCode,
@@ -17,20 +17,28 @@ import {
   Award,
   Wallet,
   AlertCircle,
+  Users,
+  Sparkles,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatVND } from '@/lib/utils';
 import { AVAILABLE_COUPONS, validateCoupon } from '@/lib/coupons';
-import { Coupon } from '@/types';
+import { Coupon, GroupOrder } from '@/types';
 import { MembershipTierInfo } from '@/lib/membership';
 import AddressAutocompleteInput from '@/components/AddressAutocompleteInput';
 import { DistanceCalculationResult } from '@/lib/goong';
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const groupCodeParam = searchParams.get('groupCode');
+
   const { cart, totalPrice, clearCart } = useCart();
   const { user, isLoading, getAuthHeader } = useAuth();
+
+  const [groupOrder, setGroupOrder] = useState<GroupOrder | null>(null);
+  const [isLoadingGroup, setIsLoadingGroup] = useState(false);
 
   const [customerName, setCustomerName] = useState(user?.fullName || '');
   const [customerPhone, setCustomerPhone] = useState(user?.phone || '');
@@ -52,8 +60,31 @@ export default function CheckoutPage() {
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [useWallet, setUseWallet] = useState<boolean>(false);
 
+  // Fetch Group Order if groupCode param is present
+  useEffect(() => {
+    if (groupCodeParam) {
+      setIsLoadingGroup(true);
+      fetch(`/api/group/${groupCodeParam}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.success && d.data) {
+            setGroupOrder(d.data);
+            if (!customerName && d.data.hostName) {
+              setCustomerName(d.data.hostName);
+            }
+          }
+        })
+        .catch((err) => console.error('Error fetching group order in checkout:', err))
+        .finally(() => setIsLoadingGroup(false));
+    }
+  }, [groupCodeParam]);
+
   useEffect(() => {
     if (user?.id) {
+      if (!customerName) setCustomerName(user.fullName || '');
+      if (!customerPhone) setCustomerPhone(user.phone || '');
+      if (!deliveryAddress) setDeliveryAddress(user.address || '');
+
       fetch(`/api/user/promo-status?userId=${user.id}`, { headers: getAuthHeader() })
         .then((r) => r.json())
         .then((d) => {
@@ -83,6 +114,9 @@ export default function CheckoutPage() {
     }
   };
 
+  const effectiveTotalPrice = groupOrder ? (groupOrder.subtotal || 0) : totalPrice;
+  const groupDiscountAmount = groupOrder ? (groupOrder.discountAmount || 0) : 0;
+
   const handleApplyCoupon = (codeToApply?: string) => {
     const code = (codeToApply || couponInput).trim().toUpperCase();
     setCouponError('');
@@ -93,7 +127,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    const res = validateCoupon(code, totalPrice, paymentMethod, isNewUser, tierInfo?.tier);
+    const res = validateCoupon(code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier);
     if (!res.valid) {
       setCouponError(res.message || 'Mã không hợp lệ');
       return;
@@ -120,17 +154,18 @@ export default function CheckoutPage() {
   const shippingFeeAfterMember = Math.max(0, baseShippingFee - memberShippingDiscount);
   const effectiveShippingFee = appliedCoupon?.code === 'FREESHIP' ? 0 : shippingFeeAfterMember;
   const couponDiscountExcludingFreeship = appliedCoupon?.code === 'FREESHIP' ? 0 : discountAmount;
-  const totalBeforeWallet = Math.max(0, totalPrice - couponDiscountExcludingFreeship + effectiveShippingFee);
+  const totalDiscounts = couponDiscountExcludingFreeship + groupDiscountAmount;
+  const totalBeforeWallet = Math.max(0, effectiveTotalPrice - totalDiscounts + effectiveShippingFee);
 
   const walletDeduction = useWallet && walletBalance > 0 ? Math.min(walletBalance, totalBeforeWallet) : 0;
   const finalTotal = Math.max(0, totalBeforeWallet - walletDeduction);
   const isFullyCoveredByWallet = useWallet && walletDeduction > 0 && finalTotal === 0;
 
-  if (isLoading) {
+  if (isLoading || isLoadingGroup) {
     return (
       <div className="max-w-md mx-auto px-4 py-24 text-center">
         <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#e31837]" />
-        <p className="text-[14px] text-[#41454d] mt-3">Đang tải thông tin...</p>
+        <p className="text-[14px] text-[#41454d] mt-3">Đang tải thông tin đơn hàng...</p>
       </div>
     );
   }
@@ -153,17 +188,17 @@ export default function CheckoutPage() {
             Đăng nhập tài khoản
           </Link>
           <Link
-            href="/cart"
+            href={groupOrder ? `/group/${groupOrder.code}` : '/cart'}
             className="px-6 py-3 bg-white border border-[#dddddd] text-[#181d26] font-medium text-[14px] rounded-[12px] hover:bg-[#f8fafc] transition"
           >
-            Quay lại giỏ hàng
+            {groupOrder ? 'Quay lại phòng nhóm' : 'Quay lại giỏ hàng'}
           </Link>
         </div>
       </div>
     );
   }
 
-  if (cart.length === 0) {
+  if (cart.length === 0 && !groupOrder) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-24 text-center space-y-4">
         <h1 className="text-2xl font-normal text-[#181d26]">Giỏ hàng của bạn đang trống</h1>
@@ -194,28 +229,55 @@ export default function CheckoutPage() {
 
     setIsSubmitting(true);
     try {
+      const groupItems = groupOrder
+        ? groupOrder.members.flatMap((m) =>
+            (m.items || []).map((it) => {
+              let toppingsStr: string | null = null;
+              if (it.toppings) {
+                toppingsStr =
+                  typeof it.toppings === 'string' && it.toppings.startsWith('[')
+                    ? JSON.parse(it.toppings).map((t: any) => `${t.name} (+${formatVND(t.price)})`).join(', ')
+                    : String(it.toppings);
+              }
+              return {
+                productId: it.productId,
+                productName: it.productName,
+                price: it.price,
+                quantity: it.quantity,
+                toppings: toppingsStr,
+                note: it.note ? `[Phần của ${m.name}] ${it.note}` : `[Phần của ${m.name}]`,
+              };
+            })
+          )
+        : [];
+
+      const orderItems = groupOrder
+        ? groupItems
+        : cart.map((it) => ({
+            productId: it.product.id,
+            productName: it.product.name,
+            price: it.itemPrice || it.product.price,
+            quantity: it.quantity,
+            toppings:
+              it.selectedToppings && it.selectedToppings.length > 0
+                ? it.selectedToppings.map((t) => `${t.name} (+${formatVND(t.price)})`).join(', ')
+                : null,
+            note: it.note ? it.note.trim() : null,
+          }));
+
       const payload = {
         userId: user.id,
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
         deliveryAddress: deliveryAddress.trim(),
-        notes: notes.trim(),
+        notes: groupOrder ? `[Đơn nhóm ${groupOrder.code}] ${notes.trim()}`.trim() : notes.trim(),
         paymentMethod: isFullyCoveredByWallet ? 'Wallet' : paymentMethod,
         couponCode: appliedCoupon ? appliedCoupon.code : null,
+        groupCode: groupOrder ? groupOrder.code : null,
         shippingFee: effectiveShippingFee,
         useWallet: useWallet && walletDeduction > 0,
         walletAmountUsed: walletDeduction,
-        items: cart.map((it) => ({
-          productId: it.product.id,
-          productName: it.product.name,
-          price: it.itemPrice || it.product.price,
-          quantity: it.quantity,
-          toppings:
-            it.selectedToppings && it.selectedToppings.length > 0
-              ? it.selectedToppings.map((t) => `${t.name} (+${formatVND(t.price)})`).join(', ')
-              : null,
-          note: it.note ? it.note.trim() : null,
-        })),
+        items: orderItems,
       };
 
       const res = await fetch('/api/orders', {
@@ -229,8 +291,10 @@ export default function CheckoutPage() {
         throw new Error(data.message || 'Lỗi khi tạo đơn hàng');
       }
 
-      // Clear the cart
-      clearCart();
+      // Clear the individual cart if not a group order
+      if (!groupOrder) {
+        clearCart();
+      }
 
       // Redirect based on payment method
       if (data.fullyPaidByWallet || isFullyCoveredByWallet) {
@@ -253,17 +317,19 @@ export default function CheckoutPage() {
         {/* Header */}
         <div className="flex items-center gap-4 pb-6 border-b border-[#dddddd]">
           <Link
-            href="/cart"
+            href={groupOrder ? `/group/${groupOrder.code}` : '/cart'}
             className="p-2 text-[#41454d] hover:text-[#e31837] bg-white border border-[#dddddd] rounded-[6px] transition"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
             <h1 className="text-3xl font-normal text-[#181d26]">
-              Thông tin giao hàng & thanh toán
+              {groupOrder ? `Thanh toán Đơn nhóm #${groupOrder.code}` : 'Thông tin giao hàng & thanh toán'}
             </h1>
             <p className="text-[14px] text-[#41454d] mt-1">
-              Điền địa chỉ nhận món và chọn phương thức thanh toán thuận tiện
+              {groupOrder
+                ? `Trưởng nhóm thanh toán cho ${groupOrder.members.length} thành viên với ưu đãi giảm trực tiếp ${groupOrder.discountPercentage}%`
+                : 'Điền địa chỉ nhận món và chọn phương thức thanh toán thuận tiện'}
             </p>
           </div>
         </div>
@@ -281,7 +347,7 @@ export default function CheckoutPage() {
               {/* Customer Info Card */}
               <div className="bg-white rounded-[10px] p-6 sm:p-8 border border-[#dddddd] space-y-5">
                 <h2 className="text-[16px] font-semibold text-[#181d26]">
-                  1. Thông tin người nhận
+                  1. Thông tin người nhận ({groupOrder ? 'Trưởng nhóm' : 'Khách hàng'})
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -426,45 +492,91 @@ export default function CheckoutPage() {
             {/* Right Summary */}
             <div className="lg:col-span-5 bg-[#fdf2f2]/30 rounded-[10px] p-6 sm:p-8 border border-[#fecdd3] space-y-6">
               <h2 className="text-[16px] font-semibold text-[#181d26] pb-3 border-b border-[#fecdd3]">
-                Đơn hàng ({cart.length} món)
+                {groupOrder
+                  ? `Đơn nhóm #${groupOrder.code} (${groupOrder.totalQuantity || 0} món)`
+                  : `Đơn hàng (${cart.length} món)`}
               </h2>
 
-              <div className="divide-y divide-[#fecdd3] max-h-72 overflow-y-auto pr-1">
-                {cart.map((item) => (
-                  <div key={item.cartItemId} className="py-3 first:pt-0 flex items-start justify-between text-[13px] gap-2">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={item.product.image}
-                        alt={item.product.name}
-                        className="w-12 h-12 rounded-[6px] object-cover border border-[#dddddd] shrink-0 bg-white"
-                      />
-                      <div className="min-w-0 space-y-0.5">
-                        <div className="font-semibold text-[#181d26] truncate">{item.product.name}</div>
+              {/* Items List */}
+              {groupOrder ? (
+                <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                  {/* Group Info Banner */}
+                  <div className="p-3 bg-[#fff1f2] border border-[#fecdd3] rounded-xl space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-[#e31837] uppercase tracking-wider flex items-center gap-1">
+                        <Users className="w-3.5 h-3.5" /> Đơn Đặt Nhóm #{groupOrder.code}
+                      </span>
+                      <span className="text-xs font-bold bg-[#e31837] text-white px-2 py-0.5 rounded-full">
+                        Giảm {groupOrder.discountPercentage}%
+                      </span>
+                    </div>
+                    <p className="text-[12px] text-[#41454d]">
+                      Trưởng nhóm: <strong>{groupOrder.hostName}</strong> • {groupOrder.members.length} thành viên • {groupOrder.totalQuantity} món
+                    </p>
+                  </div>
 
-                        {item.selectedToppings && item.selectedToppings.length > 0 && (
-                          <div className="text-[11px] text-[#e31837] line-clamp-1">
-                            +{item.selectedToppings.map((t) => t.name).join(', ')}
-                          </div>
-                        )}
-
-                        {item.note && (
-                          <div className="text-[11px] text-amber-800 italic line-clamp-1">
-                            "{item.note}"
-                          </div>
-                        )}
-
-                        <div className="text-[#9297a0] text-[11px]">
-                          x{item.quantity} • {formatVND(item.itemPrice || item.product.price)}
+                  {groupOrder.members.map((m) => {
+                    if (!m.items || m.items.length === 0) return null;
+                    const mTotal = m.items.reduce((s, it) => s + it.price * it.quantity, 0);
+                    return (
+                      <div key={m.id} className="bg-white p-3 rounded-xl border border-[#e5e7eb] space-y-2">
+                        <div className="font-bold text-[13px] text-[#181d26] flex items-center justify-between pb-1 border-b border-[#f3f4f6]">
+                          <span>{m.name} {m.isHost && '(Trưởng nhóm)'}</span>
+                          <span className="text-[#e31837]">{formatVND(mTotal)}</span>
+                        </div>
+                        <div className="space-y-1.5 pl-1">
+                          {m.items.map((it) => (
+                            <div key={it.id} className="text-[12px] flex justify-between text-[#555a64]">
+                              <div className="pr-2">
+                                <span className="font-medium text-[#181d26]">{it.productName}</span> x{it.quantity}
+                                {it.note && <span className="block text-[11px] text-[#d97706] italic">"{it.note}"</span>}
+                              </div>
+                              <span className="shrink-0 font-medium">{formatVND(it.price * it.quantity)}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="divide-y divide-[#fecdd3] max-h-72 overflow-y-auto pr-1">
+                  {cart.map((item) => (
+                    <div key={item.cartItemId} className="py-3 first:pt-0 flex items-start justify-between text-[13px] gap-2">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={item.product.image}
+                          alt={item.product.name}
+                          className="w-12 h-12 rounded-[6px] object-cover border border-[#dddddd] shrink-0 bg-white"
+                        />
+                        <div className="min-w-0 space-y-0.5">
+                          <div className="font-semibold text-[#181d26] truncate">{item.product.name}</div>
+
+                          {item.selectedToppings && item.selectedToppings.length > 0 && (
+                            <div className="text-[11px] text-[#e31837] line-clamp-1">
+                              +{item.selectedToppings.map((t) => t.name).join(', ')}
+                            </div>
+                          )}
+
+                          {item.note && (
+                            <div className="text-[11px] text-amber-800 italic line-clamp-1">
+                              "{item.note}"
+                            </div>
+                          )}
+
+                          <div className="text-[#9297a0] text-[11px]">
+                            x{item.quantity} • {formatVND(item.itemPrice || item.product.price)}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="font-bold text-[#e31837] shrink-0 text-right">
+                        {formatVND((item.itemPrice || item.product.price) * item.quantity)}
+                      </div>
                     </div>
-                    <div className="font-bold text-[#e31837] shrink-0 text-right">
-                      {formatVND((item.itemPrice || item.product.price) * item.quantity)}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
 
               {/* Coupon Section */}
               <div className="pt-4 border-t border-[#fecdd3] space-y-3">
@@ -538,7 +650,7 @@ export default function CheckoutPage() {
                   <div className="space-y-2 pt-2 border-t border-[#fecdd3]/60 max-h-56 overflow-y-auto pr-1">
                     {AVAILABLE_COUPONS.map((c) => {
                       const isApplied = appliedCoupon?.code === c.code;
-                      const check = validateCoupon(c.code, totalPrice, paymentMethod, isNewUser, tierInfo?.tier);
+                      const check = validateCoupon(c.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier);
                       const isEligible = check.valid;
 
                       return (
@@ -643,15 +755,27 @@ export default function CheckoutPage() {
               {/* Totals Calculation */}
               <div className="space-y-2 pt-4 border-t border-[#fecdd3] text-[13px]">
                 <div className="flex justify-between text-[#41454d]">
-                  <span>Tạm tính ({cart.length} món)</span>
-                  <span className="font-semibold text-[#181d26]">{formatVND(totalPrice)}</span>
+                  <span>Tạm tính ({groupOrder ? `${groupOrder.totalQuantity || 0} món` : `${cart.length} món`})</span>
+                  <span className="font-semibold text-[#181d26]">{formatVND(effectiveTotalPrice)}</span>
                 </div>
+
+                {/* Direct Group Discount (giảm trực tiếp không cần voucher) */}
+                {groupDiscountAmount > 0 && (
+                  <div className="flex justify-between text-[#059669] font-medium">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="w-4 h-4" /> Giảm giá đơn nhóm ({groupOrder?.discountPercentage}%)
+                    </span>
+                    <span>- {formatVND(groupDiscountAmount)}</span>
+                  </div>
+                )}
+
                 {couponDiscountExcludingFreeship > 0 && (
                   <div className="flex justify-between text-[#e31837] font-medium">
                     <span>Giảm giá voucher ({appliedCoupon?.code})</span>
                     <span>- {formatVND(couponDiscountExcludingFreeship)}</span>
                   </div>
                 )}
+
                 <div className="flex justify-between text-[#41454d]">
                   <div>
                     <span>Phí giao hàng</span>
@@ -744,5 +868,20 @@ export default function CheckoutPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-md mx-auto px-4 py-24 text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#e31837]" />
+          <p className="text-[14px] text-[#41454d] mt-3">Đang tải thông tin đơn hàng...</p>
+        </div>
+      }
+    >
+      <CheckoutContent />
+    </Suspense>
   );
 }

@@ -215,6 +215,11 @@ export default function AdminOrdersPage() {
                       <Link href={`/orders/${order.orderCode}`} className="hover:underline">
                         #{order.orderCode}
                       </Link>
+                      {order.groupCode && (
+                        <span className="inline-block mt-0.5 text-[10px] font-semibold px-1.5 py-0.2 rounded bg-[#fee2e2] text-[#e31837] border border-[#fecdd3]">
+                          Đơn nhóm #{order.groupCode}
+                        </span>
+                      )}
                       <span className="block text-[11px] text-[#9297a0] font-normal">
                         {formatDate(order.createdAt)}
                       </span>

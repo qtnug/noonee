@@ -79,6 +79,7 @@ export interface Order {
   totalAmount: number;
   discountAmount?: number;
   couponCode?: string | null;
+  groupCode?: string | null;
   status: OrderStatus;
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
@@ -151,5 +152,46 @@ export interface SupportMessage {
   isComplaint: boolean;
   status: 'open' | 'resolved';
   createdAt: string;
+}
+
+export interface GroupMemberItem {
+  id: string;
+  productId: number;
+  productName: string;
+  productImage?: string;
+  price: number;
+  quantity: number;
+  toppings?: string | null;
+  selectedToppings?: ProductTopping[];
+  note?: string;
+  total?: number;
+}
+
+export interface GroupMember {
+  id: string;
+  name: string;
+  isHost: boolean;
+  userId?: number | null;
+  joinedAt: string;
+  items: GroupMemberItem[];
+}
+
+export interface GroupOrder {
+  id?: number;
+  code: string;
+  hostName: string;
+  hostUserId?: number | null;
+  status: 'active' | 'locked' | 'completed' | 'cancelled';
+  orderCode?: string | null;
+  members: GroupMember[];
+  createdAt: string;
+  updatedAt: string;
+  totalMembers?: number;
+  membersWithItemsCount?: number;
+  totalQuantity?: number;
+  subtotal?: number;
+  discountPercentage?: number;
+  discountAmount?: number;
+  finalTotal?: number;
 }
 
