@@ -311,13 +311,16 @@ export default function OrderTrackingPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowChat(true)}
-              className="h-10 px-3.5 bg-white border border-[#e31837] text-[#e31837] hover:bg-[#fff1f2] rounded-[6px] text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
-            >
-              <MessageSquare className="w-4 h-4" />
-              <span>Khiếu nại / Chat Quán</span>
-            </button>
+            {/* Group members do not have the complaint button; only Host or individual order owner */}
+            {(!order.groupCode || (user && order.userId === user.id)) && (
+              <button
+                onClick={() => setShowChat(true)}
+                className="h-10 px-3.5 bg-white border border-[#e31837] text-[#e31837] hover:bg-[#fff1f2] rounded-[6px] text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Khiếu nại / Chat Quán</span>
+              </button>
+            )}
 
             {order.status !== 'Cancelled' && order.paymentStatus === 'Unpaid' && order.paymentMethod === 'Sepay' && (
               <Link

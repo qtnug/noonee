@@ -26,7 +26,6 @@ import {
   ExternalLink,
   Crown,
   RefreshCw,
-  Calculator,
   UserMinus,
 } from 'lucide-react';
 import { GroupOrder, GroupMember, GroupMemberItem, Product, ProductTopping } from '@/types';
@@ -52,10 +51,6 @@ export default function GroupOrderRoomPage({
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Split Bill Modal
-  const [showSplitModal, setShowSplitModal] = useState(false);
-  const [copiedSplitText, setCopiedSplitText] = useState(false);
-
   // QR Modal
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
@@ -71,7 +66,6 @@ export default function GroupOrderRoomPage({
   const [productSearch, setProductSearch] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedToppings, setSelectedToppings] = useState<ProductTopping[]>([]);
-  const [itemNote, setItemNote] = useState('');
   const [itemQuantity, setItemQuantity] = useState(1);
   const [isAddingItem, setIsAddingItem] = useState(false);
 
@@ -123,23 +117,31 @@ export default function GroupOrderRoomPage({
         return;
       }
 
+      // Check if user is logged in and already in group members by userId
+      if (user) {
+        const myMem = group.members?.find(
+          (m) => (m.userId && m.userId === user.id) || (m.isHost && group.hostUserId === user.id)
+        );
+        if (myMem) {
+          setMyMemberId(myMem.id);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(`noonee_group_member_${code}`, myMem.id);
+          }
+          setShowJoinModal(false);
+          return;
+        }
+      }
+
       if (myMemberId) {
         const exists = group.members?.some((m) => m.id === myMemberId);
-        if (!exists) {
-          setShowJoinModal(true);
+        if (exists) {
+          setShowJoinModal(false);
+          return;
         }
-      } else {
-        // Check if user is logged in and matches host
-        if (user && group.hostUserId === user.id) {
-          const hostMem = group.members?.find((m) => m.isHost);
-          if (hostMem) {
-            setMyMemberId(hostMem.id);
-            localStorage.setItem(`noonee_group_member_${code}`, hostMem.id);
-            return;
-          }
-        }
-        setShowJoinModal(true);
       }
+
+      // If not in members or not logged in, prompt to join/login
+      setShowJoinModal(true);
     }
   }, [group, loading, myMemberId, user, code]);
 
@@ -191,10 +193,15 @@ export default function GroupOrderRoomPage({
     }
   };
 
-  // Join Room Handler
-  const handleJoin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const name = joinNameInput.trim() || user?.fullName;
+  // Join Room Handler (Requires authenticated user)
+  const handleJoin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!user) {
+      router.push(`/login?returnUrl=/group/${code}`);
+      return;
+    }
+
+    const name = user.fullName || user.username || joinNameInput.trim();
     if (!name) return;
 
     setIsJoining(true);
@@ -249,7 +256,7 @@ export default function GroupOrderRoomPage({
             price: selectedProduct.price,
             quantity: itemQuantity,
             toppings: selectedToppings,
-            note: itemNote.trim(),
+            note: '',
           },
         }),
       });
@@ -262,7 +269,6 @@ export default function GroupOrderRoomPage({
       setShowFoodPicker(false);
       setSelectedProduct(null);
       setSelectedToppings([]);
-      setItemNote('');
       setItemQuantity(1);
     } catch (err: any) {
       alert(err.message || 'Lỗi khi thêm món');
@@ -352,40 +358,6 @@ export default function GroupOrderRoomPage({
     } finally {
       setIsActionLoading(false);
     }
-  };
-
-  // Compute Bill Split strictly matching total without rounding errors (Test Case 3.2)
-  const computeBillSplit = () => {
-    if (!group) return [];
-    const discountPct = group.discountPercentage || 0;
-    const finalTotal = group.finalTotal || 0;
-
-    const activeMembers = group.members.filter((m) => (m.items || []).length > 0);
-    if (activeMembers.length === 0) return [];
-
-    let allocatedTotal = 0;
-    const splits = activeMembers.map((m) => {
-      const mSubtotal = (m.items || []).reduce((s, it) => s + it.price * it.quantity, 0);
-      const mDiscount = Math.round(mSubtotal * (discountPct / 100));
-      const mAmount = Math.max(0, mSubtotal - mDiscount);
-      allocatedTotal += mAmount;
-      return {
-        id: m.id,
-        name: m.name,
-        isHost: m.isHost,
-        subtotal: mSubtotal,
-        discount: mDiscount,
-        amountToPay: mAmount,
-      };
-    });
-
-    const diff = finalTotal - allocatedTotal;
-    if (diff !== 0 && splits.length > 0) {
-      const hostSplit = splits.find((s) => s.isHost) || splits[0];
-      hostSplit.amountToPay += diff;
-    }
-
-    return splits;
   };
 
   // Proceed to Checkout (Host only)
@@ -523,74 +495,54 @@ export default function GroupOrderRoomPage({
             </div>
           </div>
 
-          {/* Discount Tier Progress Bar */}
-          <div className="bg-[#fcfbf9] rounded-2xl p-4 sm:p-5 border border-[#e5e7eb] space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] font-bold text-[#181d26] flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-[#e31837]" />
-                  Ưu đãi giảm giá nhóm:
+          {/* Compact Group Discount Status Bar (Requirement 3) */}
+          <div className="bg-[#fff1f2] border border-[#fecdd3] rounded-2xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-[13px]">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#e31837] shrink-0" />
+              <span className="font-bold text-[#181d26]">
+                Ưu đãi nhóm: <span className="text-[#e31837]">Giảm {group.discountPercentage || 0}%</span>
+              </span>
+              <span className="text-[12px] text-[#555a64]">
+                ({group.members?.length || 0}/10 người)
+              </span>
+              {discountInfo.nextTier && (
+                <span className="text-[12px] text-[#e31837] font-semibold hidden md:inline">
+                  • Thêm {discountInfo.nextTier.peopleNeeded} người nữa để -{discountInfo.nextTier.percentage}%!
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-[#e31837] text-white">
-                  Giảm {group.discountPercentage || 0}%
-                </span>
-              </div>
-              <span className="text-[12px] text-[#717680] font-medium">
-                {group.members?.length || 0} / {MAX_GROUP_MEMBERS} người
-              </span>
+              )}
             </div>
 
-            {/* Stepper bar */}
-            <div className="w-full bg-[#e5e7eb] h-2.5 rounded-full overflow-hidden flex">
-              <div
-                className="bg-gradient-to-r from-[#e31837] to-[#f43f5e] h-full transition-all duration-500 rounded-full"
-                style={{
-                  width: `${Math.min(100, ((group.members?.length || 0) / MAX_GROUP_MEMBERS) * 100)}%`,
-                }}
-              />
+            <div className="flex items-center gap-2 text-[11px] font-semibold text-[#555a64]">
+              <span className={group.members?.length >= 3 ? 'text-[#059669] font-bold' : ''}>3 người: -2%</span>
+              <span>•</span>
+              <span className={group.members?.length >= 5 ? 'text-[#059669] font-bold' : ''}>5 người: -5%</span>
+              <span>•</span>
+              <span className={group.members?.length >= 10 ? 'text-[#059669] font-bold' : ''}>10 người: -10%</span>
             </div>
-
-            <div className="flex items-center justify-between text-[11px] sm:text-[12px] font-medium text-[#555a64]">
-              <span className={group.members?.length >= 3 ? 'text-[#059669] font-bold' : ''}>
-                ✓ 3 người: -2%
-              </span>
-              <span className={group.members?.length >= 5 ? 'text-[#059669] font-bold' : ''}>
-                ✓ 5 người: -5%
-              </span>
-              <span className={group.members?.length >= 10 ? 'text-[#059669] font-bold' : ''}>
-                ✓ 10 người: -10% (Tối đa)
-              </span>
-            </div>
-
-            {discountInfo.nextTier && (
-              <p className="text-[12px] text-[#e31837] font-semibold pt-1">
-                👉 Thêm {discountInfo.nextTier.peopleNeeded} người nữa để được giảm {discountInfo.nextTier.percentage}% tổng đơn!
-              </p>
-            )}
           </div>
         </div>
 
         {/* Members & Items Live List */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-bold text-[#181d26] flex items-center gap-2">
               <UtensilsCrossed className="w-5 h-5 text-[#e31837]" />
               Danh sách món từng thành viên ({group.members?.length || 0})
             </h2>
 
-            {/* Add Food Button for Current User */}
+            {/* Prominent Add Food Button for Current User (Requirement 4) */}
             {group.status === 'active' && myMemberId && (
               <button
                 onClick={() => setShowFoodPicker(true)}
-                className="flex items-center gap-1.5 px-4 py-2.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-semibold text-[13px] rounded-xl shadow-sm transition cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#e31837] to-[#f43f5e] hover:from-[#be0e27] hover:to-[#e11d48] text-white font-extrabold text-[13px] sm:text-[14px] rounded-xl shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-[#e31837]/30"
               >
-                <Plus className="w-4 h-4" />
-                Thêm món cho tôi
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>+ THÊM MÓN CHO TÔI</span>
               </button>
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-3">
             {group.members?.map((member) => {
               const isMe = member.id === myMemberId;
               const memberTotal = member.items?.reduce((sum, it) => sum + it.price * it.quantity, 0) || 0;
@@ -598,28 +550,28 @@ export default function GroupOrderRoomPage({
               return (
                 <div
                   key={member.id}
-                  className={`bg-white rounded-2xl p-5 border transition ${
+                  className={`bg-white rounded-xl p-3.5 sm:p-4 border transition ${
                     isMe
-                      ? 'border-[#e31837] ring-2 ring-[#e31837]/10 shadow-md'
-                      : 'border-[#e5e7eb] shadow-sm'
+                      ? 'border-[#e31837] ring-1 ring-[#e31837]/20 shadow-xs'
+                      : 'border-[#e5e7eb] shadow-2xs'
                   }`}
                 >
                   {/* Member Header */}
-                  <div className="flex items-center justify-between pb-3 border-b border-[#f3f4f6]">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-full bg-[#f3f4f6] text-[#181d26] font-bold text-[14px] flex items-center justify-center">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#f3f4f6]">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-[#f3f4f6] text-[#181d26] font-bold text-xs flex items-center justify-center">
                         {member.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-[15px] text-[#181d26]">{member.name}</span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-bold text-[13px] sm:text-[14px] text-[#181d26]">{member.name}</span>
                           {member.isHost && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#fef3c7] text-[#b45309] text-[11px] font-bold">
-                              <Crown className="w-3 h-3 text-[#d97706]" /> Trưởng nhóm
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full bg-[#fef3c7] text-[#b45309] text-[10px] font-bold">
+                              <Crown className="w-2.5 h-2.5 text-[#d97706]" /> Trưởng nhóm
                             </span>
                           )}
                           {isMe && (
-                            <span className="px-2 py-0.5 rounded-full bg-[#fee2e2] text-[#e31837] text-[11px] font-bold">
+                            <span className="px-1.5 py-0.2 rounded-full bg-[#fee2e2] text-[#e31837] text-[10px] font-bold">
                               Bạn
                             </span>
                           )}
@@ -627,98 +579,102 @@ export default function GroupOrderRoomPage({
                             <button
                               onClick={() => handleRemoveMember(member.id, member.name)}
                               title="Xóa thành viên khỏi nhóm"
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#fee2e2] hover:bg-[#fca5a5] text-[#b91c1c] text-[11px] font-medium transition cursor-pointer"
+                              className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full bg-[#fee2e2] hover:bg-[#fca5a5] text-[#b91c1c] text-[10px] font-medium transition cursor-pointer"
                             >
-                              <UserMinus className="w-3 h-3" /> Mời ra
+                              <UserMinus className="w-2.5 h-2.5" /> Mời ra
                             </button>
                           )}
                         </div>
-                        <span className="text-[12px] text-[#717680]">
+                        <span className="text-[11px] text-[#717680]">
                           Đã chọn {member.items?.length || 0} món
                         </span>
                       </div>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[11px] text-[#717680] block">Tiền phần này</span>
-                      <span className="font-bold text-[15px] text-[#181d26]">
+                      <span className="text-[10px] text-[#717680] block">Tiền phần này</span>
+                      <span className="font-bold text-[13px] sm:text-[14px] text-[#181d26]">
                         {formatVND(memberTotal)}
                       </span>
                     </div>
                   </div>
 
                   {/* Member Items */}
-                  <div className="pt-3">
+                  <div className="pt-2">
                     {(!member.items || member.items.length === 0) ? (
-                      <p className="text-[13px] text-[#9aa0a6] italic py-2">
-                        Chưa chọn món nào...
-                      </p>
+                      <div className="flex items-center justify-between py-1">
+                        <p className="text-[12px] text-[#9aa0a6] italic">
+                          Chưa chọn món nào...
+                        </p>
+                        {isMe && group.status === 'active' && (
+                          <button
+                            onClick={() => setShowFoodPicker(true)}
+                            className="text-[11px] font-bold text-[#e31837] hover:underline cursor-pointer"
+                          >
+                            + Chọn món ngay
+                          </button>
+                        )}
+                      </div>
                     ) : (
-                      <div className="space-y-2.5">
+                      <div className="space-y-1.5">
                         {member.items.map((it) => (
                           <div
                             key={it.id}
-                            className="flex items-start justify-between gap-3 text-[13px] bg-[#fcfbf9] p-3 rounded-xl border border-[#f3f4f6]"
+                            className="flex items-center justify-between gap-2 text-[12px] bg-[#fcfbf9] px-2.5 py-2 rounded-lg border border-[#f3f4f6]"
                           >
-                            <div className="space-y-1 flex-1">
-                              <div className="font-semibold text-[#181d26] flex items-center gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-[#181d26] truncate flex items-center gap-1.5">
                                 <span>{it.productName}</span>
-                                <span className="text-[12px] text-[#555a64] font-normal">x{it.quantity}</span>
+                                <span className="text-[11px] text-[#717680] font-normal">x{it.quantity}</span>
                               </div>
 
                               {it.toppings && (
-                                <p className="text-[12px] text-[#555a64]">
+                                <p className="text-[11px] text-[#555a64] truncate">
                                   Topping: {typeof it.toppings === 'string' && it.toppings.startsWith('[')
                                     ? JSON.parse(it.toppings).map((t: any) => t.name).join(', ')
                                     : it.toppings}
                                 </p>
                               )}
-
-                              {it.note && (
-                                <p className="text-[12px] text-[#d97706] italic">
-                                  Ghi chú: "{it.note}"
-                                </p>
-                              )}
                             </div>
 
-                            <div className="flex items-center gap-3">
-                              <span className="font-bold text-[#181d26]">
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="font-bold text-[12px] text-[#181d26]">
                                 {formatVND(it.price * it.quantity)}
                               </span>
 
                               {/* Controls for current member or Host */}
                               {group.status === 'active' && (
-                                <div className="flex items-center gap-1.5 ml-2">
+                                <div className="flex items-center gap-1 ml-1">
                                   {isMe ? (
                                     <>
                                       <button
                                         onClick={() => handleUpdateItem('update_qty', it.id, it.quantity - 1)}
-                                        className="w-6 h-6 rounded-md bg-white border border-[#dddddd] flex items-center justify-center text-xs font-bold hover:bg-[#fee2e2] hover:text-[#e31837] transition cursor-pointer"
+                                        className="w-5 h-5 rounded bg-white border border-[#dddddd] flex items-center justify-center text-[10px] font-bold hover:bg-[#fee2e2] hover:text-[#e31837] transition cursor-pointer"
                                       >
                                         -
                                       </button>
-                                      <span className="text-xs font-bold w-4 text-center">{it.quantity}</span>
+                                      <span className="text-[11px] font-bold w-3 text-center">{it.quantity}</span>
                                       <button
                                         onClick={() => handleUpdateItem('update_qty', it.id, it.quantity + 1)}
-                                        className="w-6 h-6 rounded-md bg-white border border-[#dddddd] flex items-center justify-center text-xs font-bold hover:bg-[#fee2e2] hover:text-[#e31837] transition cursor-pointer"
+                                        className="w-5 h-5 rounded bg-white border border-[#dddddd] flex items-center justify-center text-[10px] font-bold hover:bg-[#fee2e2] hover:text-[#e31837] transition cursor-pointer"
                                       >
                                         +
                                       </button>
                                       <button
                                         onClick={() => handleUpdateItem('remove', it.id)}
-                                        className="p-1 text-[#717680] hover:text-[#e31837] transition ml-1 cursor-pointer"
+                                        className="p-0.5 text-[#717680] hover:text-[#e31837] transition ml-0.5 cursor-pointer"
                                         title="Xóa món"
                                       >
-                                        <Trash2 className="w-4 h-4" />
+                                        <Trash2 className="w-3.5 h-3.5" />
                                       </button>
                                     </>
                                   ) : isHost ? (
                                     <button
                                       onClick={() => handleUpdateItem('remove', it.id, undefined, member.id)}
-                                      className="p-1 text-[#717680] hover:text-[#e31837] transition ml-1 cursor-pointer"
+                                      className="p-0.5 text-[#717680] hover:text-[#e31837] transition ml-0.5 cursor-pointer"
                                       title="Trưởng nhóm xóa món của thành viên này"
                                     >
-                                      <Trash2 className="w-4 h-4" />
+                                      <Trash2 className="w-3.5 h-3.5" />
                                     </button>
                                   ) : null}
                                 </div>
@@ -765,57 +721,46 @@ export default function GroupOrderRoomPage({
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Action Buttons (Requirement 8: Khóa phòng mới hiện nút thanh toán) */}
           <div className="pt-3 flex flex-col sm:flex-row gap-3">
-            {/* Split Bill Modal Button (Test Case 3.2) */}
-            <button
-              onClick={() => setShowSplitModal(true)}
-              className="py-3.5 px-4 bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#e2e8f0] text-[#181d26] font-semibold text-[14px] rounded-xl transition flex items-center justify-center gap-2 cursor-pointer"
-              title="Xem bảng chia tiền chính xác từng thành viên"
-            >
-              <Calculator className="w-4 h-4 text-[#e31837]" />
-              Chia tiền
-            </button>
-
             {isHost ? (
               <>
                 {group.status === 'active' ? (
                   <button
                     onClick={() => handleToggleLock('lock')}
                     disabled={isActionLoading}
-                    className="flex-1 py-3.5 bg-[#181d26] hover:bg-black text-white font-semibold text-[14px] rounded-xl transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="w-full py-3.5 bg-[#181d26] hover:bg-black text-white font-bold text-[14px] rounded-xl transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-md"
                   >
                     <Lock className="w-4 h-4" />
-                    Chốt món & Khóa phòng
+                    Chốt món & Khóa phòng để thanh toán
                   </button>
                 ) : group.status === 'locked' ? (
-                  <button
-                    onClick={() => handleToggleLock('unlock')}
-                    disabled={isActionLoading}
-                    className="py-3.5 px-5 bg-white border border-[#dddddd] hover:bg-[#f8fafc] text-[#181d26] font-semibold text-[14px] rounded-xl transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <Unlock className="w-4 h-4" />
-                    Mở lại phòng
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-3 w-full">
+                    <button
+                      onClick={() => handleToggleLock('unlock')}
+                      disabled={isActionLoading}
+                      className="py-3.5 px-5 bg-white border border-[#dddddd] hover:bg-[#f8fafc] text-[#181d26] font-semibold text-[14px] rounded-xl transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      <Unlock className="w-4 h-4" />
+                      Mở lại phòng
+                    </button>
+                    <button
+                      onClick={handleProceedToCheckout}
+                      className="flex-1 py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-bold text-[15px] rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <CreditCard className="w-5 h-5" />
+                      Thanh toán đơn nhóm ({formatVND(group.finalTotal || 0)})
+                    </button>
+                  </div>
                 ) : null}
-
-                {group.status !== 'completed' && (
-                  <button
-                    onClick={handleProceedToCheckout}
-                    className="flex-[2] py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-bold text-[15px] rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <CreditCard className="w-5 h-5" />
-                    Thanh toán đơn nhóm ({formatVND(group.finalTotal || 0)})
-                  </button>
-                )}
               </>
             ) : (
               <div className="w-full py-3 bg-[#f8fafc] rounded-xl border border-[#e5e7eb] text-center text-[13px] text-[#555a64]">
                 {group.status === 'completed'
-                  ? 'Đơn hàng đã được trưởng nhóm thanh toán.'
+                  ? 'Đơn hàng đã được trưởng nhóm thanh toán thành công.'
                   : group.status === 'locked'
-                  ? 'Trưởng nhóm đã khóa phòng và đang tiến hành thanh toán.'
-                  : 'Vui lòng chọn món ăn của bạn. Khi mọi người chọn xong, trưởng nhóm sẽ tiến hành chốt và thanh toán.'}
+                  ? 'Trưởng nhóm đã chốt món, khóa phòng và đang tiến hành thanh toán.'
+                  : 'Vui lòng chọn món ăn của bạn. Khi mọi người chọn xong, trưởng nhóm sẽ chốt món và thanh toán.'}
               </div>
             )}
           </div>
@@ -869,45 +814,67 @@ export default function GroupOrderRoomPage({
         </div>
       )}
 
-      {/* Join Room Modal for New Visitors */}
+      {/* Join Room Modal (Requirement 2: Bắt buộc có tài khoản) */}
       {showJoinModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-5 shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="text-center space-y-2">
-              <div className="w-12 h-12 rounded-full bg-[#fee2e2] text-[#e31837] flex items-center justify-center mx-auto">
-                <Users className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-[#181d26]">
-                Tham gia nhóm của {group.hostName}
-              </h3>
-              <p className="text-[13px] text-[#555a64]">
-                Nhập tên của bạn để bạn bè trong nhóm biết ai đang chọn món gì nhé!
-              </p>
-            </div>
+            {!user ? (
+              <div className="text-center space-y-4">
+                <div className="w-14 h-14 rounded-full bg-[#fee2e2] text-[#e31837] flex items-center justify-center mx-auto shadow-xs">
+                  <Users className="w-7 h-7" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-extrabold text-[#181d26]">
+                    Đăng nhập để vào nhóm
+                  </h3>
+                  <p className="text-[13px] text-[#555a64] leading-relaxed">
+                    Bạn cần đăng nhập tài khoản NooNee để tham gia nhóm của <strong>{group.hostName}</strong>.
+                    <br />
+                    Món ăn bạn đặt sẽ được <strong className="text-[#e31837]">tích lũy thăng hạng thành viên</strong> và ghi nhận là <strong>1 đơn của bản thân</strong>!
+                  </p>
+                </div>
 
-            <form onSubmit={handleJoin} className="space-y-4">
-              <div>
-                <label className="block text-[13px] font-semibold text-[#181d26] mb-1.5">
-                  Tên của bạn
-                </label>
-                <input
-                  type="text"
-                  value={joinNameInput}
-                  onChange={(e) => setJoinNameInput(e.target.value)}
-                  placeholder="Ví dụ: Tuấn Anh, Phương Thảo..."
-                  className="w-full px-4 py-3 rounded-xl border border-[#dddddd] text-[14px] focus:outline-none focus:border-[#e31837] transition"
-                  required
-                />
+                <div className="pt-2 space-y-2.5">
+                  <Link
+                    href={`/login?returnUrl=/group/${code}`}
+                    className="w-full py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-bold text-[14px] rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    Đăng nhập tài khoản NooNee
+                  </Link>
+                  <Link
+                    href={`/register?returnUrl=/group/${code}`}
+                    className="w-full py-3 bg-white border border-[#dddddd] hover:bg-[#f8fafc] text-[#181d26] font-semibold text-[14px] rounded-xl transition flex items-center justify-center cursor-pointer"
+                  >
+                    Chưa có tài khoản? Đăng ký ngay
+                  </Link>
+                </div>
               </div>
+            ) : (
+              <div className="text-center space-y-4">
+                <div className="w-14 h-14 rounded-full bg-[#fee2e2] text-[#e31837] flex items-center justify-center mx-auto">
+                  <Users className="w-6 h-6" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-xl font-extrabold text-[#181d26]">
+                    Vào nhóm của {group.hostName}
+                  </h3>
+                  <p className="text-[13px] text-[#555a64]">
+                    Bạn đang tham gia với tài khoản:
+                  </p>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#f8fafc] border border-[#e5e7eb] rounded-xl text-[14px] font-bold text-[#181d26]">
+                    {user.fullName || user.username}
+                  </div>
+                </div>
 
-              <button
-                type="submit"
-                disabled={isJoining}
-                className="w-full py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-bold text-[14px] rounded-xl shadow-md transition disabled:opacity-50 cursor-pointer"
-              >
-                {isJoining ? 'Đang vào nhóm...' : 'Vào nhóm chọn món'}
-              </button>
-            </form>
+                <button
+                  onClick={() => handleJoin()}
+                  disabled={isJoining}
+                  className="w-full py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-bold text-[14px] rounded-xl shadow-md transition disabled:opacity-50 cursor-pointer"
+                >
+                  {isJoining ? 'Đang vào nhóm...' : 'Vào nhóm chọn món ngay'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -965,7 +932,6 @@ export default function GroupOrderRoomPage({
                           onClick={() => {
                             setSelectedProduct(p);
                             setSelectedToppings([]);
-                            setItemNote('');
                             setItemQuantity(1);
                           }}
                           className="flex items-center gap-3 p-3 rounded-2xl border border-[#e5e7eb] hover:border-[#e31837] hover:bg-[#fff1f2]/20 transition cursor-pointer"
@@ -1049,20 +1015,6 @@ export default function GroupOrderRoomPage({
                     </div>
                   )}
 
-                  {/* Personal Note */}
-                  <div>
-                    <label className="block text-[13px] font-bold text-[#181d26] mb-1.5">
-                      Ghi chú món ăn (tùy chọn)
-                    </label>
-                    <input
-                      type="text"
-                      value={itemNote}
-                      onChange={(e) => setItemNote(e.target.value)}
-                      placeholder="Ví dụ: Không hành, ít cay, nhiều đá..."
-                      className="w-full px-4 py-2.5 rounded-xl border border-[#dddddd] text-[13px] focus:outline-none focus:border-[#e31837]"
-                    />
-                  </div>
-
                   {/* Quantity Selector */}
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-[14px] font-bold text-[#181d26]">Số lượng:</span>
@@ -1104,98 +1056,6 @@ export default function GroupOrderRoomPage({
                 </button>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* Split Bill Modal (Test Case 3.2 - Penny Perfect Calculation) */}
-      {showSplitModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full space-y-5 relative shadow-2xl animate-in fade-in zoom-in duration-200">
-            <button
-              onClick={() => setShowSplitModal(false)}
-              className="absolute top-4 right-4 p-2 text-[#717680] hover:text-[#181d26] rounded-full hover:bg-[#f3f4f6] transition cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="space-y-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fee2e2] text-[#e31837] text-xs font-bold">
-                <Calculator className="w-3.5 h-3.5" /> Bảng Chia Tiền Chính Xác
-              </div>
-              <h3 className="text-xl font-bold text-[#181d26]">Chi tiết phần tiền từng thành viên</h3>
-              <p className="text-[13px] text-[#555a64]">
-                Ưu đãi giảm giá nhóm {group.discountPercentage}% được phân bổ chuẩn xác từng đồng không lệch.
-              </p>
-            </div>
-
-            <div className="divide-y divide-[#f3f4f6] border border-[#e5e7eb] rounded-2xl overflow-hidden max-h-[350px] overflow-y-auto">
-              {computeBillSplit().length === 0 ? (
-                <div className="p-6 text-center text-[13px] text-[#717680]">
-                  Chưa có thành viên nào chọn món để chia tiền.
-                </div>
-              ) : (
-                computeBillSplit().map((split) => (
-                  <div key={split.id} className="p-3.5 flex items-center justify-between hover:bg-[#fcfbf9]">
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-[14px] text-[#181d26]">{split.name}</span>
-                        {split.isHost && (
-                          <span className="px-1.5 py-0.5 bg-[#fef3c7] text-[#b45309] text-[10px] font-bold rounded">
-                            Trưởng nhóm
-                          </span>
-                        )}
-                        {split.id === myMemberId && (
-                          <span className="px-1.5 py-0.5 bg-[#fee2e2] text-[#e31837] text-[10px] font-bold rounded">
-                            Bạn
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[12px] text-[#717680]">
-                        Gốc: {formatVND(split.subtotal)} {split.discount > 0 && `(Giảm ${formatVND(split.discount)})`}
-                      </span>
-                    </div>
-                    <span className="font-bold text-[15px] text-[#e31837]">
-                      {formatVND(split.amountToPay)}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="p-4 bg-[#f8fafc] rounded-2xl flex justify-between items-center text-[14px]">
-              <span className="font-bold text-[#181d26]">Tổng cộng cả nhóm:</span>
-              <span className="font-black text-lg text-[#e31837]">
-                {formatVND(group.finalTotal || 0)}
-              </span>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  const splits = computeBillSplit();
-                  const text = `📋 BẢNG CHIA TIỀN ĐƠN NHÓM NOONEE (${group.code})\n` +
-                    splits.map((s) => `• ${s.name}${s.isHost ? ' (Trưởng nhóm)' : ''}: ${formatVND(s.amountToPay)}`).join('\n') +
-                    `\n👉 Tổng thanh toán: ${formatVND(group.finalTotal || 0)}`;
-                  if (typeof navigator !== 'undefined') {
-                    navigator.clipboard.writeText(text);
-                    setCopiedSplitText(true);
-                    setTimeout(() => setCopiedSplitText(false), 2000);
-                  }
-                }}
-                disabled={computeBillSplit().length === 0}
-                className="flex-1 py-3 bg-[#181d26] hover:bg-black text-white font-semibold text-[14px] rounded-xl transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                {copiedSplitText ? <Check className="w-4 h-4 text-[#059669]" /> : <Copy className="w-4 h-4" />}
-                {copiedSplitText ? 'Đã sao chép' : 'Sao chép bảng chia tiền'}
-              </button>
-              <button
-                onClick={() => setShowSplitModal(false)}
-                className="px-5 py-3 border border-[#dddddd] hover:bg-[#f8fafc] text-[#181d26] font-semibold text-[14px] rounded-xl transition cursor-pointer"
-              >
-                Đóng
-              </button>
-            </div>
           </div>
         </div>
       )}

@@ -28,14 +28,21 @@ export async function POST(
     }
 
     const authUser = authenticateRequest(request);
+    if (!authUser) {
+      return NextResponse.json(
+        { success: false, message: 'Vui lòng đăng nhập tài khoản NooNee để tham gia nhóm đặt món.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
-    const name = (body.name || authUser?.username || '').trim();
+    const name = (body.name || authUser.username || '').trim();
     const memberId = body.memberId || undefined;
-    const userId = authUser?.userId || null;
+    const userId = authUser.userId;
 
     if (!name) {
       return NextResponse.json(
-        { success: false, message: 'Vui lòng nhập tên của bạn để tham gia nhóm' },
+        { success: false, message: 'Vui lòng cập nhật họ tên tài khoản để tham gia nhóm' },
         { status: 400 }
       );
     }

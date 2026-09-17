@@ -796,7 +796,13 @@ export async function getOrders(filter?: { status?: string; search?: string; use
       const req = pool.request();
       if (filter?.userId) {
         req.input('userId', sql.Int, filter.userId);
-        query += ` AND o.userId = @userId`;
+        query += ` AND (
+          o.userId = @userId 
+          OR (o.groupCode IS NOT NULL AND o.groupCode IN (
+            SELECT code FROM GroupOrders 
+            WHERE membersData LIKE '%"userId":' + CAST(@userId AS NVARCHAR) + '%'
+          ))
+        )`;
       }
       if (filter?.status && filter.status !== 'all') {
         req.input('status', sql.NVarChar(50), filter.status);
@@ -824,11 +830,18 @@ export async function getOrders(filter?: { status?: string; search?: string; use
     console.error('Error fetching orders from cloud:', err);
   }
 
-
-
   let res = [...inMemoryOrders];
   if (filter?.userId) {
-    res = res.filter(o => o.userId === filter.userId);
+    res = res.filter(o => {
+      if (o.userId === filter.userId) return true;
+      if (o.groupCode) {
+        const grp = inMemoryGroupOrders.find(g => g.code === o.groupCode);
+        if (grp && grp.members?.some(m => m.userId === filter.userId)) {
+          return true;
+        }
+      }
+      return false;
+    });
   }
   if (filter?.status && filter.status !== 'all') {
     res = res.filter(o => o.status === filter.status);
@@ -1312,6 +1325,10 @@ export async function getUserSpendingStats(userId: number): Promise<{
   orderCount: number;
   completedCount: number;
 }> {
+  let directTotalSpent = 0;
+  let directOrderCount = 0;
+  let directCompletedCount = 0;
+
   try {
     const pool = await getCloudPool();
     if (pool) {
@@ -1326,27 +1343,87 @@ export async function getUserSpendingStats(userId: number): Promise<{
         WHERE userId = @userId
       `);
       if (res.recordset && res.recordset[0]) {
-        return {
-          totalSpent: Number(res.recordset[0].totalSpent) || 0,
-          orderCount: Number(res.recordset[0].orderCount) || 0,
-          completedCount: Number(res.recordset[0].completedCount) || 0,
-        };
+        directTotalSpent = Number(res.recordset[0].totalSpent) || 0;
+        directOrderCount = Number(res.recordset[0].orderCount) || 0;
+        directCompletedCount = Number(res.recordset[0].completedCount) || 0;
       }
     }
   } catch (err) {
     console.error('Error fetching user spending stats:', err);
   }
 
-  // Fallback to in-memory orders
-  const userOrders = inMemoryOrders.filter((o) => o.userId === userId);
-  const completed = userOrders.filter(
-    (o) => o.paymentStatus === 'Paid' || o.status === 'Completed'
-  );
-  const totalSpent = completed.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  // Fallback to in-memory orders if pool not connected or empty
+  if (directOrderCount === 0 && directTotalSpent === 0) {
+    const userOrders = inMemoryOrders.filter((o) => o.userId === userId);
+    const completed = userOrders.filter(
+      (o) => o.paymentStatus === 'Paid' || o.status === 'Completed'
+    );
+    directTotalSpent = completed.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    directOrderCount = userOrders.length;
+    directCompletedCount = completed.length;
+  }
+
+  // Add stats from completed Group Orders where user was a participating member (not the host)
+  let groupOrderCount = 0;
+  let groupSpent = 0;
+  let groupCompletedCount = 0;
+
+  // 1. In-memory completed group orders
+  for (const grp of inMemoryGroupOrders) {
+    if (grp.status === 'completed' && grp.hostUserId !== userId) {
+      const myMember = grp.members?.find((m) => m.userId === userId);
+      if (myMember && (myMember.items || []).length > 0) {
+        groupOrderCount++;
+        groupCompletedCount++;
+        const memSubtotal = (myMember.items || []).reduce((s, it) => s + it.price * it.quantity, 0);
+        const discountPct = grp.discountPercentage || 0;
+        const memDiscount = Math.round(memSubtotal * (discountPct / 100));
+        groupSpent += Math.max(0, memSubtotal - memDiscount);
+      }
+    }
+  }
+
+  // 2. Cloud SQL completed group orders if available
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const gReq = pool.request();
+      gReq.input('userId', sql.Int, userId);
+      const gRes = await gReq.query(`
+        SELECT code, hostUserId, membersData, discountPercentage 
+        FROM GroupOrders 
+        WHERE status = 'completed' 
+          AND (hostUserId IS NULL OR hostUserId != @userId)
+          AND membersData LIKE '%"userId":' + CAST(@userId AS NVARCHAR) + '%'
+      `);
+      if (gRes.recordset && gRes.recordset.length > 0) {
+        groupOrderCount = 0;
+        groupSpent = 0;
+        groupCompletedCount = 0;
+        for (const row of gRes.recordset) {
+          try {
+            const members: GroupMember[] = JSON.parse(row.membersData || '[]');
+            const myMem = members.find((m) => m.userId === userId);
+            if (myMem && (myMem.items || []).length > 0) {
+              groupOrderCount++;
+              groupCompletedCount++;
+              const memSubtotal = (myMem.items || []).reduce((s, it) => s + it.price * it.quantity, 0);
+              const discountPct = row.discountPercentage || 0;
+              const memDiscount = Math.round(memSubtotal * (discountPct / 100));
+              groupSpent += Math.max(0, memSubtotal - memDiscount);
+            }
+          } catch {}
+        }
+      }
+    }
+  } catch (gErr) {
+    console.error('Error fetching group order member spending stats:', gErr);
+  }
+
   return {
-    totalSpent,
-    orderCount: userOrders.length,
-    completedCount: completed.length,
+    totalSpent: directTotalSpent + groupSpent,
+    orderCount: directOrderCount + groupOrderCount,
+    completedCount: directCompletedCount + groupCompletedCount,
   };
 }
 
