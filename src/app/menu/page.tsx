@@ -3,10 +3,12 @@
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Search, Tag, UtensilsCrossed, Gift, Zap, Users, Star, Flame, Sparkles } from 'lucide-react';
+import { Search, Tag, UtensilsCrossed, Gift, Zap, Users, Star, Flame, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import { Product, Category } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+
+const ITEMS_PER_PAGE = 12;
 
 function MenuPageContent() {
   const { user } = useAuth();
@@ -23,6 +25,7 @@ function MenuPageContent() {
   const [onlyDeals, setOnlyDeals] = useState(initialDeal);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [sortBy, setSortBy] = useState<'best-seller' | 'price-asc' | 'price-desc'>('best-seller');
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(true);
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
 
@@ -95,6 +98,29 @@ function MenuPageContent() {
     return list;
   }, [products, selectedCategory, onlyDeals, searchQuery, sortBy]);
 
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [filteredProducts.length, totalPages, currentPage]);
+
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredProducts.length);
+  const currentProducts = useMemo(() => {
+    return filteredProducts.slice(startIndex, endIndex);
+  }, [filteredProducts, startIndex, endIndex]);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+    setCurrentPage(page);
+    const gridElem = document.getElementById('menu-product-grid');
+    if (gridElem) {
+      gridElem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div className="bg-white min-h-screen pb-24">
       {/* Category Header Band */}
@@ -127,7 +153,7 @@ function MenuPageContent() {
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             <Link
               href="/group"
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 hover:border-[#e31837] rounded-xl text-[13px] font-semibold text-[#e31837] shadow-xs transition hover:scale-[1.02]"
+              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 hover:border-[#e31837] rounded-[6px] text-[13px] font-semibold text-[#e31837] shadow-xs transition hover:scale-[1.02]"
             >
               <Users className="w-4 h-4" />
               <span>Đặt theo nhóm tiết kiệm</span>
@@ -136,8 +162,13 @@ function MenuPageContent() {
               </span>
             </Link>
 
-            <div className="px-4 py-2.5 bg-white rounded-xl border border-[#dddddd] text-[13px] text-[#41454d] shadow-2xs font-medium">
+            <div className="px-4 py-2.5 bg-white rounded-[6px] border border-[#dddddd] text-[13px] text-[#41454d] shadow-2xs font-medium">
               Đang hiển thị <strong className="text-[#e31837] font-bold">{filteredProducts.length}</strong> món ăn
+              {totalPages > 1 && (
+                <span className="text-gray-400 ml-1.5 text-xs font-normal">
+                  (Trang {currentPage}/{totalPages})
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -193,7 +224,10 @@ function MenuPageContent() {
                 type="text"
                 placeholder="Tìm món ăn, cơm tấm, bún phở, trà..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="w-full h-11 pl-10 pr-4 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
               />
             </div>
@@ -201,7 +235,10 @@ function MenuPageContent() {
             {/* Sort & Quick Deals */}
             <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
               <button
-                onClick={() => setOnlyDeals(!onlyDeals)}
+                onClick={() => {
+                  setOnlyDeals(!onlyDeals);
+                  setCurrentPage(1);
+                }}
                 className={`h-11 px-4 rounded-[6px] text-[13px] font-semibold transition flex items-center gap-1.5 border cursor-pointer ${
                   onlyDeals
                     ? 'bg-[#e31837] text-white border-[#e31837] shadow-xs'
@@ -214,7 +251,10 @@ function MenuPageContent() {
 
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => {
+                  setSortBy(e.target.value as any);
+                  setCurrentPage(1);
+                }}
                 className="h-11 text-[13px] bg-white border border-[#dddddd] rounded-[6px] px-3 text-[#181d26] font-medium focus:outline-none focus:border-[#e31837] cursor-pointer"
               >
                 <option value="best-seller">Sắp xếp: Bán chạy nhất ⭐</option>
@@ -230,6 +270,7 @@ function MenuPageContent() {
               onClick={() => {
                 setSelectedCategory(null);
                 setOnlyDeals(false);
+                setCurrentPage(1);
               }}
               className={`h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition cursor-pointer ${
                 selectedCategory === null && !onlyDeals
@@ -245,6 +286,7 @@ function MenuPageContent() {
                 onClick={() => {
                   setSelectedCategory(cat.id);
                   setOnlyDeals(false);
+                  setCurrentPage(1);
                 }}
                 className={`h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition cursor-pointer ${
                   selectedCategory === cat.id && !onlyDeals
@@ -261,7 +303,7 @@ function MenuPageContent() {
         {/* Product Grid */}
         {isLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6 py-4 sm:py-8">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
               <div key={n} className="bg-white rounded-[10px] p-3 sm:p-4 border border-[#dddddd] animate-pulse space-y-2 sm:space-y-3">
                 <div className="aspect-square bg-[#f8fafc] rounded-[6px]" />
                 <div className="h-3 sm:h-4 bg-gray-200 rounded w-3/4" />
@@ -284,6 +326,7 @@ function MenuPageContent() {
                 setSearchQuery('');
                 setSelectedCategory(null);
                 setOnlyDeals(false);
+                setCurrentPage(1);
               }}
               className="h-10 px-5 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-semibold rounded-[6px] transition"
             >
@@ -291,14 +334,82 @@ function MenuPageContent() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                badgeText={product.isFeatured ? 'Nổi bật' : 'Món ngon'}
-              />
-            ))}
+          <div id="menu-product-grid" className="scroll-mt-8 space-y-8">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
+              {currentProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  badgeText={product.isFeatured ? 'Nổi bật' : 'Món ngon'}
+                />
+              ))}
+            </div>
+
+            {/* Pagination Controls Bar */}
+            {totalPages > 1 && (
+              <div className="pt-6 pb-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#dddddd]">
+                <div className="text-[13px] text-[#555a64]">
+                  Hiển thị <strong className="text-[#181d26]">{startIndex + 1} - {endIndex}</strong> trong tổng số <strong className="text-[#e31837]">{filteredProducts.length}</strong> món ăn
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="h-9 px-3 bg-white border border-[#dddddd] text-[#181d26] text-[13px] font-medium rounded-[6px] hover:bg-[#f8fafc] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 cursor-pointer"
+                    aria-label="Trang trước"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span className="hidden sm:inline">Trước</span>
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                    const isCurrent = pageNum === currentPage;
+                    const isNearCurrent = Math.abs(pageNum - currentPage) <= 1;
+                    const isFirst = pageNum === 1;
+                    const isLast = pageNum === totalPages;
+
+                    if (!isNearCurrent && !isFirst && !isLast) {
+                      if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                        return (
+                          <span key={pageNum} className="w-7 text-center text-gray-400 text-xs">
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`min-w-9 h-9 px-2.5 rounded-[6px] text-[13px] font-semibold transition cursor-pointer ${
+                          isCurrent
+                            ? 'bg-[#e31837] text-white shadow-xs'
+                            : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="h-9 px-3 bg-white border border-[#dddddd] text-[#181d26] text-[13px] font-medium rounded-[6px] hover:bg-[#f8fafc] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 cursor-pointer"
+                    aria-label="Trang sau"
+                  >
+                    <span className="hidden sm:inline">Sau</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
