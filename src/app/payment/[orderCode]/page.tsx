@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, AlertTriangle, ShoppingCart, RefreshCcw } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertTriangle, ShoppingCart, RefreshCcw, CheckCircle2, ArrowRight, Home, Sparkles, Check } from 'lucide-react';
 import VietQRCode from '@/components/VietQRCode';
 import { Order, CartItem } from '@/types';
 import { formatVND } from '@/lib/utils';
@@ -21,47 +21,78 @@ export default function PaymentPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPaid, setIsPaid] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [countdown, setCountdown] = useState(3);
   const [isCancelling, setIsCancelling] = useState(false);
   const cancellingRef = useRef(false);
 
   useEffect(() => {
-    async function fetchOrder() {
+    let isMounted = true;
+    let pollInterval: NodeJS.Timeout | null = null;
+
+    async function checkStatus() {
       try {
-        const res = await fetch(`/api/orders/${orderCode}`);
+        const res = await fetch(`/api/orders/${orderCode}?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
+        });
         const data = await res.json();
-        if (data.success && data.data) {
+        if (data.success && data.data && isMounted) {
           setOrder(data.data);
           if (data.data.paymentStatus === 'Paid') {
             setIsPaid(true);
+            setShowSuccessModal(true);
+            if (pollInterval) clearInterval(pollInterval);
+            return true;
           }
         }
       } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+        console.error('Lỗi kiểm tra trạng thái thanh toán:', err);
       }
+      return false;
     }
 
-    fetchOrder();
+    // Initial check
+    (async () => {
+      await checkStatus();
+      if (isMounted) setLoading(false);
+    })();
 
-    // Poll payment status every 3 seconds
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/orders/${orderCode}`);
-        const data = await res.json();
-        if (data.success && data.data) {
-          if (data.data.paymentStatus === 'Paid') {
-            setIsPaid(true);
-            clearInterval(interval);
-          }
-        }
-      } catch (e) {
-        // ignore
+    // Poll payment status every 2 seconds
+    pollInterval = setInterval(async () => {
+      const done = await checkStatus();
+      if (done && pollInterval) {
+        clearInterval(pollInterval);
       }
-    }, 3000);
+    }, 2000);
 
-    return () => clearInterval(interval);
+    return () => {
+      isMounted = false;
+      if (pollInterval) clearInterval(pollInterval);
+    };
   }, [orderCode]);
+
+  // Countdown timer to auto-redirect after payment success
+  useEffect(() => {
+    if (!showSuccessModal) return;
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          router.push(`/orders/${orderCode}?paymentSuccess=true`);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [showSuccessModal, orderCode, router]);
+
+  const handleGoToOrder = () => {
+    router.push(`/orders/${orderCode}?paymentSuccess=true`);
+  };
 
   // Intercept browser back button to auto-cancel and restore cart (STT 14 & 15)
   useEffect(() => {
@@ -199,9 +230,9 @@ export default function PaymentPage() {
         <div className="flex items-center justify-between pb-4 border-b border-[#dddddd]">
           <div className="flex items-center gap-3">
             <button
-              onClick={handleCancelAndReturnToCart}
+              onClick={isPaid || order.paymentStatus === 'Paid' ? handleGoToOrder : handleCancelAndReturnToCart}
               disabled={isCancelling}
-              title="Quay lại giỏ hàng và hủy đơn"
+              title={isPaid || order.paymentStatus === 'Paid' ? 'Xem đơn hàng' : 'Quay lại giỏ hàng và hủy đơn'}
               className="p-2 text-[#41454d] hover:text-[#e31837] bg-white border border-[#dddddd] rounded-[6px] transition cursor-pointer hover:border-[#e31837]"
             >
               {isCancelling ? <Loader2 className="w-4 h-4 animate-spin text-[#e31837]" /> : <ArrowLeft className="w-4 h-4" />}
@@ -229,11 +260,15 @@ export default function PaymentPage() {
           bankName={process.env.SEPAY_BANK_NAME || 'MB'}
           accountNo={process.env.SEPAY_BANK_ACCOUNT || '0822123346'}
           accountName={process.env.SEPAY_ACCOUNT_NAME || 'HOANG KHOI NGUYEN - QUAN AN NOONEE'}
-          onPaymentSuccess={() => setIsPaid(true)}
+          isPaid={isPaid || order.paymentStatus === 'Paid'}
+          onPaymentSuccess={() => {
+            setIsPaid(true);
+            setShowSuccessModal(true);
+          }}
         />
 
-        {/* Cancel & Restore Cart Action Card */}
-        {order.paymentStatus !== 'Paid' && (
+        {/* Cancel & Restore Cart Action Card (only if unpaid) */}
+        {!isPaid && order.paymentStatus !== 'Paid' && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-[#f8fafc] border border-[#dddddd] rounded-[10px]">
             <div className="text-[13px] text-[#41454d] space-y-0.5">
               <span className="font-semibold text-[#181d26] flex items-center gap-1.5">
@@ -280,6 +315,83 @@ export default function PaymentPage() {
           </div>
         </div>
       </div>
+
+      {/* Payment Success Celebratory Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[16px] max-w-md w-full p-6 sm:p-8 text-center shadow-2xl border border-[#dddddd] space-y-5 animate-in zoom-in-95 duration-200">
+            {/* Animated Success Icon */}
+            <div className="relative mx-auto w-20 h-20">
+              <div className="absolute inset-0 rounded-full bg-[#10b981]/20 animate-ping opacity-75" />
+              <div className="relative w-20 h-20 rounded-full bg-[#ecfdf5] border-2 border-[#10b981] flex items-center justify-center text-[#10b981] shadow-inner">
+                <CheckCircle2 className="w-10 h-10" />
+              </div>
+            </div>
+
+            {/* Title & Description */}
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ecfdf5] text-[#047857] text-[12px] font-semibold">
+                <Sparkles className="w-3.5 h-3.5 text-[#10b981]" />
+                Xác nhận thanh toán thành công
+              </div>
+              <h2 className="text-2xl font-bold text-[#181d26]">
+                🎉 Thanh Toán Thành Công!
+              </h2>
+              <p className="text-[13px] text-[#41454d]">
+                Hệ thống quán đã nhận được tiền cho đơn hàng của bạn. Bếp đang bắt đầu chuẩn bị món ăn nóng hổi ngay bây giờ!
+              </p>
+            </div>
+
+            {/* Receipt Summary Box */}
+            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-[10px] p-4 text-left space-y-2.5 text-[13px]">
+              <div className="flex justify-between items-center text-[#41454d]">
+                <span>Mã đơn hàng:</span>
+                <span className="font-mono font-bold text-[#181d26]">#{orderCode}</span>
+              </div>
+              <div className="flex justify-between items-center text-[#41454d]">
+                <span>Số tiền đã thanh toán:</span>
+                <span className="font-bold text-[#e31837] text-[16px]">
+                  {formatVND(order.totalAmount)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-[#41454d]">
+                <span>Phương thức:</span>
+                <span className="font-medium text-[#181d26]">Chuyển khoản VietQR</span>
+              </div>
+              <div className="flex justify-between items-center text-[#41454d]">
+                <span>Trạng thái nhà bếp:</span>
+                <span className="inline-flex items-center gap-1 font-semibold text-[#047857]">
+                  <Check className="w-3.5 h-3.5 text-[#10b981]" /> Đã chuyển vào bếp
+                </span>
+              </div>
+            </div>
+
+            {/* Countdown redirect prompt */}
+            <div className="text-[12px] text-[#64748b]">
+              Tự động chuyển đến trang theo dõi đơn hàng sau{' '}
+              <strong className="text-[#e31837] font-bold text-[14px]">{countdown}s</strong>...
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              <button
+                onClick={handleGoToOrder}
+                className="flex-1 py-3 px-4 bg-[#e31837] hover:bg-[#be0e27] text-white rounded-[8px] text-[13px] font-semibold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+              >
+                <span>Theo dõi đơn hàng ngay</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <Link
+                href="/"
+                className="py-3 px-4 bg-white hover:bg-[#f8fafc] text-[#41454d] border border-[#dddddd] rounded-[8px] text-[13px] font-medium transition flex items-center justify-center gap-1.5"
+              >
+                <Home className="w-4 h-4" />
+                <span>Trang chủ</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

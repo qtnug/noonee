@@ -47,6 +47,9 @@ export default function OrderTrackingPage() {
   const [isCancellingOrder, setIsCancellingOrder] = useState(false);
   const [cancelError, setCancelError] = useState('');
 
+  // Payment success banner state
+  const [showPaymentSuccessBanner, setShowPaymentSuccessBanner] = useState(false);
+
   // Deduplicate items by productId so each dish is only reviewed once per order
   const uniqueReviewableItems = React.useMemo(() => {
     if (!order?.items) return [];
@@ -85,6 +88,15 @@ export default function OrderTrackingPage() {
     const timer = setInterval(fetchOrder, 5000);
     return () => clearInterval(timer);
   }, [orderCode]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('paymentSuccess') === 'true') {
+        setShowPaymentSuccessBanner(true);
+      }
+    }
+  }, []);
 
   // Fetch reviews for unique items in this order
   const fetchOrderReviews = async () => {
@@ -381,6 +393,33 @@ export default function OrderTrackingPage() {
             )}
           </div>
         </div>
+
+        {/* Payment Success Celebratory Banner */}
+        {showPaymentSuccessBanner && (
+          <div className="bg-[#f0fdf4] border-2 border-[#86efac] rounded-[10px] p-4 sm:p-5 flex items-start justify-between gap-3 shadow-xs animate-in slide-in-from-top duration-300">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#16a34a] text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-[#15803d]">
+                  🎉 Thanh toán VietQR thành công!
+                </h3>
+                <p className="text-[13px] text-[#166534]">
+                  Hệ thống đã nhận được <strong>{formatVND(order.totalAmount)}</strong> cho đơn hàng <strong>#{order.orderCode}</strong>. Quán đã tiếp nhận và đang tiến hành chuẩn bị món ăn nóng hổi cho bạn!
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowPaymentSuccessBanner(false)}
+              className="p-1.5 text-[#166534] hover:text-[#14532d] hover:bg-[#dcfce7] rounded-[6px] transition cursor-pointer shrink-0"
+              title="Đóng thông báo"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Realtime Progress Stepper or Cancellation Banner */}
         {order.status === 'Cancelled' ? (

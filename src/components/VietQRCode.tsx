@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Copy, Check, QrCode, AlertCircle, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { formatVND } from '@/lib/utils';
 import { getVietQRImageUrl } from '@/lib/sepay';
@@ -11,6 +12,7 @@ interface VietQRCodeProps {
   bankName?: string;
   accountNo?: string;
   accountName?: string;
+  isPaid?: boolean;
   onPaymentSuccess?: () => void;
 }
 
@@ -20,12 +22,15 @@ export default function VietQRCode({
   bankName = 'MB',
   accountNo = '0822123346',
   accountName = 'HOANG KHOI NGUYEN - QUAN AN NOONEE',
+  isPaid = false,
   onPaymentSuccess,
 }: VietQRCodeProps) {
   const [copiedAcc, setCopiedAcc] = useState(false);
   const [copiedMemo, setCopiedMemo] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
-  const [isPaid, setIsPaid] = useState(false);
+  const [internalIsPaid, setInternalIsPaid] = useState(false);
+
+  const isPaymentDone = Boolean(isPaid || internalIsPaid);
 
   const qrImageUrl = getVietQRImageUrl({
     bankId: bankName,
@@ -60,7 +65,7 @@ export default function VietQRCode({
       });
       const data = await res.json();
       if (data.success) {
-        setIsPaid(true);
+        setInternalIsPaid(true);
         if (onPaymentSuccess) {
           onPaymentSuccess();
         }
@@ -75,7 +80,7 @@ export default function VietQRCode({
     }
   };
 
-  if (isPaid) {
+  if (isPaymentDone) {
     return (
       <div className="bg-[#fff1f2]/50 border border-[#39bf45] rounded-[12px] p-8 text-center space-y-4 shadow-xs">
         <div className="w-14 h-14 bg-white border border-[#39bf45] text-[#006400] rounded-full flex items-center justify-center mx-auto">
@@ -86,12 +91,12 @@ export default function VietQRCode({
           Hệ thống đã ghi nhận giao dịch thành công số tiền <strong className="font-bold text-[#e31837]">{formatVND(amount)}</strong> cho đơn hàng <span className="font-mono font-bold bg-white border border-[#dddddd] px-2 py-0.5 rounded-[4px]">{orderCode}</span>.
         </p>
         <div className="pt-2">
-          <a
-            href={`/orders/${orderCode}`}
+          <Link
+            href={`/orders/${orderCode}?paymentSuccess=true`}
             className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] text-white text-[14px] font-semibold px-6 py-3 rounded-[6px] shadow-xs transition"
           >
             Theo dõi đơn hàng
-          </a>
+          </Link>
         </div>
       </div>
     );
