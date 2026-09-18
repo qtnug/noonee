@@ -397,7 +397,7 @@ export default function GroupOrderRoomPage({
         </p>
         <Link
           href="/group"
-          className="px-6 py-3 bg-[#e31837] text-white font-medium rounded-xl hover:bg-[#be0e27] transition"
+          className="px-6 py-3 bg-[#e31837] text-white font-medium rounded-[6px] hover:bg-[#be0e27] transition"
         >
           Quay lại trang Đơn nhóm
         </Link>
@@ -534,7 +534,7 @@ export default function GroupOrderRoomPage({
             {group.status === 'active' && myMemberId && (
               <button
                 onClick={() => setShowFoodPicker(true)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#e31837] to-[#f43f5e] hover:from-[#be0e27] hover:to-[#e11d48] text-white font-extrabold text-[13px] sm:text-[14px] rounded-xl shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-[#e31837]/30"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#e31837] to-[#f43f5e] hover:from-[#be0e27] hover:to-[#e11d48] text-white font-extrabold text-[13px] sm:text-[14px] rounded-[6px] shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-[#e31837]/30"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
                 <span>+ THÊM MÓN CHO TÔI</span>
@@ -729,7 +729,7 @@ export default function GroupOrderRoomPage({
                   <button
                     onClick={() => handleToggleLock('lock')}
                     disabled={isActionLoading}
-                    className="w-full py-3.5 bg-[#181d26] hover:bg-black text-white font-bold text-[14px] rounded-xl transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-md"
+                    className="w-full py-3.5 bg-[#181d26] hover:bg-black text-white font-bold text-[14px] rounded-[6px] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-md"
                   >
                     <Lock className="w-4 h-4" />
                     Chốt món & Khóa phòng để thanh toán
@@ -739,14 +739,14 @@ export default function GroupOrderRoomPage({
                     <button
                       onClick={() => handleToggleLock('unlock')}
                       disabled={isActionLoading}
-                      className="py-3.5 px-5 bg-white border border-[#dddddd] hover:bg-[#f8fafc] text-[#181d26] font-semibold text-[14px] rounded-xl transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      className="py-3.5 px-5 bg-white border border-[#dddddd] hover:bg-[#f8fafc] text-[#181d26] font-semibold text-[14px] rounded-[6px] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     >
                       <Unlock className="w-4 h-4" />
                       Mở lại phòng
                     </button>
                     <button
                       onClick={handleProceedToCheckout}
-                      className="flex-1 py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-bold text-[15px] rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 cursor-pointer"
+                      className="flex-1 py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-bold text-[15px] rounded-[6px] shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <CreditCard className="w-5 h-5" />
                       Thanh toán đơn nhóm ({formatVND(group.finalTotal || 0)})

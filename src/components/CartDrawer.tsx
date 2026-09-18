@@ -62,7 +62,7 @@ export default function CartDrawer() {
                 <Link
                   href="/menu"
                   onClick={() => setIsCartOpen(false)}
-                  className="px-6 py-2.5 bg-[#e31837] hover:bg-[#be0e27] text-white rounded-[12px] text-[14px] font-medium transition inline-block text-center"
+                  className="px-6 py-2.5 bg-[#e31837] hover:bg-[#be0e27] text-white rounded-[6px] text-[14px] font-medium transition inline-block text-center"
                 >
                   Xem thực đơn
                 </Link>
@@ -168,14 +168,14 @@ export default function CartDrawer() {
                 <Link
                   href="/cart"
                   onClick={() => setIsCartOpen(false)}
-                  className="h-11 flex items-center justify-center border border-[#e31837] bg-white text-[#e31837] text-[14px] font-semibold rounded-[12px] hover:bg-[#fff1f2] transition"
+                  className="h-11 flex items-center justify-center border border-[#e31837] bg-white text-[#e31837] text-[14px] font-semibold rounded-[6px] hover:bg-[#fff1f2] transition"
                 >
                   Xem giỏ hàng
                 </Link>
                 <Link
                   href="/checkout"
                   onClick={() => setIsCartOpen(false)}
-                  className="h-11 flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] text-white text-[14px] font-semibold rounded-[12px] shadow-xs transition"
+                  className="h-11 flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] text-white text-[14px] font-semibold rounded-[6px] shadow-xs transition"
                 >
                   Thanh toán
                 </Link>

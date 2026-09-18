@@ -51,14 +51,16 @@ const config: Config = {
       },
       borderRadius: {
         xs: "2px",
-        sm: "6px",
-        md: "10px",
-        lg: "12px",
+        sm: "4px",
+        md: "6px",
+        lg: "8px",
+        xl: "10px",
+        "2xl": "14px",
         pill: "9999px",
       },
       fontFamily: {
-        sans: ["Haas", "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
-        display: ["Haas Groot Disp", "Haas", "Inter", "sans-serif"],
+        sans: ["var(--font-sans)", "Plus Jakarta Sans", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+        display: ["var(--font-sans)", "Plus Jakarta Sans", "sans-serif"],
         friem: ["var(--font-friem)", "Friem", "cursive", "sans-serif"],
       },
       spacing: {

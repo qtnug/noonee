@@ -45,13 +45,13 @@ export default async function HomePage() {
               <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <Link
                   href="/menu"
-                  className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-medium text-[15px] sm:text-[16px] leading-[1.4] px-6 sm:px-7 py-3 sm:py-3.5 rounded-[12px] shadow-sm transition"
+                  className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-medium text-[15px] sm:text-[16px] leading-[1.4] px-6 sm:px-7 py-3 sm:py-3.5 rounded-[6px] shadow-sm transition"
                 >
                   Khám phá thực đơn
                 </Link>
                 <Link
                   href="/orders"
-                  className="inline-flex items-center justify-center bg-white hover:bg-[#fff1f2] text-[#e31837] font-medium text-[15px] sm:text-[16px] leading-[1.4] px-6 sm:px-7 py-3 sm:py-3.5 rounded-[12px] border border-[#e31837] transition"
+                  className="inline-flex items-center justify-center bg-white hover:bg-[#fff1f2] text-[#e31837] font-medium text-[15px] sm:text-[16px] leading-[1.4] px-6 sm:px-7 py-3 sm:py-3.5 rounded-[6px] border border-[#e31837] transition"
                 >
                   Tra cứu đơn hàng
                 </Link>

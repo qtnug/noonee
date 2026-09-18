@@ -229,13 +229,13 @@ function ProfileContent() {
         <div className="pt-2 flex gap-3 justify-center">
           <Link
             href="/login"
-            className="px-6 py-3 bg-[#e31837] hover:bg-[#be0e27] text-white font-medium text-[14px] rounded-[12px] shadow-xs transition"
+            className="px-6 py-3 bg-[#e31837] hover:bg-[#be0e27] text-white font-medium text-[14px] rounded-[6px] shadow-xs transition"
           >
             Đăng nhập ngay
           </Link>
           <Link
             href="/menu"
-            className="px-6 py-3 bg-white border border-[#dddddd] text-[#181d26] font-medium text-[14px] rounded-[12px] hover:bg-[#f8fafc] transition"
+            className="px-6 py-3 bg-white border border-[#dddddd] text-[#181d26] font-medium text-[14px] rounded-[6px] hover:bg-[#f8fafc] transition"
           >
             Xem thực đơn
           </Link>

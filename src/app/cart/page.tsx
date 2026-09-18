@@ -22,7 +22,7 @@ export default function CartPage() {
         <div className="pt-3">
           <Link
             href="/menu"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#e31837] hover:bg-[#be0e27] text-white font-medium text-[14px] rounded-[12px] shadow-xs transition"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#e31837] hover:bg-[#be0e27] text-white font-medium text-[14px] rounded-[6px] shadow-xs transition"
           >
             <span>Khám phá thực đơn</span>
             <ArrowRight className="w-4 h-4" />
@@ -168,7 +168,7 @@ export default function CartPage() {
 
             <Link
               href="/checkout"
-              className="w-full h-11 sm:h-12 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-semibold text-[14px] rounded-[12px] flex items-center justify-center gap-2 transition shadow-xs"
+              className="w-full h-11 sm:h-12 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-semibold text-[14px] rounded-[6px] flex items-center justify-center gap-2 transition shadow-xs"
             >
               <span>Tiến hành đặt hàng</span>
               <ArrowRight className="w-4 h-4" />

@@ -238,7 +238,7 @@ function LoginContent() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-11 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white font-medium rounded-[12px] transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-60"
+              className="w-full h-11 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white font-medium rounded-[6px] transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-60"
             >
               <span>{isSubmitting ? 'Đang xác thực...' : 'Đăng nhập'}</span>
               <ArrowRight className="w-4 h-4" />
@@ -383,7 +383,7 @@ function LoginContent() {
             <button
               type="submit"
               disabled={isSubmitting || !passwordsMatch || strengthScore < 5}
-              className="w-full h-11 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white font-medium rounded-[12px] transition flex items-center justify-center gap-2 mt-2 shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-11 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white font-medium rounded-[6px] transition flex items-center justify-center gap-2 mt-2 shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>{isSubmitting ? 'Đang tạo tài khoản...' : 'Hoàn tất đăng ký'}</span>
               <ArrowRight className="w-4 h-4" />

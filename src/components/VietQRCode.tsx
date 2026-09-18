@@ -88,7 +88,7 @@ export default function VietQRCode({
         <div className="pt-2">
           <a
             href={`/orders/${orderCode}`}
-            className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] text-white text-[14px] font-semibold px-6 py-3 rounded-[12px] shadow-xs transition"
+            className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] text-white text-[14px] font-semibold px-6 py-3 rounded-[6px] shadow-xs transition"
           >
             Theo dõi đơn hàng
           </a>

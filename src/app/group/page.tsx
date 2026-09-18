@@ -252,7 +252,7 @@ export default function GroupOrderLandingPage() {
               <button
                 type="submit"
                 disabled={isCreating}
-                className="w-full py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-semibold text-[15px] rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-semibold text-[15px] rounded-[6px] shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isCreating ? (
                   <>
@@ -309,7 +309,7 @@ export default function GroupOrderLandingPage() {
               <button
                 type="submit"
                 disabled={isJoining}
-                className="w-full py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-semibold text-[15px] rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-semibold text-[15px] rounded-[6px] shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isJoining ? (
                   <>

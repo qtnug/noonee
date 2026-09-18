@@ -71,7 +71,7 @@ export default function GroupOrderBanner() {
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <Link
                 href="/group"
-                className="inline-flex items-center justify-center gap-2 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-medium text-[15px] px-6 py-3.5 rounded-[12px] shadow-sm transition group"
+                className="inline-flex items-center justify-center gap-2 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-medium text-[15px] px-6 py-3.5 rounded-[6px] shadow-sm transition group"
               >
                 <PlusCircle className="w-4 h-4" />
                 <span>Tạo phòng nhóm mới</span>
@@ -79,7 +79,7 @@ export default function GroupOrderBanner() {
               </Link>
               <Link
                 href="/group"
-                className="inline-flex items-center justify-center gap-2 bg-white hover:bg-[#fff1f2] text-[#181d26] hover:text-[#e31837] font-medium text-[15px] px-6 py-3.5 rounded-[12px] border border-[#dddddd] hover:border-[#fecdd3] transition"
+                className="inline-flex items-center justify-center gap-2 bg-white hover:bg-[#fff1f2] text-[#181d26] hover:text-[#e31837] font-medium text-[15px] px-6 py-3.5 rounded-[6px] border border-[#dddddd] hover:border-[#fecdd3] transition"
               >
                 <LogIn className="w-4 h-4 text-[#e31837]" />
                 <span>Tham gia bằng mã</span>

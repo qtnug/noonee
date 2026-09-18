@@ -212,13 +212,13 @@ function CheckoutContent() {
         <div className="pt-3 flex gap-3 justify-center">
           <Link
             href="/login"
-            className="px-6 py-3 bg-[#e31837] hover:bg-[#be0e27] text-white font-medium text-[14px] rounded-[12px] shadow-xs transition"
+            className="px-6 py-3 bg-[#e31837] hover:bg-[#be0e27] text-white font-medium text-[14px] rounded-[6px] shadow-xs transition"
           >
             Đăng nhập tài khoản
           </Link>
           <Link
             href={groupOrder ? `/group/${groupOrder.code}` : '/cart'}
-            className="px-6 py-3 bg-white border border-[#dddddd] text-[#181d26] font-medium text-[14px] rounded-[12px] hover:bg-[#f8fafc] transition"
+            className="px-6 py-3 bg-white border border-[#dddddd] text-[#181d26] font-medium text-[14px] rounded-[6px] hover:bg-[#f8fafc] transition"
           >
             {groupOrder ? 'Quay lại phòng nhóm' : 'Quay lại giỏ hàng'}
           </Link>
@@ -234,7 +234,7 @@ function CheckoutContent() {
         <p className="text-[14px] text-[#41454d]">Vui lòng chọn món trước khi tiến hành đặt hàng.</p>
         <Link
           href="/menu"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-[#e31837] text-white font-medium text-[14px] rounded-[12px] hover:bg-[#be0e27] transition"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-[#e31837] text-white font-medium text-[14px] rounded-[6px] hover:bg-[#be0e27] transition"
         >
           Quay lại thực đơn
         </Link>
@@ -964,7 +964,7 @@ function CheckoutContent() {
               <button
                 type="submit"
                 disabled={isSubmitting || isOutOfRange || isCalculatingDistance}
-                className="w-full h-12 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-semibold text-[14px] rounded-[12px] flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-xs cursor-pointer"
+                className="w-full h-12 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-semibold text-[14px] rounded-[6px] flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-xs cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
