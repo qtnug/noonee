@@ -3,13 +3,11 @@
 import React from 'react';
 import Link from 'next/link';
 import {
-  Users,
   Sparkles,
   ArrowRight,
   Share2,
   CheckCircle2,
   Percent,
-  Flame,
   PlusCircle,
   LogIn,
   ShoppingBag,
@@ -26,18 +24,6 @@ export default function GroupOrderBanner() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center relative z-10">
           {/* Left Column: Headline, Highlights & Actions */}
           <div className="lg:col-span-7 space-y-4 sm:space-y-6">
-            {/* Top Badges */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#e31837] text-white text-[12px] font-bold uppercase tracking-wider shadow-xs">
-                <Users className="w-3.5 h-3.5" />
-                Đặt Đơn Nhóm
-              </span>
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-100/80 text-[#e31837] text-[12px] font-semibold border border-red-200">
-                <Flame className="w-3.5 h-3.5 fill-[#e31837]" />
-                Càng đông càng giảm - Tới 10%
-              </span>
-            </div>
-
             {/* Main Title */}
             <div>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#181d26] leading-tight">
