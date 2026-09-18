@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Search, Tag, UtensilsCrossed, Gift, Zap, Users, Star, Flame, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Tag, UtensilsCrossed, Gift, Users, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import { Product, Category } from '@/types';
 import { useAuth } from '@/context/AuthContext';
@@ -127,20 +127,6 @@ function MenuPageContent() {
       <div className="bg-gradient-to-b from-[#fff1f2]/60 to-white border-b border-[#dddddd] py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold bg-[#fff1f2] text-[#e31837] border border-[#fecdd3]">
-                <Flame className="w-3.5 h-3.5 text-[#e31837]" />
-                Món ngon tươi nóng mỗi ngày
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                <Zap className="w-3.5 h-3.5 text-amber-500" />
-                Giao nhanh 15-30p
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <Star className="w-3.5 h-3.5 fill-emerald-500 text-emerald-500" />
-                Đánh giá 4.9/5 (1.2k+ lượt)
-              </span>
-            </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#181d26]">
               Khám phá thực đơn NooNee
             </h1>

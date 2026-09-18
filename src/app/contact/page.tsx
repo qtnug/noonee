@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef, Suspense } from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
   MapPin,
@@ -150,19 +149,8 @@ function ContactChatContent() {
   return (
     <div className="min-h-screen bg-[#fafafa] py-8 sm:py-10">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-[#9297a0]">
-          <Link href="/" className="hover:text-[#181d26] transition">Trang chủ</Link>
-          <span>/</span>
-          <span className="text-[#181d26] font-medium">Hỗ trợ trực tuyến</span>
-        </div>
-
         {/* Header Band */}
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[#fff1f2] text-[#e31837] border border-[#fecdd3]">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Khu vực Chat Trực Tuyến Với Quản Trị Viên</span>
-          </div>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#181d26] tracking-tight">
             Tư Vấn & Hỗ Trợ Trực Tuyến NooNee
           </h1>
