@@ -222,7 +222,7 @@ export default function ScrollFoodVideo({
 
   const handleClick = () => {
     if (isHoveringDish) {
-      router.push('/menu');
+      router.push('/product/bun-bo-hue');
     }
   };
 
@@ -240,31 +240,38 @@ export default function ScrollFoodVideo({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onClick={handleClick}
-      title={isHoveringDish ? 'Bấm để xem Bún Bò Huế trong thực đơn' : undefined}
+      title={isHoveringDish ? 'Bấm để xem Bún Bò Huế' : undefined}
     >
       <canvas
         ref={canvasRef}
         width={1280}
         height={720}
-        className="w-full h-full object-contain pointer-events-none drop-shadow-md"
+        className={`w-full h-full object-contain pointer-events-none transition-all duration-300 ease-out ${
+          isHoveringDish
+            ? '-translate-y-2.5 scale-[1.05] filter drop-shadow-[0_0_35px_rgba(227,24,55,0.7)] drop-shadow-[0_16px_40px_rgba(249,115,22,0.45)]'
+            : 'translate-y-0 scale-100 filter drop-shadow-[0_4px_16px_rgba(0,0,0,0.06)]'
+        }`}
       />
 
       {/* Hover Popup: ONLY displays when hovering directly over the dish */}
       {isHoveringDish && (
         <div
-          className="absolute z-30 pointer-events-none -translate-x-1/2 -translate-y-full pb-3 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute z-30 pointer-events-none -translate-x-1/2 -translate-y-full pb-4 animate-in fade-in zoom-in-95 duration-150"
           style={{
             left: `${mousePos.x}px`,
             top: `${mousePos.y}px`,
           }}
         >
-          <div className="bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-[10px] shadow-xl border border-[#fecdd3] flex items-center gap-2.5 whitespace-nowrap">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#e31837] animate-ping" />
-            <div>
-              <div className="text-[13px] font-bold text-[#181d26] leading-tight">
-                {dishName}
+          <div className="bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-[12px] shadow-2xl border-2 border-[#e31837] flex items-center gap-3 whitespace-nowrap">
+            <div className="w-3 h-3 rounded-full bg-[#e31837] animate-ping shrink-0" />
+            <div className="space-y-0.5">
+              <div className="text-[14px] font-bold text-[#181d26] leading-tight flex items-center gap-1.5">
+                <span>{dishName}</span>
+                <span className="text-[10px] font-medium text-[#e31837] bg-[#fff1f2] px-1.5 py-0.5 rounded-[4px] border border-[#fecdd3]">
+                  Xem chi tiết →
+                </span>
               </div>
-              <div className="text-[12px] font-extrabold text-[#e31837] leading-none mt-0.5">
+              <div className="text-[13px] font-extrabold text-[#e31837] leading-none">
                 {priceText}
               </div>
             </div>

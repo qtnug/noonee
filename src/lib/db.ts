@@ -249,6 +249,26 @@ let inMemoryProducts: Product[] = [
       { id: 3, name: 'Hạt chia', price: 4000 },
       { id: 4, name: 'Trân châu trắng 3Q', price: 6000 }
     ]
+  },
+  {
+    id: 45,
+    categoryId: 1,
+    categoryName: 'Cơm & Món chính',
+    name: 'Bún bò Huế',
+    slug: 'bun-bo-hue',
+    description: 'Bún bò Huế đậm đà chuẩn vị cố đô, nước dùng hầm xương ngọt thanh cay nồng sả ớt, chả cua, thịt bắp bò hoa và tiết mềm thơm ngon.',
+    price: 42000,
+    image: '/frames_clean/frame_0001.png',
+    isAvailable: true,
+    isFeatured: true,
+    rating: 5.0,
+    toppings: [
+      { id: 1, name: 'Thêm bắp bò hoa', price: 15000 },
+      { id: 2, name: 'Thêm chả cua Huế', price: 10000 },
+      { id: 3, name: 'Thêm móng giò giòn', price: 15000 },
+      { id: 4, name: 'Thêm tiết luộc mềm', price: 5000 },
+      { id: 5, name: 'Quẩy giòn (3 cái)', price: 5000 }
+    ]
   }
 ];
 
