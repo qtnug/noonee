@@ -168,7 +168,7 @@ export default function ScrollFoodVideo({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full aspect-[16/9] rounded-[20px] overflow-hidden bg-black shadow-lg cursor-grab active:cursor-grabbing select-none ${className}`}
+      className={`relative w-full aspect-[16/9] bg-transparent cursor-grab active:cursor-grabbing select-none flex items-center justify-center ${className}`}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -181,7 +181,7 @@ export default function ScrollFoodVideo({
         ref={canvasRef}
         width={1280}
         height={720}
-        className="w-full h-full object-contain pointer-events-none"
+        className="w-full h-full object-contain pointer-events-none drop-shadow-md"
       />
     </div>
   );
