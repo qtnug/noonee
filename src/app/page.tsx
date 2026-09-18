@@ -10,7 +10,7 @@ import {
   Star,
 } from 'lucide-react';
 import { getProducts } from '@/lib/db';
-import Carousel360 from '@/components/Carousel360';
+import ScrollFoodVideo from '@/components/ScrollFoodVideo';
 import ProductCard from '@/components/ProductCard';
 import PromoBanner from '@/components/PromoBanner';
 import GroupOrderBanner from '@/components/GroupOrderBanner';
@@ -32,7 +32,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Left Content Column */}
-            <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+            <div className="lg:col-span-6 space-y-4 sm:space-y-6">
               <h1 className="text-3xl sm:text-5xl lg:text-[44px] font-normal tracking-tight text-[#181d26] leading-[1.18]">
                 Hệ thống đặt món ăn trực tuyến nhanh chóng & tiện lợi
               </h1>
@@ -58,11 +58,14 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Right Visual Fragment: 3D Interactive Featured Showcase */}
-            <div className="lg:col-span-5">
-              <div className="bg-[#fff1f2] p-3 sm:p-5 rounded-[20px] border border-[#fecdd3] relative shadow-xs">
-                <Carousel360 items={featuredProducts.length > 0 ? featuredProducts : undefined} />
-              </div>
+            {/* Right Visual Fragment: Scroll-driven 360 Food Video */}
+            <div className="lg:col-span-6">
+              <ScrollFoodVideo
+                totalFrames={100}
+                dishName="Bún Bò Huế Cay Nồng Đặc Biệt"
+                price={42000}
+                dishCategory="Món Nước Nóng Hổi"
+              />
             </div>
           </div>
         </div>
