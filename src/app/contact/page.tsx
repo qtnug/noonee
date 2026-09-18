@@ -282,8 +282,8 @@ function ContactChatContent() {
                     <Headphones className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-[14px] sm:text-[15px] truncate flex items-center gap-2">
-                      <span>NooNee CSKH Trực Tuyến</span>
+                    <h3 className="font-semibold text-[14px] sm:text-[15px] !text-white text-white truncate flex items-center gap-2">
+                      <span className="text-white">NooNee CSKH Trực Tuyến</span>
                     </h3>
                     <div className="flex items-center gap-1.5 text-[11px] text-gray-300">
                       <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
