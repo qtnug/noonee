@@ -1,19 +1,21 @@
-không chống bot 
-fail responsibility
-không có nút ở navbar, phải ấn vào chữ mới được, nên thêm btn vào (không viền, chỉ đậm tên khi hover)
-navbar để chưa hợp lý, thanh tìm kiếm bé. navbar nên để giỏ hàng, đăng nhập đăng xuất, profile, liên hệ, thực đơn, best seller, vân vân
-danh mục món ăn để dạng dropbox khi hover vào thực đơn trên món ăn, xem thêm về cookie, cache, redis để tăng tốc độ tải món (hiện tại đang chậm).
-sắp xếp hiện là sắp xếp:mặc định. nên đổi thành sắp xếp:best seller và đổi cách sắp xếp
-ở thực đơn, vị trí các nút chưa ở giữa div, còn nhiều khoảng trống để rút gọn/khai thác, còn nhiều khoảng trống ở tiêu đề "Khám phá tất cả món ăn & thức uống", nên đổi font hoặc thêm gì đó vào 
-ở mục đơn hàng, khi chưa đăng nhập vẫn có phần tìm kiếm đơn hàng mặc dù phải đăng nhập mới tìm kiếm được 
-mục đơn nhóm là tính năng hay, nên để ở chỗ có nhiều người thấy hơn để quảng cáo
-web thiếu animation quá
-nên yêu cầu đăng nhập từ sớm trước khi xem các món ăn
-khi ấn vào giỏ hàng trống, có hiện lên nút xem thực đơn, nhưng khi ấn vào thì không ra thực đơn
-ơ mục đăng ký tài khoản, phần nhập địa chỉ, placeholder không hiện thị hết (nên để placeholder ngắn)
-khi thanh toán vietqr, mã đang hiển thị để thanh toán mà back ra thì đơn hàng sẽ ở trạng thái chưa thanh toán và cho phép ấn nút quét vietqr để thanh toán,
-nhưng nên hủy luôn đơn đó đi và đưa lại đồ ăn vào giỏ hàng
-ở trang admin, sidebar của trang quản lý đang kéo dài theo độ dài của trang, không có các cơ chế phân trang
-ở trang thanh toán, trong trường hợp người dùng chưa có địa chỉ, thì lần đầu nhập địa chỉ vào sẽ có nút tick "lưu làm địa chỉ mặc định"
-ui ux chưa thiết kế đủ tốt nên responsive bị lỗi nhiều, cải thiện auto responsive
+thêm kho mã voucher vào profile, tách riêng ra 1 mục
+voucher sẽ có hạn sử dụng, có giới hạn số người dùng
+cập nhật thêm nhiều loại mã (mã cho đơn cơm, đơn nước độc quyền, mã giảm 20/30/50% mã giảm 10k-50k) (mã không được quá dễ đoán, tốt nhất là ký tự ngẫu nhiên), admin có thể tạo/quản lý voucher
+ở sau khi đặt món ăn, nếu có vấn đề gì thì sẽ có nút chuyển qua mục liên hệ, và người dùng ở đó có thể chọn đơn hàng ở mục chủ đề sau đó chat với nhân viên, khi nhân viên trả lời thì mục liên hệ sẽ có chấm đỏ
+thông báo, (hiện tại là nút chat khiếu nại riêng, khi muốn vào chat lại phải vào món ăn đó để xem tin nhắn), ngoài ra phải lưu lịch sử tin nhắn
+ở mục thanh toán, đưa số dư ví ảo xuống phương thức thanh toán, còn logic hoạt động vẫn thể, thay nút tích thành dạng công tắc on off.
+ở tiến trình thành viên, hiện rõ số lượng tiền được giảm và hiện rõ mã giảm giá người dùng nhận được khi lên hạng, ngoài ra để lợi ích to lên chứ (đương nhiên rồi)
+khách hàng khi đặt đơn xong nếu bếp chưa nấu có thể ấn hủy đơn kèm mục ghi lí do không bắt buộc(nếu đã quét qr chuyển tiền thì sẽ hoàn tiền)
+khi bếp ấn hủy đơn cũng phải kèm lí do, ở phía bếp sẽ có lựa chọn lí do mẫu để hủy đơn nhanh hơn
+nút lưu địa chỉ mặc định chưa hoạt động, bỏ luôn nút đó đi, khi khách hàng nhập thông tin và thanh toán sẽ mặc định lưu luôn địa chỉ và sdt đó vào đơn sau
+mục bán cháy ở navbar sẽ ra một trang khác thay vì menu, ở trang bán chạy sẽ hiện các món hot kèm banner quảng cáo và mã giảm giá độc quyền cho các món (1 lần dùng)
+ở giao diện giỏ hàng, có nút xem giỏ hàng và thanh toán, nhưng dấu x ở trên quá bé, ở trên giao diện mobile người dùng phản ánh rằng khi họ thêm món ăn vào giỏ, giỏ hàng hiện lên và họ mãi mới tìm được cách
+tắt đi (ở trên desktop thì khỏ hàng chỉ hiện 1 bên những ở mobile thì giỏ hàng hiện cả màn hình)
+ngoài ra phần input để tìm kiếm ở navbar vẫn bị bé, tôi nghĩ nên chỉnh thành nút tìm kiếm, khi ấn vào thì mở rộng phần input ra
+khi người dùng ấn vào profile phải hiện thêm thông tin số dư ví
+ở admin dashboard phải có thêm thông báo chấm đỏ ở tin nhắn khiếu nại khi có thông báo mới 
+ở thực đơn, ở mục [Đang hiển thị 73 món ăn(Trang 1/7)], xóa trang 1/7 đi (quá vô dụng)
+ở mục thanh toán, thay vì nhập mã voucher thì sẽ có luôn nút xem mã, áp mã gì đó, khi ấn vào mới hiện ra thanh nhập mã và mã sẵn có (vì thực tế người dùng sẽ ấn áp mã có sẵn chứ chả ai nhập mã bằng tay)
+
+
 

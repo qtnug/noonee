@@ -88,6 +88,9 @@ function ContactChatContent() {
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         const incoming: SupportMessage[] = data.data;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('noonee_last_viewed_support', Date.now().toString());
+        }
 
         setMessages((prev) => {
           // If no change in messages, keep previous state to avoid unnecessary re-renders
@@ -324,6 +327,9 @@ function ContactChatContent() {
                     className="h-7 px-2 bg-white border border-[#dddddd] rounded-[4px] text-[12px] font-medium text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
                   >
                     <option value="">Hỗ trợ chung (Không theo đơn)</option>
+                    {orderCode && orderCode !== 'GENERAL' && !userOrders.includes(orderCode) && (
+                      <option value={orderCode}>Đơn hàng #{orderCode}</option>
+                    )}
                     {userOrders.map((code) => (
                       <option key={code} value={code}>
                         Đơn hàng #{code}

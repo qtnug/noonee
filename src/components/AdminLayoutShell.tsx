@@ -21,8 +21,25 @@ import AdminHeaderUser from '@/components/AdminHeaderUser';
 
 export default function AdminLayoutShell({ children }: { children: React.ReactNode }) {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [hasUnreadComplaint, setHasUnreadComplaint] = useState(false);
   const pathname = usePathname();
   const { logout } = useAuth();
+
+  React.useEffect(() => {
+    const checkSupport = async () => {
+      try {
+        const res = await fetch('/api/support');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          const hasOpenComplaint = data.data.some((m: any) => m.senderRole === 'customer' && m.isComplaint);
+          setHasUnreadComplaint(hasOpenComplaint);
+        }
+      } catch (e) {}
+    };
+    checkSupport();
+    const interval = setInterval(checkSupport, 6000);
+    return () => clearInterval(interval);
+  }, []);
 
   const links = [
     { name: 'Tổng quan hệ thống', href: '/admin', icon: LayoutDashboard },
@@ -68,7 +85,10 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
                 }`}
               >
                 <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#9297a0]'}`} />
-                <span>{link.name}</span>
+                <span className="flex-1 truncate">{link.name}</span>
+                {link.href === '/admin/support' && hasUnreadComplaint && (
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#e31837] ring-2 ring-white animate-pulse shrink-0" title="Có tin nhắn khiếu nại chưa xử lý" />
+                )}
               </Link>
             );
           })}
@@ -145,7 +165,10 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
                     }`}
                   >
                     <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#9297a0]'}`} />
-                    <span>{link.name}</span>
+                    <span className="flex-1 truncate">{link.name}</span>
+                    {link.href === '/admin/support' && hasUnreadComplaint && (
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#e31837] ring-2 ring-white animate-pulse shrink-0" />
+                    )}
                   </Link>
                 );
               })}

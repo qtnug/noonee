@@ -46,7 +46,8 @@ export async function PATCH(
         }
       }
 
-      const result = await cancelOrder(params.code, cancelReason || 'Hủy theo yêu cầu');
+      const isAdmin = authUser?.role === 'admin';
+      const result = await cancelOrder(params.code, cancelReason || 'Hủy theo yêu cầu', isAdmin);
       if (!result.success) {
         return NextResponse.json({ success: false, message: result.message }, { status: 400 });
       }

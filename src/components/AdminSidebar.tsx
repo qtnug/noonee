@@ -13,12 +13,30 @@ import {
   LogOut,
   ShieldCheck,
   MessageSquare,
+  Ticket,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { logout } = useAuth();
+  const [hasUnreadComplaint, setHasUnreadComplaint] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkSupport = async () => {
+      try {
+        const res = await fetch('/api/support');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          const hasOpenComplaint = data.data.some((m: any) => m.senderRole === 'customer' && m.isComplaint);
+          setHasUnreadComplaint(hasOpenComplaint);
+        }
+      } catch (e) {}
+    };
+    checkSupport();
+    const interval = setInterval(checkSupport, 6000);
+    return () => clearInterval(interval);
+  }, []);
 
   const links = [
     { name: 'Tổng quan hệ thống', href: '/admin', icon: LayoutDashboard },
@@ -26,6 +44,7 @@ export default function AdminSidebar() {
     { name: 'Khiếu nại & Hỗ trợ KH', href: '/admin/support', icon: MessageSquare },
     { name: 'Thực đơn & Món ăn', href: '/admin/products', icon: UtensilsCrossed },
     { name: 'Danh mục món ăn', href: '/admin/categories', icon: Layers },
+    { name: 'Kho Voucher ưu đãi', href: '/admin/coupons', icon: Ticket },
     { name: 'Chẩn đoán CSDL Cloud', href: '/admin/diagnostics', icon: Activity },
   ];
 
@@ -62,7 +81,10 @@ export default function AdminSidebar() {
               }`}
             >
               <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#9297a0]'}`} />
-              <span>{link.name}</span>
+              <span className="flex-1 truncate">{link.name}</span>
+              {link.href === '/admin/support' && hasUnreadComplaint && (
+                <span className="w-2.5 h-2.5 rounded-full bg-[#e31837] ring-2 ring-white animate-pulse shrink-0" title="Có khiếu nại chưa xử lý" />
+              )}
             </Link>
           );
         })}

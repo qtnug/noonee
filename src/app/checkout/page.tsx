@@ -19,11 +19,12 @@ import {
   AlertCircle,
   Users,
   Sparkles,
+  X,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatVND } from '@/lib/utils';
-import { AVAILABLE_COUPONS, validateCoupon } from '@/lib/coupons';
+import { getAllCoupons, validateCoupon } from '@/lib/coupons';
 import { Coupon, GroupOrder } from '@/types';
 import { MembershipTierInfo } from '@/lib/membership';
 import AddressAutocompleteInput from '@/components/AddressAutocompleteInput';
@@ -115,6 +116,14 @@ function CheckoutContent() {
         })
         .catch(() => {});
     }
+
+    // Auto-populate from localStorage if not provided
+    if (typeof window !== 'undefined') {
+      const savedPhone = localStorage.getItem('noonee_saved_phone');
+      if (savedPhone && !customerPhone) setCustomerPhone(savedPhone);
+      const savedAddr = localStorage.getItem('noonee_saved_address');
+      if (savedAddr && !deliveryAddress) setDeliveryAddress(savedAddr);
+    }
   }, [user]);
 
   const handlePaymentMethodChange = (method: 'Sepay' | 'COD') => {
@@ -130,20 +139,26 @@ function CheckoutContent() {
   const effectiveTotalPrice = groupOrder ? (groupOrder.subtotal || 0) : totalPrice;
   const groupDiscountAmount = groupOrder ? (groupOrder.discountAmount || 0) : 0;
 
+  const cartProductItems = cart.map((it) => ({
+    categoryId: it.product.categoryId,
+    isFeatured: it.product.isFeatured,
+    name: it.product.name,
+  }));
+
   // Test Case 3.1: Revalidate coupon if subtotal changes or drops below minimum order amount
   useEffect(() => {
     if (appliedCoupon && effectiveTotalPrice > 0) {
-      const recheck = validateCoupon(appliedCoupon.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier);
+      const recheck = validateCoupon(appliedCoupon.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
       if (!recheck.valid) {
         setAppliedCoupon(null);
         setDiscountAmount(0);
         setCouponSuccess('');
-        setCouponError(`Mã giảm giá "${appliedCoupon.code}" đã bị hủy do đơn hàng không còn đủ điều kiện tối thiểu (${formatVND(appliedCoupon.minOrderAmount)}).`);
+        setCouponError(`Mã giảm giá "${appliedCoupon.code}" đã bị hủy: ${recheck.message || 'Không đủ điều kiện'}`);
       } else {
         setDiscountAmount(recheck.discountAmount);
       }
     }
-  }, [effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, appliedCoupon]);
+  }, [effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, appliedCoupon, cart]);
 
   const handleApplyCoupon = (codeToApply?: string) => {
     const code = (codeToApply || couponInput).trim().toUpperCase();
@@ -155,7 +170,7 @@ function CheckoutContent() {
       return;
     }
 
-    const res = validateCoupon(code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier);
+    const res = validateCoupon(code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
     if (!res.valid) {
       setCouponError(res.message || 'Mã không hợp lệ');
       return;
@@ -368,12 +383,20 @@ function CheckoutContent() {
         clearCart();
       }
 
-      // Save default address if checked
-      if (saveAsDefaultAddress && deliveryAddress.trim() && user?.id) {
+      // Automatically save address & phone for next orders (STT 10)
+      if (typeof window !== 'undefined') {
+        if (deliveryAddress.trim()) localStorage.setItem('noonee_saved_address', deliveryAddress.trim());
+        if (customerPhone.trim()) localStorage.setItem('noonee_saved_phone', customerPhone.trim());
+      }
+      if (user?.id) {
         fetch('/api/user/profile', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-          body: JSON.stringify({ userId: user.id, address: deliveryAddress.trim() }),
+          body: JSON.stringify({
+            userId: user.id,
+            address: deliveryAddress.trim(),
+            phone: customerPhone.trim(),
+          }),
         }).catch(() => {});
       }
 
@@ -491,17 +514,6 @@ function CheckoutContent() {
                     onCalculatingChange={(isCalc) => setIsCalculatingDistance(isCalc)}
                     required
                   />
-                  {user && (
-                    <label className="flex items-center gap-2 mt-2 text-[13px] text-[#41454d] cursor-pointer hover:text-[#181d26] select-none">
-                      <input
-                        type="checkbox"
-                        checked={saveAsDefaultAddress}
-                        onChange={(e) => setSaveAsDefaultAddress(e.target.checked)}
-                        className="w-4 h-4 rounded text-[#e31837] focus:ring-[#e31837] border-[#dddddd]"
-                      />
-                      <span>Lưu làm địa chỉ nhận hàng mặc định cho tài khoản</span>
-                    </label>
-                  )}
                 </div>
 
                 <div className="space-y-1.5">
@@ -529,7 +541,82 @@ function CheckoutContent() {
                   2. Chọn phương thức thanh toán
                 </h2>
 
+                {/* Virtual Wallet with On/Off Switch (STT 6) */}
+                {walletBalance > 0 && (
+                  <div className={`p-4 rounded-[10px] border transition-all ${useWallet ? 'bg-gradient-to-r from-blue-50/70 to-emerald-50/70 border-blue-300 shadow-xs' : 'bg-[#f8fafc] border-[#dddddd]'}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-[8px] bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                          <Wallet className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[14px] font-bold text-[#181d26]">Ví ảo NooNee Pay</span>
+                            <span className="text-[13px] font-extrabold text-[#16a34a] bg-white px-2 py-0.5 rounded border border-emerald-200">
+                              {formatVND(walletBalance)}
+                            </span>
+                          </div>
+                          <p className="text-[12px] text-[#41454d] mt-0.5 truncate">
+                            {useWallet ? 'Đang bật: tự động trừ số dư ví vào đơn hàng này' : 'Bật công tắc để thanh toán bằng số dư ví'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* On / Off Toggle Switch */}
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={useWallet}
+                        onClick={() => setUseWallet(!useWallet)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          useWallet ? 'bg-[#16a34a]' : 'bg-gray-300'
+                        }`}
+                        title={useWallet ? 'Tắt thanh toán bằng ví' : 'Bật thanh toán bằng ví'}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                            useWallet ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {useWallet && walletDeduction > 0 && (
+                      <div className="mt-3 pt-3 border-t border-blue-100 space-y-1 text-[12px]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-blue-950 font-medium">Trừ từ số dư ví:</span>
+                          <span className="text-[#006400] font-bold">-{formatVND(walletDeduction)}</span>
+                        </div>
+                        {isFullyCoveredByWallet ? (
+                          <div className="p-2 rounded bg-emerald-100/60 text-emerald-800 font-semibold text-[11px] sm:text-[12px] flex items-center gap-1.5 mt-1">
+                            <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <span>Đơn hàng đã được thanh toán 100% bằng số dư ví! Bạn không cần thanh toán thêm.</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between text-[#e31837] font-semibold pt-1">
+                            <span>Số tiền còn lại cần thanh toán:</span>
+                            <span>{formatVND(finalTotal)}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-3">
+                  {isFullyCoveredByWallet ? (
+                    <div className="p-3.5 rounded-[8px] bg-emerald-50 border border-emerald-200 text-emerald-800 text-[13px] font-medium flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Phương thức thanh toán chính: <strong>Ví NooNee Pay</strong> (Đã trừ đủ toàn bộ giá trị đơn hàng)</span>
+                    </div>
+                  ) : (
+                    <>
+                      {useWallet && walletDeduction > 0 && (
+                        <p className="text-[12px] text-[#9297a0] font-medium">
+                          Chọn phương thức thanh toán cho phần tiền còn lại ({formatVND(finalTotal)}):
+                        </p>
+                      )}
                   {/* Sepay Option */}
                   <label
                     onClick={() => handlePaymentMethodChange('Sepay')}
@@ -597,6 +684,8 @@ function CheckoutContent() {
                       className="mt-1 accent-[#e31837] shrink-0"
                     />
                   </label>
+                  </>
+                )}
                 </div>
               </div>
             </div>
@@ -690,129 +779,208 @@ function CheckoutContent() {
                 </div>
               )}
 
-              {/* Coupon Section */}
-              <div className="pt-4 border-t border-[#fecdd3] space-y-3">
+              {/* Coupon Section (STT 18: Button to open modal, rather than raw input) */}
+              <div className="pt-4 border-t border-[#fecdd3] space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] font-semibold text-[#181d26] flex items-center gap-1.5">
                     <Tag className="w-4 h-4 text-[#e31837]" />
-                    <span>Mã ưu đãi / Giảm giá</span>
+                    <span>Mã ưu đãi & Voucher</span>
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowCouponsList(!showCouponsList)}
-                    className="text-[12px] font-semibold text-[#e31837] hover:underline flex items-center gap-1"
-                  >
-                    <span>{showCouponsList ? 'Thu gọn' : `Xem mã (${AVAILABLE_COUPONS.length})`}</span>
-                    {showCouponsList ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
                 </div>
 
-                {/* Input & Apply Button */}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={couponInput}
-                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleApplyCoupon();
-                      }
-                    }}
-                    placeholder="Nhập mã (VD: VIETQR20)"
-                    className="flex-1 h-9 px-3 text-[13px] font-mono text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] uppercase placeholder:normal-case"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleApplyCoupon()}
-                    className="h-9 px-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white text-[12px] font-semibold rounded-[6px] transition shrink-0"
-                  >
-                    Áp dụng
-                  </button>
-                </div>
-
-                {couponError && (
-                  <p className="text-[12px] text-[#e31837] font-medium">{couponError}</p>
-                )}
-
-                {couponSuccess && !couponError && (
-                  <p className="text-[12px] text-[#006400] font-medium">{couponSuccess}</p>
-                )}
-
-                {appliedCoupon && (
-                  <div className="flex items-center justify-between p-2.5 bg-[#006400]/10 border border-[#006400]/20 rounded-[6px] text-[12px]">
-                    <div className="flex items-center gap-1.5 text-[#006400] font-medium">
-                      <CheckCircle className="w-4 h-4 shrink-0" />
-                      <span>
-                        Mã <strong>{appliedCoupon.code}</strong> (-{formatVND(discountAmount)})
-                      </span>
+                {appliedCoupon ? (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-[8px] flex items-center justify-between gap-2 shadow-2xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                        <CheckCircle className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono font-bold text-emerald-900 text-[13px]">{appliedCoupon.code}</span>
+                          <span className="text-[11px] font-extrabold text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-300">
+                            -{formatVND(discountAmount)}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-emerald-700 truncate">{appliedCoupon.name}</p>
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleRemoveCoupon}
-                      className="text-[#e31837] font-semibold hover:underline shrink-0 ml-2"
-                    >
-                      Gỡ mã
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setShowCouponsList(true)}
+                        className="text-[12px] font-semibold text-[#e31837] hover:underline cursor-pointer"
+                      >
+                        Đổi mã
+                      </button>
+                      <span className="text-gray-300">|</span>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoupon}
+                        className="text-[12px] font-semibold text-[#64748b] hover:text-[#e31837] hover:underline cursor-pointer"
+                      >
+                        Gỡ
+                      </button>
+                    </div>
                   </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowCouponsList(true)}
+                    className="w-full p-3 bg-white hover:bg-red-50/40 border border-dashed border-[#e31837] rounded-[8px] flex items-center justify-between text-left transition cursor-pointer group shadow-2xs"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-[6px] bg-[#fff1f2] text-[#e31837] flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                        <Tag className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-[13px] font-bold text-[#181d26] group-hover:text-[#e31837] transition">
+                          Chọn hoặc nhập mã ưu đãi
+                        </span>
+                        <span className="text-[11px] text-[#9297a0] block">
+                          Có sẵn {getAllCoupons().length} mã giảm giá (tiết kiệm tới 50k, 50%...)
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 text-[#e31837] font-semibold text-[12px] shrink-0">
+                      <span>Chọn mã</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </div>
+                  </button>
                 )}
 
-                {/* Available Coupons Dropdown/List */}
+                {/* Voucher Modal / Dialog */}
                 {showCouponsList && (
-                  <div className="space-y-2 pt-2 border-t border-[#fecdd3]/60 max-h-56 overflow-y-auto pr-1">
-                    {AVAILABLE_COUPONS.map((c) => {
-                      const isApplied = appliedCoupon?.code === c.code;
-                      const check = validateCoupon(c.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier);
-                      const isEligible = check.valid;
-
-                      return (
-                        <div
-                          key={c.code}
-                          className={`p-2.5 rounded-[8px] border text-[12px] transition ${
-                            isApplied
-                              ? 'border-[#006400] bg-[#006400]/5'
-                              : isEligible
-                              ? 'border-[#fecdd3] bg-white hover:border-[#e31837]'
-                              : 'border-[#dddddd] bg-[#f8fafc] opacity-80'
-                          }`}
+                  <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
+                    <div className="bg-white rounded-[12px] border border-[#dddddd] shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh]">
+                      {/* Modal Header */}
+                      <div className="p-4 bg-gradient-to-r from-[#181d26] to-[#2c3440] text-white flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Tag className="w-4 h-4 text-[#e31837]" />
+                          <h3 className="font-bold text-[15px] text-white">Chọn hoặc nhập mã ưu đãi</h3>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowCouponsList(false)}
+                          className="p-1 text-gray-300 hover:text-white rounded cursor-pointer"
                         >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-mono font-bold text-[#e31837]">{c.code}</span>
-                              {c.badge && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#fff1f2] text-[#e31837] font-medium border border-[#fecdd3]">
-                                  {c.badge}
-                                </span>
-                              )}
-                            </div>
-                            {isApplied ? (
-                              <span className="text-[#006400] font-semibold text-[11px] flex items-center gap-1 shrink-0">
-                                <CheckCircle className="w-3 h-3" /> Đang dùng
-                              </span>
-                            ) : (
-                              <button
-                                type="button"
-                                disabled={!isEligible}
-                                onClick={() => handleApplyCoupon(c.code)}
-                                className={`px-2.5 py-1 rounded-[4px] text-[11px] font-semibold transition shrink-0 ${
-                                  isEligible
-                                    ? 'bg-[#e31837] text-white hover:bg-[#be0e27]'
-                                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                }`}
-                              >
-                                Dùng mã
-                              </button>
-                            )}
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Modal Body */}
+                      <div className="p-4 overflow-y-auto space-y-4">
+                        {/* Custom Input Bar inside modal */}
+                        <div>
+                          <label className="block text-[12px] font-bold text-[#181d26] mb-1.5">
+                            Nhập mã giảm giá khác:
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={couponInput}
+                              onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleApplyCoupon();
+                                }
+                              }}
+                              placeholder="Nhập mã (VD: COM_R9X4A, FREESHIP)..."
+                              className="flex-1 h-9 px-3 text-[12px] uppercase font-mono font-bold bg-[#f8fafc] border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleApplyCoupon()}
+                              disabled={!couponInput.trim()}
+                              className="h-9 px-4 bg-[#e31837] hover:bg-[#be0e27] text-white text-[12px] font-semibold rounded-[6px] transition cursor-pointer disabled:opacity-50 shrink-0"
+                            >
+                              Áp dụng
+                            </button>
                           </div>
-                          <p className="text-[11px] text-[#41454d] mt-1">{c.name}</p>
-                          {!isEligible && (
-                            <p className="text-[10px] text-amber-700 mt-0.5 italic">
-                              * {check.message}
-                            </p>
+                          {couponError && (
+                            <p className="text-[12px] text-[#e31837] font-medium mt-1.5">{couponError}</p>
+                          )}
+                          {couponSuccess && !couponError && (
+                            <p className="text-[12px] text-[#006400] font-medium mt-1.5">{couponSuccess}</p>
                           )}
                         </div>
-                      );
-                    })}
+
+                        {/* Available Coupons List */}
+                        <div className="space-y-2.5 pt-2 border-t border-[#dddddd]">
+                          <span className="text-[12px] font-bold text-[#181d26] block">
+                            Mã ưu đãi có sẵn ({getAllCoupons().length}):
+                          </span>
+                          {getAllCoupons().map((c) => {
+                            const isApplied = appliedCoupon?.code === c.code;
+                            const check = validateCoupon(c.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
+                            const isEligible = check.valid;
+
+                            return (
+                              <div
+                                key={c.code}
+                                className={`p-3 rounded-[8px] border text-[12px] transition ${
+                                  isApplied
+                                    ? 'border-[#006400] bg-emerald-50/70 shadow-2xs'
+                                    : isEligible
+                                    ? 'border-red-200 bg-white hover:border-[#e31837] shadow-2xs'
+                                    : 'border-[#dddddd] bg-[#f8fafc] opacity-75'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="font-mono font-bold text-[13px] text-[#e31837]">{c.code}</span>
+                                    {c.badge && (
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#fff1f2] text-[#e31837] font-bold border border-[#fecdd3]">
+                                        {c.badge}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {isApplied ? (
+                                    <span className="text-[#006400] font-bold text-[12px] flex items-center gap-1 shrink-0">
+                                      <CheckCircle className="w-3.5 h-3.5" /> Đang áp dụng
+                                    </span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      disabled={!isEligible}
+                                      onClick={() => {
+                                        handleApplyCoupon(c.code);
+                                        setShowCouponsList(false);
+                                      }}
+                                      className={`px-3 py-1.5 rounded-[4px] text-[12px] font-bold transition shrink-0 cursor-pointer ${
+                                        isEligible
+                                          ? 'bg-[#e31837] text-white hover:bg-[#be0e27] shadow-xs'
+                                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                      }`}
+                                    >
+                                      Áp dụng
+                                    </button>
+                                  )}
+                                </div>
+                                <p className="text-[12px] font-medium text-[#181d26] mt-1.5">{c.name}</p>
+                                <p className="text-[11px] text-[#64748b] mt-0.5">{c.description}</p>
+                                {!isEligible && (
+                                  <p className="text-[11px] text-amber-700 mt-1 font-medium italic">
+                                    * {check.message}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Modal Footer */}
+                      <div className="p-3 bg-[#f8fafc] border-t border-[#dddddd] flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setShowCouponsList(false)}
+                          className="px-4 py-2 bg-white hover:bg-gray-100 text-[#181d26] text-[13px] font-semibold rounded-[6px] border border-[#dddddd] transition cursor-pointer"
+                        >
+                          Xong
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -829,38 +997,6 @@ function CheckoutContent() {
                       ? `Được giảm ${formatVND(memberShippingDiscount)} ship`
                       : 'Thành viên NooNee'}
                   </span>
-                </div>
-              )}
-
-              {/* Virtual Wallet Box */}
-              {walletBalance > 0 && (
-                <div className="p-3.5 rounded-[8px] bg-gradient-to-r from-[#eff6ff] to-[#f0fdf4] border border-[#bfdbfe] space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Wallet className="w-4 h-4 text-[#2563eb]" />
-                      <span className="text-[13px] font-semibold text-[#181d26]">Số dư ví ảo NooNee</span>
-                    </div>
-                    <span className="text-[13px] font-bold text-[#16a34a]">{formatVND(walletBalance)}</span>
-                  </div>
-                  <label className="flex items-center gap-2 text-[12px] text-[#333840] cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={useWallet}
-                      onChange={(e) => setUseWallet(e.target.checked)}
-                      className="w-4 h-4 text-[#e31837] rounded accent-[#e31837] cursor-pointer"
-                    />
-                    <span>Sử dụng số dư ví để trừ vào đơn này</span>
-                  </label>
-                  {useWallet && walletDeduction > 0 && (
-                    <div className="text-[11px] text-[#2563eb] font-medium bg-white/80 p-2 rounded border border-[#bfdbfe]">
-                      Đã trừ <strong>{formatVND(walletDeduction)}</strong> từ số dư ví.
-                      {isFullyCoveredByWallet && (
-                        <span className="block text-[#16a34a] font-semibold mt-0.5">
-                          ✓ Đơn hàng đã được thanh toán đủ 100% bằng ví!
-                        </span>
-                      )}
-                    </div>
-                  )}
                 </div>
               )}
 

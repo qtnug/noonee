@@ -93,16 +93,25 @@ export interface Order {
 }
 
 export interface Coupon {
+  id?: number | string;
   code: string;
   name: string;
   description: string;
   discountType: 'percentage' | 'fixed';
   discountValue: number;
   minOrderAmount: number;
+  maxDiscountAmount?: number;
   requiresVietQR?: boolean;
   forNewUserOnly?: boolean;
   badge?: string;
   minTier?: 'Bronze' | 'Silver' | 'Gold' | 'Diamond';
+  expiryDate?: string; // Format: YYYY-MM-DD or DD/MM/YYYY
+  usageLimit?: number; // Maximum total allowed uses
+  usedCount?: number;  // Number of times used so far
+  categoryExclusive?: 'all' | 'rice' | 'drinks' | 'best_seller';
+  isOneTimeUse?: boolean;
+  isActive?: boolean;
+  createdAt?: string;
 }
 
 export interface PaymentRecord {

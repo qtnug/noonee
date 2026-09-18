@@ -339,14 +339,28 @@ export default function AdminOrdersPage() {
                               </div>
                             )}
                             {order.status === 'Processing' && (
-                              <button
-                                onClick={() => handleStatusChange(order.orderCode, 'Delivering')}
-                                className="h-7 px-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[11px] font-medium rounded-[4px] flex items-center gap-1 transition cursor-pointer shadow-xs"
-                                title="Bếp nấu xong, giao Shipper"
-                              >
-                                <Truck className="w-3 h-3" />
-                                <span>Giao hàng</span>
-                              </button>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleStatusChange(order.orderCode, 'Delivering')}
+                                  className="h-7 px-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[11px] font-medium rounded-[4px] flex items-center gap-1 transition cursor-pointer shadow-xs"
+                                  title="Bếp nấu xong, giao Shipper"
+                                >
+                                  <Truck className="w-3 h-3" />
+                                  <span>Giao hàng</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setCancelModalOrder(order);
+                                    setCancelReasonInput('');
+                                    setCancelError('');
+                                  }}
+                                  className="h-7 px-2 bg-white hover:bg-[#fff1f2] text-[#e31837] border border-[#fecdd3] text-[11px] font-medium rounded-[4px] flex items-center gap-1 transition cursor-pointer"
+                                  title="Bếp hủy đơn (Hết nguyên liệu, quá tải...)"
+                                >
+                                  <XCircle className="w-3.5 h-3.5" />
+                                  <span>Hủy</span>
+                                </button>
+                              </div>
                             )}
                             {order.status === 'Delivering' && (
                               <button

@@ -41,10 +41,11 @@ export default function CartDrawer() {
             </div>
             <button
               onClick={() => setIsCartOpen(false)}
-              className="p-1.5 sm:p-2 text-[#41454d] hover:text-[#e31837] rounded-[6px] hover:bg-[#fff1f2] transition"
-              aria-label="Đóng"
+              className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-[#fff1f2] text-[#41454d] hover:text-[#e31837] rounded-[6px] border border-gray-200 hover:border-red-200 transition cursor-pointer active:scale-95 text-[13px] font-medium"
+              aria-label="Đóng giỏ hàng"
             >
-              <X className="w-5 h-5" />
+              <span>Đóng</span>
+              <X className="w-4 h-4 text-current" />
             </button>
           </div>
 
@@ -180,6 +181,14 @@ export default function CartDrawer() {
                   Thanh toán
                 </Link>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setIsCartOpen(false)}
+                className="w-full py-2 text-center text-[13px] font-medium text-[#555a64] hover:text-[#e31837] transition cursor-pointer flex items-center justify-center gap-1"
+              >
+                <span>← Tiếp tục chọn món khác</span>
+              </button>
             </div>
           )}
         </div>

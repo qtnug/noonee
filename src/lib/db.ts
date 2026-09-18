@@ -1028,7 +1028,7 @@ export async function refundToUserWallet(userId: number, amount: number): Promis
   return false;
 }
 
-export async function cancelOrder(orderCode: string, cancelReason: string): Promise<{
+export async function cancelOrder(orderCode: string, cancelReason: string, allowProcessingCancel: boolean = false): Promise<{
   success: boolean;
   message: string;
   refundedAmount?: number;
@@ -1043,10 +1043,12 @@ export async function cancelOrder(orderCode: string, cancelReason: string): Prom
     return { success: false, message: 'Đơn hàng này đã bị hủy trước đó' };
   }
 
-  // Requirement: "nếu chưa xác nhận thì mới được huỷ"
-  // Only 'Pending' orders can be cancelled!
-  if (order.status !== 'Pending') {
+  // Requirement STT 8 & 9: Khách chỉ hủy khi Pending; Bếp/Admin hủy được cả Pending và Processing
+  if (!allowProcessingCancel && order.status !== 'Pending') {
     return { success: false, message: 'Đơn hàng đã được xác nhận vào bếp, không thể hủy!' };
+  }
+  if (allowProcessingCancel && order.status !== 'Pending' && order.status !== 'Processing') {
+    return { success: false, message: 'Đơn hàng đang giao hoặc đã hoàn thành, không thể hủy!' };
   }
 
   // Calculate refund

@@ -150,11 +150,6 @@ function MenuPageContent() {
 
             <div className="px-4 py-2.5 bg-white rounded-[6px] border border-[#dddddd] text-[13px] text-[#41454d] shadow-2xs font-medium">
               Đang hiển thị <strong className="text-[#e31837] font-bold">{filteredProducts.length}</strong> món ăn
-              {totalPages > 1 && (
-                <span className="text-gray-400 ml-1.5 text-xs font-normal">
-                  (Trang {currentPage}/{totalPages})
-                </span>
-              )}
             </div>
           </div>
         </div>

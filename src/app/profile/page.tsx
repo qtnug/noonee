@@ -24,12 +24,15 @@ import {
   Clock,
   ArrowRight,
   Wallet,
+  Ticket,
+  Tag,
+  Flame,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { formatVND } from '@/lib/utils';
 import { getMembershipTier, MembershipTierInfo } from '@/lib/membership';
-import { Product } from '@/types';
+import { Product, Coupon } from '@/types';
 import ProductCard from '@/components/ProductCard';
 import AddressAutocompleteInput from '@/components/AddressAutocompleteInput';
 
@@ -41,13 +44,18 @@ function ProfileContent() {
   const { user, login, getAuthHeader } = useAuth();
   const { favorites } = useFavorites();
 
-  const [activeTab, setActiveTab] = useState<'tier' | 'favorites' | 'password' | 'info'>('tier');
+  const [activeTab, setActiveTab] = useState<'tier' | 'vouchers' | 'favorites' | 'password' | 'info'>('tier');
   const [profileData, setProfileData] = useState<{
     stats: { totalSpent: number; orderCount: number; completedCount: number };
     tier: MembershipTierInfo;
   } | null>(null);
   const [walletBalance, setWalletBalance] = useState<number>(user?.walletBalance || 0);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+  // Vouchers for vouchers tab (STT 1)
+  const [allCoupons, setAllCoupons] = useState<Coupon[]>([]);
+  const [voucherFilter, setVoucherFilter] = useState<string>('all');
+  const [isLoadingCoupons, setIsLoadingCoupons] = useState(false);
 
   // Products for favorites tab
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -74,10 +82,24 @@ function ProfileContent() {
   const [isSavingInfo, setIsSavingInfo] = useState(false);
 
   useEffect(() => {
-    if (initialTab === 'favorites' || initialTab === 'password' || initialTab === 'info') {
+    if (initialTab === 'vouchers' || initialTab === 'favorites' || initialTab === 'password' || initialTab === 'info') {
       setActiveTab(initialTab);
     }
   }, [initialTab]);
+
+  // Fetch all coupons when entering vouchers tab
+  useEffect(() => {
+    if (activeTab === 'vouchers' && allCoupons.length === 0) {
+      setIsLoadingCoupons(true);
+      fetch('/api/coupons')
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.success && Array.isArray(d.data)) setAllCoupons(d.data);
+        })
+        .catch(() => {})
+        .finally(() => setIsLoadingCoupons(false));
+    }
+  }, [activeTab, allCoupons.length]);
 
   useEffect(() => {
     if (user) {
@@ -312,6 +334,22 @@ function ProfileContent() {
             <span>Hạng thành viên & Chi tiêu</span>
           </button>
 
+          {/* Kho Voucher (STT 1) */}
+          <button
+            onClick={() => setActiveTab('vouchers')}
+            className={`flex items-center gap-2 py-4 px-3 sm:px-4 text-[14px] font-semibold border-b-2 transition whitespace-nowrap cursor-pointer ${
+              activeTab === 'vouchers'
+                ? 'border-[#e31837] text-[#e31837]'
+                : 'border-transparent text-[#41454d] hover:text-[#181d26]'
+            }`}
+          >
+            <Ticket className="w-4 h-4" />
+            <span>Kho Voucher ưu đãi</span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-100 text-[#e31837] rounded-full">
+              Mới
+            </span>
+          </button>
+
           <button
             onClick={() => setActiveTab('favorites')}
             className={`flex items-center gap-2 py-4 px-3 sm:px-4 text-[14px] font-semibold border-b-2 transition whitespace-nowrap cursor-pointer ${
@@ -349,7 +387,7 @@ function ProfileContent() {
           </button>
         </div>
 
-        {/* TAB 1: MEMBERSHIP TIER & SPENDING STATS */}
+        {/* TAB 1: MEMBERSHIP TIER & SPENDING STATS (STT 7) */}
         {activeTab === 'tier' && (
           <div className="space-y-8">
             {/* Compact Stat Cards Row */}
@@ -423,7 +461,7 @@ function ProfileContent() {
                   </h2>
                 </div>
                 {tier.nextTier && (
-                  <div className="text-right sm:text-right">
+                  <div className="text-left sm:text-right">
                     <span className="text-[12px] text-[#41454d] block">Mục tiêu tiếp theo:</span>
                     <strong className="text-[15px] font-bold text-[#e31837]">
                       {tier.nextTier === 'Silver' && '🥈 Hạng Bạc (500k)'}
@@ -450,32 +488,178 @@ function ProfileContent() {
                 </div>
               </div>
 
-              {/* Tier Benefits */}
-              <div className="pt-4 border-t border-[#dddddd]/70">
-                <h3 className="text-[14px] font-bold text-[#181d26] mb-3 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#e31837]" />
-                  <span>Đặc quyền của hạng {tier.name}:</span>
+              {/* LỢI ÍCH TO NỔI BẬT (STT 7) */}
+              <div className="pt-4 border-t border-[#dddddd]/70 space-y-4">
+                <h3 className="text-[15px] font-bold text-[#181d26] flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[#e31837]" />
+                  <span>ĐẶC QUYỀN NỔI BẬT CỦA HẠNG {tier.name.toUpperCase()}:</span>
                 </h3>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[13px] text-[#41454d]">
-                  {tier.benefits.map((b, i) => (
-                    <li key={i} className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-[#16a34a] shrink-0" />
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                  {/* Highlight 1: Shipping Discount */}
+                  <div className="bg-white/90 rounded-[12px] p-4 border border-[#dddddd] shadow-2xs space-y-1.5">
+                    <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                      <Truck className="w-5 h-5" />
+                    </div>
+                    <h4 className="text-[13px] font-bold text-[#181d26]">Giảm Phí Giao Hàng</h4>
+                    <p className="text-[18px] font-extrabold text-emerald-600">
+                      {tier.shippingDiscount > 0 ? `-${formatVND(tier.shippingDiscount)}` : '0 ₫ / đơn'}
+                    </p>
+                    <p className="text-[11px] text-[#41454d]">
+                      {tier.shippingDiscount > 0 ? 'Tự động trừ vào mọi đơn đặt hàng' : 'Lên Hạng Bạc để nhận giảm 5k ship'}
+                    </p>
+                  </div>
+
+                  {/* Highlight 2: Exclusive Vouchers */}
+                  <div className="bg-white/90 rounded-[12px] p-4 border border-[#dddddd] shadow-2xs space-y-1.5">
+                    <div className="w-9 h-9 rounded-full bg-red-50 text-[#e31837] flex items-center justify-center font-bold">
+                      <Ticket className="w-5 h-5" />
+                    </div>
+                    <h4 className="text-[13px] font-bold text-[#181d26]">Kho Voucher Độc Quyền</h4>
+                    <p className="text-[18px] font-extrabold text-[#e31837]">
+                      {tier.vouchers.length} Mã Giảm Giá
+                    </p>
+                    <p className="text-[11px] text-[#41454d]">
+                      Được hưởng trọn bộ mã giảm giá của hạng hiện tại & các hạng trước
+                    </p>
+                  </div>
+
+                  {/* Highlight 3: Priority Service */}
+                  <div className="bg-white/90 rounded-[12px] p-4 border border-[#dddddd] shadow-2xs space-y-1.5">
+                    <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <h4 className="text-[13px] font-bold text-[#181d26]">Dịch Vụ Ưu Tiên</h4>
+                    <p className="text-[18px] font-extrabold text-blue-600">
+                      {tier.tier === 'Diamond' ? 'Ưu tiên VIP 1:1' : tier.tier === 'Gold' ? 'Ưu tiên bếp nấu' : 'Ưu tiên giờ cao điểm'}
+                    </p>
+                    <p className="text-[11px] text-[#41454d]">
+                      Chế biến siêu tốc & hỗ trợ tiếp nhận đơn nhanh chóng
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Exclusive Vouchers Section */}
+            {/* PREVIEW NEXT TIER (STT 7: Hiện rõ số lượng tiền được giảm và mã giảm giá nhận được khi lên hạng) */}
+            {tier.nextTier && (
+              <div className="bg-gradient-to-br from-[#fff1f2] via-white to-[#fff9f9] rounded-[16px] p-6 sm:p-8 border-2 border-[#fecdd3] shadow-md space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#fecdd3] pb-4">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#e31837] bg-white px-2.5 py-0.5 rounded border border-[#fecdd3]">
+                      Đặc quyền mở khóa kế tiếp
+                    </span>
+                    <h3 className="text-xl font-bold text-[#181d26] mt-1.5">
+                      KHI LÊN {tier.nextTier === 'Silver' ? 'HẠNG BẠC (🥈)' : tier.nextTier === 'Gold' ? 'HẠNG VÀNG (🥇)' : 'VIP KIM CƯƠNG (💎)'} BẠN SẼ NHẬN ĐƯỢC:
+                    </h3>
+                  </div>
+                  <div className="text-left sm:text-right shrink-0">
+                    <span className="text-[12px] text-[#41454d] block">Chỉ cần chi tiêu thêm:</span>
+                    <strong className="text-xl font-extrabold text-[#e31837]">
+                      {formatVND(tier.amountNeeded)}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Số tiền được giảm khi lên hạng */}
+                  <div className="bg-white p-4 rounded-[12px] border border-[#fecdd3] space-y-2">
+                    <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider block">
+                      💰 Số tiền được giảm tự động:
+                    </span>
+                    <div className="text-[16px] font-bold text-[#181d26]">
+                      {tier.nextTier === 'Silver' && 'Giảm 5.000 ₫ phí giao hàng cho MỌI đơn'}
+                      {tier.nextTier === 'Gold' && 'Giảm 10.000 ₫ phí giao hàng cho MỌI đơn'}
+                      {tier.nextTier === 'Diamond' && 'Giảm cực lớn 25.000 ₫ phí giao hàng cho MỌI đơn'}
+                    </div>
+                    <p className="text-[12px] text-[#41454d]">
+                      Không giới hạn số lần đặt món trong ngày, tự động trừ tại bước thanh toán.
+                    </p>
+                  </div>
+
+                  {/* Mã giảm giá nhận được khi lên hạng */}
+                  <div className="bg-white p-4 rounded-[12px] border border-[#fecdd3] space-y-2">
+                    <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider block">
+                      🎟️ Mã giảm giá mới được mở khóa:
+                    </span>
+                    {tier.nextTier === 'Silver' && (
+                      <div>
+                        <div className="inline-block font-mono font-bold text-[#e31837] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[13px]">
+                          SILVER10
+                        </div>
+                        <span className="ml-2 font-bold text-[14px] text-[#181d26]">Giảm ngay 10.000 ₫</span>
+                        <p className="text-[12px] text-[#41454d] mt-1">Đơn từ 80.000 ₫ trở lên</p>
+                      </div>
+                    )}
+                    {tier.nextTier === 'Gold' && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-[#e31837] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[12px]">
+                            GOLD25
+                          </span>
+                          <span className="font-bold text-[13px] text-[#181d26]">Giảm ngay 25.000 ₫</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-[#e31837] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[12px]">
+                            GOLDVIP
+                          </span>
+                          <span className="font-bold text-[13px] text-[#181d26]">Giảm sâu 15% tổng tiền</span>
+                        </div>
+                      </div>
+                    )}
+                    {tier.nextTier === 'Diamond' && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-[#e31837] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[12px]">
+                            DIAMOND50
+                          </span>
+                          <span className="font-bold text-[13px] text-[#181d26]">Giảm ngay 50.000 ₫</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-[#e31837] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[12px]">
+                            DIAMONDVIP
+                          </span>
+                          <span className="font-bold text-[13px] text-[#181d26]">Giảm cực lớn 20% đơn</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                  <span className="text-[12px] text-[#41454d]">
+                    Đặt thêm các bữa ăn ngon tại NooNee để tích lũy chi tiêu và thăng hạng ngay hôm nay!
+                  </span>
+                  <Link
+                    href="/menu"
+                    className="h-10 px-5 bg-[#e31837] hover:bg-[#be0e27] text-white font-semibold text-[13px] rounded-[8px] transition flex items-center gap-2 shadow-xs shrink-0"
+                  >
+                    <span>Đặt món tích lũy</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* Exclusive Tier Vouchers Box */}
             <div className="bg-white rounded-[16px] p-6 sm:p-8 border border-[#dddddd] shadow-xs space-y-6">
-              <div>
-                <h2 className="text-xl font-bold text-[#181d26]">
-                  Kho Voucher đặc quyền của bạn ({tier.vouchers.length})
-                </h2>
-                <p className="text-[13px] text-[#41454d] mt-1">
-                  Mã giảm giá được trao tặng theo thứ hạng chi tiêu của bạn tại NooNee. Sao chép và nhập tại bước thanh toán!
-                </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#dddddd] pb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-[#181d26]">
+                    Voucher độc quyền theo hạng hiện tại ({tier.vouchers.length})
+                  </h2>
+                  <p className="text-[13px] text-[#41454d] mt-1">
+                    Các mã giảm giá đã mở khóa theo chi tiêu của bạn. Sao chép và dùng tại trang thanh toán.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('vouchers')}
+                  className="text-[13px] font-bold text-[#e31837] hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
+                >
+                  <span>Mở toàn bộ Kho Voucher</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -534,7 +718,203 @@ function ProfileContent() {
           </div>
         )}
 
-        {/* TAB 2: FAVORITE DISHES */}
+        {/* TAB 2: KHO VOUCHER ƯU ĐÃI (STT 1 & 2 & 3) */}
+        {activeTab === 'vouchers' && (
+          <div className="bg-white rounded-[16px] p-6 sm:p-8 border border-[#dddddd] shadow-xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#dddddd] pb-4">
+              <div>
+                <h2 className="text-xl font-bold text-[#181d26] flex items-center gap-2">
+                  <Ticket className="w-6 h-6 text-[#e31837]" />
+                  <span>Kho Mã Voucher & Ưu Đãi Của Bạn</span>
+                </h2>
+                <p className="text-[13px] text-[#41454d] mt-1">
+                  Tổng hợp tất cả mã khuyến mãi cơm, nước, đơn đầu tiên, mã giảm 20/30/50% và đặc quyền thành viên.
+                </p>
+              </div>
+
+              <Link
+                href="/menu"
+                className="h-9 px-4 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer shadow-xs"
+              >
+                <span>Dùng mã đặt món</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {/* Voucher Category Filter Chips */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              {[
+                { id: 'all', label: 'Tất cả voucher' },
+                { id: 'rice', label: 'Đơn Cơm & Món chính' },
+                { id: 'drinks', label: 'Đồ uống' },
+                { id: 'best_seller', label: 'Món Bán chạy (1 lần)' },
+                { id: 'percentage', label: 'Giảm % (20/30/50%)' },
+                { id: 'fixed', label: 'Giảm tiền mặt (10k-50k)' },
+                { id: 'tier', label: 'Đặc quyền thành viên' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setVoucherFilter(tab.id)}
+                  className={`px-3 py-1.5 rounded-[6px] text-[12px] font-semibold transition whitespace-nowrap cursor-pointer ${
+                    voucherFilter === tab.id
+                      ? 'bg-[#e31837] text-white shadow-2xs'
+                      : 'bg-[#f8fafc] text-[#41454d] border border-[#dddddd] hover:bg-red-50 hover:text-[#e31837]'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Coupons List */}
+            {isLoadingCoupons ? (
+              <div className="py-16 text-center text-gray-400 space-y-2">
+                <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#e31837]" />
+                <p className="text-[13px]">Đang tải kho mã ưu đãi...</p>
+              </div>
+            ) : (
+              (() => {
+                const filtered = allCoupons.filter((c) => {
+                  if (voucherFilter === 'all') return true;
+                  if (voucherFilter === 'rice') return c.categoryExclusive === 'rice';
+                  if (voucherFilter === 'drinks') return c.categoryExclusive === 'drinks';
+                  if (voucherFilter === 'best_seller') return c.categoryExclusive === 'best_seller' || c.isOneTimeUse;
+                  if (voucherFilter === 'percentage') return c.discountType === 'percentage';
+                  if (voucherFilter === 'fixed') return c.discountType === 'fixed';
+                  if (voucherFilter === 'tier') return Boolean(c.minTier);
+                  return true;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="py-12 text-center text-gray-400 space-y-2">
+                      <Ticket className="w-8 h-8 mx-auto text-gray-300" />
+                      <p className="text-[13px] text-[#555a64]">Không có voucher nào trong mục này</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filtered.map((c) => {
+                      const used = c.usedCount || 0;
+                      const limit = c.usageLimit || 100;
+                      const percent = Math.min(100, Math.round((used / limit) * 100));
+
+                      return (
+                        <div
+                          key={c.code}
+                          className="border border-[#dddddd] hover:border-[#fecdd3] bg-white rounded-[12px] p-4 flex flex-col justify-between space-y-3.5 shadow-2xs hover:shadow-md transition relative group"
+                        >
+                          <div className="space-y-2">
+                            {/* Badges */}
+                            <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#e31837] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3]">
+                                {c.badge || 'Ưu đãi'}
+                              </span>
+                              {c.isOneTimeUse && (
+                                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                                  1 Lần dùng
+                                </span>
+                              )}
+                              {c.categoryExclusive === 'rice' && (
+                                <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">
+                                  Cơm & Món chính
+                                </span>
+                              )}
+                              {c.categoryExclusive === 'drinks' && (
+                                <span className="text-[10px] font-semibold text-blue-800 bg-blue-50 px-1.5 py-0.5 rounded">
+                                  Đồ uống
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Title & Description */}
+                            <div>
+                              <h4 className="font-bold text-[14px] text-[#181d26] group-hover:text-[#e31837] transition">
+                                {c.name}
+                              </h4>
+                              <p className="text-[12px] text-[#41454d] line-clamp-2 mt-1 leading-relaxed">
+                                {c.description}
+                              </p>
+                            </div>
+
+                            {/* Discount Value */}
+                            <div className="pt-1 flex items-baseline gap-2">
+                              <span className="text-xl font-extrabold text-[#e31837]">
+                                {c.discountType === 'percentage'
+                                  ? `-${c.discountValue}%`
+                                  : `-${formatVND(c.discountValue)}`}
+                              </span>
+                              <span className="text-[11px] text-[#9297a0]">
+                                {c.minOrderAmount > 0 ? `Đơn từ ${formatVND(c.minOrderAmount)}` : 'Mọi giá trị đơn'}
+                              </span>
+                            </div>
+
+                            {/* Expiry & Usage Limit (STT 2) */}
+                            <div className="pt-2 border-t border-[#f0f0f0] space-y-1.5 text-[11px] text-[#555a64]">
+                              <div className="flex items-center justify-between">
+                                <span className="flex items-center gap-1 text-gray-500">
+                                  <Clock className="w-3 h-3 text-gray-400" />
+                                  Hạn dùng:
+                                </span>
+                                <strong className="text-[#181d26]">{c.expiryDate || '31/12/2026'}</strong>
+                              </div>
+
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between text-[10px] text-gray-400">
+                                  <span>Đã dùng: {used}/{limit}</span>
+                                  <span>{percent}%</span>
+                                </div>
+                                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-[#e31837] rounded-full"
+                                    style={{ width: `${percent}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Code Bar & Action Buttons */}
+                          <div className="pt-2 border-t border-[#f0f0f0] flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1">
+                              <span className="font-mono font-bold text-[12px] bg-[#f8fafc] text-[#181d26] px-2.5 py-1 rounded border border-[#dddddd]">
+                                {c.code}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyCode(c.code)}
+                                className="p-1 text-gray-400 hover:text-[#e31837] rounded transition cursor-pointer"
+                                title="Sao chép mã"
+                              >
+                                {copiedCode === c.code ? (
+                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </div>
+
+                            <Link
+                              href={`/menu?coupon=${c.code}`}
+                              onClick={() => handleCopyCode(c.code)}
+                              className="px-3 py-1 bg-[#e31837] hover:bg-[#be0e27] text-white text-[11px] font-semibold rounded-[4px] transition cursor-pointer"
+                            >
+                              Dùng ngay
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()
+            )}
+          </div>
+        )}
+
+        {/* TAB 3: FAVORITE DISHES */}
         {activeTab === 'favorites' && (
           <div className="bg-white rounded-[16px] p-6 sm:p-8 border border-[#dddddd] shadow-xs space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-[#dddddd]">

@@ -41,6 +41,12 @@ export default function OrderTrackingPage() {
   const [isComplaint, setIsComplaint] = useState(false);
   const [isSendingChat, setIsSendingChat] = useState(false);
 
+  // Customer cancellation state (STT 8)
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReasonInput, setCancelReasonInput] = useState('');
+  const [isCancellingOrder, setIsCancellingOrder] = useState(false);
+  const [cancelError, setCancelError] = useState('');
+
   // Deduplicate items by productId so each dish is only reviewed once per order
   const uniqueReviewableItems = React.useMemo(() => {
     if (!order?.items) return [];
@@ -219,6 +225,34 @@ export default function OrderTrackingPage() {
     }
   };
 
+  const handleCustomerCancelOrder = async () => {
+    if (!order) return;
+    setIsCancellingOrder(true);
+    setCancelError('');
+    try {
+      const res = await fetch(`/api/orders/${order.orderCode}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({
+          status: 'Cancelled',
+          action: 'cancel',
+          cancelReason: cancelReasonInput.trim() || 'Khách hàng chủ động hủy đơn',
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.message || 'Không thể hủy đơn hàng này.');
+      }
+      setShowCancelModal(false);
+      setCancelReasonInput('');
+      fetchOrder();
+    } catch (err: any) {
+      setCancelError(err.message || 'Có lỗi xảy ra khi hủy đơn.');
+    } finally {
+      setIsCancellingOrder(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-xl mx-auto px-4 py-24 text-center space-y-4">
@@ -311,14 +345,28 @@ export default function OrderTrackingPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Group members do not have the complaint button; only Host or individual order owner */}
-            {(!order.groupCode || (user && order.userId === user.id)) && (
+            {/* Link directly to Live Chat for this order (STT 4 & 5) */}
+            <Link
+              href={`/contact?orderCode=${encodeURIComponent(order.orderCode)}`}
+              className="h-9 sm:h-10 px-3 sm:px-3.5 bg-white border border-[#e31837] text-[#e31837] hover:bg-[#fff1f2] rounded-[6px] text-[12px] sm:text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Cần hỗ trợ? (Chat quán)</span>
+            </Link>
+
+            {/* Cancel order button if kitchen has not cooked yet (STT 8) */}
+            {order.status === 'Pending' && (!order.groupCode || (user && order.userId === user.id)) && (
               <button
-                onClick={() => setShowChat(true)}
-                className="h-9 sm:h-10 px-3 sm:px-3.5 bg-white border border-[#e31837] text-[#e31837] hover:bg-[#fff1f2] rounded-[6px] text-[12px] sm:text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                type="button"
+                onClick={() => {
+                  setShowCancelModal(true);
+                  setCancelReasonInput('');
+                  setCancelError('');
+                }}
+                className="h-9 sm:h-10 px-3 sm:px-3.5 bg-white border border-gray-300 text-[#41454d] hover:text-[#e31837] hover:border-red-300 hover:bg-red-50 rounded-[6px] text-[12px] sm:text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
               >
-                <MessageSquare className="w-4 h-4" />
-                <span>Khiếu nại / Chat Quán</span>
+                <X className="w-4 h-4 text-red-500" />
+                <span>Hủy đơn</span>
               </button>
             )}
 
@@ -846,6 +894,74 @@ export default function OrderTrackingPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Customer Cancel Modal (STT 8) */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-[12px] w-full max-w-md shadow-2xl border border-[#dddddd] p-5 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
+              <div className="flex items-center gap-2 text-[#e31837] font-bold text-[16px]">
+                <AlertTriangle className="w-5 h-5" />
+                <span>Xác nhận hủy đơn #{order.orderCode}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(false)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-[13px] text-[#41454d]">
+              <p>
+                Đơn hàng đang ở trạng thái <strong>Chờ tiếp nhận</strong> (bếp chưa nấu). Bạn có thể hủy đơn này ngay lập tức.
+              </p>
+              {order.paymentStatus === 'Paid' && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-[6px] text-emerald-800 text-[12px]">
+                  ✓ Số tiền đã thanh toán ({formatVND(order.totalAmount + (order.walletAmountUsed || 0))}) sẽ được <strong>hoàn trả 100%</strong> vào Số Dư Ví NooNee của bạn để đặt lại món khác.
+                </div>
+              )}
+              <div>
+                <label className="block text-[12px] font-semibold text-[#181d26] mb-1">
+                  Lý do hủy đơn (Không bắt buộc):
+                </label>
+                <textarea
+                  rows={2}
+                  value={cancelReasonInput}
+                  onChange={(e) => setCancelReasonInput(e.target.value)}
+                  placeholder="VD: Đổi ý muốn đặt món khác, đặt nhầm địa chỉ..."
+                  className="w-full p-2.5 text-[13px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837]"
+                />
+              </div>
+            </div>
+
+            {cancelError && (
+              <p className="text-[12px] text-red-600 font-medium">{cancelError}</p>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#dddddd]">
+              <button
+                type="button"
+                disabled={isCancellingOrder}
+                onClick={() => setShowCancelModal(false)}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-[#181d26] text-[13px] font-semibold rounded-[6px] transition cursor-pointer"
+              >
+                Giữ lại đơn
+              </button>
+              <button
+                type="button"
+                disabled={isCancellingOrder}
+                onClick={handleCustomerCancelOrder}
+                className="px-4 py-2 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
+              >
+                {isCancellingOrder ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                <span>Đồng ý hủy đơn</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

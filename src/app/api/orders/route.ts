@@ -3,7 +3,7 @@ import { getOrders, createOrder, getProducts, hasUserPaidFirstVietqr, getUserSpe
 import { generateOrderCode } from '@/lib/utils';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { requireAuth, requireAdmin, authenticateRequest, AuthError } from '@/lib/auth';
-import { validateCoupon } from '@/lib/coupons';
+import { validateCoupon, incrementCouponUsage } from '@/lib/coupons';
 import { getMembershipTier } from '@/lib/membership';
 import { calculateGroupDiscount } from '@/lib/groupOrder';
 
@@ -180,10 +180,11 @@ export async function POST(request: NextRequest) {
       ]);
       const userTier = getMembershipTier(spendingStats.totalSpent).tier;
       const isNewUser = !isFirstPaid;
-      const validation = validateCoupon(couponCode, subtotal, paymentMethod || 'Sepay', isNewUser, userTier);
+      const validation = validateCoupon(couponCode, subtotal, paymentMethod || 'Sepay', isNewUser, userTier, items);
       if (validation.valid) {
         discountAmount = validation.discountAmount;
         validCouponCode = validation.coupon ? validation.coupon.code : String(couponCode).toUpperCase();
+        incrementCouponUsage(validCouponCode);
       }
     }
 
