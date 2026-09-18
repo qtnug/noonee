@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -144,6 +144,31 @@ function CheckoutContent() {
     isFeatured: it.product.isFeatured,
     name: it.product.name,
   }));
+
+  // Best coupon recommendation (Item 10)
+  const sortedCouponsWithDiscount = useMemo(() => {
+    const list = getAllCoupons();
+    return list.map((c) => {
+      const check = validateCoupon(c.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
+      return {
+        coupon: c,
+        check,
+        discountAmount: check.valid ? check.discountAmount : 0,
+      };
+    }).sort((a, b) => {
+      if (a.check.valid && !b.check.valid) return -1;
+      if (!a.check.valid && b.check.valid) return 1;
+      return b.discountAmount - a.discountAmount;
+    });
+  }, [effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, cartProductItems]);
+
+  const bestCoupon = useMemo(() => {
+    const first = sortedCouponsWithDiscount[0];
+    if (first && first.check.valid && first.discountAmount > 0) {
+      return first;
+    }
+    return null;
+  }, [sortedCouponsWithDiscount]);
 
   // Test Case 3.1: Revalidate coupon if subtotal changes or drops below minimum order amount
   useEffect(() => {
@@ -644,7 +669,7 @@ function CheckoutContent() {
                         )}
                       </div>
                       <p className="text-[12px] sm:text-[13px] text-[#41454d] mt-1 leading-relaxed">
-                        Quét mã QR từ bất kỳ ứng dụng ngân hàng di động nào. Hệ thống tự động nhận diện và chuyển đơn vào bếp ngay.
+                        Quét mã QR qua ứng dụng ngân hàng, khớp lệnh tự động.
                       </p>
                     </div>
                     <input
@@ -673,7 +698,7 @@ function CheckoutContent() {
                         Tiền mặt khi nhận hàng (COD)
                       </div>
                       <p className="text-[12px] sm:text-[13px] text-[#41454d] mt-1 leading-relaxed">
-                        Thanh toán trực tiếp bằng tiền mặt cho shipper khi nhận được đồ ăn nóng hổi.
+                        Thanh toán trực tiếp tiền mặt khi nhận hàng.
                       </p>
                     </div>
                     <input
@@ -823,29 +848,57 @@ function CheckoutContent() {
                     </div>
                   </div>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowCouponsList(true)}
-                    className="w-full p-3 bg-white hover:bg-red-50/40 border border-dashed border-[#e31837] rounded-[8px] flex items-center justify-between text-left transition cursor-pointer group shadow-2xs"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-[6px] bg-[#fff1f2] text-[#e31837] flex items-center justify-center shrink-0 group-hover:scale-105 transition">
-                        <Tag className="w-4 h-4" />
+                  <div className="space-y-2.5">
+                    {bestCoupon && (
+                      <div className="p-3 bg-red-50/90 border border-[#fecdd3] rounded-[8px] flex items-center justify-between gap-2 shadow-2xs">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-full bg-[#e31837] text-white flex items-center justify-center shrink-0">
+                            <Sparkles className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[10px] font-extrabold uppercase bg-[#e31837] text-white px-1.5 py-0.5 rounded">Gợi ý tốt nhất</span>
+                              <span className="font-mono font-bold text-[#181d26] text-[12px]">{bestCoupon.coupon.code}</span>
+                            </div>
+                            <span className="text-[11px] text-[#006400] font-bold block mt-0.5">
+                              Tiết kiệm {formatVND(bestCoupon.discountAmount)} cho đơn này
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleApplyCoupon(bestCoupon.coupon.code)}
+                          className="px-3 py-1.5 bg-[#e31837] hover:bg-[#be0e27] text-white text-[11px] font-bold rounded-[4px] shrink-0 cursor-pointer shadow-xs transition"
+                        >
+                          Áp dụng
+                        </button>
                       </div>
-                      <div>
-                        <span className="text-[13px] font-bold text-[#181d26] group-hover:text-[#e31837] transition">
-                          Chọn hoặc nhập mã ưu đãi
-                        </span>
-                        <span className="text-[11px] text-[#9297a0] block">
-                          Có sẵn {getAllCoupons().length} mã giảm giá (tiết kiệm tới 50k, 50%...)
-                        </span>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setShowCouponsList(true)}
+                      className="w-full p-3 bg-white hover:bg-red-50/40 border border-dashed border-[#e31837] rounded-[8px] flex items-center justify-between text-left transition cursor-pointer group shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-[6px] bg-[#fff1f2] text-[#e31837] flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                          <Tag className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-[13px] font-bold text-[#181d26] group-hover:text-[#e31837] transition">
+                            Chọn hoặc nhập mã ưu đãi
+                          </span>
+                          <span className="text-[11px] text-[#9297a0] block">
+                            Có sẵn {getAllCoupons().length} mã giảm giá
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1 text-[#e31837] font-semibold text-[12px] shrink-0">
-                      <span>Chọn mã</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </div>
-                  </button>
+                      <div className="flex items-center gap-1 text-[#e31837] font-semibold text-[12px] shrink-0">
+                        <span>Chọn mã</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </div>
+                    </button>
+                  </div>
                 )}
 
                 {/* Voucher Modal / Dialog */}
@@ -905,15 +958,15 @@ function CheckoutContent() {
                           )}
                         </div>
 
-                        {/* Available Coupons List */}
+                        {/* Available Coupons List (Sorted by highest discount first) */}
                         <div className="space-y-2.5 pt-2 border-t border-[#dddddd]">
                           <span className="text-[12px] font-bold text-[#181d26] block">
                             Mã ưu đãi có sẵn ({getAllCoupons().length}):
                           </span>
-                          {getAllCoupons().map((c) => {
+                          {sortedCouponsWithDiscount.map(({ coupon: c, check, discountAmount: disc }) => {
                             const isApplied = appliedCoupon?.code === c.code;
-                            const check = validateCoupon(c.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
                             const isEligible = check.valid;
+                            const isHighest = isEligible && bestCoupon?.coupon.code === c.code;
 
                             return (
                               <div
@@ -921,6 +974,8 @@ function CheckoutContent() {
                                 className={`p-3 rounded-[8px] border text-[12px] transition ${
                                   isApplied
                                     ? 'border-[#006400] bg-emerald-50/70 shadow-2xs'
+                                    : isHighest
+                                    ? 'border-[#e31837] bg-[#fff1f2]/30 shadow-xs'
                                     : isEligible
                                     ? 'border-red-200 bg-white hover:border-[#e31837] shadow-2xs'
                                     : 'border-[#dddddd] bg-[#f8fafc] opacity-75'
@@ -929,6 +984,11 @@ function CheckoutContent() {
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="flex items-center gap-1.5 flex-wrap">
                                     <span className="font-mono font-bold text-[13px] text-[#e31837]">{c.code}</span>
+                                    {isHighest && (
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#e31837] text-white font-extrabold">
+                                        Gợi ý tốt nhất
+                                      </span>
+                                    )}
                                     {c.badge && (
                                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#fff1f2] text-[#e31837] font-bold border border-[#fecdd3]">
                                         {c.badge}
@@ -959,6 +1019,11 @@ function CheckoutContent() {
                                 </div>
                                 <p className="text-[12px] font-medium text-[#181d26] mt-1.5">{c.name}</p>
                                 <p className="text-[11px] text-[#64748b] mt-0.5">{c.description}</p>
+                                {isEligible && disc > 0 && (
+                                  <p className="text-[11px] text-[#006400] font-bold mt-1">
+                                    Tiết kiệm: -{formatVND(disc)}
+                                  </p>
+                                )}
                                 {!isEligible && (
                                   <p className="text-[11px] text-amber-700 mt-1 font-medium italic">
                                     * {check.message}
@@ -985,105 +1050,78 @@ function CheckoutContent() {
                 )}
               </div>
 
-              {/* Member Tier Perks Box */}
-              {tierInfo && (
-                <div className="flex items-center justify-between p-3 rounded-[8px] bg-white border border-[#fecdd3] shadow-2xs">
-                  <div className="flex items-center gap-2">
-                    <Award className="w-4 h-4 text-[#e31837]" />
-                    <span className="text-[12px] font-bold text-[#181d26]">{tierInfo.badge}</span>
-                  </div>
-                  <span className="text-[11px] text-[#16a34a] font-semibold">
-                    {memberShippingDiscount > 0
-                      ? `Được giảm ${formatVND(memberShippingDiscount)} ship`
-                      : 'Thành viên NooNee'}
-                  </span>
+              {/* Receipt Bill Breakdown (Item 12: Món ăn -> Phí ship -> Mã giảm -> Giảm thành viên -> Tổng tiền) */}
+              <div className="bg-white rounded-[8px] p-4 sm:p-5 border border-[#dddddd] space-y-3 shadow-2xs font-mono text-[13px]">
+                <div className="text-center font-bold text-[14px] text-[#181d26] pb-2 border-b border-dashed border-[#dddddd] font-sans tracking-wide uppercase">
+                  Hóa Đơn Thanh Toán
                 </div>
-              )}
 
-              {/* Totals Calculation */}
-              <div className="space-y-2 pt-4 border-t border-[#fecdd3] text-[13px]">
+                {/* 1. Tiền món ăn */}
                 <div className="flex justify-between text-[#41454d]">
-                  <span>Tạm tính ({groupOrder ? `${groupOrder.totalQuantity || 0} món` : `${cart.length} món`})</span>
+                  <span>Tiền món ăn ({groupOrder ? `${groupOrder.totalQuantity || 0}` : `${cart.length}`} món):</span>
                   <span className="font-semibold text-[#181d26]">{formatVND(effectiveTotalPrice)}</span>
                 </div>
 
-                {/* Direct Group Discount (giảm trực tiếp không cần voucher) */}
-                {groupDiscountAmount > 0 && (
-                  <div className="flex justify-between text-[#059669] font-medium">
-                    <span className="flex items-center gap-1">
-                      <Sparkles className="w-4 h-4" /> Giảm giá đơn nhóm ({groupOrder?.discountPercentage}%)
-                    </span>
-                    <span>- {formatVND(groupDiscountAmount)}</span>
-                  </div>
-                )}
-
-                {couponDiscountExcludingFreeship > 0 && (
-                  <div className="flex justify-between text-[#e31837] font-medium">
-                    <span>Giảm giá voucher ({appliedCoupon?.code})</span>
-                    <span>- {formatVND(couponDiscountExcludingFreeship)}</span>
-                  </div>
-                )}
-
+                {/* 2. Phí giao hàng (phí ship) */}
                 <div className="flex justify-between text-[#41454d]">
                   <div>
-                    <span>Phí giao hàng</span>
+                    <span>Phí giao hàng:</span>
                     {isCalculatingDistance ? (
-                      <span className="text-[11px] text-[#e31837] flex items-center gap-1 font-normal mt-0.5">
-                        <Loader2 className="w-3 h-3 animate-spin" /> Đang tính phí theo khoảng cách...
+                      <span className="text-[10px] text-[#e31837] flex items-center gap-1 font-normal block font-sans">
+                        <Loader2 className="w-3 h-3 animate-spin" /> Đang tính khoảng cách...
                       </span>
                     ) : distanceData ? (
-                      <span className="text-[11px] text-gray-500 block font-normal">
-                        Khoảng cách: {distanceData.distanceText}
+                      <span className="text-[10px] text-gray-500 block font-normal font-sans">
+                        {distanceData.distanceText}
                       </span>
+                    ) : null}
+                  </div>
+                  <div>
+                    {isCalculatingDistance ? (
+                      <span className="text-gray-400 italic text-[11px]">Đang tính...</span>
+                    ) : effectiveShippingFee === 0 ? (
+                      <span className="text-[#16a34a] font-bold">0₫ (Miễn phí)</span>
                     ) : (
-                      <span className="text-[11px] text-gray-400 block font-normal">
-                        (Ước tính theo khoảng cách)
-                      </span>
+                      <span className="font-semibold text-[#181d26]">{formatVND(effectiveShippingFee)}</span>
                     )}
                   </div>
-                  {isCalculatingDistance ? (
-                    <div className="text-right">
-                      <span className="text-[12px] text-gray-400 italic">Đang cập nhật...</span>
-                    </div>
-                  ) : effectiveShippingFee === 0 ? (
-                    <div className="text-right">
-                      <span className="text-[#16a34a] font-semibold">Miễn phí</span>
-                      <span className="text-[10px] text-gray-500 block font-normal">
-                        {appliedCoupon?.code === 'FREESHIP'
-                          ? '(Voucher FREESHIP)'
-                          : tierInfo && tierInfo.shippingDiscount >= baseShippingFee
-                          ? `(Đã giảm ${formatVND(tierInfo.shippingDiscount)} ${tierInfo.badge})`
-                          : ''}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="text-right">
-                      {baseShippingFee !== effectiveShippingFee && (
-                        <span className="line-through text-gray-400 text-[11px] mr-1.5">
-                          {formatVND(baseShippingFee)}
-                        </span>
-                      )}
-                      <span className="font-semibold text-[#181d26]">{formatVND(effectiveShippingFee)}</span>
-                      {memberShippingDiscount > 0 && (
-                        <span className="text-[10px] text-[#16a34a] block font-medium">
-                          - {formatVND(memberShippingDiscount)} ({tierInfo?.name})
-                        </span>
-                      )}
-                    </div>
-                  )}
                 </div>
 
-                {useWallet && walletDeduction > 0 && (
-                  <div className="flex justify-between text-[#2563eb] font-semibold">
-                    <span>Trừ từ số dư ví ảo</span>
-                    <span>- {formatVND(walletDeduction)}</span>
+                {/* 3. Mã giảm giá nếu có */}
+                {couponDiscountExcludingFreeship > 0 && (
+                  <div className="flex justify-between text-[#e31837] font-semibold">
+                    <span>Mã giảm giá ({appliedCoupon?.code}):</span>
+                    <span>-{formatVND(couponDiscountExcludingFreeship)}</span>
                   </div>
                 )}
 
-                <div className="flex justify-between text-[16px] font-bold text-[#181d26] pt-3 border-t border-[#fecdd3]">
-                  <span>Tổng thanh toán</span>
+                {/* 4. Giảm giá thành viên / đơn nhóm nếu có */}
+                {memberShippingDiscount > 0 && appliedCoupon?.code !== 'FREESHIP' && (
+                  <div className="flex justify-between text-[#16a34a] font-medium">
+                    <span>Ưu đãi thành viên ({tierInfo?.name}):</span>
+                    <span>-{formatVND(memberShippingDiscount)}</span>
+                  </div>
+                )}
+                {groupDiscountAmount > 0 && (
+                  <div className="flex justify-between text-[#16a34a] font-medium">
+                    <span>Giảm giá đơn nhóm ({groupOrder?.discountPercentage}%):</span>
+                    <span>-{formatVND(groupDiscountAmount)}</span>
+                  </div>
+                )}
+
+                {/* 5. Trừ ví ảo nếu có */}
+                {useWallet && walletDeduction > 0 && (
+                  <div className="flex justify-between text-[#2563eb] font-semibold">
+                    <span>Trừ từ số dư ví ảo:</span>
+                    <span>-{formatVND(walletDeduction)}</span>
+                  </div>
+                )}
+
+                {/* 6. Tổng thanh toán */}
+                <div className="flex justify-between text-[15px] sm:text-[16px] font-extrabold text-[#181d26] pt-3 border-t border-dashed border-[#dddddd]">
+                  <span>TỔNG TIỀN:</span>
                   <span className="text-[#e31837] text-lg">
-                    {isCalculatingDistance ? 'Đang cập nhật...' : formatVND(finalTotal)}
+                    {isCalculatingDistance ? 'Đang tính...' : formatVND(finalTotal)}
                   </span>
                 </div>
               </div>
@@ -1125,11 +1163,6 @@ function CheckoutContent() {
                   </>
                 )}
               </button>
-
-              <div className="flex items-center justify-center gap-1.5 text-[12px] text-[#9297a0] text-center">
-                <ShieldCheck className="w-4 h-4 text-[#006400]" />
-                <span>Cam kết an toàn và bảo mật thông tin đơn hàng</span>
-              </div>
             </div>
           </div>
         </form>

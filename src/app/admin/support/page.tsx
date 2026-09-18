@@ -183,7 +183,13 @@ export default function AdminSupportPage() {
                       <div className="flex items-center gap-1.5">
                         <ShoppingBag className="w-3.5 h-3.5 text-[#e31837]" />
                         <span className="font-mono font-bold text-[13px] sm:text-[14px] text-[#181d26]">
-                          {key === 'GENERAL' ? 'Hỗ trợ chung' : `#${key}`}
+                          {key === 'GENERAL'
+                            ? 'Hỗ trợ chung'
+                            : key.startsWith('USER_')
+                            ? `Khách TV #${key.replace('USER_', '')}`
+                            : key.startsWith('GUEST_')
+                            ? `Khách vãng lai #${key.replace('GUEST_', '')}`
+                            : `#${key}`}
                         </span>
                       </div>
                       {hasComplaint && (
@@ -226,7 +232,15 @@ export default function AdminSupportPage() {
 
                   <div className="min-w-0">
                     <h3 className="font-semibold text-[#181d26] text-[14px] sm:text-[15px] flex items-center gap-2 flex-wrap truncate">
-                      <span>Đơn hàng #{selectedOrder}</span>
+                      <span>
+                        {selectedOrder === 'GENERAL'
+                          ? 'Hỗ trợ chung'
+                          : selectedOrder?.startsWith('USER_')
+                          ? `Khách thành viên #${selectedOrder.replace('USER_', '')}`
+                          : selectedOrder?.startsWith('GUEST_')
+                          ? `Khách vãng lai #${selectedOrder.replace('GUEST_', '')}`
+                          : `Đơn hàng #${selectedOrder}`}
+                      </span>
                       {currentOrderHasComplaint && (
                         <span className="text-[10px] sm:text-[11px] font-bold text-[#e31837] bg-[#fff1f2] border border-[#fecdd3] px-2 py-0.5 rounded-[4px]">
                           Khách khiếu nại

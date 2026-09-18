@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Minus, ShoppingBag, Check, CheckSquare, Square, PenLine, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, Minus, ShoppingBag, Check, CheckSquare, Square, PenLine, Sparkles, ArrowRight } from 'lucide-react';
 import { Product, ProductTopping } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { formatVND } from '@/lib/utils';
 import { getAvailableToppings } from '@/components/ProductOptionsModal';
 
 export default function ProductDetailActions({ product }: { product: Product }) {
+  const router = useRouter();
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<ProductTopping[]>([]);
@@ -37,15 +39,20 @@ export default function ProductDetailActions({ product }: { product: Product }) 
     setTimeout(() => setAdded(false), 2000);
   };
 
+  const handleBuyNow = () => {
+    addToCart(product, quantity, selectedToppings, itemNote.trim());
+    router.push('/checkout');
+  };
+
   return (
     <div className="space-y-6 pt-6 border-t border-[#dddddd]">
-      {/* 1. TOPPINGS & OPTIONS SELECTOR */}
+      {/* 1. TOPPINGS & OPTIONS SELECTOR (Item 14: Tùy chọn) */}
       {toppings.length > 0 && (
         <div className="space-y-3 bg-[#f8fafc] p-4 sm:p-5 rounded-[10px] border border-[#dddddd]">
           <div className="flex items-center justify-between">
             <h3 className="text-[14px] font-semibold text-[#181d26] flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-[#e31837]" />
-              <span>Tùy chọn món thêm / Topping:</span>
+              <span>Tùy chọn:</span>
             </h3>
             <span className="text-[11px] text-[#9297a0]">Chọn không giới hạn</span>
           </div>
@@ -97,11 +104,11 @@ export default function ProductDetailActions({ product }: { product: Product }) 
         </div>
       )}
 
-      {/* 2. ITEM CULINARY NOTE (Ghi chú riêng cho món này) */}
+      {/* 2. ITEM CULINARY NOTE (Item 14: Ghi chú) */}
       <div className="space-y-1.5">
         <label className="text-[13px] font-semibold text-[#181d26] flex items-center gap-1.5">
           <PenLine className="w-3.5 h-3.5 text-[#e31837]" />
-          <span>Ghi chú riêng cho món này (Bếp chế biến theo yêu cầu):</span>
+          <span>Ghi chú:</span>
         </label>
         <input
           type="text"
@@ -158,27 +165,38 @@ export default function ProductDetailActions({ product }: { product: Product }) 
             type="button"
             onClick={handleAdd}
             disabled={!product.isAvailable}
-            className={`h-11 px-4 sm:px-6 rounded-[8px] font-semibold text-[13px] sm:text-[14px] flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 transition cursor-pointer shadow-xs ${
-              !product.isAvailable
-                ? 'bg-[#f8fafc] text-[#9297a0] border border-[#dddddd] cursor-not-allowed'
-                : added
-                ? 'bg-[#006400] text-white'
-                : 'bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white'
+            className={`h-11 px-3.5 sm:px-4 rounded-[8px] font-semibold text-[13px] border border-[#dddddd] bg-white hover:border-[#e31837] text-[#181d26] flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs shrink-0 ${
+              !product.isAvailable ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
             {added ? (
               <>
-                <Check className="w-4 h-4" />
-                <span>Đã thêm vào giỏ!</span>
+                <Check className="w-4 h-4 text-[#006400]" />
+                <span className="text-[#006400]">Đã thêm</span>
               </>
             ) : (
               <>
-                <ShoppingBag className="w-4 h-4 shrink-0" />
-                <span className="truncate">
-                  {product.isAvailable ? `Thêm vào giỏ • ${formatVND(totalPrice)}` : 'Món tạm hết hàng'}
-                </span>
+                <ShoppingBag className="w-4 h-4 text-[#e31837]" />
+                <span>Thêm vào giỏ</span>
               </>
             )}
+          </button>
+
+          {/* Buy Now Button (Item 15) */}
+          <button
+            type="button"
+            onClick={handleBuyNow}
+            disabled={!product.isAvailable}
+            className={`h-11 px-4 sm:px-6 rounded-[8px] font-semibold text-[13px] sm:text-[14px] flex-1 sm:flex-initial flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs ${
+              !product.isAvailable
+                ? 'bg-[#f8fafc] text-[#9297a0] border border-[#dddddd] cursor-not-allowed'
+                : 'bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white'
+            }`}
+          >
+            <ArrowRight className="w-4 h-4 shrink-0" />
+            <span className="truncate">
+              {product.isAvailable ? `Mua ngay` : 'Hết hàng'}
+            </span>
           </button>
         </div>
       </div>

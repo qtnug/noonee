@@ -82,6 +82,36 @@ async function ensureSchemaColumns(pool: any) {
           updatedAt DATETIME DEFAULT GETDATE()
         );
       END;
+
+      -- Split Cơm & Món chính into Cơm, Bún mì, Phở
+      IF EXISTS (SELECT * FROM Categories WHERE name = N'Cơm & Món chính')
+      BEGIN
+        UPDATE Categories SET name = N'Cơm', slug = 'com', description = N'Các món cơm tấm, cơm rang thơm ngon nóng hổi' WHERE name = N'Cơm & Món chính';
+      END
+
+      IF NOT EXISTS (SELECT * FROM Categories WHERE slug = 'bun-mi')
+      BEGIN
+        INSERT INTO Categories (name, slug, description, icon) VALUES (N'Bún mì', 'bun-mi', N'Các món bún bò Huế, bún trộn, mì xào đậm đà hấp dẫn', 'Soup');
+      END
+
+      IF NOT EXISTS (SELECT * FROM Categories WHERE slug = 'pho')
+      BEGIN
+        INSERT INTO Categories (name, slug, description, icon) VALUES (N'Phở', 'pho', N'Phở bò, phở gà gia truyền nước dùng ngọt thanh', 'Soup');
+      END
+
+      DECLARE @bunMiId INT = (SELECT TOP 1 id FROM Categories WHERE slug = 'bun-mi');
+      DECLARE @phoId INT = (SELECT TOP 1 id FROM Categories WHERE slug = 'pho');
+      DECLARE @comId INT = (SELECT TOP 1 id FROM Categories WHERE slug = 'com');
+
+      IF @bunMiId IS NOT NULL
+      BEGIN
+        UPDATE Products SET categoryId = @bunMiId WHERE (LOWER(name) LIKE N'%bún%' OR LOWER(name) LIKE N'%mì%' OR LOWER(name) LIKE N'%miến%') AND (categoryId = @comId OR categoryId = 1);
+      END
+
+      IF @phoId IS NOT NULL
+      BEGIN
+        UPDATE Products SET categoryId = @phoId WHERE LOWER(name) LIKE N'%phở%' AND (categoryId = @comId OR categoryId = 1);
+      END
     `);
     } catch (err: any) {
       console.warn('Schema check note:', err.message);
@@ -125,7 +155,9 @@ async function getCloudPool(): Promise<any> {
 
 // In-memory fallback cache
 let inMemoryCategories: Category[] = [
-  { id: 1, name: 'Cơm & Món chính', slug: 'com-mon-chinh', description: 'Các món cơm rang, bún, phở, mì thơm ngon nóng hổi, chuẩn vị truyền thống', icon: 'Utensils' },
+  { id: 1, name: 'Cơm', slug: 'com', description: 'Các món cơm tấm, cơm rang thơm ngon nóng hổi, chuẩn vị truyền thống', icon: 'Utensils' },
+  { id: 4, name: 'Bún mì', slug: 'bun-mi', description: 'Các món bún bò Huế, bún trộn, mì xào đậm đà hấp dẫn', icon: 'Soup' },
+  { id: 5, name: 'Phở', slug: 'pho', description: 'Phở bò, phở gà gia truyền nước dùng thanh ngọt thơm lừng', icon: 'Soup' },
   { id: 2, name: 'Đồ ăn vặt', slug: 'do-an-vat', description: 'Các món ăn vặt đường phố hấp dẫn, nóng giòn rụm thơm ngon', icon: 'Sandwich' },
   { id: 3, name: 'Đồ uống', slug: 'do-uong', description: 'Trà sữa, cà phê, sinh tố, nước ép và các món chè thanh mát', icon: 'Coffee' }
 ];
@@ -134,7 +166,7 @@ let inMemoryProducts: Product[] = [
   {
     id: 1,
     categoryId: 1,
-    categoryName: 'Cơm & Món chính',
+    categoryName: 'Cơm',
     name: 'Cơm rang dương châu',
     slug: 'com-rang-duong-chau',
     description: 'Cơm rang giòn tơi hạt vàng ruộm cùng xá xíu, lạp xưởng, đậu Hà Lan, cà rốt và trứng gà béo ngậy.',
@@ -154,7 +186,7 @@ let inMemoryProducts: Product[] = [
   {
     id: 4,
     categoryId: 1,
-    categoryName: 'Cơm & Món chính',
+    categoryName: 'Cơm',
     name: 'Cơm tấm Sài Gòn',
     slug: 'com-tam-sai-gon',
     description: 'Cơm tấm hạt nhuyễn truyền thống, sườn cốt lết nướng than hoa thơm lừng, bì sợi dai giòn, chả trứng béo ngậy kèm mỡ hành tóp mỡ.',
@@ -173,8 +205,8 @@ let inMemoryProducts: Product[] = [
   },
   {
     id: 9,
-    categoryId: 1,
-    categoryName: 'Cơm & Món chính',
+    categoryId: 5,
+    categoryName: 'Phở',
     name: 'Phở bò',
     slug: 'pho-bo',
     description: 'Bánh phở tươi mềm mướt, nước dùng hầm xương bò 12 tiếng thơm lừng quế hồi, nạm gầu ngọt mềm đậm vị.',
@@ -252,8 +284,8 @@ let inMemoryProducts: Product[] = [
   },
   {
     id: 45,
-    categoryId: 1,
-    categoryName: 'Cơm & Món chính',
+    categoryId: 4,
+    categoryName: 'Bún mì',
     name: 'Bún bò Huế',
     slug: 'bun-bo-hue',
     description: 'Bún bò Huế đậm đà chuẩn vị cố đô, nước dùng hầm xương ngọt thanh cay nồng sả ớt, chả cua, thịt bắp bò hoa và tiết mềm thơm ngon.',

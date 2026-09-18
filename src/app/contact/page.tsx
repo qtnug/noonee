@@ -36,13 +36,28 @@ function ContactChatContent() {
   const [inputText, setInputText] = useState('');
   const [isComplaint, setIsComplaint] = useState(false);
 
-  // Identity state
-  const [customerName, setCustomerName] = useState('');
+  // Identity & Session state
+  const [guestSessionId, setGuestSessionId] = useState<string>('');
   const [orderCode, setOrderCode] = useState(urlOrderCode);
   const [userOrders, setUserOrders] = useState<string[]>([]);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize unique guest session for chat isolation
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let saved = localStorage.getItem('noonee_guest_chat_session');
+      if (!saved) {
+        saved = 'GUEST_' + Math.random().toString(36).substring(2, 10).toUpperCase();
+        localStorage.setItem('noonee_guest_chat_session', saved);
+      }
+      setGuestSessionId(saved);
+    }
+  }, []);
+
+  // Compute active chat room identifier: orderCode if selected, otherwise USER_id or guest session
+  const activeChatKey = orderCode.trim() || (user?.id ? `USER_${user.id}` : guestSessionId);
 
   // Helper to scroll only the chat message box (never jumps or scrolls the outer webpage)
   const scrollToBottom = (smooth = true) => {
@@ -55,24 +70,14 @@ function ContactChatContent() {
     }
   };
 
-  // Initialize name
-  useEffect(() => {
-    if (user) {
-      setCustomerName(user.fullName || user.username || 'Khách hàng');
-    } else {
-      const savedName = typeof window !== 'undefined' ? localStorage.getItem('noonee_chat_name') : null;
-      setCustomerName(savedName || 'Khách hàng');
-    }
-  }, [user]);
-
-  // If user is logged in, optionally fetch their recent orders so they can select from a dropdown
+  // If user is logged in, fetch 3 recent orders for quick selection
   useEffect(() => {
     if (user) {
       fetch('/api/orders')
         .then((res) => res.json())
         .then((data) => {
           if (data.success && Array.isArray(data.data)) {
-            const codes = data.data.map((o: any) => o.code).slice(0, 10);
+            const codes = data.data.map((o: any) => o.code).slice(0, 3);
             setUserOrders(codes);
           }
         })
@@ -80,11 +85,11 @@ function ContactChatContent() {
     }
   }, [user]);
 
-  // Fetch messages from Support API
+  // Fetch messages from Support API for this isolated session / order
   const fetchMessages = async (isInitialOrManual = false) => {
+    if (!activeChatKey) return;
     try {
-      const queryParam = orderCode.trim() ? `?orderCode=${encodeURIComponent(orderCode.trim())}` : '?orderCode=GENERAL';
-      const res = await fetch(`/api/support${queryParam}`);
+      const res = await fetch(`/api/support?orderCode=${encodeURIComponent(activeChatKey)}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         const incoming: SupportMessage[] = data.data;
@@ -93,7 +98,6 @@ function ContactChatContent() {
         }
 
         setMessages((prev) => {
-          // If no change in messages, keep previous state to avoid unnecessary re-renders
           if (
             prev.length === incoming.length &&
             prev.length > 0 &&
@@ -105,7 +109,6 @@ function ContactChatContent() {
             return prev;
           }
 
-          // If new messages arrived, check if user was near bottom before auto-scrolling
           const el = messagesContainerRef.current;
           const wasNearBottom = el ? el.scrollHeight - el.scrollTop - el.clientHeight < 120 : true;
 
@@ -127,24 +130,22 @@ function ContactChatContent() {
 
   // Initial fetch and 3.5s real-time poll
   useEffect(() => {
+    if (!activeChatKey) return;
     setLoading(true);
     fetchMessages(true);
     const interval = setInterval(() => {
       fetchMessages(false);
     }, 3500);
     return () => clearInterval(interval);
-  }, [orderCode]);
+  }, [activeChatKey]);
 
   // Handle Send Message
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const cleanMsg = inputText.trim();
-    if (!cleanMsg || isSending) return;
+    if (!cleanMsg || isSending || !activeChatKey) return;
 
-    const finalName = customerName.trim() || user?.fullName || 'Khách hàng';
-    if (!user && typeof window !== 'undefined') {
-      localStorage.setItem('noonee_chat_name', finalName);
-    }
+    const senderName = user?.fullName || user?.username || 'Khách hàng';
 
     setIsSending(true);
     try {
@@ -152,10 +153,10 @@ function ContactChatContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderCode: orderCode.trim() || 'GENERAL',
+          orderCode: activeChatKey,
           userId: user?.id || null,
           senderRole: 'customer',
-          senderName: finalName,
+          senderName,
           message: cleanMsg,
           isComplaint: Boolean(isComplaint),
         }),
@@ -176,11 +177,6 @@ function ContactChatContent() {
       setIsSending(false);
       inputRef.current?.focus();
     }
-  };
-
-  const handleQuickQuestion = (text: string) => {
-    setInputText(text);
-    inputRef.current?.focus();
   };
 
   return (
@@ -236,7 +232,7 @@ function ContactChatContent() {
                   </div>
                   <div>
                     <strong className="block text-[#181d26]">Khung giờ phục vụ:</strong>
-                    <span>07:00 - 22:00 (Mỗi ngày)</span>
+                    <span>06:00 - 24:00 (Mỗi ngày)</span>
                   </div>
                 </div>
 
@@ -250,28 +246,6 @@ function ContactChatContent() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Service Guarantees Card */}
-            <div className="bg-white rounded-[10px] border border-[#dddddd] p-5 shadow-xs space-y-3">
-              <h3 className="text-[13px] font-bold text-[#181d26] uppercase tracking-wider flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-[#059669]" />
-                Cam kết hỗ trợ khách hàng
-              </h3>
-              <ul className="space-y-2 text-[12px] text-[#41454d]">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#059669] shrink-0 mt-0.5" />
-                  <span>Phản hồi chat trung bình trong vòng <strong>1 - 3 phút</strong>.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#059669] shrink-0 mt-0.5" />
-                  <span>Đổi món mới hoặc hoàn tiền nếu món ăn nguội, hỏng hoặc giao nhầm.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#059669] shrink-0 mt-0.5" />
-                  <span>Tin nhắn được đồng bộ trực tiếp tới bảng điều khiển Quản trị viên.</span>
-                </li>
-              </ul>
             </div>
           </div>
 
@@ -288,10 +262,6 @@ function ContactChatContent() {
                     <h3 className="font-semibold text-[14px] sm:text-[15px] !text-white text-white truncate flex items-center gap-2">
                       <span className="text-white">NooNee CSKH Trực Tuyến</span>
                     </h3>
-                    <div className="flex items-center gap-1.5 text-[11px] text-gray-300">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <span>Đang trực tuyến • Sẵn sàng phản hồi</span>
-                    </div>
                   </div>
                 </div>
 
@@ -306,28 +276,17 @@ function ContactChatContent() {
                 </button>
               </div>
 
-              {/* Chat Metadata & Topic Filter Bar */}
-              <div className="bg-[#f8fafc] px-3.5 py-2.5 border-b border-[#dddddd] flex flex-wrap items-center justify-between gap-2 text-[12px]">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[#555a64]">Tên bạn:</span>
-                  <input
-                    type="text"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="Nhập tên của bạn..."
-                    className="h-7 px-2 bg-white border border-[#dddddd] rounded-[4px] text-[12px] font-medium text-[#181d26] max-w-[140px] focus:outline-none focus:border-[#e31837]"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[#555a64]">Chủ đề:</span>
+              {/* Chat Topic Filter Bar (Without name input) */}
+              <div className="bg-[#f8fafc] px-3.5 py-2.5 border-b border-[#dddddd] flex items-center justify-between gap-2 text-[12px]">
+                <div className="flex items-center gap-2">
+                  <span className="text-[#555a64] font-medium">Chủ đề hỗ trợ:</span>
                   <select
                     value={orderCode}
                     onChange={(e) => setOrderCode(e.target.value)}
-                    className="h-7 px-2 bg-white border border-[#dddddd] rounded-[4px] text-[12px] font-medium text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
+                    className="h-7 px-2.5 bg-white border border-[#dddddd] rounded-[4px] text-[12px] font-medium text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
                   >
-                    <option value="">Hỗ trợ chung (Không theo đơn)</option>
-                    {orderCode && orderCode !== 'GENERAL' && !userOrders.includes(orderCode) && (
+                    <option value="">Hỗ trợ chung</option>
+                    {orderCode && !userOrders.includes(orderCode) && (
                       <option value={orderCode}>Đơn hàng #{orderCode}</option>
                     )}
                     {userOrders.map((code) => (
@@ -336,6 +295,10 @@ function ContactChatContent() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div className="text-[11px] text-[#9297a0]">
+                  {user ? (user.fullName || user.username) : 'Khách vãng lai'}
                 </div>
               </div>
 
@@ -349,8 +312,8 @@ function ContactChatContent() {
                 ) : messages.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2 text-gray-400">
                     <MessageSquare className="w-10 h-10 text-gray-300" />
-                    <p className="text-[13px] text-[#555a64] font-medium">Chưa có tin nhắn nào trong cuộc trò chuyện này.</p>
-                    <p className="text-[12px] text-[#9297a0]">Hãy đặt câu hỏi bên dưới, chúng tôi sẽ phản hồi bạn ngay!</p>
+                    <p className="text-[13px] text-[#555a64] font-medium">Xin chào! Bạn cần NooNee hỗ trợ điều gì hôm nay?</p>
+                    <p className="text-[12px] text-[#9297a0]">Gửi tin nhắn bên dưới, nhân viên hỗ trợ sẽ phản hồi bạn ngay.</p>
                   </div>
                 ) : (
                   messages.map((m) => {
@@ -392,31 +355,7 @@ function ContactChatContent() {
                 )}
               </div>
 
-              {/* Quick Suggestion Chips */}
-              <div className="px-3.5 py-2 bg-white border-t border-[#dddddd] flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                <span className="text-[11px] text-gray-400 shrink-0">Gợi ý:</span>
-                <button
-                  type="button"
-                  onClick={() => handleQuickQuestion('Quán mình hiện tại còn mở cửa nhận đơn không ạ?')}
-                  className="px-2.5 py-1 rounded-[4px] bg-[#f8fafc] hover:bg-red-50 text-[11px] text-[#41454d] hover:text-[#e31837] border border-[#dddddd] shrink-0 transition cursor-pointer"
-                >
-                  ⏰ Quán còn mở không?
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickQuestion('Tư vấn cho mình món cơm rang và bún ngon nhất với ạ!')}
-                  className="px-2.5 py-1 rounded-[4px] bg-[#f8fafc] hover:bg-red-50 text-[11px] text-[#41454d] hover:text-[#e31837] border border-[#dddddd] shrink-0 transition cursor-pointer"
-                >
-                  🍜 Tư vấn món ngon
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickQuestion('Mình muốn kiểm tra thời gian giao hàng đơn này.')}
-                  className="px-2.5 py-1 rounded-[4px] bg-[#f8fafc] hover:bg-red-50 text-[11px] text-[#41454d] hover:text-[#e31837] border border-[#dddddd] shrink-0 transition cursor-pointer"
-                >
-                  📦 Tình trạng giao hàng
-                </button>
-              </div>
+              {/* Chat Input & Controls (Suggestions removed) */}
 
               {/* Chat Input & Controls */}
               <form onSubmit={handleSendMessage} className="p-3 sm:p-3.5 bg-white border-t border-[#dddddd] space-y-2">

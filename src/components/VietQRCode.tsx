@@ -82,18 +82,18 @@ export default function VietQRCode({
 
   if (isPaymentDone) {
     return (
-      <div className="bg-[#fff1f2]/50 border border-[#39bf45] rounded-[12px] p-8 text-center space-y-4 shadow-xs">
-        <div className="w-14 h-14 bg-white border border-[#39bf45] text-[#006400] rounded-full flex items-center justify-center mx-auto">
-          <CheckCircle2 className="w-8 h-8" />
+      <div className="bg-white border border-[#dddddd] rounded-[10px] p-6 text-center space-y-3 shadow-xs">
+        <div className="w-12 h-12 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+          <CheckCircle2 className="w-6 h-6" />
         </div>
-        <h3 className="text-xl font-bold text-[#181d26]">Thanh toán thành công!</h3>
-        <p className="text-[14px] text-[#333840] max-w-md mx-auto">
-          Hệ thống đã ghi nhận giao dịch thành công số tiền <strong className="font-bold text-[#e31837]">{formatVND(amount)}</strong> cho đơn hàng <span className="font-mono font-bold bg-white border border-[#dddddd] px-2 py-0.5 rounded-[4px]">{orderCode}</span>.
+        <h3 className="text-lg font-bold text-[#181d26]">Thanh toán thành công!</h3>
+        <p className="text-[13px] text-[#41454d]">
+          Đơn hàng <span className="font-mono font-bold text-[#181d26]">#{orderCode}</span> đã được chuyển vào bếp.
         </p>
-        <div className="pt-2">
+        <div className="pt-1">
           <Link
             href={`/orders/${orderCode}?paymentSuccess=true`}
-            className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] text-white text-[14px] font-semibold px-6 py-3 rounded-[6px] shadow-xs transition"
+            className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-semibold px-5 py-2.5 rounded-[6px] shadow-xs transition"
           >
             Theo dõi đơn hàng
           </Link>

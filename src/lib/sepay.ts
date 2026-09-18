@@ -23,7 +23,7 @@ export function getVietQRImageUrl(config: VietQRConfig): string {
 
 export function parseOrderCodeFromMemo(memo: string): string | null {
   if (!memo) return null;
-  // Match DH followed by digits or letters
-  const match = memo.toUpperCase().match(/DH[0-9A-Z]+/);
+  // Match NOONEE_ followed by 8 digits/letters, or legacy DH...
+  const match = memo.toUpperCase().match(/(?:NOONEE_[0-9A-Z]{8}|DH[0-9A-Z]+)/);
   return match ? match[0] : null;
 }

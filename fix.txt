@@ -1,21 +1,18 @@
-thêm kho mã voucher vào profile, tách riêng ra 1 mục
-voucher sẽ có hạn sử dụng, có giới hạn số người dùng
-cập nhật thêm nhiều loại mã (mã cho đơn cơm, đơn nước độc quyền, mã giảm 20/30/50% mã giảm 10k-50k) (mã không được quá dễ đoán, tốt nhất là ký tự ngẫu nhiên), admin có thể tạo/quản lý voucher
-ở sau khi đặt món ăn, nếu có vấn đề gì thì sẽ có nút chuyển qua mục liên hệ, và người dùng ở đó có thể chọn đơn hàng ở mục chủ đề sau đó chat với nhân viên, khi nhân viên trả lời thì mục liên hệ sẽ có chấm đỏ
-thông báo, (hiện tại là nút chat khiếu nại riêng, khi muốn vào chat lại phải vào món ăn đó để xem tin nhắn), ngoài ra phải lưu lịch sử tin nhắn
-ở mục thanh toán, đưa số dư ví ảo xuống phương thức thanh toán, còn logic hoạt động vẫn thể, thay nút tích thành dạng công tắc on off.
-ở tiến trình thành viên, hiện rõ số lượng tiền được giảm và hiện rõ mã giảm giá người dùng nhận được khi lên hạng, ngoài ra để lợi ích to lên chứ (đương nhiên rồi)
-khách hàng khi đặt đơn xong nếu bếp chưa nấu có thể ấn hủy đơn kèm mục ghi lí do không bắt buộc(nếu đã quét qr chuyển tiền thì sẽ hoàn tiền)
-khi bếp ấn hủy đơn cũng phải kèm lí do, ở phía bếp sẽ có lựa chọn lí do mẫu để hủy đơn nhanh hơn
-nút lưu địa chỉ mặc định chưa hoạt động, bỏ luôn nút đó đi, khi khách hàng nhập thông tin và thanh toán sẽ mặc định lưu luôn địa chỉ và sdt đó vào đơn sau
-mục bán cháy ở navbar sẽ ra một trang khác thay vì menu, ở trang bán chạy sẽ hiện các món hot kèm banner quảng cáo và mã giảm giá độc quyền cho các món (1 lần dùng)
-ở giao diện giỏ hàng, có nút xem giỏ hàng và thanh toán, nhưng dấu x ở trên quá bé, ở trên giao diện mobile người dùng phản ánh rằng khi họ thêm món ăn vào giỏ, giỏ hàng hiện lên và họ mãi mới tìm được cách
-tắt đi (ở trên desktop thì khỏ hàng chỉ hiện 1 bên những ở mobile thì giỏ hàng hiện cả màn hình)
-ngoài ra phần input để tìm kiếm ở navbar vẫn bị bé, tôi nghĩ nên chỉnh thành nút tìm kiếm, khi ấn vào thì mở rộng phần input ra
-khi người dùng ấn vào profile phải hiện thêm thông tin số dư ví
-ở admin dashboard phải có thêm thông báo chấm đỏ ở tin nhắn khiếu nại khi có thông báo mới 
-ở thực đơn, ở mục [Đang hiển thị 73 món ăn(Trang 1/7)], xóa trang 1/7 đi (quá vô dụng)
-ở mục thanh toán, thay vì nhập mã voucher thì sẽ có luôn nút xem mã, áp mã gì đó, khi ấn vào mới hiện ra thanh nhập mã và mã sẵn có (vì thực tế người dùng sẽ ấn áp mã có sẵn chứ chả ai nhập mã bằng tay)
-
-
-
+chia danh mục cơm & món chính chi tiết hơn thành các mục cơm, bún mì, phở 
+ở https://noonee.dpdns.org/ - xóa Món ngon nóng hổi • Giao nhanh 30 phút, danh mục sản phầm ở cuối, banner đơn nhóm để lên trên, tối giản banner lại cho người dùng dễ hiểu, món ăn nổi bật để 2 hàng thôi
+ở https://noonee.dpdns.org/menu, các món ăn không hiển thị danh mục trên tên, không hiện thời gian chuẩn bị, sắp xếp hiện là bán chạy thôi (tiện cho tôi hỏi sắp xếp bán chạy đang theo tiêu chí gì), ở mục tùy chọn món ăn xóa icon ngôi sao và cái bút đi, xóa luôn danh mục và thời gian nấu, đánh giá ở tùy chọn, xóa Hiển thị 1 - 12 trong tổng số 73 món ăn đi
+ở đơn nhóm người dùng sẽ thật sự chả hiểu nó có tác dụng gì, viết dẽ hiểu hơn, 3 ô hiện mức giảm giá cũng chả để làm gì
+ở đơn hàng thiếu phân trang, xóa Xem danh sách lịch sử đơn hàng của tài khoản, ở mục đơn hàng xem lịch sử các thì xóa "Thanh toán: Chuyển khoản VietQR • Đã thanh toán", người nhận chỉ ghi người nhận, không cần ghi thêm sdt
+ở bán chạy xóa "BẢNG XẾP HẠNG BEST SELLER 2026" "Đánh giá trung bình 4.9+" "Hơn 1.200+ lượt gọi/ngày" "ĐẶC QUYỀN TRANG BÁN CHẠY"
+ở bán chạy chỉ để tầm 9 món thôi
+ở bán chạy, mục Mã Giảm Giá Độc Quyền Cho Món Bán Chạy (1 Lần Dùng) - Sao chép mã ưu đãi độc quyền dành riêng cho thực khách trải nghiệm các món Best-seller hôm nay. chỉ viết thành voucher độc quyền là được, và các voucher cũng chỉ ghi là giảm bao nhiêu, đơn từ bao nhiêu, và nút ấn lưu, không cần ấn sao chép hay hiện mã, thêm 1 nút điều kiện để hiện thi chi tiết mã và điều kiện, xóa mục "mỗi khác hàng sử dụng 1 lần vì tất cả các mã đều mặc định dùng 1 lần"
+ở cskh chat hiện tại đang dùng chung nhiều user 1 khung chat hỗ trợ, đơn hàng khi tích sẽ hiện 3 đơn gần đây thôi, xóa Cam kết hỗ trợ khách hàng, xóa Đang trực tuyến • Sẵn sàng phản hồi, xóa nhập tên, xóa gợi ý 
+ở mục thanh toán, phương thức thanh toán mô tả quá dài dòng xóa Cam kết an toàn và bảo mật thông tin đơn hàng, ở mục chọn mã thì gợi ý luôn mã giảm nhiều nhất lên
+pop up thông báo thanh toán thành công quá nhiều chi tiết rờm rà, tối giản lại
+thông tin thanh toán sẽ hiện món ăn và phí ship, sao đó hiện mã giảm nếu có, hiện giảm thành viên nếu có và hiện tổng tiền (như tờ bill vậy)
+mã đơn hàng chỉnh thành #NOONEE_########
+ở chi tiết món ăn, xóa Chế biến tươi sạch, giá cơ bán, kèm dụng cụ, Tùy chọn món thêm / Topping thì đổi thành tùy chọn. Ghi chú riêng cho món này (Bếp chế biến theo yêu cầu): đổi thành ghi chú
+ngoài ra thêm nút mua ngay, chọn topping và tiến hành thanh toán luôn thay vì nút thêm vào giỏ hàng
+© 2026 NooNee Food. Giữ trọn hương vị chuẩn vị & nóng hổi. đổi thành © 2026 NooNee Food.
+ở cuối trang xóa Giao hàng 30 phút Món ngon mỗi ngày
+giờ phục vụ từ 6:00 đến 24:00

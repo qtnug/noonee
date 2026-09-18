@@ -42,7 +42,17 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/menu?categoryId=1" className="hover:text-[#e31837] transition">
-                  Cơm & Món chính
+                  Cơm
+                </Link>
+              </li>
+              <li>
+                <Link href="/menu?categoryId=4" className="hover:text-[#e31837] transition">
+                  Bún mì
+                </Link>
+              </li>
+              <li>
+                <Link href="/menu?categoryId=5" className="hover:text-[#e31837] transition">
+                  Phở
                 </Link>
               </li>
               <li>
@@ -73,24 +83,29 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2.5 text-[14px] text-[#475569] font-medium">
               <li>
+                <Link href="/contact" className="hover:text-[#e31837] transition">
+                  Chăm sóc khách hàng & Khiếu nại
+                </Link>
+              </li>
+              <li>
                 <Link href="/orders" className="hover:text-[#e31837] transition">
-                  Tra cứu đơn hàng
+                  Tra cứu lịch sử đơn hàng
                 </Link>
               </li>
               <li>
-                <Link href="/cart" className="hover:text-[#e31837] transition">
-                  Giỏ hàng
+                <Link href="/profile" className="hover:text-[#e31837] transition">
+                  Hạng thành viên & Điểm thưởng
                 </Link>
               </li>
               <li>
-                <Link href="/login" className="hover:text-[#e31837] transition">
-                  Đăng nhập tài khoản
+                <Link href="/privacy" className="hover:text-[#e31837] transition">
+                  Chính sách bảo mật & Giao hàng
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 4: Thông Tin Liên Hệ */}
+          {/* Col 4: Liên Hệ & Cửa Hàng */}
           <div>
             <h4 className="text-[#0f172a] text-[14px] font-bold uppercase tracking-wider mb-4">
               Liên Hệ & Cửa Hàng
@@ -106,20 +121,15 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#e31837] shrink-0" />
-                <span>Giờ phục vụ: 07:00 - 22:00</span>
+                <span>Giờ phục vụ: 06:00 - 24:00</span>
               </li>
             </ul>
           </div>
         </div>
 
         {/* Hairline Row */}
-        <div className="border-t border-[#ebdcd0] mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between text-[13px] text-[#64748b] gap-4">
-          <p>© {new Date().getFullYear()} NooNee Food. Giữ trọn hương vị chuẩn vị & nóng hổi.</p>
-          <div className="flex items-center gap-2 text-[12px] text-[#64748b] font-medium">
-            <span>Giao hàng 30 phút</span>
-            <span>•</span>
-            <span>Món ngon mỗi ngày</span>
-          </div>
+        <div className="border-t border-[#ebdcd0] mt-10 pt-6 flex items-center justify-center text-[13px] text-[#64748b]">
+          <p>© 2026 NooNee Food.</p>
         </div>
       </div>
     </footer>

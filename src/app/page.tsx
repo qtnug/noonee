@@ -33,11 +33,6 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Left Content Column */}
             <div className="lg:col-span-6 space-y-4 sm:space-y-6">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-[#e31837] text-[12px] font-bold border border-rose-200 shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-[#e31837] animate-pulse" />
-                <span>Món ngon nóng hổi • Giao nhanh 30 phút</span>
-              </div>
-
               <h1 className="text-3xl sm:text-5xl lg:text-[46px] font-extrabold tracking-tight text-[#0f172a] leading-[1.15]">
                 Thưởng thức món ngon, <br className="hidden sm:inline" />
                 <span className="text-[#e31837]">chuẩn vị</span> & giao tận nơi
@@ -101,17 +96,20 @@ export default async function HomePage() {
               <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#e31837] flex items-center justify-center shrink-0">
                 <Clock className="w-4 h-4" />
               </div>
-              <span className="text-[13px] sm:text-[14px] font-bold text-[#0f172a]">Mở cửa 07:00 - 22:00</span>
+              <span className="text-[13px] sm:text-[14px] font-bold text-[#0f172a]">Mở cửa 06:00 - 24:00</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. SIGNATURE RED BANNER (PromoBanner with auto-hide after first paid VietQR order) */}
+      {/* 3. SIGNATURE RED BANNER */}
       <PromoBanner />
 
-      {/* 4. FEATURED PRODUCTS (Clean Header, No Fluff Text) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      {/* 4. GROUP ORDER BANNER (Placed above featured products) */}
+      <GroupOrderBanner />
+
+      {/* 5. FEATURED PRODUCTS (2 Rows = 8 Items) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-16">
         <div className="flex items-center justify-between mb-8 pb-3 border-b border-[#dddddd]">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a]">
             Món ăn nổi bật
@@ -126,74 +124,9 @@ export default async function HomePage() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-          {featuredProducts.slice(0, 16).map((product) => (
+          {featuredProducts.slice(0, 8).map((product) => (
             <ProductCard key={product.id} product={product} badgeText="Nổi bật" />
           ))}
-        </div>
-      </section>
-
-      {/* 5. GROUP ORDER BANNER */}
-      <GroupOrderBanner />
-
-      {/* 6. CLEAN CATEGORY CARDS (Minimalist, Crisp) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Card 1 */}
-          <Link
-            href="/menu?categoryId=1"
-            className="bg-white border border-[#dddddd] hover:border-[#e31837] rounded-[12px] p-6 flex flex-col justify-between h-48 transition-all hover:-translate-y-1 hover:shadow-md group"
-          >
-            <div>
-              <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded">
-                Cơm & Món chính
-              </span>
-              <h3 className="text-xl font-bold text-[#0f172a] mt-3 group-hover:text-[#e31837] transition-colors">
-                Cơm rang & Bún phở gia truyền
-              </h3>
-            </div>
-            <div className="inline-flex items-center gap-1.5 text-[13px] font-bold text-[#e31837] pt-3 border-t border-[#f1f5f9]">
-              <span>Khám phá ngay</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
-
-          {/* Card 2 */}
-          <Link
-            href="/menu?categoryId=2"
-            className="bg-white border border-[#dddddd] hover:border-[#e31837] rounded-[12px] p-6 flex flex-col justify-between h-48 transition-all hover:-translate-y-1 hover:shadow-md group"
-          >
-            <div>
-              <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded">
-                Đồ ăn vặt
-              </span>
-              <h3 className="text-xl font-bold text-[#0f172a] mt-3 group-hover:text-[#e31837] transition-colors">
-                Bánh tráng & Ăn vặt nóng giòn
-              </h3>
-            </div>
-            <div className="inline-flex items-center gap-1.5 text-[13px] font-bold text-[#e31837] pt-3 border-t border-[#f1f5f9]">
-              <span>Khám phá ngay</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
-
-          {/* Card 3 */}
-          <Link
-            href="/menu?categoryId=3"
-            className="bg-white border border-[#dddddd] hover:border-[#e31837] rounded-[12px] p-6 flex flex-col justify-between h-48 transition-all hover:-translate-y-1 hover:shadow-md group"
-          >
-            <div>
-              <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded">
-                Đồ uống & Tráng miệng
-              </span>
-              <h3 className="text-xl font-bold text-[#0f172a] mt-3 group-hover:text-[#e31837] transition-colors">
-                Trà sữa, Cà phê & Nước ép
-              </h3>
-            </div>
-            <div className="inline-flex items-center gap-1.5 text-[13px] font-bold text-[#e31837] pt-3 border-t border-[#f1f5f9]">
-              <span>Khám phá ngay</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
         </div>
       </section>
     </div>

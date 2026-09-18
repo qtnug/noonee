@@ -318,77 +318,26 @@ export default function PaymentPage() {
 
       {/* Payment Success Celebratory Modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-[16px] max-w-md w-full p-6 sm:p-8 text-center shadow-2xl border border-[#dddddd] space-y-5 animate-in zoom-in-95 duration-200">
-            {/* Animated Success Icon */}
-            <div className="relative mx-auto w-20 h-20">
-              <div className="absolute inset-0 rounded-full bg-[#10b981]/20 animate-ping opacity-75" />
-              <div className="relative w-20 h-20 rounded-full bg-[#ecfdf5] border-2 border-[#10b981] flex items-center justify-center text-[#10b981] shadow-inner">
-                <CheckCircle2 className="w-10 h-10" />
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-[12px] max-w-sm w-full p-6 text-center shadow-xl border border-[#dddddd] space-y-4">
+            <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
+              <Check className="w-6 h-6" />
             </div>
 
-            {/* Title & Description */}
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ecfdf5] text-[#047857] text-[12px] font-semibold">
-                <Sparkles className="w-3.5 h-3.5 text-[#10b981]" />
-                Xác nhận thanh toán thành công
-              </div>
-              <h2 className="text-2xl font-bold text-[#181d26]">
-                🎉 Thanh Toán Thành Công!
-              </h2>
+            <div className="space-y-1">
+              <h2 className="text-lg font-bold text-[#181d26]">Thanh toán thành công</h2>
               <p className="text-[13px] text-[#41454d]">
-                Hệ thống quán đã nhận được tiền cho đơn hàng của bạn. Bếp đang bắt đầu chuẩn bị món ăn nóng hổi ngay bây giờ!
+                Đơn hàng <span className="font-mono font-bold text-[#181d26]">#{orderCode}</span> ({formatVND(order.totalAmount)}) đã được chuyển vào bếp.
               </p>
             </div>
 
-            {/* Receipt Summary Box */}
-            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-[10px] p-4 text-left space-y-2.5 text-[13px]">
-              <div className="flex justify-between items-center text-[#41454d]">
-                <span>Mã đơn hàng:</span>
-                <span className="font-mono font-bold text-[#181d26]">#{orderCode}</span>
-              </div>
-              <div className="flex justify-between items-center text-[#41454d]">
-                <span>Số tiền đã thanh toán:</span>
-                <span className="font-bold text-[#e31837] text-[16px]">
-                  {formatVND(order.totalAmount)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-[#41454d]">
-                <span>Phương thức:</span>
-                <span className="font-medium text-[#181d26]">Chuyển khoản VietQR</span>
-              </div>
-              <div className="flex justify-between items-center text-[#41454d]">
-                <span>Trạng thái nhà bếp:</span>
-                <span className="inline-flex items-center gap-1 font-semibold text-[#047857]">
-                  <Check className="w-3.5 h-3.5 text-[#10b981]" /> Đã chuyển vào bếp
-                </span>
-              </div>
-            </div>
-
-            {/* Countdown redirect prompt */}
-            <div className="text-[12px] text-[#64748b]">
-              Tự động chuyển đến trang theo dõi đơn hàng sau{' '}
-              <strong className="text-[#e31837] font-bold text-[14px]">{countdown}s</strong>...
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-2 pt-1">
-              <button
-                onClick={handleGoToOrder}
-                className="flex-1 py-3 px-4 bg-[#e31837] hover:bg-[#be0e27] text-white rounded-[8px] text-[13px] font-semibold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-              >
-                <span>Theo dõi đơn hàng ngay</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-              <Link
-                href="/"
-                className="py-3 px-4 bg-white hover:bg-[#f8fafc] text-[#41454d] border border-[#dddddd] rounded-[8px] text-[13px] font-medium transition flex items-center justify-center gap-1.5"
-              >
-                <Home className="w-4 h-4" />
-                <span>Trang chủ</span>
-              </Link>
-            </div>
+            <button
+              onClick={handleGoToOrder}
+              className="w-full py-2.5 px-4 bg-[#e31837] hover:bg-[#be0e27] text-white rounded-[6px] text-[13px] font-semibold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+            >
+              <span>Theo dõi đơn hàng ({countdown}s)</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import {
   X,
   Plus,
@@ -10,11 +11,8 @@ import {
   Check,
   CheckSquare,
   Square,
-  PenLine,
   Sparkles,
-  Star,
-  ShieldCheck,
-  Clock,
+  Zap,
 } from 'lucide-react';
 import { Product, ProductTopping } from '@/types';
 import { formatVND } from '@/lib/utils';
@@ -100,6 +98,7 @@ export default function ProductOptionsModal({
   isOpen,
   onClose,
 }: ProductOptionsModalProps) {
+  const router = useRouter();
   const { addToCart, setIsCartOpen } = useCart();
   const [mounted, setMounted] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -170,6 +169,13 @@ export default function ProductOptionsModal({
     }, 300);
   };
 
+  const handleBuyNow = () => {
+    setIsSubmitting(true);
+    addToCart(product, quantity, selectedToppings, itemNote.trim());
+    onClose();
+    router.push('/checkout');
+  };
+
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs transition-opacity"
@@ -195,19 +201,6 @@ export default function ProductOptionsModal({
 
               {/* Product Basics */}
               <div className="space-y-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#e31837] bg-[#fff1f2] px-2 py-0.5 rounded-[4px] border border-[#fecdd3]">
-                    {product.categoryName || 'Món ngon'}
-                  </span>
-                  <span className="flex items-center gap-0.5 text-[11px] text-[#41454d] bg-[#f8fafc] border border-[#dddddd] px-1.5 py-0.5 rounded-[4px]">
-                    <Clock className="w-3 h-3 text-[#e31837]" />
-                    <span>{product.prepTime || 15}p</span>
-                  </span>
-                  <span className="flex items-center gap-1 text-[12px] text-[#41454d]">
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                    <span>{product.rating ? product.rating.toFixed(1) : '5.0'}</span>
-                  </span>
-                </div>
                 <h3 className="text-[16px] sm:text-[18px] font-semibold text-[#181d26] leading-snug line-clamp-1">
                   {product.name}
                 </h3>
@@ -298,9 +291,8 @@ export default function ProductOptionsModal({
 
           {/* 2. Item Culinary Note */}
           <div className="space-y-2 pt-3 border-t border-[#dddddd]">
-            <label className="text-[13px] font-semibold text-[#181d26] flex items-center gap-1.5">
-              <PenLine className="w-3.5 h-3.5 text-[#e31837]" />
-              <span>Ghi chú cho quán (Khẩu vị / Chế biến):</span>
+            <label className="text-[13px] font-semibold text-[#181d26]">
+              <span>Ghi chú:</span>
             </label>
             <input
               type="text"
@@ -313,7 +305,7 @@ export default function ProductOptionsModal({
           </div>
         </div>
 
-        {/* Modal Footer: Quantity Stepper & Submit Button */}
+        {/* Modal Footer: Quantity Stepper & Action Buttons */}
         <div className="p-4 sm:p-5 border-t border-[#dddddd] bg-[#f8fafc] sticky bottom-0">
           <div className="flex items-center justify-between gap-3 mb-3">
             <div>
@@ -347,31 +339,37 @@ export default function ProductOptionsModal({
             </div>
           </div>
 
-          {/* Action Button */}
-          <button
-            type="button"
-            onClick={handleConfirmAdd}
-            disabled={!product.isAvailable || isSubmitting}
-            className={`w-full h-11 px-4 rounded-[10px] text-[14px] font-semibold transition flex items-center justify-center gap-2 shadow-sm ${
-              !product.isAvailable
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : isSubmitting
-                ? 'bg-[#16a34a] text-white'
-                : 'bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white'
-            }`}
-          >
-            {isSubmitting ? (
-              <>
-                <Check className="w-4 h-4" />
-                <span>Đã thêm vào giỏ hàng!</span>
-              </>
-            ) : (
-              <>
-                <ShoppingBag className="w-4 h-4" />
-                <span>Thêm vào giỏ hàng • {formatVND(totalPrice)}</span>
-              </>
-            )}
-          </button>
+          {/* Action Buttons: Thêm vào giỏ & Mua ngay */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleConfirmAdd}
+              disabled={!product.isAvailable || isSubmitting}
+              className={`flex-1 h-11 px-3 rounded-[10px] text-[13px] sm:text-[14px] font-semibold transition flex items-center justify-center gap-1.5 border border-[#dddddd] bg-white hover:bg-rose-50/60 text-[#181d26] hover:border-[#e31837] cursor-pointer disabled:opacity-50`}
+            >
+              {isSubmitting ? (
+                <>
+                  <Check className="w-4 h-4 text-[#006400]" />
+                  <span>Đã thêm!</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="w-4 h-4 text-[#e31837]" />
+                  <span>Thêm vào giỏ</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleBuyNow}
+              disabled={!product.isAvailable || isSubmitting}
+              className={`flex-1 h-11 px-3 rounded-[10px] text-[13px] sm:text-[14px] font-semibold transition flex items-center justify-center gap-1.5 shadow-sm bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white cursor-pointer disabled:opacity-50`}
+            >
+              <Zap className="w-4 h-4" />
+              <span>Mua ngay • {formatVND(totalPrice)}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>,

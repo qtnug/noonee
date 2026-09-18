@@ -6,16 +6,14 @@ import {
   Flame,
   Sparkles,
   Ticket,
-  Copy,
   Check,
-  TrendingUp,
-  Award,
   ArrowRight,
-  ShieldCheck,
   UtensilsCrossed,
   Coffee,
   Sandwich,
   Loader2,
+  Info,
+  X,
 } from 'lucide-react';
 import { Product } from '@/types';
 import { formatVND } from '@/lib/utils';
@@ -25,7 +23,8 @@ export default function BestSellerPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [savedCodes, setSavedCodes] = useState<string[]>([]);
+  const [conditionModalCoupon, setConditionModalCoupon] = useState<any | null>(null);
 
   useEffect(() => {
     const fetchHotDishes = async () => {
@@ -53,36 +52,53 @@ export default function BestSellerPage() {
     fetchHotDishes();
   }, []);
 
-  const handleCopy = (code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(code);
-    setTimeout(() => setCopiedCode(null), 2500);
+  const handleSaveCoupon = (code: string) => {
+    setSavedCodes((prev) => {
+      if (prev.includes(code)) return prev;
+      const next = [...prev, code];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('noonee_saved_vouchers', JSON.stringify(next));
+      }
+      return next;
+    });
   };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = JSON.parse(localStorage.getItem('noonee_saved_vouchers') || '[]');
+        if (Array.isArray(saved)) setSavedCodes(saved);
+      } catch {}
+    }
+  }, []);
 
   const exclusiveCoupons = [
     {
       code: 'BEST_HOT25',
-      name: 'Voucher Bán Chạy - Giảm 25.000 ₫',
-      description: 'Áp dụng cho các đơn có món trong danh mục Bán Chạy đạt từ 80.000 ₫. Mỗi khách hàng sử dụng 1 lần.',
-      badge: 'Độc quyền 1 lần dùng',
-      discount: 'Giảm 25k',
-      minOrder: 'Đơn từ 80k',
+      name: 'Voucher Bán Chạy',
+      description: 'Áp dụng cho các đơn có món trong danh mục Bán Chạy đạt từ 80.000 ₫.',
+      badge: 'Độc quyền',
+      discount: 'Giảm 25.000 ₫',
+      minOrder: 'Đơn từ 80.000 ₫',
+      condition: 'Áp dụng cho đơn hàng có món trong danh mục Bán Chạy từ 80.000 ₫ trở lên. Tự động áp dụng tại trang thanh toán.',
     },
     {
       code: 'BEST_HOT35',
-      name: 'Siêu Deal Món Hot - Giảm 35.000 ₫',
+      name: 'Siêu Deal Món Hot',
       description: 'Áp dụng cho đơn có món Bán Chạy đạt từ 130.000 ₫. Thưởng thức trọn vẹn hương vị đỉnh cao.',
-      badge: 'Hot Deal 1 lần dùng',
-      discount: 'Giảm 35k',
-      minOrder: 'Đơn từ 130k',
+      badge: 'Hot Deal',
+      discount: 'Giảm 35.000 ₫',
+      minOrder: 'Đơn từ 130.000 ₫',
+      condition: 'Áp dụng cho đơn hàng có món trong danh mục Bán Chạy đạt từ 130.000 ₫ trở lên.',
     },
     {
       code: 'GIAM_P30K9',
-      name: 'Đại Tiệc Món Ngon - Giảm 30%',
-      description: 'Giảm 30% tối đa 50.000 ₫ cho đơn từ 120.000 ₫. Ưu đãi nóng hổi trong ngày.',
+      name: 'Đại Tiệc Món Ngon',
+      description: 'Giảm 30% tối đa 50.000 ₫ cho đơn từ 120.000 ₫.',
       badge: 'Giảm 30%',
-      discount: 'Giảm 30%',
-      minOrder: 'Đơn từ 120k',
+      discount: 'Giảm 30% (tối đa 50k)',
+      minOrder: 'Đơn từ 120.000 ₫',
+      condition: 'Giảm 30% tổng giá trị món ăn (tối đa 50.000 ₫) cho đơn từ 120.000 ₫ trở lên.',
     },
   ];
 
@@ -93,122 +109,87 @@ export default function BestSellerPage() {
 
   return (
     <div className="bg-[#FFFAF0] min-h-screen pb-16">
-      {/* 1. HERO PROMOTIONAL BANNER */}
-      <div className="bg-gradient-to-r from-[#181d26] via-[#2c1418] to-[#181d26] text-white py-10 sm:py-14 border-b border-[#dddddd] relative overflow-hidden">
-        {/* Subtle background flare */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
+      {/* 1. HERO BANNER (Minimalist & Punchy) */}
+      <div className="bg-gradient-to-r from-[#181d26] via-[#2c1418] to-[#181d26] text-white py-10 sm:py-12 border-b border-[#dddddd] relative overflow-hidden">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-            <div className="space-y-4 max-w-2xl text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 border border-red-500/30 text-[#fecdd3] text-[12px] font-bold">
-                <Flame className="w-4 h-4 text-amber-400 fill-amber-400 animate-pulse" />
-                <span>BẢNG XẾP HẠNG BEST SELLER 2026</span>
-              </div>
+          <div className="max-w-2xl text-center lg:text-left space-y-3">
+            <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+              Top Món Bán Chạy Nhất <br className="hidden sm:inline" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-pink-400 to-amber-300">
+                Tại NooNee Food
+              </span>
+            </h1>
 
-              <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
-                <span className="text-white">Top Món Bán Chạy Nhất</span> <br className="hidden sm:inline" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-pink-400 to-amber-300">
-                  Tại NooNee Food
-                </span>
-              </h1>
-
-              <p className="text-[14px] sm:text-[16px] text-gray-300 leading-relaxed">
-                Được tuyển chọn từ hàng chục ngàn lượt đặt hàng của thực khách. Hương vị chuẩn mực truyền thống, đậm đà, chế biến nóng hổi ngay khi có đơn.
-              </p>
-
-              <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-3 text-[12px] text-gray-300">
-                <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-[6px]">
-                  <Award className="w-4 h-4 text-amber-400" />
-                  <span>Đánh giá trung bình 4.9+ ⭐</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-[6px]">
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
-                  <span>Hơn 1.200+ lượt gọi/ngày</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Banner Side Graphic Card */}
-            <div className="w-full lg:w-96 bg-white/10 backdrop-blur-md rounded-[16px] border border-white/20 p-5 shadow-2xl space-y-3 shrink-0">
-              <div className="flex items-center gap-2 text-amber-300 text-[13px] font-bold">
-                <Sparkles className="w-4 h-4" />
-                <span>ĐẶC QUYỀN TRANG BÁN CHẠY</span>
-              </div>
-              <p className="text-[13px] text-gray-200">
-                Sử dụng ngay các mã giảm giá 1 lần duy nhất bên dưới để được giảm tới <strong>35.000 ₫</strong> khi thưởng thức các món ăn trong danh sách này!
-              </p>
-              <div className="pt-2 border-t border-white/15 flex items-center justify-between text-[11px] text-gray-300">
-                <span>Áp dụng tự động tại bước thanh toán</span>
-                <span className="text-amber-400 font-semibold">1 Lần / Khách</span>
-              </div>
-            </div>
+            <p className="text-[14px] sm:text-[15px] text-gray-300 leading-relaxed">
+              Tuyển chọn các món ăn được thực khách gọi nhiều nhất. Hương vị chuẩn truyền thống, chế biến nóng hổi ngay khi có đơn.
+            </p>
           </div>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
-        {/* 2. EXCLUSIVE 1-TIME COUPONS SECTION (STT 11) */}
+        {/* 2. EXCLUSIVE VOUCHERS SECTION */}
         <div className="bg-white rounded-[14px] border border-[#dddddd] p-5 sm:p-7 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#dddddd] pb-3">
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold text-[#181d26] flex items-center gap-2">
-                <Ticket className="w-5 h-5 text-[#e31837]" />
-                Mã Giảm Giá Độc Quyền Cho Món Bán Chạy (1 Lần Dùng)
-              </h2>
-              <p className="text-[13px] text-[#41454d] mt-0.5">
-                Sao chép mã ưu đãi độc quyền dành riêng cho thực khách trải nghiệm các món Best-seller hôm nay.
-              </p>
-            </div>
-            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-red-50 text-[#e31837] border border-[#fecdd3] self-start sm:self-auto">
-              Ưu đãi giới hạn
-            </span>
+          <div className="flex items-center justify-between border-b border-[#dddddd] pb-3">
+            <h2 className="text-lg sm:text-xl font-bold text-[#181d26] flex items-center gap-2">
+              <Ticket className="w-5 h-5 text-[#e31837]" />
+              Voucher độc quyền
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-            {exclusiveCoupons.map((c) => (
-              <div
-                key={c.code}
-                className="bg-gradient-to-br from-white to-[#fff5f6] border border-[#fecdd3] rounded-[10px] p-4 flex flex-col justify-between space-y-3 relative shadow-2xs hover:shadow-md transition"
-              >
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#e31837] bg-white px-2 py-0.5 rounded border border-[#fecdd3]">
-                      {c.badge}
-                    </span>
-                    <span className="text-[11px] font-bold text-[#41454d] bg-gray-100 px-2 py-0.5 rounded">
-                      {c.minOrder}
-                    </span>
+            {exclusiveCoupons.map((c) => {
+              const isSaved = savedCodes.includes(c.code);
+              return (
+                <div
+                  key={c.code}
+                  className="bg-gradient-to-br from-white to-[#fff5f6] border border-[#fecdd3] rounded-[10px] p-4 flex flex-col justify-between space-y-3 relative shadow-2xs hover:shadow-md transition"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#e31837] bg-white px-2 py-0.5 rounded border border-[#fecdd3]">
+                        {c.badge}
+                      </span>
+                      <span className="text-[11px] font-bold text-[#41454d] bg-gray-100 px-2 py-0.5 rounded">
+                        {c.minOrder}
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-[16px] text-[#e31837] pt-1">{c.discount}</h3>
+                    <p className="text-[12px] text-[#41454d] leading-relaxed">{c.minOrder}</p>
                   </div>
-                  <h3 className="font-bold text-[14px] text-[#181d26] pt-1">{c.name}</h3>
-                  <p className="text-[12px] text-[#41454d] leading-relaxed">{c.description}</p>
-                </div>
 
-                <div className="pt-2 border-t border-[#fecdd3]/60 flex items-center justify-between">
-                  <span className="font-mono font-bold text-[13px] text-[#e31837] bg-white px-2.5 py-1 rounded border border-[#fecdd3]">
-                    {c.code}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(c.code)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#e31837] hover:bg-[#be0e27] text-white text-[12px] font-semibold rounded-[6px] transition cursor-pointer shadow-2xs"
-                  >
-                    {copiedCode === c.code ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Đã lưu mã</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Sao chép</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="pt-2 border-t border-[#fecdd3]/60 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setConditionModalCoupon(c)}
+                      className="text-[12px] text-[#555a64] hover:text-[#e31837] font-medium flex items-center gap-1 cursor-pointer transition underline"
+                    >
+                      <Info className="w-3.5 h-3.5" />
+                      <span>Điều kiện</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSaveCoupon(c.code)}
+                      className={`flex items-center gap-1 px-4 py-1.5 text-[12px] font-semibold rounded-[6px] transition cursor-pointer shadow-2xs ${
+                        isSaved
+                          ? 'bg-[#16a34a] text-white'
+                          : 'bg-[#e31837] hover:bg-[#be0e27] text-white'
+                      }`}
+                    >
+                      {isSaved ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Đã lưu</span>
+                        </>
+                      ) : (
+                        <span>Lưu</span>
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -287,8 +268,8 @@ export default function BestSellerPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {filteredProducts.map((product, index) => {
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+            {filteredProducts.slice(0, 9).map((product, index) => {
               const rank = index + 1;
               const badge =
                 rank === 1
@@ -308,6 +289,54 @@ export default function BestSellerPage() {
           </div>
         )}
       </div>
+
+      {/* Condition Modal Dialog */}
+      {conditionModalCoupon && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-[12px] border border-[#dddddd] shadow-2xl max-w-md w-full overflow-hidden flex flex-col animate-in zoom-in-95">
+            <div className="p-4 bg-gradient-to-r from-[#181d26] to-[#2c3440] text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Ticket className="w-4 h-4 text-[#e31837]" />
+                <h3 className="font-bold text-[15px] text-white">Chi tiết điều kiện voucher</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setConditionModalCoupon(null)}
+                className="p-1 text-gray-300 hover:text-white rounded cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-3.5 text-[13px]">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#e31837] bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                  {conditionModalCoupon.badge}
+                </span>
+                <h4 className="text-[17px] font-bold text-[#181d26] mt-1.5">{conditionModalCoupon.discount}</h4>
+                <p className="text-[13px] text-[#41454d] font-medium mt-0.5">{conditionModalCoupon.minOrder}</p>
+              </div>
+
+              <div className="p-3 bg-[#f8fafc] rounded-[8px] border border-[#dddddd] space-y-1.5">
+                <span className="font-semibold text-[#181d26] block">Quy định áp dụng:</span>
+                <p className="text-[#41454d] leading-relaxed text-[12px]">
+                  {conditionModalCoupon.condition}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-[#f8fafc] border-t border-[#dddddd] flex justify-end">
+              <button
+                type="button"
+                onClick={() => setConditionModalCoupon(null)}
+                className="px-4 py-2 bg-[#e31837] text-white text-[13px] font-semibold rounded-[6px] transition cursor-pointer hover:bg-[#be0e27]"
+              >
+                Đã hiểu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

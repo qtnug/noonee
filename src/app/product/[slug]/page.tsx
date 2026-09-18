@@ -70,11 +70,6 @@ export default async function ProductDetailPage({
                     {product.rating ? product.rating.toFixed(1) : '5.0'}
                   </span>
                 </div>
-                <span className="text-[#dddddd]">•</span>
-                <span className="text-[12px] sm:text-[13px] text-[#006400] font-medium flex items-center gap-1">
-                  <ShieldCheck className="w-4 h-4" />
-                  Chế biến tươi sạch
-                </span>
               </div>
 
               <h1 className="text-2xl sm:text-4xl font-extrabold text-[#0f172a] tracking-tight">
@@ -84,9 +79,6 @@ export default async function ProductDetailPage({
               <div className="flex items-baseline gap-2.5">
                 <span className="text-2xl sm:text-3xl font-bold text-[#e31837]">
                   {formatVND(product.price)}
-                </span>
-                <span className="text-[12px] text-[#41454d] font-medium bg-[#f8fafc] border border-[#dddddd] px-2 py-0.5 rounded-[4px]">
-                  Giá cơ bản
                 </span>
               </div>
 
@@ -99,15 +91,11 @@ export default async function ProductDetailPage({
                 </p>
               </div>
 
-              {/* Features Bar */}
-              <div className="grid grid-cols-2 gap-2 sm:gap-3 text-[12px] sm:text-[13px] text-[#41454d]">
-                <div className="flex items-center gap-2 p-2.5 sm:p-3 rounded-[6px] bg-[#fff1f2]/50 border border-[#fecdd3]">
+              {/* Prep time badge */}
+              <div>
+                <div className="inline-flex items-center gap-2 p-2.5 sm:p-3 rounded-[6px] bg-[#fff1f2]/50 border border-[#fecdd3] text-[12px] sm:text-[13px] text-[#41454d]">
                   <Clock className="w-4 h-4 text-[#e31837] shrink-0" />
                   <span>Chuẩn bị trong {product.prepTime || 15} phút</span>
-                </div>
-                <div className="flex items-center gap-2 p-2.5 sm:p-3 rounded-[6px] bg-[#fff1f2]/50 border border-[#fecdd3]">
-                  <Utensils className="w-4 h-4 text-[#e31837] shrink-0" />
-                  <span>Kèm đầy đủ dụng cụ</span>
                 </div>
               </div>
             </div>

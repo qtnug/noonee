@@ -44,7 +44,6 @@ export function generateSlug(name: string): string {
 }
 
 export function generateOrderCode(): string {
-  const now = Date.now();
-  const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
-  return `DH${now.toString().slice(-6)}${randomPart}`;
+  const random8Digits = Math.floor(10000000 + Math.random() * 90000000).toString();
+  return `NOONEE_${random8Digits}`;
 }

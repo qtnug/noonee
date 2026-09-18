@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, ShoppingBag, ArrowRight, User as UserIcon, ShieldAlert } from 'lucide-react';
+import { Search, ShoppingBag, ArrowRight, User as UserIcon, ShieldAlert, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Order } from '@/types';
 import { formatVND, formatDate } from '@/lib/utils';
@@ -14,6 +14,8 @@ export default function OrdersLookupPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ORDERS_PER_PAGE = 5;
 
   useEffect(() => {
     async function loadOrders() {
@@ -100,11 +102,11 @@ export default function OrdersLookupPage() {
         {/* Header */}
         <div className="space-y-2 text-center max-w-xl mx-auto">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a]">Đơn hàng của bạn</h1>
-          <p className="text-[13px] sm:text-[14px] text-[#41454d]">
-            {user
-              ? `Xem danh sách lịch sử đơn hàng của tài khoản ${user.fullName} (${user.username})`
-              : 'Đăng nhập tài khoản để xem lịch sử đơn hàng của bạn hoặc tra cứu theo mã đơn'}
-          </p>
+          {!user && (
+            <p className="text-[13px] sm:text-[14px] text-[#41454d]">
+              Đăng nhập tài khoản để xem lịch sử đơn hàng của bạn hoặc tra cứu theo mã đơn
+            </p>
+          )}
 
           {/* Search input for logged in users */}
           {user && (
@@ -116,7 +118,10 @@ export default function OrdersLookupPage() {
                     type="text"
                     placeholder="Tìm theo mã đơn, món ăn, SĐT..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     className="w-full h-11 pl-11 pr-4 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition font-mono"
                   />
                 </div>
@@ -157,7 +162,7 @@ export default function OrdersLookupPage() {
               <form onSubmit={handleManualSearch} className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Nhập mã đơn (VD: DH017439...)"
+                  placeholder="Nhập mã đơn (VD: NOONEE_12345678...)"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1 h-10 px-3 text-[13px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] font-mono"
@@ -200,59 +205,99 @@ export default function OrdersLookupPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              {filteredOrders.map((order) => (
-                <div
-                  key={order.id}
-                  className="bg-white border border-[#dddddd] rounded-[10px] p-4 sm:p-6 hover:border-[#e31837] hover:shadow-xs transition space-y-3 sm:space-y-4"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#dddddd]">
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono font-bold text-[15px] sm:text-[16px] text-[#181d26]">
-                        #{order.orderCode}
-                      </span>
-                      <span className="text-[11px] sm:text-[12px] text-[#9297a0]">
-                        {formatDate(order.createdAt)}
-                      </span>
-                    </div>
-                    <div>{getStatusBadge(order.status)}</div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 text-[13px]">
-                    <div className="space-y-1">
-                      <div className="text-[#181d26]">
-                        Người nhận: <span className="font-semibold">{order.customerName}</span> ({order.customerPhone})
-                      </div>
-                      <div className="text-[#41454d] line-clamp-1">
-                        Địa chỉ: {order.deliveryAddress}
-                      </div>
-                      <div className="text-[#9297a0]">
-                        Thanh toán: <span className="font-medium text-[#181d26]">{order.paymentMethod === 'Sepay' ? 'Chuyển khoản VietQR' : 'Tiền mặt COD'}</span> •{' '}
-                        <span className={order.paymentStatus === 'Paid' ? 'text-[#006400] font-semibold' : 'text-[#e31837] font-semibold'}>
-                          {order.paymentStatus === 'Paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
+              {filteredOrders
+                .slice((currentPage - 1) * ORDERS_PER_PAGE, currentPage * ORDERS_PER_PAGE)
+                .map((order) => (
+                  <div
+                    key={order.id}
+                    className="bg-white border border-[#dddddd] rounded-[10px] p-4 sm:p-6 hover:border-[#e31837] hover:shadow-xs transition space-y-3 sm:space-y-4"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#dddddd]">
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono font-bold text-[15px] sm:text-[16px] text-[#181d26]">
+                          #{order.orderCode}
+                        </span>
+                        <span className="text-[11px] sm:text-[12px] text-[#9297a0]">
+                          {formatDate(order.createdAt)}
                         </span>
                       </div>
+                      <div>{getStatusBadge(order.status)}</div>
                     </div>
 
-                    <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#dddddd]">
-                      <div className="text-right">
-                        <span className="text-[11px] text-[#9297a0] block">Tổng thanh toán</span>
-                        <span className="text-[16px] sm:text-[17px] font-bold text-[#e31837]">
-                          {formatVND(order.totalAmount)}
-                        </span>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 text-[13px]">
+                      <div className="space-y-1">
+                        <div className="text-[#181d26]">
+                          Người nhận: <span className="font-semibold">{order.customerName}</span>
+                        </div>
+                        <div className="text-[#41454d] line-clamp-1">
+                          Địa chỉ: {order.deliveryAddress}
+                        </div>
                       </div>
 
-                      <Link
-                        href={`/orders/${order.orderCode}`}
-                        className="inline-flex items-center gap-1 text-[12px] sm:text-[13px] font-semibold text-white bg-[#e31837] hover:bg-[#be0e27] px-3.5 sm:px-4 py-2 rounded-[6px] transition cursor-pointer"
-                      >
-                        <span>Chi tiết & Đánh giá</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+                      <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#dddddd]">
+                        <div className="text-right">
+                          <span className="text-[11px] text-[#9297a0] block">Tổng thanh toán</span>
+                          <span className="text-[16px] sm:text-[17px] font-bold text-[#e31837]">
+                            {formatVND(order.totalAmount)}
+                          </span>
+                        </div>
+
+                        <Link
+                          href={`/orders/${order.orderCode}`}
+                          className="inline-flex items-center gap-1 text-[12px] sm:text-[13px] font-semibold text-white bg-[#e31837] hover:bg-[#be0e27] px-3.5 sm:px-4 py-2 rounded-[6px] transition cursor-pointer"
+                        >
+                          <span>Chi tiết & Đánh giá</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
+
+            {/* Pagination Controls */}
+            {Math.ceil(filteredOrders.length / ORDERS_PER_PAGE) > 1 && (
+              <div className="pt-6 pb-2 flex items-center justify-center border-t border-[#dddddd]">
+                <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="h-9 px-3 bg-white border border-[#dddddd] text-[#181d26] text-[13px] font-medium rounded-[6px] hover:bg-[#f8fafc] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 cursor-pointer"
+                    aria-label="Trang trước"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span className="hidden sm:inline">Trước</span>
+                  </button>
+
+                  {Array.from({ length: Math.ceil(filteredOrders.length / ORDERS_PER_PAGE) }, (_, i) => i + 1).map((pageNum) => (
+                    <button
+                      key={pageNum}
+                      type="button"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`min-w-9 h-9 px-2.5 rounded-[6px] text-[13px] font-semibold transition cursor-pointer ${
+                        pageNum === currentPage
+                          ? 'bg-[#e31837] text-white shadow-xs'
+                          : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.min(Math.ceil(filteredOrders.length / ORDERS_PER_PAGE), p + 1))}
+                    disabled={currentPage === Math.ceil(filteredOrders.length / ORDERS_PER_PAGE)}
+                    className="h-9 px-3 bg-white border border-[#dddddd] text-[#181d26] text-[13px] font-medium rounded-[6px] hover:bg-[#f8fafc] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 cursor-pointer"
+                    aria-label="Trang sau"
+                  >
+                    <span className="hidden sm:inline">Sau</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

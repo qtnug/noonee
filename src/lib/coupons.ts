@@ -403,12 +403,12 @@ export function validateCoupon(
   if (coupon.categoryExclusive && cartItems && cartItems.length > 0) {
     if (coupon.categoryExclusive === 'rice') {
       const hasRice = cartItems.some(
-        item => item.categoryId === 1 || (item.name && item.name.toLowerCase().includes('cơm'))
+        item => item.categoryId === 1 || item.categoryId === 4 || item.categoryId === 5 || (item.name && (item.name.toLowerCase().includes('cơm') || item.name.toLowerCase().includes('bún') || item.name.toLowerCase().includes('phở') || item.name.toLowerCase().includes('mì')))
       );
       if (!hasRice) {
         return {
           valid: false,
-          message: 'Mã giảm giá này chỉ áp dụng cho đơn hàng có món Cơm & Món chính',
+          message: 'Mã giảm giá này chỉ áp dụng cho đơn hàng có món Cơm, Bún mì hoặc Phở',
           discountAmount: 0,
         };
       }

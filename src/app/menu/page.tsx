@@ -238,9 +238,7 @@ function MenuPageContent() {
                 }}
                 className="h-11 text-[13px] bg-white border border-[#dddddd] rounded-[6px] px-3 text-[#181d26] font-medium focus:outline-none focus:border-[#e31837] cursor-pointer"
               >
-                <option value="best-seller">Sắp xếp: Bán chạy nhất ⭐</option>
-                <option value="price-asc">Giá: Thấp đến Cao</option>
-                <option value="price-desc">Giá: Cao đến Thấp</option>
+                <option value="best-seller">Sắp xếp: Bán chạy</option>
               </select>
             </div>
           </div>
@@ -328,11 +326,7 @@ function MenuPageContent() {
 
             {/* Pagination Controls Bar */}
             {totalPages > 1 && (
-              <div className="pt-6 pb-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#dddddd]">
-                <div className="text-[13px] text-[#555a64]">
-                  Hiển thị <strong className="text-[#181d26]">{startIndex + 1} - {endIndex}</strong> trong tổng số <strong className="text-[#e31837]">{filteredProducts.length}</strong> món ăn
-                </div>
-
+              <div className="pt-6 pb-2 flex items-center justify-center border-t border-[#dddddd]">
                 <div className="flex items-center gap-1.5 flex-wrap justify-center">
                   <button
                     type="button"

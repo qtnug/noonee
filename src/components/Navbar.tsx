@@ -111,7 +111,9 @@ export default function Navbar() {
 
   const categories = [
     { name: 'Tất cả thực đơn', href: '/menu', icon: UtensilsCrossed, desc: 'Hơn 50+ món ngon chuẩn vị' },
-    { name: 'Cơm & Món chính', href: '/menu?categoryId=1', icon: UtensilsCrossed, desc: 'Cơm rang, cơm tấm, phở bò' },
+    { name: 'Cơm', href: '/menu?categoryId=1', icon: UtensilsCrossed, desc: 'Cơm rang, cơm tấm sườn' },
+    { name: 'Bún mì', href: '/menu?categoryId=4', icon: UtensilsCrossed, desc: 'Bún bò Huế, bún trộn, mì xào' },
+    { name: 'Phở', href: '/menu?categoryId=5', icon: UtensilsCrossed, desc: 'Phở bò tái nạm gia truyền' },
     { name: 'Đồ ăn vặt', href: '/menu?categoryId=2', icon: Sandwich, desc: 'Bánh tráng trộn, khoai chiên' },
     { name: 'Đồ uống & Tráng miệng', href: '/menu?categoryId=3', icon: Coffee, desc: 'Trà sữa, trà đào, sữa chua' },
   ];
@@ -436,7 +438,21 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block py-1.5 text-xs text-[#334155] font-medium hover:text-[#e31837]"
               >
-                • Cơm & Món chính
+                • Cơm
+              </Link>
+              <Link
+                href="/menu?categoryId=4"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block py-1.5 text-xs text-[#334155] font-medium hover:text-[#e31837]"
+              >
+                • Bún mì
+              </Link>
+              <Link
+                href="/menu?categoryId=5"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block py-1.5 text-xs text-[#334155] font-medium hover:text-[#e31837]"
+              >
+                • Phở
               </Link>
               <Link
                 href="/menu?categoryId=2"

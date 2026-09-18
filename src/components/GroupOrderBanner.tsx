@@ -27,10 +27,10 @@ export default function GroupOrderBanner() {
             {/* Main Title */}
             <div>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-[#0f172a] leading-tight">
-                Cùng Nhau Chọn Món, <span className="text-[#e31837]">Tiết Kiệm Tối Đa</span>
+                Đặt Món Theo Nhóm, <span className="text-[#e31837]">Gom Chung 1 Đơn</span>
               </h2>
               <p className="text-[14px] sm:text-[16px] text-[#475569] font-medium leading-relaxed mt-2.5 max-w-xl">
-                Gửi link cho bạn bè tự chọn món yêu thích trên máy riêng. Hệ thống tự động gộp đơn và áp dụng giảm giá tới 10%!
+                Tạo nhóm và gửi link cho bạn bè, đồng nghiệp tự chọn món theo khẩu vị riêng. Hệ thống tự động gom vào 1 đơn, giao cùng lúc và tiết kiệm phí ship.
               </p>
             </div>
 
@@ -39,30 +39,30 @@ export default function GroupOrderBanner() {
               <div className="p-3 bg-white/90 backdrop-blur-xs rounded-[12px] border border-red-100 shadow-2xs">
                 <div className="flex items-center gap-2 text-[#e31837] font-bold text-[13px]">
                   <Share2 className="w-4 h-4 shrink-0" />
-                  <span>1 Link duy nhất</span>
+                  <span>Gửi 1 link duy nhất</span>
                 </div>
                 <p className="text-[12px] text-[#475569] font-medium mt-1">
-                  Chia sẻ link nhóm vào chọn món tức thì
+                  Mọi người tự vào chọn món trên máy riêng
                 </p>
               </div>
 
               <div className="p-3 bg-white/90 backdrop-blur-xs rounded-[12px] border border-red-100 shadow-2xs">
                 <div className="flex items-center gap-2 text-[#e31837] font-bold text-[13px]">
                   <ShoppingBag className="w-4 h-4 shrink-0" />
-                  <span>Tự chọn món riêng</span>
+                  <span>Tự chọn khẩu vị</span>
                 </div>
                 <p className="text-[12px] text-[#475569] font-medium mt-1">
-                  Tùy chỉnh món và ghi chú khẩu vị cá nhân
+                  Thêm topping và ghi chú riêng từng người
                 </p>
               </div>
 
               <div className="p-3 bg-white/90 backdrop-blur-xs rounded-[12px] border border-red-100 shadow-2xs">
                 <div className="flex items-center gap-2 text-[#e31837] font-bold text-[13px]">
                   <Percent className="w-4 h-4 shrink-0" />
-                  <span>Giảm trực tiếp</span>
+                  <span>Tiết kiệm tối đa</span>
                 </div>
                 <p className="text-[12px] text-[#475569] font-medium mt-1">
-                  Giảm tự động 2% - 5% - 10% trên tổng bill
+                  Giao cùng lúc, tiết kiệm phí vận chuyển
                 </p>
               </div>
             </div>
@@ -115,38 +115,6 @@ export default function GroupOrderBanner() {
                 </span>
               </div>
 
-              {/* Tier Progress Bar Visual */}
-              <div className="space-y-2 bg-[#f8fafc] p-3.5 rounded-[12px] border border-[#e5e7eb]">
-                <div className="flex items-center justify-between text-[12px]">
-                  <span className="font-semibold text-[#181d26] flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5 text-[#e31837]" /> Mức ưu đãi nhóm hiện tại:
-                  </span>
-                  <span className="font-bold text-[#e31837] text-[13px] bg-red-50 px-2 py-0.5 rounded border border-red-200">
-                    -5% Bill
-                  </span>
-                </div>
-
-                {/* 3 Step Tiers */}
-                <div className="grid grid-cols-3 gap-1.5 pt-1 text-center">
-                  <div className="bg-emerald-50 border border-emerald-200 p-1.5 rounded-[8px]">
-                    <div className="text-[10px] text-emerald-700 font-semibold">3-4 người</div>
-                    <div className="text-[12px] font-bold text-emerald-800">Giảm 2%</div>
-                  </div>
-                  <div className="bg-[#e31837] text-white p-1.5 rounded-[8px] shadow-xs relative">
-                    <div className="text-[10px] text-white/90 font-semibold">5-9 người</div>
-                    <div className="text-[12px] font-extrabold text-white">Giảm 5%</div>
-                  </div>
-                  <div className="bg-amber-50 border border-amber-200 p-1.5 rounded-[8px]">
-                    <div className="text-[10px] text-amber-700 font-semibold">10 người</div>
-                    <div className="text-[12px] font-bold text-amber-800">Giảm 10%</div>
-                  </div>
-                </div>
-
-                <div className="text-[11px] text-gray-500 text-center pt-0.5">
-                  Thêm <strong className="text-[#181d26]">5 người nữa</strong> để đạt mức giảm kịch sàn <strong className="text-[#e31837]">10%</strong>
-                </div>
-              </div>
-
               {/* Members Avatars preview */}
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-center -space-x-2 overflow-hidden">
@@ -170,7 +138,7 @@ export default function GroupOrderBanner() {
                 <div className="text-right">
                   <span className="text-[11px] text-gray-500 block">Đã chọn: <strong>7 món</strong></span>
                   <span className="text-[12px] font-bold text-emerald-600 flex items-center gap-1 justify-end">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Tiết kiệm ngay ~25.000đ
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Gộp chung 1 lượt giao
                   </span>
                 </div>
               </div>
