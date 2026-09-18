@@ -41,8 +41,19 @@ function ContactChatContent() {
   const [orderCode, setOrderCode] = useState(urlOrderCode);
   const [userOrders, setUserOrders] = useState<string[]>([]);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Helper to scroll only the chat message box (never jumps or scrolls the outer webpage)
+  const scrollToBottom = (smooth = true) => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    if (smooth) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    } else {
+      el.scrollTop = el.scrollHeight;
+    }
+  };
 
   // Initialize name
   useEffect(() => {
@@ -70,13 +81,39 @@ function ContactChatContent() {
   }, [user]);
 
   // Fetch messages from Support API
-  const fetchMessages = async () => {
+  const fetchMessages = async (isInitialOrManual = false) => {
     try {
       const queryParam = orderCode.trim() ? `?orderCode=${encodeURIComponent(orderCode.trim())}` : '?orderCode=GENERAL';
       const res = await fetch(`/api/support${queryParam}`);
       const data = await res.json();
-      if (data.success) {
-        setMessages(data.data || []);
+      if (data.success && Array.isArray(data.data)) {
+        const incoming: SupportMessage[] = data.data;
+
+        setMessages((prev) => {
+          // If no change in messages, keep previous state to avoid unnecessary re-renders
+          if (
+            prev.length === incoming.length &&
+            prev.length > 0 &&
+            prev[prev.length - 1].id === incoming[incoming.length - 1].id
+          ) {
+            return prev;
+          }
+          if (prev.length === 0 && incoming.length === 0) {
+            return prev;
+          }
+
+          // If new messages arrived, check if user was near bottom before auto-scrolling
+          const el = messagesContainerRef.current;
+          const wasNearBottom = el ? el.scrollHeight - el.scrollTop - el.clientHeight < 120 : true;
+
+          if (isInitialOrManual || wasNearBottom) {
+            setTimeout(() => {
+              scrollToBottom(!isInitialOrManual);
+            }, 60);
+          }
+
+          return incoming;
+        });
       }
     } catch (e) {
       console.error('Error loading chat messages:', e);
@@ -88,15 +125,12 @@ function ContactChatContent() {
   // Initial fetch and 3.5s real-time poll
   useEffect(() => {
     setLoading(true);
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 3500);
+    fetchMessages(true);
+    const interval = setInterval(() => {
+      fetchMessages(false);
+    }, 3500);
     return () => clearInterval(interval);
   }, [orderCode]);
-
-  // Auto-scroll to bottom on messages update
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
   // Handle Send Message
   const handleSendMessage = async (e?: React.FormEvent) => {
@@ -130,8 +164,8 @@ function ContactChatContent() {
         setInputText('');
         setIsComplaint(false);
         setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
+          scrollToBottom(true);
+        }, 50);
       }
     } catch (err) {
       console.error('Error sending message:', err);
@@ -260,7 +294,7 @@ function ContactChatContent() {
 
                 <button
                   type="button"
-                  onClick={fetchMessages}
+                  onClick={() => fetchMessages(true)}
                   disabled={loading}
                   className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-[6px] transition cursor-pointer"
                   title="Tải lại tin nhắn"
@@ -300,7 +334,7 @@ function ContactChatContent() {
               </div>
 
               {/* Messages Scrollable Area */}
-              <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-[#fcfbf9]/60">
+              <div ref={messagesContainerRef} className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-[#fcfbf9]/60">
                 {loading && messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-gray-400 text-[13px] gap-2">
                     <Loader2 className="w-5 h-5 animate-spin text-[#e31837]" />
@@ -350,7 +384,6 @@ function ContactChatContent() {
                     );
                   })
                 )}
-                <div ref={messagesEndRef} />
               </div>
 
               {/* Quick Suggestion Chips */}
