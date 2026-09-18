@@ -1,16 +1,22 @@
 'use client';
 
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface ScrollFoodVideoProps {
   totalFrames?: number;
   className?: string;
+  dishName?: string;
+  priceText?: string;
 }
 
 export default function ScrollFoodVideo({
   totalFrames = 100,
   className = '',
+  dishName = 'Bún Bò Huế',
+  priceText = '42.000đ',
 }: ScrollFoodVideoProps) {
+  const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imagesRef = useRef<(HTMLImageElement | null)[]>([]);
@@ -20,17 +26,21 @@ export default function ScrollFoodVideo({
   const startXRef = useRef<number>(0);
   const startFrameRef = useRef<number>(0);
 
-  // Format frame path: /video/frame_0001.png to /video/frame_0100.png
+  // Dish hover state (only triggers when mouse is over actual dish pixels)
+  const [isHoveringDish, setIsHoveringDish] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  // Format frame path from transparent frames folder: /frames_clean/frame_0001.png?v=2
   const getFrameUrl = useCallback((index: number) => {
     const frameNumber = String(index + 1).padStart(4, '0');
-    return `/video/frame_${frameNumber}.png`;
+    return `/frames_clean/frame_${frameNumber}.png?v=2`;
   }, []);
 
   // Draw specific frame onto canvas
   const drawFrame = useCallback((frameIndex: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return;
 
     let img = imagesRef.current[frameIndex];
@@ -57,7 +67,7 @@ export default function ScrollFoodVideo({
     }
   }, [totalFrames]);
 
-  // Preload images
+  // Preload transparent images
   useEffect(() => {
     imagesRef.current = new Array(totalFrames).fill(null);
     isLoadedRef.current = new Array(totalFrames).fill(false);
@@ -125,6 +135,41 @@ export default function ScrollFoodVideo({
     };
   }, [totalFrames, setFrame]);
 
+  // Pixel-perfect Hit Testing: Detect if cursor is directly over the dish (Alpha > 25)
+  const checkDishPixelUnderCursor = (e: React.MouseEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const relX = e.clientX - rect.left;
+    const relY = e.clientY - rect.top;
+
+    if (relX < 0 || relX > rect.width || relY < 0 || relY > rect.height) {
+      setIsHoveringDish(false);
+      return;
+    }
+
+    // Map CSS pixel to canvas 1280x720 coordinates
+    const canvasX = Math.floor(relX * (canvas.width / rect.width));
+    const canvasY = Math.floor(relY * (canvas.height / rect.height));
+
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+
+    try {
+      const pixel = ctx.getImageData(canvasX, canvasY, 1, 1).data;
+      // pixel[3] is Alpha (0 = transparent background, >25 = actual dish pixel)
+      if (pixel[3] > 25) {
+        setIsHoveringDish(true);
+        setMousePos({ x: relX, y: relY });
+      } else {
+        setIsHoveringDish(false);
+      }
+    } catch {
+      setIsHoveringDish(false);
+    }
+  };
+
   // Handle Mouse / Touch Drag to rotate
   const handleMouseDown = (e: React.MouseEvent) => {
     isDraggingRef.current = true;
@@ -133,6 +178,10 @@ export default function ScrollFoodVideo({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    // 1. Check if hovering on actual dish
+    checkDishPixelUnderCursor(e);
+
+    // 2. If dragging, rotate frame
     if (!isDraggingRef.current) return;
     const deltaX = e.clientX - startXRef.current;
     const frameDelta = -Math.floor(deltaX / 4);
@@ -145,6 +194,12 @@ export default function ScrollFoodVideo({
     isDraggingRef.current = false;
   };
 
+  const handleMouseLeave = () => {
+    isDraggingRef.current = false;
+    setIsHoveringDish(false);
+  };
+
+  // Mobile Touch Support
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length !== 1) return;
     isDraggingRef.current = true;
@@ -165,17 +220,27 @@ export default function ScrollFoodVideo({
     isDraggingRef.current = false;
   };
 
+  const handleClick = () => {
+    if (isHoveringDish) {
+      router.push('/menu');
+    }
+  };
+
   return (
     <div
       ref={containerRef}
-      className={`relative w-full aspect-[16/9] bg-transparent cursor-grab active:cursor-grabbing select-none flex items-center justify-center ${className}`}
+      className={`relative w-full aspect-[16/9] bg-transparent select-none flex items-center justify-center ${
+        isHoveringDish ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'
+      } ${className}`}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onClick={handleClick}
+      title={isHoveringDish ? 'Bấm để xem Bún Bò Huế trong thực đơn' : undefined}
     >
       <canvas
         ref={canvasRef}
@@ -183,6 +248,29 @@ export default function ScrollFoodVideo({
         height={720}
         className="w-full h-full object-contain pointer-events-none drop-shadow-md"
       />
+
+      {/* Hover Popup: ONLY displays when hovering directly over the dish */}
+      {isHoveringDish && (
+        <div
+          className="absolute z-30 pointer-events-none -translate-x-1/2 -translate-y-full pb-3 animate-in fade-in zoom-in-95 duration-150"
+          style={{
+            left: `${mousePos.x}px`,
+            top: `${mousePos.y}px`,
+          }}
+        >
+          <div className="bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-[10px] shadow-xl border border-[#fecdd3] flex items-center gap-2.5 whitespace-nowrap">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#e31837] animate-ping" />
+            <div>
+              <div className="text-[13px] font-bold text-[#181d26] leading-tight">
+                {dishName}
+              </div>
+              <div className="text-[12px] font-extrabold text-[#e31837] leading-none mt-0.5">
+                {priceText}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
