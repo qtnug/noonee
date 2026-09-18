@@ -69,15 +69,15 @@ export default function PromoBanner() {
             </span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl font-normal tracking-tight text-white leading-tight">
-            Giảm ngay 20% cho đơn hàng đầu tiên thanh toán qua VietQR
+          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+            Giảm ngay 20% cho đơn hàng đầu tiên qua VietQR
           </h2>
 
-          <p className="text-[15px] text-white/90 leading-relaxed max-w-xl">
-            Thưởng thức các món ngon trứ danh tại NooNee Food. Nhập mã ưu đãi hoặc áp dụng trực tiếp tại trang thanh toán khi chuyển khoản VietQR để nhận giảm giá 20% tức thì!
+          <p className="text-[14px] sm:text-[15px] text-white/90 leading-relaxed max-w-xl font-medium">
+            Nhập mã bên dưới hoặc áp dụng khi quét mã VietQR tại bước thanh toán để nhận ưu đãi ngay.
           </p>
 
-          <div className="pt-3 flex flex-wrap items-center gap-3.5">
+          <div className="pt-2 flex flex-wrap items-center gap-3">
             <div className="flex items-center bg-white/15 border border-white/30 rounded-[10px] px-3.5 py-2 backdrop-blur-sm">
               <span className="text-[12px] text-white/80 mr-2">Mã ưu đãi:</span>
               <strong className="text-[15px] font-mono font-bold tracking-wider text-white select-all">

@@ -85,13 +85,13 @@ export default function ProductCard({
 
           {/* Title */}
           <Link href={`/product/${product.slug}`}>
-            <h3 className="font-semibold text-[#181d26] text-[13px] sm:text-[15px] leading-snug line-clamp-1 mb-1 hover:text-[#e31837] transition-colors">
+            <h3 className="font-bold text-[#0f172a] text-[14px] sm:text-[15px] leading-snug line-clamp-1 mb-1 hover:text-[#e31837] transition-colors">
               {product.name}
             </h3>
           </Link>
 
           {/* Description */}
-          <p className="text-[11px] sm:text-[13px] text-[#41454d] line-clamp-1 sm:line-clamp-2 leading-relaxed mb-2 sm:mb-4">
+          <p className="text-[11px] sm:text-[13px] text-[#475569] line-clamp-1 sm:line-clamp-2 leading-relaxed mb-2 sm:mb-4">
             {product.description}
           </p>
         </div>
@@ -99,11 +99,8 @@ export default function ProductCard({
         {/* Price & Action Button (Red Button) */}
         <div className="pt-2 sm:pt-3 border-t border-[#dddddd] flex items-center justify-between gap-1 sm:gap-2">
           <div className="min-w-0">
-            <span className="text-[13px] sm:text-[16px] font-bold text-[#e31837] block leading-tight truncate">
+            <span className="text-[14px] sm:text-[16px] font-extrabold text-[#e31837] block leading-tight truncate">
               {formatVND(product.price)}
-            </span>
-            <span className="text-[10px] sm:text-[11px] text-[#9297a0] block mt-0.5 hidden xs:block">
-              Giá cơ bản
             </span>
           </div>
 

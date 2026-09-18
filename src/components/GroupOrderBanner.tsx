@@ -26,43 +26,43 @@ export default function GroupOrderBanner() {
           <div className="lg:col-span-7 space-y-4 sm:space-y-6">
             {/* Main Title */}
             <div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#181d26] leading-tight">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-[#0f172a] leading-tight">
                 Cùng Nhau Chọn Món, <span className="text-[#e31837]">Tiết Kiệm Tối Đa</span>
               </h2>
-              <p className="text-[14px] sm:text-[16px] text-[#41454d] leading-relaxed mt-2.5 max-w-xl">
-                Không còn phải chuyền tay điện thoại hay ghi chép thủ công. Mỗi người tự mở link nhóm trên máy mình để chọn món yêu thích. Hệ thống tự động gộp đơn và giảm giá trực tiếp vào hóa đơn!
+              <p className="text-[14px] sm:text-[16px] text-[#475569] font-medium leading-relaxed mt-2.5 max-w-xl">
+                Gửi link cho bạn bè tự chọn món yêu thích trên máy riêng. Hệ thống tự động gộp đơn và áp dụng giảm giá tới 10%!
               </p>
             </div>
 
             {/* Feature Highlights Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-              <div className="p-3 bg-white/80 backdrop-blur-xs rounded-[12px] border border-red-100 shadow-2xs">
+              <div className="p-3 bg-white/90 backdrop-blur-xs rounded-[12px] border border-red-100 shadow-2xs">
                 <div className="flex items-center gap-2 text-[#e31837] font-bold text-[13px]">
                   <Share2 className="w-4 h-4 shrink-0" />
                   <span>1 Link duy nhất</span>
                 </div>
-                <p className="text-[12px] text-[#555a64] mt-1">
-                  Tạo phòng & gửi link nhóm cho bạn bè vào chọn món ngay
+                <p className="text-[12px] text-[#475569] font-medium mt-1">
+                  Chia sẻ link nhóm vào chọn món tức thì
                 </p>
               </div>
 
-              <div className="p-3 bg-white/80 backdrop-blur-xs rounded-[12px] border border-red-100 shadow-2xs">
+              <div className="p-3 bg-white/90 backdrop-blur-xs rounded-[12px] border border-red-100 shadow-2xs">
                 <div className="flex items-center gap-2 text-[#e31837] font-bold text-[13px]">
                   <ShoppingBag className="w-4 h-4 shrink-0" />
-                  <span>Tự chọn riêng</span>
+                  <span>Tự chọn món riêng</span>
                 </div>
-                <p className="text-[12px] text-[#555a64] mt-1">
-                  Tùy biến món & ghi chú khẩu vị theo ý thích từng người
+                <p className="text-[12px] text-[#475569] font-medium mt-1">
+                  Tùy chỉnh món và ghi chú khẩu vị cá nhân
                 </p>
               </div>
 
-              <div className="p-3 bg-white/80 backdrop-blur-xs rounded-[12px] border border-red-100 shadow-2xs">
+              <div className="p-3 bg-white/90 backdrop-blur-xs rounded-[12px] border border-red-100 shadow-2xs">
                 <div className="flex items-center gap-2 text-[#e31837] font-bold text-[13px]">
                   <Percent className="w-4 h-4 shrink-0" />
                   <span>Giảm trực tiếp</span>
                 </div>
-                <p className="text-[12px] text-[#555a64] mt-1">
-                  Tự động giảm 2% - 5% - 10% bill khi đủ người
+                <p className="text-[12px] text-[#475569] font-medium mt-1">
+                  Giảm tự động 2% - 5% - 10% trên tổng bill
                 </p>
               </div>
             </div>
@@ -71,7 +71,7 @@ export default function GroupOrderBanner() {
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <Link
                 href="/group"
-                className="inline-flex items-center justify-center gap-2 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-medium text-[15px] px-6 py-3.5 rounded-[6px] shadow-sm transition group"
+                className="inline-flex items-center justify-center gap-2 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-bold text-[15px] px-6 py-3 rounded-[8px] shadow-sm transition group"
               >
                 <PlusCircle className="w-4 h-4" />
                 <span>Tạo phòng nhóm mới</span>
@@ -79,7 +79,7 @@ export default function GroupOrderBanner() {
               </Link>
               <Link
                 href="/group"
-                className="inline-flex items-center justify-center gap-2 bg-white hover:bg-[#fff1f2] text-[#181d26] hover:text-[#e31837] font-medium text-[15px] px-6 py-3.5 rounded-[6px] border border-[#dddddd] hover:border-[#fecdd3] transition"
+                className="inline-flex items-center justify-center gap-2 bg-white hover:bg-rose-50/70 text-[#0f172a] hover:text-[#e31837] font-bold text-[15px] px-6 py-3 rounded-[8px] border border-[#dddddd] hover:border-[#e31837] transition"
               >
                 <LogIn className="w-4 h-4 text-[#e31837]" />
                 <span>Tham gia bằng mã</span>

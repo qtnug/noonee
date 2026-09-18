@@ -27,31 +27,37 @@ export default async function HomePage() {
 
   return (
     <div className="bg-white min-h-screen">
-      {/* 1. HERO BAND (Red & White Editorial Theme) */}
-      <section className="bg-white border-b border-[#dddddd]">
+      {/* 1. HERO BAND (Minimalist & Punchy Editorial Theme) */}
+      <section className="bg-gradient-to-b from-[#fff1f2]/50 via-white to-white border-b border-[#f1f5f9]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Left Content Column */}
             <div className="lg:col-span-6 space-y-4 sm:space-y-6">
-              <h1 className="text-3xl sm:text-5xl lg:text-[44px] font-normal tracking-tight text-[#181d26] leading-[1.18]">
-                Hệ thống đặt món ăn trực tuyến nhanh chóng & tiện lợi
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-[#e31837] text-[12px] font-bold border border-rose-200 shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-[#e31837] animate-pulse" />
+                <span>Món ngon nóng hổi • Giao nhanh 30 phút</span>
+              </div>
+
+              <h1 className="text-3xl sm:text-5xl lg:text-[46px] font-extrabold tracking-tight text-[#0f172a] leading-[1.15]">
+                Thưởng thức món ngon, <br className="hidden sm:inline" />
+                <span className="text-[#e31837]">chuẩn vị</span> & giao tận nơi
               </h1>
 
-              <p className="text-[14px] sm:text-[16px] text-[#41454d] leading-relaxed max-w-xl">
-                Khám phá thực đơn phong phú từ cơm rang, bún phở truyền thống đến các món ăn vặt giòn rụm và thức uống thanh mát. Đặt món dễ dàng, giao nhanh tận nơi, đảm bảo luôn nóng hổi.
+              <p className="text-[15px] sm:text-[17px] text-[#475569] font-medium leading-relaxed max-w-lg">
+                Bún phở, cơm tấm và đồ uống thanh mát chế biến trong ngày. Đặt món dễ dàng, luôn nóng hổi.
               </p>
 
               {/* Red & White CTA Button Pair */}
               <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <Link
                   href="/menu"
-                  className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-medium text-[15px] sm:text-[16px] leading-[1.4] px-6 sm:px-7 py-3 sm:py-3.5 rounded-[6px] shadow-sm transition"
+                  className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-bold text-[15px] sm:text-[16px] leading-[1.4] px-7 py-3.5 rounded-[8px] shadow-md shadow-red-500/20 transition"
                 >
                   Khám phá thực đơn
                 </Link>
                 <Link
                   href="/orders"
-                  className="inline-flex items-center justify-center bg-white hover:bg-[#fff1f2] text-[#e31837] font-medium text-[15px] sm:text-[16px] leading-[1.4] px-6 sm:px-7 py-3 sm:py-3.5 rounded-[6px] border border-[#e31837] transition"
+                  className="inline-flex items-center justify-center bg-white hover:bg-rose-50/60 text-[#0f172a] hover:text-[#e31837] font-bold text-[15px] sm:text-[16px] leading-[1.4] px-7 py-3.5 rounded-[8px] border border-[#dddddd] hover:border-[#e31837] transition"
                 >
                   Tra cứu đơn hàng
                 </Link>
@@ -59,55 +65,43 @@ export default async function HomePage() {
             </div>
 
             {/* Right Visual Fragment: Scroll-driven 360 Food Video */}
-            <div className="lg:col-span-6">
+            <div className="lg:col-span-6 flex items-center justify-center">
               <ScrollFoodVideo totalFrames={100} />
             </div>
           </div>
         </div>
       </section>
 
-      {/* 2. TRUST BAR */}
-      <section className="border-b border-[#dddddd] bg-[#f8fafc]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-3">
-              <div className="w-10 h-10 rounded-[6px] bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] flex items-center justify-center shrink-0">
-                <Truck className="w-5 h-5" />
+      {/* 2. COMPACT TRUST BAR (Minimalist, Zero Fluff) */}
+      <section className="border-b border-[#f1f5f9] bg-[#f8fafc]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#e31837] flex items-center justify-center shrink-0">
+                <Truck className="w-4 h-4" />
               </div>
-              <div>
-                <h4 className="text-[14px] font-semibold text-[#181d26]">Giao hàng 30 phút</h4>
-                <p className="text-[12px] text-[#9297a0]">Món ăn luôn nóng hổi</p>
-              </div>
+              <span className="text-[13px] sm:text-[14px] font-bold text-[#0f172a]">Giao nóng 30 phút</span>
             </div>
 
-            <div className="flex items-center justify-center md:justify-start gap-3">
-              <div className="w-10 h-10 rounded-[6px] bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] flex items-center justify-center shrink-0">
-                <Utensils className="w-5 h-5" />
+            <div className="flex items-center justify-center md:justify-start gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#e31837] flex items-center justify-center shrink-0">
+                <Utensils className="w-4 h-4" />
               </div>
-              <div>
-                <h4 className="text-[14px] font-semibold text-[#181d26]">Chế biến chuẩn vị</h4>
-                <p className="text-[12px] text-[#9297a0]">Hương vị gia truyền đậm đà</p>
-              </div>
+              <span className="text-[13px] sm:text-[14px] font-bold text-[#0f172a]">Chế biến chuẩn vị</span>
             </div>
 
-            <div className="flex items-center justify-center md:justify-start gap-3">
-              <div className="w-10 h-10 rounded-[6px] bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-5 h-5" />
+            <div className="flex items-center justify-center md:justify-start gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#e31837] flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-4 h-4" />
               </div>
-              <div>
-                <h4 className="text-[14px] font-semibold text-[#181d26]">Nguyên liệu tươi sạch</h4>
-                <p className="text-[12px] text-[#9297a0]">Đảm bảo vệ sinh 100%</p>
-              </div>
+              <span className="text-[13px] sm:text-[14px] font-bold text-[#0f172a]">Nguyên liệu tươi sạch</span>
             </div>
 
-            <div className="flex items-center justify-center md:justify-start gap-3">
-              <div className="w-10 h-10 rounded-[6px] bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] flex items-center justify-center shrink-0">
-                <Clock className="w-5 h-5" />
+            <div className="flex items-center justify-center md:justify-start gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#e31837] flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4" />
               </div>
-              <div>
-                <h4 className="text-[14px] font-semibold text-[#181d26]">07:00 - 22:00</h4>
-                <p className="text-[12px] text-[#9297a0]">Phục vụ tất cả các ngày</p>
-              </div>
+              <span className="text-[13px] sm:text-[14px] font-bold text-[#0f172a]">Mở cửa 07:00 - 22:00</span>
             </div>
           </div>
         </div>
@@ -116,18 +110,15 @@ export default async function HomePage() {
       {/* 3. SIGNATURE RED BANNER (PromoBanner with auto-hide after first paid VietQR order) */}
       <PromoBanner />
 
-      {/* 4. FEATURED PRODUCTS */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* 4. FEATURED PRODUCTS (Clean Header, No Fluff Text) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex items-center justify-between mb-8 pb-3 border-b border-[#dddddd]">
-          <div>
-            <h2 className="text-2xl font-normal text-[#181d26]">Món ăn nổi bật hôm nay</h2>
-            <p className="text-[14px] text-[#41454d] mt-1">
-              Những món ngon được lựa chọn và chuẩn bị đặc biệt trong ngày
-            </p>
-          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a]">
+            Món ăn nổi bật
+          </h2>
           <Link
             href="/menu"
-            className="text-[14px] font-semibold text-[#e31837] hover:underline flex items-center gap-1 transition"
+            className="text-[14px] font-bold text-[#e31837] hover:underline flex items-center gap-1 transition"
           >
             <span>Xem tất cả</span>
             <ChevronRight className="w-4 h-4" />
@@ -144,74 +135,65 @@ export default async function HomePage() {
       {/* 5. GROUP ORDER BANNER */}
       <GroupOrderBanner />
 
-      {/* 6. RED & WHITE THEMATIC CARDS */}
+      {/* 6. CLEAN CATEGORY CARDS (Minimalist, Crisp) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 1 */}
-          <div className="bg-white border border-[#dddddd] hover:border-[#e31837] rounded-[10px] p-6 flex flex-col justify-between h-64 transition-colors group">
+          <Link
+            href="/menu?categoryId=1"
+            className="bg-white border border-[#dddddd] hover:border-[#e31837] rounded-[12px] p-6 flex flex-col justify-between h-48 transition-all hover:-translate-y-1 hover:shadow-md group"
+          >
             <div>
-              <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider">
+              <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded">
                 Cơm & Món chính
               </span>
-              <h3 className="text-xl font-semibold text-[#181d26] mt-2 group-hover:text-[#e31837] transition-colors">
+              <h3 className="text-xl font-bold text-[#0f172a] mt-3 group-hover:text-[#e31837] transition-colors">
                 Cơm rang & Bún phở gia truyền
               </h3>
-              <p className="text-[13px] text-[#41454d] mt-2 leading-relaxed">
-                Hương vị truyền thống đậm đà, hạt cơm vàng giòn và nước dùng hầm xương kỹ lưỡng thơm ngon.
-              </p>
             </div>
-            <Link
-              href="/menu?categoryId=1"
-              className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#e31837] hover:underline pt-3 border-t border-[#fecdd3]"
-            >
-              <span>Xem danh mục</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+            <div className="inline-flex items-center gap-1.5 text-[13px] font-bold text-[#e31837] pt-3 border-t border-[#f1f5f9]">
+              <span>Khám phá ngay</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
 
           {/* Card 2 */}
-          <div className="bg-white border border-[#dddddd] hover:border-[#e31837] rounded-[10px] p-6 flex flex-col justify-between h-64 transition-colors group">
+          <Link
+            href="/menu?categoryId=2"
+            className="bg-white border border-[#dddddd] hover:border-[#e31837] rounded-[12px] p-6 flex flex-col justify-between h-48 transition-all hover:-translate-y-1 hover:shadow-md group"
+          >
             <div>
-              <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider">
+              <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded">
                 Đồ ăn vặt
               </span>
-              <h3 className="text-xl font-semibold text-[#181d26] mt-2 group-hover:text-[#e31837] transition-colors">
+              <h3 className="text-xl font-bold text-[#0f172a] mt-3 group-hover:text-[#e31837] transition-colors">
                 Bánh tráng & Ăn vặt nóng giòn
               </h3>
-              <p className="text-[13px] text-[#41454d] mt-2 leading-relaxed">
-                Bánh tráng nướng, bánh tráng trộn, nem chua rán và phô mai que giòn rụm thơm ngon.
-              </p>
             </div>
-            <Link
-              href="/menu?categoryId=2"
-              className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#e31837] hover:underline pt-3 border-t border-[#fecdd3]"
-            >
-              <span>Xem danh mục</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+            <div className="inline-flex items-center gap-1.5 text-[13px] font-bold text-[#e31837] pt-3 border-t border-[#f1f5f9]">
+              <span>Khám phá ngay</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
 
           {/* Card 3 */}
-          <div className="bg-white border border-[#dddddd] hover:border-[#e31837] rounded-[10px] p-6 flex flex-col justify-between h-64 transition-colors group">
+          <Link
+            href="/menu?categoryId=3"
+            className="bg-white border border-[#dddddd] hover:border-[#e31837] rounded-[12px] p-6 flex flex-col justify-between h-48 transition-all hover:-translate-y-1 hover:shadow-md group"
+          >
             <div>
-              <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider">
+              <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded">
                 Đồ uống & Tráng miệng
               </span>
-              <h3 className="text-xl font-semibold text-[#181d26] mt-2 group-hover:text-[#e31837] transition-colors">
-                Trà sữa, Cà phê & Nước ép thanh mát
+              <h3 className="text-xl font-bold text-[#0f172a] mt-3 group-hover:text-[#e31837] transition-colors">
+                Trà sữa, Cà phê & Nước ép
               </h3>
-              <p className="text-[13px] text-[#41454d] mt-2 leading-relaxed">
-                Trà sữa tự chọn topping, cà phê sữa phin Đắk Lắk đậm đà cùng các loại chè và sữa chua mát lạnh.
-              </p>
             </div>
-            <Link
-              href="/menu?categoryId=3"
-              className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#e31837] hover:underline pt-3 border-t border-[#fecdd3]"
-            >
-              <span>Xem danh mục</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+            <div className="inline-flex items-center gap-1.5 text-[13px] font-bold text-[#e31837] pt-3 border-t border-[#f1f5f9]">
+              <span>Khám phá ngay</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
         </div>
       </section>
     </div>
