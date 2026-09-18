@@ -13,6 +13,7 @@ import { getProducts } from '@/lib/db';
 import Carousel360 from '@/components/Carousel360';
 import ProductCard from '@/components/ProductCard';
 import PromoBanner from '@/components/PromoBanner';
+import GroupOrderBanner from '@/components/GroupOrderBanner';
 
 export const revalidate = 0; // Dynamic
 
@@ -142,7 +143,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 5. RED & WHITE THEMATIC CARDS */}
+      {/* 5. GROUP ORDER BANNER */}
+      <GroupOrderBanner />
+
+      {/* 6. RED & WHITE THEMATIC CARDS */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 1 */}
