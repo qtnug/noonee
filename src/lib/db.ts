@@ -1724,6 +1724,20 @@ export async function createReview(data: {
 // SUPPORT & COMPLAINTS CHAT (Cloud SQL Server)
 // ==========================================
 
+let inMemorySupportMessages: SupportMessage[] = [
+  {
+    id: 1,
+    orderCode: null,
+    userId: null,
+    senderRole: 'admin',
+    senderName: 'NooNee CSKH',
+    message: 'Chào mừng bạn đến với kênh hỗ trợ trực tuyến NooNee Food! Chúng mình luôn sẵn sàng lắng nghe mọi thắc mắc và hỗ trợ bạn nhanh nhất.',
+    isComplaint: false,
+    status: 'open',
+    createdAt: new Date().toISOString(),
+  }
+];
+
 export async function getSupportMessages(options?: { orderCode?: string; userId?: number }): Promise<SupportMessage[]> {
   try {
     const pool = await getCloudPool();
@@ -1735,8 +1749,12 @@ export async function getSupportMessages(options?: { orderCode?: string; userId?
       `;
       const req = pool.request();
       if (options?.orderCode) {
-        req.input('orderCode', sql.NVarChar(50), options.orderCode);
-        query += ` AND orderCode = @orderCode`;
+        if (options.orderCode === 'GENERAL') {
+          query += ` AND (orderCode IS NULL OR orderCode = 'GENERAL')`;
+        } else {
+          req.input('orderCode', sql.NVarChar(50), options.orderCode);
+          query += ` AND orderCode = @orderCode`;
+        }
       }
       if (options?.userId) {
         req.input('userId', sql.Int, options.userId);
@@ -1744,12 +1762,27 @@ export async function getSupportMessages(options?: { orderCode?: string; userId?
       }
       query += ` ORDER BY id ASC`;
       const res = await req.query(query);
-      return res.recordset || [];
+      if (res.recordset && res.recordset.length > 0) {
+        return res.recordset;
+      }
     }
   } catch (err) {
     console.error('Error fetching support messages from cloud:', err);
   }
-  return [];
+
+  // Robust In-memory fallback
+  let list = [...inMemorySupportMessages];
+  if (options?.orderCode) {
+    if (options.orderCode === 'GENERAL') {
+      list = list.filter((m) => !m.orderCode || m.orderCode === 'GENERAL');
+    } else {
+      list = list.filter((m) => m.orderCode === options.orderCode);
+    }
+  }
+  if (options?.userId) {
+    list = list.filter((m) => m.userId === options.userId);
+  }
+  return list;
 }
 
 export async function createSupportMessage(data: {
@@ -1760,11 +1793,24 @@ export async function createSupportMessage(data: {
   message: string;
   isComplaint?: boolean;
 }): Promise<SupportMessage> {
+  const cleanOrderCode = data.orderCode === 'GENERAL' ? null : (data.orderCode || null);
+  const fallbackMsg: SupportMessage = {
+    id: Date.now(),
+    orderCode: cleanOrderCode,
+    userId: data.userId || null,
+    senderRole: data.senderRole,
+    senderName: data.senderName,
+    message: data.message,
+    isComplaint: Boolean(data.isComplaint),
+    status: 'open',
+    createdAt: new Date().toISOString(),
+  };
+
   try {
     const pool = await getCloudPool();
     if (pool) {
       const req = pool.request();
-      req.input('orderCode', sql.NVarChar(50), data.orderCode || null);
+      req.input('orderCode', sql.NVarChar(50), cleanOrderCode);
       req.input('userId', sql.Int, data.userId || null);
       req.input('senderRole', sql.NVarChar(20), data.senderRole);
       req.input('senderName', sql.NVarChar(100), data.senderName);
@@ -1777,24 +1823,16 @@ export async function createSupportMessage(data: {
         VALUES (@orderCode, @userId, @senderRole, @senderName, @message, @isComplaint)
       `);
       if (res.recordset && res.recordset[0]) {
+        inMemorySupportMessages.push(res.recordset[0]);
         return res.recordset[0];
       }
     }
   } catch (err) {
     console.error('Error creating support message in cloud:', err);
-    throw err;
   }
-  return {
-    id: Date.now(),
-    orderCode: data.orderCode || null,
-    userId: data.userId || null,
-    senderRole: data.senderRole,
-    senderName: data.senderName,
-    message: data.message,
-    isComplaint: Boolean(data.isComplaint),
-    status: 'open',
-    createdAt: new Date().toISOString(),
-  };
+
+  inMemorySupportMessages.push(fallbackMsg);
+  return fallbackMsg;
 }
 
 // ==========================================

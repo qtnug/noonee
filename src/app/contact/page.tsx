@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   MapPin,
   Phone,
@@ -10,280 +11,446 @@ import {
   Send,
   MessageSquare,
   CheckCircle2,
-  AlertCircle,
+  AlertTriangle,
+  RefreshCw,
+  User,
+  ShoppingBag,
+  Sparkles,
+  Loader2,
   HelpCircle,
   ShieldCheck,
+  Headphones,
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { SupportMessage } from '@/types';
+import { formatDate } from '@/lib/utils';
 
-export default function ContactPage() {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [content, setContent] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
+function ContactChatContent() {
+  const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const urlOrderCode = searchParams.get('orderCode') || '';
 
-  // Honeypot for bot trap (STT 1)
-  const [hpTrap, setHpTrap] = useState('');
+  // Chat State
+  const [messages, setMessages] = useState<SupportMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [inputText, setInputText] = useState('');
+  const [isComplaint, setIsComplaint] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (hpTrap) {
-      // Bot detected - ignore silently
-      setSubmitted(true);
-      return;
+  // Identity state
+  const [customerName, setCustomerName] = useState('');
+  const [orderCode, setOrderCode] = useState(urlOrderCode);
+  const [userOrders, setUserOrders] = useState<string[]>([]);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize name
+  useEffect(() => {
+    if (user) {
+      setCustomerName(user.fullName || user.username || 'Khách hàng');
+    } else {
+      const savedName = typeof window !== 'undefined' ? localStorage.getItem('noonee_chat_name') : null;
+      setCustomerName(savedName || 'Khách hàng');
     }
+  }, [user]);
 
-    if (!name.trim() || !phone.trim() || !content.trim()) {
-      setError('Vui lòng điền đầy đủ họ tên, số điện thoại và nội dung cần hỗ trợ');
-      return;
+  // If user is logged in, optionally fetch their recent orders so they can select from a dropdown
+  useEffect(() => {
+    if (user) {
+      fetch('/api/orders')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.data)) {
+            const codes = data.data.map((o: any) => o.code).slice(0, 10);
+            setUserOrders(codes);
+          }
+        })
+        .catch(() => {});
     }
+  }, [user]);
 
-    setIsSubmitting(true);
-    setError('');
-
+  // Fetch messages from Support API
+  const fetchMessages = async () => {
     try {
-      // Optional call to support API or mock success
+      const queryParam = orderCode.trim() ? `?orderCode=${encodeURIComponent(orderCode.trim())}` : '?orderCode=GENERAL';
+      const res = await fetch(`/api/support${queryParam}`);
+      const data = await res.json();
+      if (data.success) {
+        setMessages(data.data || []);
+      }
+    } catch (e) {
+      console.error('Error loading chat messages:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial fetch and 3.5s real-time poll
+  useEffect(() => {
+    setLoading(true);
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 3500);
+    return () => clearInterval(interval);
+  }, [orderCode]);
+
+  // Auto-scroll to bottom on messages update
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Handle Send Message
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanMsg = inputText.trim();
+    if (!cleanMsg || isSending) return;
+
+    const finalName = customerName.trim() || user?.fullName || 'Khách hàng';
+    if (!user && typeof window !== 'undefined') {
+      localStorage.setItem('noonee_chat_name', finalName);
+    }
+
+    setIsSending(true);
+    try {
       const res = await fetch('/api/support', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fullName: name.trim(),
-          phone: phone.trim(),
-          email: email.trim(),
-          message: content.trim(),
-          hp_bot_trap: hpTrap,
+          orderCode: orderCode.trim() || 'GENERAL',
+          userId: user?.id || null,
+          senderRole: 'customer',
+          senderName: finalName,
+          message: cleanMsg,
+          isComplaint: Boolean(isComplaint),
         }),
-      }).catch(() => null);
+      });
 
-      setSubmitted(true);
-    } catch (err: any) {
-      setError(err.message || 'Đã có lỗi xảy ra. Vui lòng liên hệ hotline.');
+      const data = await res.json();
+      if (data.success && data.data) {
+        setMessages((prev) => [...prev, data.data]);
+        setInputText('');
+        setIsComplaint(false);
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
     } finally {
-      setIsSubmitting(false);
+      setIsSending(false);
+      inputRef.current?.focus();
     }
   };
 
+  const handleQuickQuestion = (text: string) => {
+    setInputText(text);
+    inputRef.current?.focus();
+  };
+
   return (
-    <div className="min-h-screen bg-[#fafafa] py-10">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#fafafa] py-8 sm:py-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-[#9297a0] mb-6">
-          <Link href="/" className="hover:text-[#181d26]">Trang chủ</Link>
+        <div className="flex items-center gap-2 text-sm text-[#9297a0]">
+          <Link href="/" className="hover:text-[#181d26] transition">Trang chủ</Link>
           <span>/</span>
-          <span className="text-[#181d26] font-medium">Liên hệ & Hỗ trợ</span>
+          <span className="text-[#181d26] font-medium">Hỗ trợ trực tuyến</span>
         </div>
 
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#fff1f2] text-[#e31837] border border-[#fecdd3] mb-3">
-            <MessageSquare className="w-3.5 h-3.5" />
-            Hỗ trợ khách hàng 24/7
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-bold text-[#181d26] tracking-tight">
-            Liên hệ với NooNee Food
+        {/* Header Band */}
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[#fff1f2] text-[#e31837] border border-[#fecdd3]">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Khu vực Chat Trực Tuyến Với Quản Trị Viên</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#181d26] tracking-tight">
+            Tư Vấn & Hỗ Trợ Trực Tuyến NooNee
           </h1>
-          <p className="mt-3 text-[#41454d] text-base leading-relaxed">
-            Chúng tôi luôn sẵn sàng lắng nghe mọi góp ý, thắc mắc về đơn hàng hoặc phản hồi chất lượng món ăn từ quý khách.
+          <p className="text-[14px] sm:text-[15px] text-[#41454d] leading-relaxed">
+            Nhắn tin trực tiếp với đội ngũ Chăm sóc khách hàng và Quản trị viên để được giải đáp thắc mắc, tư vấn món ngon hoặc tiếp nhận xử lý đơn hàng tức thì.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Contact Cards */}
-          <div className="lg:col-span-5 space-y-4">
-            <div className="bg-white rounded-xl border border-[#dddddd] p-6 shadow-sm">
-              <h2 className="text-lg font-bold text-[#181d26] mb-4 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-[#e31837]" />
-                Thông tin cửa hàng
+        {/* Main 2-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+          {/* Left Column: Store Info & Direct Hotline Call */}
+          <div className="lg:col-span-4 space-y-4">
+            <div className="bg-white rounded-[10px] border border-[#dddddd] p-5 sm:p-6 shadow-xs space-y-4">
+              <h2 className="text-base font-bold text-[#181d26] pb-3 border-b border-[#dddddd] flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-[#e31837]" />
+                Thông tin nhà hàng NooNee
               </h2>
-              <div className="space-y-4 text-sm text-[#41454d]">
+
+              <div className="space-y-3.5 text-[13px] text-[#41454d]">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0 mt-0.5">
-                    <MapPin className="w-4 h-4 text-[#e31837]" />
+                  <div className="w-8 h-8 rounded-[6px] bg-red-50 flex items-center justify-center shrink-0 mt-0.5 text-[#e31837]">
+                    <MapPin className="w-4 h-4" />
                   </div>
                   <div>
-                    <strong className="block text-[#181d26]">Địa chỉ chính:</strong>
+                    <strong className="block text-[#181d26]">Địa chỉ quán:</strong>
                     <span>120 Yên Lãng, Đống Đa, Hà Nội</span>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0 mt-0.5">
-                    <Phone className="w-4 h-4 text-[#e31837]" />
+                  <div className="w-8 h-8 rounded-[6px] bg-red-50 flex items-center justify-center shrink-0 mt-0.5 text-[#e31837]">
+                    <Phone className="w-4 h-4" />
                   </div>
                   <div>
-                    <strong className="block text-[#181d26]">Hotline đặt món & Khiếu nại:</strong>
-                    <a href="tel:0988888888" className="text-[#e31837] font-bold text-base hover:underline">
+                    <strong className="block text-[#181d26]">Hotline khẩn cấp:</strong>
+                    <a href="tel:0988888888" className="text-[#e31837] font-bold text-[14px] hover:underline">
                       0988.888.888
                     </a>
+                    <span className="block text-[11px] text-[#9297a0]">Hỗ trợ nhanh các đơn gấp</span>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0 mt-0.5">
-                    <Clock className="w-4 h-4 text-[#e31837]" />
+                  <div className="w-8 h-8 rounded-[6px] bg-red-50 flex items-center justify-center shrink-0 mt-0.5 text-[#e31837]">
+                    <Clock className="w-4 h-4" />
                   </div>
                   <div>
                     <strong className="block text-[#181d26]">Khung giờ phục vụ:</strong>
-                    <span>07:00 - 22:00 (Tất cả các ngày trong tuần)</span>
+                    <span>07:00 - 22:00 (Mỗi ngày)</span>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0 mt-0.5">
-                    <Mail className="w-4 h-4 text-[#e31837]" />
+                  <div className="w-8 h-8 rounded-[6px] bg-red-50 flex items-center justify-center shrink-0 mt-0.5 text-[#e31837]">
+                    <Mail className="w-4 h-4" />
                   </div>
                   <div>
-                    <strong className="block text-[#181d26]">Email hỗ trợ:</strong>
+                    <strong className="block text-[#181d26]">Hòm thư điện tử:</strong>
                     <span>hotro@nooneefood.vn</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Quick Guarantees */}
-            <div className="bg-white rounded-xl border border-[#dddddd] p-6 shadow-sm">
-              <h3 className="text-sm font-bold text-[#181d26] uppercase tracking-wider mb-3">
-                Cam kết dịch vụ NooNee
+            {/* Service Guarantees Card */}
+            <div className="bg-white rounded-[10px] border border-[#dddddd] p-5 shadow-xs space-y-3">
+              <h3 className="text-[13px] font-bold text-[#181d26] uppercase tracking-wider flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#059669]" />
+                Cam kết hỗ trợ khách hàng
               </h3>
-              <ul className="space-y-2.5 text-xs text-[#41454d]">
-                <li className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Món ăn nấu mới 100% khi nhận đơn, bảo đảm an toàn VSTP.</span>
+              <ul className="space-y-2 text-[12px] text-[#41454d]">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#059669] shrink-0 mt-0.5" />
+                  <span>Phản hồi chat trung bình trong vòng <strong>1 - 3 phút</strong>.</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Giao hỏa tốc 15-30 phút trong bán kính nội thành.</span>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#059669] shrink-0 mt-0.5" />
+                  <span>Đổi món mới hoặc hoàn tiền nếu món ăn nguội, hỏng hoặc giao nhầm.</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Hoàn tiền hoặc đổi món nếu có sai sót đơn hàng.</span>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#059669] shrink-0 mt-0.5" />
+                  <span>Tin nhắn được đồng bộ trực tiếp tới bảng điều khiển Quản trị viên.</span>
                 </li>
               </ul>
             </div>
           </div>
 
-          {/* Right Column: Contact & Support Form */}
-          <div className="lg:col-span-7">
-            <div className="bg-white rounded-xl border border-[#dddddd] p-6 sm:p-8 shadow-sm">
-              <h2 className="text-xl font-bold text-[#181d26] mb-2">Gửi tin nhắn cho chúng tôi</h2>
-              <p className="text-sm text-[#9297a0] mb-6">
-                Điền thông tin bên dưới, nhân viên hỗ trợ của NooNee sẽ phản hồi quý khách trong vòng 10-15 phút.
-              </p>
-
-              {submitted ? (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center">
-                  <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto mb-3" />
-                  <h3 className="text-lg font-bold text-emerald-900 mb-1">
-                    Gửi yêu cầu hỗ trợ thành công!
-                  </h3>
-                  <p className="text-sm text-emerald-800 mb-4">
-                    Cảm ơn quý khách đã gửi thông tin. Đội ngũ CSKH của NooNee sẽ liên hệ sớm nhất theo số điện thoại đã cung cấp.
-                  </p>
-                  <button
-                    onClick={() => {
-                      setSubmitted(false);
-                      setName('');
-                      setPhone('');
-                      setEmail('');
-                      setContent('');
-                    }}
-                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition"
-                  >
-                    Gửi phản hồi khác
-                  </button>
+          {/* Right Column: Interactive Live Chat Area */}
+          <div className="lg:col-span-8">
+            <div className="bg-white rounded-[10px] border border-[#dddddd] shadow-sm overflow-hidden flex flex-col h-[600px] sm:h-[640px]">
+              {/* Chat Window Top Bar */}
+              <div className="p-3.5 sm:p-4 bg-gradient-to-r from-[#181d26] to-[#262c36] text-white flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-[#e31837] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
+                    <Headphones className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-[14px] sm:text-[15px] truncate flex items-center gap-2">
+                      <span>NooNee CSKH Trực Tuyến</span>
+                    </h3>
+                    <div className="flex items-center gap-1.5 text-[11px] text-gray-300">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>Đang trực tuyến • Sẵn sàng phản hồi</span>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* Honeypot field for bot protection */}
+
+                <button
+                  type="button"
+                  onClick={fetchMessages}
+                  disabled={loading}
+                  className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-[6px] transition cursor-pointer"
+                  title="Tải lại tin nhắn"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+
+              {/* Chat Metadata & Topic Filter Bar */}
+              <div className="bg-[#f8fafc] px-3.5 py-2.5 border-b border-[#dddddd] flex flex-wrap items-center justify-between gap-2 text-[12px]">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[#555a64]">Tên bạn:</span>
                   <input
                     type="text"
-                    name="hp_bot_trap"
-                    value={hpTrap}
-                    onChange={(e) => setHpTrap(e.target.value)}
-                    style={{ display: 'none' }}
-                    tabIndex={-1}
-                    autoComplete="off"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Nhập tên của bạn..."
+                    className="h-7 px-2 bg-white border border-[#dddddd] rounded-[4px] text-[12px] font-medium text-[#181d26] max-w-[140px] focus:outline-none focus:border-[#e31837]"
                   />
+                </div>
 
-                  {error && (
-                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>{error}</span>
-                    </div>
-                  )}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[#555a64]">Chủ đề:</span>
+                  <select
+                    value={orderCode}
+                    onChange={(e) => setOrderCode(e.target.value)}
+                    className="h-7 px-2 bg-white border border-[#dddddd] rounded-[4px] text-[12px] font-medium text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
+                  >
+                    <option value="">Hỗ trợ chung (Không theo đơn)</option>
+                    {userOrders.map((code) => (
+                      <option key={code} value={code}>
+                        Đơn hàng #{code}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-[#181d26] uppercase tracking-wider mb-1.5">
-                        Họ và tên <span className="text-[#e31837]">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="VD: Nguyễn Văn A"
-                        className="w-full h-11 px-3.5 bg-white border border-[#dddddd] rounded-lg text-sm text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-[#181d26] uppercase tracking-wider mb-1.5">
-                        Số điện thoại <span className="text-[#e31837]">*</span>
-                      </label>
-                      <input
-                        type="tel"
-                        required
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="VD: 0912345678"
-                        className="w-full h-11 px-3.5 bg-white border border-[#dddddd] rounded-lg text-sm text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837]"
-                      />
-                    </div>
+              {/* Messages Scrollable Area */}
+              <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-[#fcfbf9]/60">
+                {loading && messages.length === 0 ? (
+                  <div className="h-full flex items-center justify-center text-gray-400 text-[13px] gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin text-[#e31837]" />
+                    <span>Đang kết nối tới tổng đài hỗ trợ...</span>
                   </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-[#181d26] uppercase tracking-wider mb-1.5">
-                      Email (không bắt buộc)
-                    </label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="VD: email@example.com"
-                      className="w-full h-11 px-3.5 bg-white border border-[#dddddd] rounded-lg text-sm text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837]"
-                    />
+                ) : messages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2 text-gray-400">
+                    <MessageSquare className="w-10 h-10 text-gray-300" />
+                    <p className="text-[13px] text-[#555a64] font-medium">Chưa có tin nhắn nào trong cuộc trò chuyện này.</p>
+                    <p className="text-[12px] text-[#9297a0]">Hãy đặt câu hỏi bên dưới, chúng tôi sẽ phản hồi bạn ngay!</p>
                   </div>
+                ) : (
+                  messages.map((m) => {
+                    const isAdmin = m.senderRole === 'admin';
+                    return (
+                      <div
+                        key={m.id}
+                        className={`flex flex-col ${isAdmin ? 'items-start' : 'items-end'}`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-1 px-1">
+                          <span className={`text-[11px] font-semibold ${isAdmin ? 'text-[#e31837]' : 'text-[#181d26]'}`}>
+                            {isAdmin ? 'NooNee CSKH' : m.senderName}
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            {formatDate(m.createdAt)}
+                          </span>
+                        </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-[#181d26] uppercase tracking-wider mb-1.5">
-                      Nội dung cần hỗ trợ hoặc góp ý <span className="text-[#e31837]">*</span>
-                    </label>
-                    <textarea
-                      required
-                      rows={4}
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      placeholder="Mô tả chi tiết vấn đề bạn cần giúp đỡ hoặc mã đơn hàng..."
-                      className="w-full p-3.5 bg-white border border-[#dddddd] rounded-lg text-sm text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837]"
-                    />
-                  </div>
+                        <div
+                          className={`max-w-md sm:max-w-lg p-3 rounded-[8px] text-[13px] leading-relaxed shadow-2xs ${
+                            isAdmin
+                              ? 'bg-white border border-[#dddddd] text-[#181d26] rounded-tl-xs'
+                              : m.isComplaint
+                              ? 'bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] rounded-tr-xs font-medium'
+                              : 'bg-[#e31837] text-white rounded-tr-xs'
+                          }`}
+                        >
+                          {m.isComplaint && (
+                            <div className="flex items-center gap-1 text-[11px] font-bold text-[#e31837] mb-1">
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                              <span>KHIẾU NẠI ĐƠN HÀNG</span>
+                            </div>
+                          )}
+                          <p className="whitespace-pre-wrap break-words">{m.message}</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Quick Suggestion Chips */}
+              <div className="px-3.5 py-2 bg-white border-t border-[#dddddd] flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                <span className="text-[11px] text-gray-400 shrink-0">Gợi ý:</span>
+                <button
+                  type="button"
+                  onClick={() => handleQuickQuestion('Quán mình hiện tại còn mở cửa nhận đơn không ạ?')}
+                  className="px-2.5 py-1 rounded-[4px] bg-[#f8fafc] hover:bg-red-50 text-[11px] text-[#41454d] hover:text-[#e31837] border border-[#dddddd] shrink-0 transition cursor-pointer"
+                >
+                  ⏰ Quán còn mở không?
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickQuestion('Tư vấn cho mình món cơm rang và bún ngon nhất với ạ!')}
+                  className="px-2.5 py-1 rounded-[4px] bg-[#f8fafc] hover:bg-red-50 text-[11px] text-[#41454d] hover:text-[#e31837] border border-[#dddddd] shrink-0 transition cursor-pointer"
+                >
+                  🍜 Tư vấn món ngon
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickQuestion('Mình muốn kiểm tra thời gian giao hàng đơn này.')}
+                  className="px-2.5 py-1 rounded-[4px] bg-[#f8fafc] hover:bg-red-50 text-[11px] text-[#41454d] hover:text-[#e31837] border border-[#dddddd] shrink-0 transition cursor-pointer"
+                >
+                  📦 Tình trạng giao hàng
+                </button>
+              </div>
+
+              {/* Chat Input & Controls */}
+              <form onSubmit={handleSendMessage} className="p-3 sm:p-3.5 bg-white border-t border-[#dddddd] space-y-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    required
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder="Nhập nội dung cần hỗ trợ hoặc khiếu nại..."
+                    className="flex-1 h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                  />
 
                   <button
                     type="submit"
-                    disabled={isSubmitting}
-                    className="w-full sm:w-auto px-6 py-3 bg-[#e31837] hover:bg-[#be0e27] text-white font-medium rounded-lg text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    disabled={isSending || !inputText.trim()}
+                    className="h-10 px-4 sm:px-5 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-xs shrink-0"
                   >
-                    <Send className="w-4 h-4" />
-                    <span>{isSubmitting ? 'Đang gửi thông tin...' : 'Gửi yêu cầu hỗ trợ'}</span>
+                    {isSending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <span>Gửi</span>
+                        <Send className="w-3.5 h-3.5" />
+                      </>
+                    )}
                   </button>
-                </form>
-              )}
+                </div>
+
+                {/* Complaint Checkbox */}
+                <div className="flex items-center justify-between text-[11px] text-[#555a64] px-1">
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={isComplaint}
+                      onChange={(e) => setIsComplaint(e.target.checked)}
+                      className="accent-[#e31837] rounded"
+                    />
+                    <span className={isComplaint ? 'text-[#e31837] font-semibold' : ''}>
+                      Đánh dấu đây là khiếu nại chất lượng món / đơn hàng
+                    </span>
+                  </label>
+
+                  <span className="text-[10px] text-gray-400 hidden sm:inline">
+                    Nhấn Enter để gửi
+                  </span>
+                </div>
+              </form>
             </div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ContactPage() {
+  return (
+    <Suspense fallback={<div className="p-16 text-center text-[14px] text-gray-400">Đang kết nối trung tâm hỗ trợ...</div>}>
+      <ContactChatContent />
+    </Suspense>
   );
 }
