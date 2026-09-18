@@ -63,7 +63,11 @@ export default async function ProductDetailPage({
           {/* Right: Details & Order CTA */}
           <div className="md:col-span-6 flex flex-col justify-between space-y-6">
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
+              <h1 className="text-2xl sm:text-4xl font-extrabold text-[#0f172a] tracking-tight">
+                {product.name}
+              </h1>
+
+              <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 text-[#333840]">
                   <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                   <span className="text-[13px] font-bold text-[#181d26]">
@@ -71,10 +75,6 @@ export default async function ProductDetailPage({
                   </span>
                 </div>
               </div>
-
-              <h1 className="text-2xl sm:text-4xl font-extrabold text-[#0f172a] tracking-tight">
-                {product.name}
-              </h1>
 
               <div className="flex items-baseline gap-2.5">
                 <span className="text-2xl sm:text-3xl font-bold text-[#e31837]">

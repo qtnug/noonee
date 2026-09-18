@@ -66,20 +66,18 @@ export default function ProductCard({
       {/* Product Information */}
       <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between bg-white">
         <div>
-          {/* Rating */}
-          <div className="flex items-center justify-end mb-1">
-            <span className="flex items-center gap-0.5 sm:gap-1 text-[#333840] font-medium text-[11px] sm:text-[12px]">
+          {/* Title & Rating */}
+          <div className="flex items-start justify-between gap-1.5 mb-1">
+            <Link href={`/product/${product.slug}`} className="flex-1 min-w-0">
+              <h3 className="font-bold text-[#0f172a] text-[14px] sm:text-[15px] leading-snug line-clamp-1 hover:text-[#e31837] transition-colors">
+                {product.name}
+              </h3>
+            </Link>
+            <span className="flex items-center gap-0.5 text-[#333840] font-medium text-[11px] sm:text-[12px] shrink-0 pt-0.5">
               <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-400 text-amber-400" />
               <span>{product.rating ? product.rating.toFixed(1) : '5.0'}</span>
             </span>
           </div>
-
-          {/* Title */}
-          <Link href={`/product/${product.slug}`}>
-            <h3 className="font-bold text-[#0f172a] text-[14px] sm:text-[15px] leading-snug line-clamp-1 mb-1 hover:text-[#e31837] transition-colors">
-              {product.name}
-            </h3>
-          </Link>
 
           {/* Description */}
           <p className="text-[11px] sm:text-[13px] text-[#475569] line-clamp-1 sm:line-clamp-2 leading-relaxed mb-2 sm:mb-4">
