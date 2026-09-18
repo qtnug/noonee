@@ -13,7 +13,7 @@ export default function Footer() {
     return null;
   }
   return (
-    <footer className="bg-white text-[#334155] border-t border-[#e2e8f0]">
+    <footer className="bg-[#FFFAF0] text-[#334155] border-t border-[#ebdcd0]">
       {/* Main Footer Links */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10">
@@ -113,7 +113,7 @@ export default function Footer() {
         </div>
 
         {/* Hairline Row */}
-        <div className="border-t border-[#e2e8f0] mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between text-[13px] text-[#64748b] gap-4">
+        <div className="border-t border-[#ebdcd0] mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between text-[13px] text-[#64748b] gap-4">
           <p>© {new Date().getFullYear()} NooNee Food. Giữ trọn hương vị chuẩn vị & nóng hổi.</p>
           <div className="flex items-center gap-2 text-[12px] text-[#64748b] font-medium">
             <span>Giao hàng 30 phút</span>

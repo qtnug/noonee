@@ -184,11 +184,11 @@ function ContactChatContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] py-8 sm:py-10">
+    <div className="min-h-screen bg-[#FFFAF0] py-8 sm:py-10">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Header Band */}
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#181d26] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0f172a] tracking-tight">
             Tư Vấn & Hỗ Trợ Trực Tuyến NooNee
           </h1>
           <p className="text-[14px] sm:text-[15px] text-[#41454d] leading-relaxed">

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import { Montserrat } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -8,6 +9,13 @@ import MobileBottomNav from '@/components/MobileBottomNav';
 import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
+
+const montserrat = Montserrat({
+  subsets: ['latin', 'vietnamese'],
+  weight: ['600', '700', '800', '900'],
+  variable: '--font-heading',
+  display: 'swap',
+});
 
 const friemFont = localFont({
   src: '../../public/fonts/Friem-Regular.ttf',
@@ -48,8 +56,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" className={`${plusJakartaSans.variable} ${friemFont.variable} font-sans`}>
-      <body className="flex flex-col min-h-screen pb-14 md:pb-0 font-sans">
+    <html lang="vi" className={`${plusJakartaSans.variable} ${montserrat.variable} ${friemFont.variable} font-sans`}>
+      <body className="flex flex-col min-h-screen pb-14 md:pb-0 font-sans bg-[#FFFAF0] text-[#0f172a]">
         <AuthProvider>
           <FavoritesProvider>
             <CartProvider>

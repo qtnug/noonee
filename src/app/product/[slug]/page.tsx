@@ -25,7 +25,7 @@ export default async function ProductDetailPage({
   const filteredRelated = relatedProducts.filter((p) => p.id !== product.id).slice(0, 4);
 
   return (
-    <div className="bg-white min-h-screen py-6 sm:py-10 pb-20 md:pb-10">
+    <div className="bg-[#FFFAF0] min-h-screen py-6 sm:py-10 pb-20 md:pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-12">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-[12px] sm:text-[13px] text-[#41454d]">
@@ -40,10 +40,10 @@ export default async function ProductDetailPage({
           <span className="text-[#e31837] font-semibold truncate">{product.name}</span>
         </div>
 
-        {/* Main Product Card */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-10 bg-white rounded-[12px] p-4 sm:p-10 border border-[#dddddd] shadow-xs">
-          {/* Left: Image Container (1:1 Square) */}
-          <div className="md:col-span-6 relative rounded-[10px] overflow-hidden bg-[#fff1f2]/20 aspect-square w-full border border-[#dddddd] shadow-xs">
+        {/* Product Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 bg-white rounded-[16px] border border-[#dddddd] p-6 sm:p-8 lg:p-10 shadow-xs">
+          {/* Left: Product Image */}
+          <div className="md:col-span-6 relative aspect-square rounded-[12px] overflow-hidden bg-[#fdf2f2]/30 border border-[#dddddd]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={product.image}
@@ -77,7 +77,7 @@ export default async function ProductDetailPage({
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-4xl font-normal text-[#181d26] tracking-tight">
+              <h1 className="text-2xl sm:text-4xl font-extrabold text-[#0f172a] tracking-tight">
                 {product.name}
               </h1>
 

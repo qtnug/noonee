@@ -117,7 +117,7 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#e2e8f0] shadow-2xs">
+    <header className="sticky top-0 z-40 bg-[#FFFAF0]/95 backdrop-blur-md border-b border-[#ebdcd0] shadow-2xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 lg:gap-4">
         {/* Left: Brand Wordmark */}
         <div className="flex items-center gap-6 shrink-0">
@@ -417,7 +417,7 @@ export default function Navbar() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-t border-[#e2e8f0] px-4 py-4 space-y-3 shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="lg:hidden bg-[#FFFAF0] border-t border-[#ebdcd0] px-4 py-4 space-y-3 shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
           <div className="space-y-1 text-sm font-medium">
             <Link
               href="/menu"

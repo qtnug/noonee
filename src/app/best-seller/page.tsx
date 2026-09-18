@@ -92,7 +92,7 @@ export default function BestSellerPage() {
   });
 
   return (
-    <div className="bg-[#fafafa] min-h-screen pb-16">
+    <div className="bg-[#FFFAF0] min-h-screen pb-16">
       {/* 1. HERO PROMOTIONAL BANNER */}
       <div className="bg-gradient-to-r from-[#181d26] via-[#2c1418] to-[#181d26] text-white py-10 sm:py-14 border-b border-[#dddddd] relative overflow-hidden">
         {/* Subtle background flare */}
@@ -107,8 +107,8 @@ export default function BestSellerPage() {
                 <span>BẢNG XẾP HẠNG BEST SELLER 2026</span>
               </div>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
-                Top Món Bán Chạy Nhất <br className="hidden sm:inline" />
+              <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+                <span className="text-white">Top Món Bán Chạy Nhất</span> <br className="hidden sm:inline" />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-pink-400 to-amber-300">
                   Tại NooNee Food
                 </span>

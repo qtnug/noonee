@@ -122,12 +122,12 @@ function MenuPageContent() {
   };
 
   return (
-    <div className="bg-white min-h-screen pb-24">
+    <div className="bg-[#FFFAF0] min-h-screen pb-24">
       {/* Category Header Band */}
-      <div className="bg-gradient-to-b from-[#fff1f2]/60 to-white border-b border-[#dddddd] py-8 px-4 sm:px-6 lg:px-8">
+      <div className="bg-gradient-to-b from-[#fff1f2]/60 to-[#FFFAF0] border-b border-[#ebdcd0] py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#181d26]">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0f172a]">
               Khám phá thực đơn NooNee
             </h1>
             <p className="text-[14px] text-[#41454d] max-w-2xl leading-relaxed">

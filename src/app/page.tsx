@@ -26,9 +26,9 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-[#FFFAF0] min-h-screen">
       {/* 1. HERO BAND (Minimalist & Punchy Editorial Theme) */}
-      <section className="bg-gradient-to-b from-[#fff1f2]/50 via-white to-white border-b border-[#f1f5f9]">
+      <section className="bg-gradient-to-b from-[#fff1f2]/60 via-[#FFFAF0] to-[#FFFAF0] border-b border-[#f0e3d6]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Left Content Column */}
@@ -73,7 +73,7 @@ export default async function HomePage() {
       </section>
 
       {/* 2. COMPACT TRUST BAR (Minimalist, Zero Fluff) */}
-      <section className="border-b border-[#f1f5f9] bg-[#f8fafc]">
+      <section className="border-b border-[#f0e3d6] bg-[#fdf5ec]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2.5">

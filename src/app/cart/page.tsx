@@ -33,12 +33,12 @@ export default function CartPage() {
   }
 
   return (
-    <div className="bg-white min-h-screen py-6 sm:py-10 pb-28 md:pb-10">
+    <div className="bg-[#FFFAF0] min-h-screen py-6 sm:py-10 pb-28 md:pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 sm:pb-6 border-b border-[#dddddd]">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-normal text-[#181d26]">Giỏ hàng của bạn</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a]">Giỏ hàng của bạn</h1>
             <p className="text-[13px] sm:text-[14px] text-[#41454d] mt-1">
               Đang có <strong className="text-[#e31837]">{totalItems}</strong> món ăn sẵn sàng thanh toán
             </p>

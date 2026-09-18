@@ -95,11 +95,11 @@ export default function OrdersLookupPage() {
   };
 
   return (
-    <div className="bg-white min-h-screen py-6 sm:py-10 pb-20 md:pb-10">
+    <div className="bg-[#FFFAF0] min-h-screen py-6 sm:py-10 pb-20 md:pb-10">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="space-y-2 text-center max-w-xl mx-auto">
-          <h1 className="text-2xl sm:text-3xl font-normal text-[#181d26]">Đơn hàng của bạn</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a]">Đơn hàng của bạn</h1>
           <p className="text-[13px] sm:text-[14px] text-[#41454d]">
             {user
               ? `Xem danh sách lịch sử đơn hàng của tài khoản ${user.fullName} (${user.username})`

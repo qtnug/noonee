@@ -416,7 +416,7 @@ function CheckoutContent() {
   };
 
   return (
-    <div className="bg-white min-h-screen py-6 sm:py-10 pb-20 md:pb-10">
+    <div className="bg-[#FFFAF0] min-h-screen py-6 sm:py-10 pb-20 md:pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="flex items-center gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-[#dddddd]">
@@ -427,7 +427,7 @@ function CheckoutContent() {
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-normal text-[#181d26]">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a]">
               {groupOrder ? `Thanh toán Đơn nhóm #${groupOrder.code}` : 'Thông tin giao hàng & thanh toán'}
             </h1>
             <p className="text-[13px] sm:text-[14px] text-[#41454d] mt-0.5 sm:mt-1">
