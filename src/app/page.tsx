@@ -60,12 +60,7 @@ export default async function HomePage() {
 
             {/* Right Visual Fragment: Scroll-driven 360 Food Video */}
             <div className="lg:col-span-6">
-              <ScrollFoodVideo
-                totalFrames={100}
-                dishName="Bún Bò Huế Cay Nồng Đặc Biệt"
-                price={42000}
-                dishCategory="Món Nước Nóng Hổi"
-              />
+              <ScrollFoodVideo totalFrames={100} />
             </div>
           </div>
         </div>
