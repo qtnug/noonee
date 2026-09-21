@@ -33,27 +33,18 @@ export async function POST(request: NextRequest) {
     // LLM7.io OpenAI-compatible configuration
     const baseUrl = process.env.LLM7_BASE_URL || 'https://api.llm7.io/v1';
     const modelName = process.env.LLM_MODEL_NAME || 'gemini-3.1-flash-lite';
-    const apiKey = process.env.LLM7_API_KEY || process.env.GEMINI_API_KEY || '';
+    const apiKey =
+      process.env.LLM7_API_KEY ||
+      process.env.LLM_API_KEY ||
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      process.env.OPENAI_API_KEY ||
+      process.env.LLM7_TOKEN ||
+      process.env.API_KEY ||
+      process.env.NEXT_PUBLIC_LLM7_API_KEY ||
+      '';
 
-    // If API key is not configured, reply directly using keyword matching from Food.csv
-    if (!apiKey) {
-      const matchedProducts = await searchFoodsKeyword(lastUserMsg, 2);
-      let replyText = `Dạ NooNee AI gợi ý bạn món ăn phù hợp với yêu cầu:\n\n`;
-
-      if (matchedProducts.length > 0) {
-        for (const p of matchedProducts) {
-          replyText += `• **${p.name}** (${p.price.toLocaleString('vi-VN')}đ): ${p.description}\n`;
-        }
-      } else {
-        replyText += `Bạn có thể xem các món ngon bán chạy bên dưới nhé!`;
-      }
-
-      return NextResponse.json({
-        success: true,
-        reply: replyText.trim(),
-        recommendedProducts: matchedProducts,
-      });
-    }
+    console.log(`[NooNee AI] Processing request. Has apiKey: ${!!apiKey}, Model: ${modelName}`);
 
     // System instruction: strictly concise, practical, 100% hidden model/source
     const systemPrompt = `Bạn là NooNee AI - trợ lý ẩm thực của quán ăn NooNee Food.

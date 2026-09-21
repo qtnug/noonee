@@ -540,13 +540,13 @@ export default function AIChatBot() {
                             >
                               <Link
                                 href={`/product/${product.slug}`}
-                                className="relative w-13 h-13 rounded-lg overflow-hidden shrink-0 bg-gray-100 border border-gray-200"
+                                className="relative w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-lg overflow-hidden shrink-0 bg-gray-100 border border-gray-200 block"
                               >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                   src={product.image}
                                   alt={product.name}
-                                  className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300"
+                                  className="w-full h-full object-cover object-center group-hover/item:scale-105 transition-transform duration-300"
                                   loading="lazy"
                                 />
                               </Link>
