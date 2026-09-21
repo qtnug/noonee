@@ -10,11 +10,8 @@ import {
   Bot,
   User,
   ShoppingBag,
-  ExternalLink,
   ChevronDown,
   Check,
-  AlertCircle,
-  Clock,
   Star,
 } from 'lucide-react';
 import { Product } from '@/types';
@@ -30,37 +27,121 @@ interface Message {
   timestamp: string;
 }
 
-const QUICK_PROMPTS = [
-  '🍱 Gợi ý cơm trưa dưới 40k',
-  '🍜 Bún & Phở nước nóng hổi',
-  '🥤 Trà sữa & nước ép mát lạnh',
-  '🍟 Đồ ăn vặt giòn rụm',
-  '🌶️ Món cay đậm đà ấm bụng',
-  '⭐ Các món bán chạy nhất quán',
+interface QuickCategory {
+  id: string;
+  label: string;
+  filter: (p: Product) => boolean;
+  intro: (name: string, price: string, desc: string) => string;
+}
+
+// Quick suggestions config: Instant random recommendation by category without calling API
+const QUICK_CATEGORIES: QuickCategory[] = [
+  {
+    id: 'rice',
+    label: '🍱 Cơm ngon no bụng',
+    filter: (p) => p.categoryId === 1 && p.isAvailable,
+    intro: (name, price, desc) =>
+      `Bữa cơm hôm nay, NooNee AI gợi ý bạn thử ngay món **${name}** (${price}). ${desc} Mời bạn thưởng thức nhé!`,
+  },
+  {
+    id: 'noodle',
+    label: '🍜 Bún & Phở nóng hổi',
+    filter: (p) => (p.categoryId === 4 || p.categoryId === 5) && p.isAvailable,
+    intro: (name, price, desc) =>
+      `Thèm món nước nóng hổi? NooNee AI chọn cho bạn **${name}** (${price}) nước dùng đậm đà thơm phức! ${desc}`,
+  },
+  {
+    id: 'tea_juice',
+    label: '🥤 Trà sữa & Nước ép',
+    // Specifically selects tea, milk tea, juice, smoothie; STRICTLY excludes coffee, sodas, bottled water, desserts
+    filter: (p) => {
+      if (p.categoryId !== 3 || !p.isAvailable) return false;
+      const s = p.slug.toLowerCase();
+      // Exclude coffee
+      if (s.includes('ca-phe') || s.includes('bac-xiu') || s.includes('americano')) return false;
+      // Exclude canned sodas and plain water
+      if (s.includes('coca') || s.includes('sting') || s.includes('7up') || s.includes('mirinda') || s.includes('nuoc-loc')) return false;
+      // Exclude desserts (chè, sữa chua, tào phớ)
+      if (s.includes('che-') || s.includes('sua-chua') || s.includes('tao-pho')) return false;
+      // Include tea, milk tea, juice, smoothie, coconut
+      return (
+        s.includes('tra-sua') ||
+        s.includes('hong-tra') ||
+        s.includes('tra-thai') ||
+        s.includes('milo') ||
+        s.includes('matcha') ||
+        s.includes('cacao') ||
+        s.includes('tra-dao') ||
+        s.includes('tra-chanh') ||
+        s.includes('nuoc-mia') ||
+        s.includes('sinh-to') ||
+        s.includes('nuoc-ep') ||
+        s.includes('nuoc-dua')
+      );
+    },
+    intro: (name, price, desc) =>
+      `Giải khát thanh mát cùng **${name}** (${price}) bạn nhé! ${desc}`,
+  },
+  {
+    id: 'snack',
+    label: '🍟 Ăn vặt giòn ngon',
+    filter: (p) => p.categoryId === 2 && p.isAvailable,
+    intro: (name, price, desc) =>
+      `NooNee AI gợi ý món ăn vặt nhâm nhi cực đã: **${name}** (${price}). ${desc}`,
+  },
+  {
+    id: 'coffee',
+    label: '☕ Cà phê đậm vị',
+    filter: (p) => {
+      if (p.categoryId !== 3 || !p.isAvailable) return false;
+      const s = p.slug.toLowerCase();
+      return s.includes('ca-phe') || s.includes('bac-xiu') || s.includes('americano');
+    },
+    intro: (name, price, desc) =>
+      `Tỉnh táo và tràn đầy năng lượng với ly **${name}** (${price}) thơm nồng đậm đà!`,
+  },
+  {
+    id: 'dessert',
+    label: '🍧 Chè & Sữa chua',
+    filter: (p) => {
+      if (p.categoryId !== 3 || !p.isAvailable) return false;
+      const s = p.slug.toLowerCase();
+      return s.includes('che-') || s.includes('sua-chua') || s.includes('tao-pho');
+    },
+    intro: (name, price, desc) =>
+      `Tráng miệng ngọt ngào thanh mát cùng **${name}** (${price}). ${desc}`,
+  },
+  {
+    id: 'random',
+    label: '🎲 Món ngẫu nhiên hôm nay',
+    filter: (p) => p.isAvailable,
+    intro: (name, price, desc) =>
+      `Bốc thăm ngẫu nhiên hôm nay thuộc về: **${name}** (${price})! ${desc}`,
+  },
 ];
 
 /**
- * Format lightweight markdown (bold, bullet points, headers, blockquotes)
+ * Lightweight formatting for bold, bullets and quotes
  */
 function MarkdownText({ content }: { content: string }) {
   const lines = content.split('\n');
 
   return (
-    <div className="space-y-1.5 leading-relaxed text-sm">
+    <div className="space-y-1 leading-relaxed text-sm">
       {lines.map((line, idx) => {
         const trimmed = line.trim();
 
         if (!trimmed) {
-          return <div key={idx} className="h-1.5" />;
+          return <div key={idx} className="h-1" />;
         }
 
-        // Blockquote / Tip note
+        // Blockquote
         if (trimmed.startsWith('>')) {
           const quoteText = trimmed.replace(/^>\s*/, '');
           return (
             <div
               key={idx}
-              className="bg-amber-50/80 border-l-2 border-amber-400 pl-2.5 py-1 text-xs text-amber-900 rounded-r-md my-1"
+              className="bg-amber-50 border-l-2 border-amber-400 pl-2 py-0.5 text-xs text-amber-900 rounded-r my-1"
             >
               {renderFormattedInline(quoteText)}
             </div>
@@ -71,25 +152,20 @@ function MarkdownText({ content }: { content: string }) {
         if (trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.startsWith('*')) {
           const bulletText = trimmed.replace(/^[•\-\*]\s*/, '');
           return (
-            <div key={idx} className="flex items-start gap-1.5 pl-1">
-              <span className="text-[#e31837] text-xs mt-1 shrink-0">•</span>
+            <div key={idx} className="flex items-start gap-1.5 pl-0.5">
+              <span className="text-[#e31837] text-xs mt-0.5 shrink-0">•</span>
               <span className="flex-1">{renderFormattedInline(bulletText)}</span>
             </div>
           );
         }
 
-        // Regular line
         return <p key={idx}>{renderFormattedInline(trimmed)}</p>;
       })}
     </div>
   );
 }
 
-/**
- * Render inline formatting like **bold** and `code`
- */
 function renderFormattedInline(text: string) {
-  // Regex to split **bold** and `code`
   const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
 
   return parts.map((part, index) => {
@@ -123,11 +199,11 @@ export default function AIChatBot() {
   const [showTooltip, setShowTooltip] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
+  const [menuProducts, setMenuProducts] = useState<Product[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll to bottom of chat
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -142,20 +218,31 @@ export default function AIChatBot() {
     }
   }, [isOpen, messages]);
 
-  // Load chat history from sessionStorage on mount
+  // Load menu products on mount for fast instant random suggestions
+  useEffect(() => {
+    fetch('/api/food-menu')
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success && Array.isArray(res.data)) {
+          setMenuProducts(res.data);
+        }
+      })
+      .catch((err) => console.error('Error fetching menu for chatbot:', err));
+  }, []);
+
+  // Load chat history from sessionStorage
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem('noonee_ai_messages');
       if (saved) {
         setMessages(JSON.parse(saved));
       } else {
-        // Initial greeting
         setMessages([
           {
             id: 'welcome',
             role: 'assistant',
             content:
-              'Xin chào bạn! Mình là **NooNee AI** 🍽️ - trợ lý ẩm thực thông minh sử dụng mô hình **Gemma 4 31B** từ Google API.\n\nBạn đang muốn ăn món gì hôm nay? Hãy cho mình biết khẩu vị, mức giá hoặc bữa ăn bạn cần gợi ý nhé!',
+              'Xin chào bạn! Mình là **NooNee AI** 🍽️.\n\nBạn đang thèm món gì, muốn ăn trong tầm giá nào hay cần gợi ý gì hôm nay?',
             timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
           },
         ]);
@@ -165,13 +252,12 @@ export default function AIChatBot() {
     }
   }, []);
 
-  // Save chat history
   const updateMessages = (newMessages: Message[]) => {
     setMessages(newMessages);
     try {
       sessionStorage.setItem('noonee_ai_messages', JSON.stringify(newMessages));
     } catch {
-      // Ignore sessionStorage error
+      // Ignore
     }
   };
 
@@ -186,8 +272,11 @@ export default function AIChatBot() {
     updateMessages([defaultWelcome]);
   };
 
-  const handleSendMessage = async (textToSend?: string) => {
-    const query = (textToSend || inputMessage).trim();
+  /**
+   * Handle user typing custom question: calls backend API
+   */
+  const handleSendMessage = async () => {
+    const query = inputMessage.trim();
     if (!query || isLoading) return;
 
     setInputMessage('');
@@ -204,7 +293,6 @@ export default function AIChatBot() {
     setIsLoading(true);
 
     try {
-      // Send conversation history to backend route
       const apiPayload = nextHistory.map((m) => ({
         role: m.role,
         content: m.content,
@@ -222,7 +310,7 @@ export default function AIChatBot() {
         const botMessage: Message = {
           id: `bot_${Date.now()}`,
           role: 'assistant',
-          content: data.reply || 'Dạ NooNee AI đã nhận được yêu cầu của bạn.',
+          content: data.reply || 'Dạ NooNee AI gợi ý bạn các món ngon bên dưới nhé!',
           recommendedProducts: data.recommendedProducts || [],
           timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         };
@@ -231,9 +319,7 @@ export default function AIChatBot() {
         const errorMsg: Message = {
           id: `bot_err_${Date.now()}`,
           role: 'assistant',
-          content:
-            data.message ||
-            'Rất tiếc, đã có lỗi xảy ra khi kết nối với AI. Bạn vui lòng thử lại nhé!',
+          content: 'NooNee AI đang bận chút xíu. Bạn hãy thử lại hoặc xem thực đơn nhé!',
           timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         };
         updateMessages([...nextHistory, errorMsg]);
@@ -243,8 +329,7 @@ export default function AIChatBot() {
       const networkErrorMsg: Message = {
         id: `bot_err_${Date.now()}`,
         role: 'assistant',
-        content:
-          'Không thể kết nối với máy chủ AI lúc này. Vui lòng kiểm tra kết nối mạng và thử lại sau nhé!',
+        content: 'Không thể kết nối lúc này. Vui lòng thử lại sau ít giây nhé!',
         timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
       };
       updateMessages([...nextHistory, networkErrorMsg]);
@@ -253,19 +338,57 @@ export default function AIChatBot() {
     }
   };
 
-  const handleQuickPrompt = (prompt: string) => {
-    handleSendMessage(prompt);
+  /**
+   * Handle quick category pills: DOES NOT CALL API!
+   * Automatically picks a random available dish matching that category filter.
+   */
+  const handleQuickCategoryClick = (category: QuickCategory) => {
+    if (isLoading) return;
+
+    // Filter available dishes matching this category
+    const candidates = menuProducts.filter(category.filter);
+
+    let picked: Product | null = null;
+    if (candidates.length > 0) {
+      const randomIndex = Math.floor(Math.random() * candidates.length);
+      picked = candidates[randomIndex];
+    } else if (menuProducts.length > 0) {
+      // Fallback if specific category was empty
+      picked = menuProducts[Math.floor(Math.random() * menuProducts.length)];
+    }
+
+    const userMessage: Message = {
+      id: `user_${Date.now()}`,
+      role: 'user',
+      content: category.label,
+      timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    let replyText = '';
+    if (picked) {
+      const formattedPrice = formatVND(picked.price);
+      replyText = category.intro(picked.name, formattedPrice, picked.description || '');
+    } else {
+      replyText = 'Dạ NooNee AI đang chuẩn bị món ngon cho bạn, bạn hãy xem thực đơn nhé!';
+    }
+
+    const botMessage: Message = {
+      id: `bot_${Date.now()}`,
+      role: 'assistant',
+      content: replyText,
+      recommendedProducts: picked ? [picked] : [],
+      timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    updateMessages([...messages, userMessage, botMessage]);
   };
 
-  // Add to cart action from card
   const handleProductCardAddToCart = (product: Product) => {
-    // If product has toppings, open the customization modal
     if (product.toppings && product.toppings.length > 0) {
       setModalProduct(product);
       return;
     }
 
-    // Otherwise add directly to cart
     addToCart(product, 1);
     setToastMessage(`Đã thêm "${product.name}" vào giỏ hàng!`);
     setTimeout(() => {
@@ -277,7 +400,7 @@ export default function AIChatBot() {
     <>
       {/* ================= PINNED CORNER BUTTON ================= */}
       <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40 flex items-center select-none">
-        {/* Animated Greeting Tooltip */}
+        {/* Greeting Tooltip */}
         {!isOpen && showTooltip && (
           <div className="hidden sm:flex items-center gap-2 mr-3 bg-white text-[#1f2937] text-xs font-medium px-3.5 py-2 rounded-full shadow-lg border border-[#fecdd3] animate-bounce duration-1000">
             <Sparkles className="w-3.5 h-3.5 text-[#e31837] shrink-0" />
@@ -300,14 +423,13 @@ export default function AIChatBot() {
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          aria-label={isOpen ? 'Đóng NooNee AI Chatbot' : 'Mở NooNee AI Chatbot'}
+          aria-label={isOpen ? 'Đóng NooNee AI' : 'Mở NooNee AI'}
           className={`relative group flex items-center justify-center rounded-full shadow-xl transition-all duration-300 cursor-pointer ${
             isOpen
               ? 'w-12 h-12 bg-gray-800 text-white hover:bg-gray-900'
               : 'w-14 h-14 bg-gradient-to-tr from-[#e31837] via-[#f03d52] to-[#ff5b4f] text-white hover:scale-105 active:scale-95 shadow-[#e31837]/30'
           }`}
         >
-          {/* Subtle pulse ring animation when closed */}
           {!isOpen && (
             <span className="absolute -inset-1 rounded-full bg-[#e31837] opacity-30 animate-ping pointer-events-none" />
           )}
@@ -316,12 +438,11 @@ export default function AIChatBot() {
             <ChevronDown className="w-6 h-6 transition-transform group-hover:translate-y-0.5" />
           ) : (
             <div className="relative flex items-center justify-center">
-              <Bot className="w-7 h-7 animate-pulse" />
+              <Bot className="w-7 h-7" />
               <Sparkles className="w-3.5 h-3.5 absolute -top-1.5 -right-1.5 text-amber-300" />
             </div>
           )}
 
-          {/* Online badge */}
           {!isOpen && (
             <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full" />
           )}
@@ -333,9 +454,9 @@ export default function AIChatBot() {
         <div
           className="fixed bottom-24 md:bottom-20 right-4 md:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[410px] h-[590px] max-h-[calc(100dvh-7.5rem)] bg-white rounded-2xl shadow-2xl border border-[#fed7aa]/60 sm:border-[#fecdd3] flex flex-col overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-5"
           role="dialog"
-          aria-label="NooNee Food AI Assistant"
+          aria-label="NooNee AI"
         >
-          {/* Header */}
+          {/* Header - 100% hidden model / API source */}
           <div className="bg-gradient-to-r from-[#e31837] via-[#e52844] to-[#f43f5e] text-white px-4 py-3 flex items-center justify-between shrink-0 shadow-xs">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-xs flex items-center justify-center border border-white/20 relative shrink-0">
@@ -343,15 +464,10 @@ export default function AIChatBot() {
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border border-[#e31837] rounded-full" />
               </div>
               <div>
-                <div className="flex items-center gap-1.5">
-                  <h3 className="font-bold text-sm leading-none">NooNee Food AI</h3>
-                  <span className="text-[10px] font-semibold bg-white/20 px-1.5 py-0.5 rounded-full text-white/95">
-                    Gemma 4 31B
-                  </span>
-                </div>
-                <p className="text-[11px] text-white/80 mt-0.5 flex items-center gap-1">
+                <h3 className="font-bold text-sm leading-none">NooNee AI</h3>
+                <p className="text-[11px] text-white/85 mt-1 flex items-center gap-1">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Google API • Chọn món chuẩn vị
+                  Trợ lý ẩm thực • Đang hoạt động
                 </p>
               </div>
             </div>
@@ -378,7 +494,7 @@ export default function AIChatBot() {
             </div>
           </div>
 
-          {/* Toast Notification inside Chat */}
+          {/* Toast Notification */}
           {toastMessage && (
             <div className="bg-emerald-600 text-white text-xs px-3 py-1.5 flex items-center justify-center gap-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
               <Check className="w-3.5 h-3.5 shrink-0" />
@@ -387,7 +503,7 @@ export default function AIChatBot() {
           )}
 
           {/* Messages Container */}
-          <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 bg-[#fdfcfb]">
+          <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3 bg-[#fdfcfb]">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -415,22 +531,16 @@ export default function AIChatBot() {
 
                     {/* Recommended Dishes Cards List */}
                     {msg.recommendedProducts && msg.recommendedProducts.length > 0 && (
-                      <div className="mt-3 pt-2.5 border-t border-gray-100 space-y-2 w-full">
-                        <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 text-[#e31837]" />
-                          Món ăn đề xuất cho bạn:
-                        </div>
-
+                      <div className="mt-2.5 pt-2 border-t border-gray-100 space-y-2 w-full">
                         <div className="grid grid-cols-1 gap-2">
                           {msg.recommendedProducts.map((product) => (
                             <div
                               key={product.id}
                               className="bg-[#fafafa] hover:bg-white rounded-xl border border-gray-200 p-2 flex items-center gap-2.5 transition-all duration-200 hover:border-[#fecdd3] hover:shadow-xs group/item"
                             >
-                              {/* Product Thumbnail */}
                               <Link
                                 href={`/product/${product.slug}`}
-                                className="relative w-14 h-14 rounded-lg overflow-hidden shrink-0 bg-gray-100 border border-gray-200"
+                                className="relative w-13 h-13 rounded-lg overflow-hidden shrink-0 bg-gray-100 border border-gray-200"
                               >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
@@ -441,7 +551,6 @@ export default function AIChatBot() {
                                 />
                               </Link>
 
-                              {/* Info */}
                               <div className="flex-1 min-w-0">
                                 <Link
                                   href={`/product/${product.slug}`}
@@ -466,7 +575,6 @@ export default function AIChatBot() {
                                 </span>
                               </div>
 
-                              {/* Add to Cart Button */}
                               <button
                                 type="button"
                                 onClick={() => handleProductCardAddToCart(product)}
@@ -502,11 +610,11 @@ export default function AIChatBot() {
                 <div className="w-7 h-7 rounded-full bg-[#fdf2f2] border border-[#fecdd3] flex items-center justify-center text-[#e31837] shrink-0">
                   <Bot className="w-4 h-4" />
                 </div>
-                <div className="bg-white border border-[#eaeaea] rounded-2xl rounded-tl-xs px-4 py-3 shadow-xs flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#e31837] animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-[#e31837] animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-[#e31837] animate-bounce" style={{ animationDelay: '300ms' }} />
-                  <span className="text-[11px] text-gray-400 ml-1.5">Gemma 4 31B đang chọn món...</span>
+                <div className="bg-white border border-[#eaeaea] rounded-2xl rounded-tl-xs px-3.5 py-2.5 shadow-xs flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#e31837] animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#e31837] animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#e31837] animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="text-xs text-gray-500 ml-1">NooNee AI đang gợi ý món...</span>
                 </div>
               </div>
             )}
@@ -514,17 +622,17 @@ export default function AIChatBot() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Prompts Carousel */}
-          <div className="px-3 py-2 bg-gray-50/80 border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-            {QUICK_PROMPTS.map((prompt, idx) => (
+          {/* Quick Categories Bar (DOES NOT CALL API - Picks random matching dish directly) */}
+          <div className="px-3 py-2 bg-gray-50/90 border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+            {QUICK_CATEGORIES.map((cat) => (
               <button
-                key={idx}
+                key={cat.id}
                 type="button"
-                onClick={() => handleQuickPrompt(prompt)}
+                onClick={() => handleQuickCategoryClick(cat)}
                 disabled={isLoading}
                 className="whitespace-nowrap bg-white hover:bg-[#fff1f2] text-gray-700 hover:text-[#e31837] text-[11px] font-medium px-2.5 py-1 rounded-full border border-gray-200 hover:border-[#fecdd3] transition-colors shrink-0 cursor-pointer disabled:opacity-50"
               >
-                {prompt}
+                {cat.label}
               </button>
             ))}
           </div>
@@ -542,7 +650,7 @@ export default function AIChatBot() {
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Nhập món bạn thèm, mức giá, khẩu vị..."
+              placeholder="Nhập món bạn muốn tìm kiếm hoặc hỏi NooNee AI..."
               disabled={isLoading}
               className="flex-1 bg-gray-100 hover:bg-gray-100/80 focus:bg-white text-sm text-gray-900 rounded-xl px-3.5 py-2.5 outline-hidden focus:ring-2 focus:ring-[#e31837]/30 border border-transparent focus:border-[#e31837] transition-all"
             />
@@ -556,11 +664,11 @@ export default function AIChatBot() {
             </button>
           </form>
 
-          {/* Micro Footer Attribution */}
+          {/* Footer */}
           <div className="bg-gray-100/80 px-3 py-1 text-[10px] text-gray-400 text-center flex items-center justify-center gap-1 shrink-0">
-            <span>Powered by Google Gemma 4 31B</span>
+            <span>NooNee AI</span>
             <span>•</span>
-            <span>Dữ liệu thực đơn Food.csv</span>
+            <span>Thực đơn quán NooNee Food</span>
           </div>
         </div>
       )}
