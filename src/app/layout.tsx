@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CartDrawer from '@/components/CartDrawer';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import AIChatBot from '@/components/AIChatBot';
 import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
@@ -66,6 +67,7 @@ export default function RootLayout({
               <Footer />
               <CartDrawer />
               <MobileBottomNav />
+              <AIChatBot />
             </CartProvider>
           </FavoritesProvider>
         </AuthProvider>

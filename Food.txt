@@ -1,14 +1,14 @@
-*Cơm & Món chính*
+name
 Cơm rang dương châu
 Cơm rang dưa bò
 Cơm rang hải sản
 Cơm tấm Sài Gòn
 Cơm gà Hội An
-Cơm cà ri gà/bò
+Cơm cà ri gà
+Cơm cà ri bò
 Cơm thịt heo chiên xù kiểu Nhật
 Cơm đùi gà sốt tiêu
-Phở bò
-Phở gà
+Phở bò tái chín
 Bún cá cay
 Bún hải sản
 Bún mọc sườn
@@ -19,15 +19,13 @@ Bánh canh cua
 Mì vằn thắn
 Mì xào bò
 Mì xào hải sản
-
-*Đồ ăn vặt*
 Bánh tráng trộn
 Bánh tráng nướng
 Nem chua rán
 Phô mai que
 Khoai tây chiên
 Gà popcorn
-Xúc xích 
+Xúc xích
 Lạp xưởng nướng đá
 Dồi sụn nướng
 Chân gà rút xương
@@ -35,11 +33,9 @@ Bánh bột lọc
 Bánh tôm
 Bánh xèo
 Cút lộn xào me
-Bánh chuối chiên 
+Bánh chuối chiên
 Bánh khoai chiên
 Bánh ngô chiên
-
-*Đồ uống*
 Trà sữa (tự chọn topping)
 Hồng trà sữa (tự chọn topping)
 Trà thái xanh
@@ -62,12 +58,16 @@ Chè bưởi
 Chè khúc bạch
 Chè thái
 Sữa chua trân châu
-Sữa chua đánh đá (thường/nho/việt quất/cam/dâu/cafe)
+Sữa chua đánh đá truyền thống
+Sữa chua đánh đá sốt nho
+Sữa chua đánh đá việt quất
+Sữa chua đánh đá cam tươi
+Sữa chua đánh đá dâu tây
+Sữa chua đánh đá cà phê
 Tào phớ trân châu
-Nước ngọt có gas (coca/sting/7up/mirinda)
+Coca-Cola
+Nước tăng lực Sting dâu
+Nước ngọt 7Up
+Nước ngọt Mirinda cam
 Nước lọc
 Nước dừa
-
-
-
-
