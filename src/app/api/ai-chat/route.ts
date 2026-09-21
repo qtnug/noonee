@@ -33,9 +33,9 @@ export async function POST(request: NextRequest) {
     // LLM7.io OpenAI-compatible configuration
     const baseUrl = process.env.LLM7_BASE_URL || 'https://api.llm7.io/v1';
     const modelName = process.env.LLM_MODEL_NAME || 'gemini-3.1-flash-lite';
-    const apiKey =
-      process.env.LLM7_API_KEY ||
+    const rawKey =
       process.env.LLM_API_KEY ||
+      process.env.LLM7_API_KEY ||
       process.env.GEMINI_API_KEY ||
       process.env.GOOGLE_API_KEY ||
       process.env.OPENAI_API_KEY ||
@@ -44,7 +44,11 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_LLM7_API_KEY ||
       '';
 
-    console.log(`[NooNee AI] Processing request. Has apiKey: ${!!apiKey}, Model: ${modelName}`);
+    const apiKey = rawKey.trim().replace(/^["']|["']$/g, '');
+
+    console.log(
+      `[NooNee AI] Processing request. Has apiKey: ${!!apiKey} (${apiKey ? apiKey.slice(0, 5) + '...' : 'none'}), Model: ${modelName}`
+    );
 
     // System instruction: strictly concise, practical, 100% hidden model/source
     const systemPrompt = `Bạn là NooNee AI - trợ lý ẩm thực của quán ăn NooNee Food.
@@ -126,7 +130,8 @@ Ví dụ: [[RECOMMENDED_FOODS: 4, 45]]`;
     }
 
     const data = await response.json();
-    let replyText = data.choices?.[0]?.message?.content || '';
+    const msgObj = data.choices?.[0]?.message;
+    let replyText = (msgObj?.content || msgObj?.reasoning_content || '').trim();
 
     if (!replyText) {
       replyText = 'Dạ NooNee AI gợi ý bạn chọn các món ngon bên dưới nhé!';
