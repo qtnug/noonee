@@ -67,25 +67,56 @@ Ví dụ: [[RECOMMENDED_FOODS: 4, 45]]`;
       })),
     ];
 
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    // 1. Determine model and auth credentials based on official LLM7 docs
+    let targetModel = modelName;
+    let authHeader = apiKey ? `Bearer ${apiKey}` : 'Bearer unused';
+
+    // If no custom key is provided, use LLM7's free anonymous model 'fast'
+    if (!apiKey) {
+      targetModel = 'fast';
+    }
+
+    console.log(`[NooNee AI] Calling LLM7 endpoint: ${baseUrl}/chat/completions (Model: ${targetModel}, HasKey: ${!!apiKey})`);
+
+    let response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: authHeader,
       },
       body: JSON.stringify({
-        model: modelName,
+        model: targetModel,
         messages: apiMessages,
         temperature: 0.7,
         max_tokens: 600,
       }),
     });
 
+    // 2. If the custom model returned 401/error (e.g. key missing/expired on host),
+    // automatically fallback to LLM7's free anonymous 'fast' model as documented in docs.llm7.io
+    if (!response.ok && targetModel !== 'fast') {
+      const errText = await response.text();
+      console.warn(`[NooNee AI] Model ${targetModel} returned ${response.status}. Retrying with LLM7 anonymous model 'fast'...`, errText);
+
+      response = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer unused',
+        },
+        body: JSON.stringify({
+          model: 'fast',
+          messages: apiMessages,
+          temperature: 0.7,
+          max_tokens: 600,
+        }),
+      });
+    }
+
     if (!response.ok) {
       const errText = await response.text();
-      console.error('LLM API Error:', response.status, errText);
+      console.error('[NooNee AI] LLM7 API Error:', response.status, errText);
 
-      // Fallback gracefully without revealing any technical errors
       const fallbackItems = await searchFoodsKeyword(lastUserMsg, 2);
       return NextResponse.json({
         success: true,
