@@ -55,12 +55,34 @@ async function ensureSchemaColumns(pool: any) {
 
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'walletBalance')
         ALTER TABLE Users ADD walletBalance DECIMAL(18, 0) DEFAULT 0;
+      ELSE
+      BEGIN
+        IF EXISTS (
+          SELECT * FROM sys.columns c
+          JOIN sys.types t ON c.user_type_id = t.user_type_id
+          WHERE c.object_id = OBJECT_ID('Users') AND c.name = 'walletBalance' AND t.name IN ('int', 'smallint', 'tinyint')
+        )
+        BEGIN
+          ALTER TABLE Users ALTER COLUMN walletBalance DECIMAL(18, 0);
+        END
+      END;
 
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'cancelReason')
         ALTER TABLE Orders ADD cancelReason NVARCHAR(500) NULL;
 
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'walletAmountUsed')
         ALTER TABLE Orders ADD walletAmountUsed DECIMAL(18, 0) DEFAULT 0;
+      ELSE
+      BEGIN
+        IF EXISTS (
+          SELECT * FROM sys.columns c
+          JOIN sys.types t ON c.user_type_id = t.user_type_id
+          WHERE c.object_id = OBJECT_ID('Orders') AND c.name = 'walletAmountUsed' AND t.name IN ('int', 'smallint', 'tinyint')
+        )
+        BEGIN
+          ALTER TABLE Orders ALTER COLUMN walletAmountUsed DECIMAL(18, 0);
+        END
+      END;
 
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'refundStatus')
         ALTER TABLE Orders ADD refundStatus NVARCHAR(50) DEFAULT 'None';
@@ -818,10 +840,10 @@ export async function getOrderByCode(code: string): Promise<Order | null> {
       req.input('code', sql.NVarChar(50), cleanCode);
       const res = await req.query(`
         SELECT o.id, o.orderCode, o.userId, o.customerName, o.customerPhone, o.deliveryAddress, 
-               o.notes, CAST(o.totalAmount AS INT) AS totalAmount, 
-               CAST(ISNULL(o.discountAmount, 0) AS INT) AS discountAmount, o.couponCode,
+               o.notes, CAST(o.totalAmount AS BIGINT) AS totalAmount, 
+               CAST(ISNULL(o.discountAmount, 0) AS BIGINT) AS discountAmount, o.couponCode,
                o.status, o.paymentMethod, o.paymentStatus,
-               o.cancelReason, CAST(ISNULL(o.walletAmountUsed, 0) AS INT) AS walletAmountUsed,
+               o.cancelReason, CAST(ISNULL(o.walletAmountUsed, 0) AS BIGINT) AS walletAmountUsed,
                ISNULL(o.refundStatus, 'None') AS refundStatus,
                o.groupCode,
                o.createdAt, o.updatedAt
@@ -857,10 +879,10 @@ export async function getOrders(filter?: { status?: string; search?: string; use
     if (pool) {
       let query = `
         SELECT o.id, o.orderCode, o.userId, o.customerName, o.customerPhone, o.deliveryAddress, 
-               o.notes, CAST(o.totalAmount AS INT) AS totalAmount,
-               CAST(ISNULL(o.discountAmount, 0) AS INT) AS discountAmount, o.couponCode,
+               o.notes, CAST(o.totalAmount AS BIGINT) AS totalAmount,
+               CAST(ISNULL(o.discountAmount, 0) AS BIGINT) AS discountAmount, o.couponCode,
                o.status, o.paymentMethod, o.paymentStatus,
-               o.cancelReason, CAST(ISNULL(o.walletAmountUsed, 0) AS INT) AS walletAmountUsed,
+               o.cancelReason, CAST(ISNULL(o.walletAmountUsed, 0) AS BIGINT) AS walletAmountUsed,
                ISNULL(o.refundStatus, 'None') AS refundStatus,
                o.groupCode,
                o.createdAt, o.updatedAt
@@ -1006,7 +1028,7 @@ export async function getUserWalletBalance(userId: number): Promise<number> {
     if (pool) {
       const req = pool.request();
       req.input('userId', sql.Int, userId);
-      const res = await req.query(`SELECT CAST(ISNULL(walletBalance, 0) AS INT) AS walletBalance FROM Users WHERE id = @userId`);
+      const res = await req.query(`SELECT CAST(ISNULL(walletBalance, 0) AS BIGINT) AS walletBalance FROM Users WHERE id = @userId`);
       if (res.recordset && res.recordset[0]) {
         return Number(res.recordset[0].walletBalance) || 0;
       }
@@ -1165,7 +1187,7 @@ export async function getAdminStats() {
     if (pool) {
       const res = await pool.request().query(`
         SELECT 
-          CAST(ISNULL(SUM(CASE WHEN paymentStatus = 'Paid' THEN totalAmount ELSE 0 END), 0) AS INT) AS totalRevenue,
+          CAST(ISNULL(SUM(CASE WHEN paymentStatus = 'Paid' THEN totalAmount ELSE 0 END), 0) AS BIGINT) AS totalRevenue,
           COUNT(*) AS totalOrders,
           COUNT(CASE WHEN status = 'Pending' THEN 1 END) AS pendingOrders,
           COUNT(CASE WHEN status = 'Delivering' THEN 1 END) AS deliveringOrders
@@ -1173,7 +1195,7 @@ export async function getAdminStats() {
       `);
       const prodRes = await pool.request().query('SELECT COUNT(*) AS cnt FROM Products');
       const recentRes = await pool.request().query(`
-        SELECT TOP 10 id, orderCode, customerName, customerPhone, CAST(totalAmount AS INT) AS totalAmount, 
+        SELECT TOP 10 id, orderCode, customerName, customerPhone, CAST(totalAmount AS BIGINT) AS totalAmount, 
                paymentMethod, paymentStatus, status, createdAt
         FROM Orders ORDER BY id DESC
       `);
@@ -1253,7 +1275,7 @@ export async function getUserByUsername(username: string): Promise<User | null> 
       const req = pool.request();
       req.input('username', sql.NVarChar(50), username);
       const res = await req.query(`
-        SELECT id, username, fullName, email, phone, address, role, CAST(ISNULL(walletBalance, 0) AS INT) AS walletBalance, createdAt
+        SELECT id, username, fullName, email, phone, address, role, CAST(ISNULL(walletBalance, 0) AS BIGINT) AS walletBalance, createdAt
         FROM Users
         WHERE username = @username
       `);
@@ -1276,7 +1298,7 @@ export async function getUserByUsernameWithPassword(username: string): Promise<U
       const req = pool.request();
       req.input('username', sql.NVarChar(50), username);
       const res = await req.query(`
-        SELECT id, username, password, fullName, email, phone, address, role, CAST(ISNULL(walletBalance, 0) AS INT) AS walletBalance, createdAt
+        SELECT id, username, password, fullName, email, phone, address, role, CAST(ISNULL(walletBalance, 0) AS BIGINT) AS walletBalance, createdAt
         FROM Users
         WHERE username = @username
       `);
@@ -1315,7 +1337,7 @@ export async function createUser(data: {
 
       const res = await req.query(`
         INSERT INTO Users (username, password, fullName, phone, address, email, role, walletBalance)
-        OUTPUT INSERTED.id, INSERTED.username, INSERTED.fullName, INSERTED.phone, INSERTED.address, INSERTED.email, INSERTED.role, CAST(ISNULL(INSERTED.walletBalance, 0) AS INT) AS walletBalance, INSERTED.createdAt
+        OUTPUT INSERTED.id, INSERTED.username, INSERTED.fullName, INSERTED.phone, INSERTED.address, INSERTED.email, INSERTED.role, CAST(ISNULL(INSERTED.walletBalance, 0) AS BIGINT) AS walletBalance, INSERTED.createdAt
         VALUES (@username, @password, @fullName, @phone, @address, @email, @role, 0)
       `);
       if (res.recordset && res.recordset[0]) {
@@ -1359,7 +1381,7 @@ export async function getUserById(userId: number): Promise<User | null> {
       const req = pool.request();
       req.input('id', sql.Int, userId);
       const res = await req.query(`
-        SELECT id, username, fullName, email, phone, address, role, CAST(ISNULL(walletBalance, 0) AS INT) AS walletBalance, createdAt
+        SELECT id, username, fullName, email, phone, address, role, CAST(ISNULL(walletBalance, 0) AS BIGINT) AS walletBalance, createdAt
         FROM Users
         WHERE id = @id
       `);
@@ -1382,7 +1404,7 @@ export async function getUserByIdWithPassword(userId: number): Promise<User | nu
       const req = pool.request();
       req.input('id', sql.Int, userId);
       const res = await req.query(`
-        SELECT id, username, password, fullName, email, phone, address, role, CAST(ISNULL(walletBalance, 0) AS INT) AS walletBalance, createdAt
+        SELECT id, username, password, fullName, email, phone, address, role, CAST(ISNULL(walletBalance, 0) AS BIGINT) AS walletBalance, createdAt
         FROM Users
         WHERE id = @id
       `);
@@ -1556,7 +1578,7 @@ export async function updateUserProfile(
         SET fullName = COALESCE(NULLIF(@fullName, ''), fullName),
             phone = COALESCE(NULLIF(@phone, ''), phone),
             address = COALESCE(NULLIF(@address, ''), address)
-        OUTPUT INSERTED.id, INSERTED.username, INSERTED.fullName, INSERTED.email, INSERTED.phone, INSERTED.address, INSERTED.role, CAST(ISNULL(INSERTED.walletBalance, 0) AS INT) AS walletBalance, INSERTED.createdAt
+        OUTPUT INSERTED.id, INSERTED.username, INSERTED.fullName, INSERTED.email, INSERTED.phone, INSERTED.address, INSERTED.role, CAST(ISNULL(INSERTED.walletBalance, 0) AS BIGINT) AS walletBalance, INSERTED.createdAt
         WHERE id = @userId
       `);
       if (res.recordset && res.recordset[0]) {
