@@ -41,14 +41,14 @@ const QUICK_CATEGORIES: QuickCategory[] = [
     label: '🍱 Cơm ngon no bụng',
     filter: (p) => p.categoryId === 1 && p.isAvailable,
     intro: (name, price, desc) =>
-      `Bữa cơm hôm nay, NooNee AI gợi ý bạn thử ngay món **${name}** (${price}). ${desc} Mời bạn thưởng thức nhé!`,
+      `Bữa cơm hôm nay, NooNee gợi ý bạn thử ngay món **${name}** (${price}). ${desc} Mời bạn thưởng thức nhé!`,
   },
   {
     id: 'noodle',
     label: '🍜 Bún & Phở nóng hổi',
     filter: (p) => (p.categoryId === 4 || p.categoryId === 5) && p.isAvailable,
     intro: (name, price, desc) =>
-      `Thèm món nước nóng hổi? NooNee AI chọn cho bạn **${name}** (${price}) nước dùng đậm đà thơm phức! ${desc}`,
+      `Thèm món nước nóng hổi? NooNee chọn cho bạn **${name}** (${price}) nước dùng đậm đà thơm phức! ${desc}`,
   },
   {
     id: 'tea_juice',
@@ -87,7 +87,7 @@ const QUICK_CATEGORIES: QuickCategory[] = [
     label: '🍟 Ăn vặt giòn ngon',
     filter: (p) => p.categoryId === 2 && p.isAvailable,
     intro: (name, price, desc) =>
-      `NooNee AI gợi ý món ăn vặt nhâm nhi cực đã: **${name}** (${price}). ${desc}`,
+      `NooNee gợi ý món ăn vặt nhâm nhi cực đã: **${name}** (${price}). ${desc}`,
   },
   {
     id: 'coffee',
@@ -242,7 +242,7 @@ export default function AIChatBot() {
             id: 'welcome',
             role: 'assistant',
             content:
-              'Xin chào bạn! Mình là **NooNee AI** 🍽️.\n\nBạn đang thèm món gì, muốn ăn trong tầm giá nào hay cần gợi ý gì hôm nay?',
+              'Xin chào bạn! Mình là **NooNee** 🍽️.\n\nBạn đang thèm món gì, muốn ăn trong tầm giá nào hay cần gợi ý gì hôm nay?',
             timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
           },
         ]);
@@ -266,7 +266,7 @@ export default function AIChatBot() {
       id: Date.now().toString(),
       role: 'assistant',
       content:
-        'Xin chào bạn! Mình là **NooNee AI** 🍽️. Bạn cần gợi ý món gì cho bữa ăn hôm nay nào?',
+        'Xin chào bạn! Mình là **NooNee** 🍽️. Bạn cần gợi ý món gì cho bữa ăn hôm nay nào?',
       timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
     };
     updateMessages([defaultWelcome]);
@@ -310,7 +310,7 @@ export default function AIChatBot() {
         const botMessage: Message = {
           id: `bot_${Date.now()}`,
           role: 'assistant',
-          content: data.reply || 'Dạ NooNee AI gợi ý bạn các món ngon bên dưới nhé!',
+          content: data.reply || 'Dạ NooNee gợi ý bạn các món ngon bên dưới nhé!',
           recommendedProducts: data.recommendedProducts || [],
           timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         };
@@ -319,7 +319,7 @@ export default function AIChatBot() {
         const errorMsg: Message = {
           id: `bot_err_${Date.now()}`,
           role: 'assistant',
-          content: 'NooNee AI đang bận chút xíu. Bạn hãy thử lại hoặc xem thực đơn nhé!',
+          content: 'NooNee đang bận chút xíu. Bạn hãy thử lại hoặc xem thực đơn nhé!',
           timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         };
         updateMessages([...nextHistory, errorMsg]);
@@ -369,7 +369,7 @@ export default function AIChatBot() {
       const formattedPrice = formatVND(picked.price);
       replyText = category.intro(picked.name, formattedPrice, picked.description || '');
     } else {
-      replyText = 'Dạ NooNee AI đang chuẩn bị món ngon cho bạn, bạn hãy xem thực đơn nhé!';
+      replyText = 'Dạ NooNee đang chuẩn bị món ngon cho bạn, bạn hãy xem thực đơn nhé!';
     }
 
     const botMessage: Message = {
@@ -404,7 +404,7 @@ export default function AIChatBot() {
         {!isOpen && showTooltip && (
           <div className="hidden sm:flex items-center gap-2 mr-3 bg-white text-[#1f2937] text-xs font-medium px-3.5 py-2 rounded-full shadow-lg border border-[#fecdd3] animate-bounce duration-1000">
             <Sparkles className="w-3.5 h-3.5 text-[#e31837] shrink-0" />
-            <span>Hôm nay ăn gì? Hỏi NooNee AI nhé!</span>
+            <span>Hôm nay ăn gì? Bấm để hỏi quán nhé!</span>
             <button
               type="button"
               onClick={(e) => {
@@ -423,7 +423,7 @@ export default function AIChatBot() {
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          aria-label={isOpen ? 'Đóng NooNee AI' : 'Mở NooNee AI'}
+          aria-label={isOpen ? 'Đóng tư vấn' : 'Mở tư vấn món ăn'}
           className={`relative group flex items-center justify-center rounded-full shadow-xl transition-all duration-300 cursor-pointer ${
             isOpen
               ? 'w-12 h-12 bg-gray-800 text-white hover:bg-gray-900'
@@ -454,7 +454,7 @@ export default function AIChatBot() {
         <div
           className="fixed bottom-24 md:bottom-20 right-4 md:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[410px] h-[590px] max-h-[calc(100dvh-7.5rem)] bg-white rounded-2xl shadow-2xl border border-[#fed7aa]/60 sm:border-[#fecdd3] flex flex-col overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-5"
           role="dialog"
-          aria-label="NooNee AI"
+          aria-label="NooNee"
         >
           {/* Header - 100% hidden model / API source */}
           <div className="bg-gradient-to-r from-[#e31837] via-[#e52844] to-[#f43f5e] text-white px-4 py-3 flex items-center justify-between shrink-0 shadow-xs">
@@ -464,11 +464,7 @@ export default function AIChatBot() {
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border border-[#e31837] rounded-full" />
               </div>
               <div>
-                <h3 className="font-bold text-sm leading-none">NooNee AI</h3>
-                <p className="text-[11px] text-white/85 mt-1 flex items-center gap-1">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Trợ lý ẩm thực • Đang hoạt động
-                </p>
+                <h3 className="font-bold text-sm leading-none">NooNee</h3>
               </div>
             </div>
 
@@ -614,7 +610,7 @@ export default function AIChatBot() {
                   <span className="w-1.5 h-1.5 rounded-full bg-[#e31837] animate-bounce" style={{ animationDelay: '0ms' }} />
                   <span className="w-1.5 h-1.5 rounded-full bg-[#e31837] animate-bounce" style={{ animationDelay: '150ms' }} />
                   <span className="w-1.5 h-1.5 rounded-full bg-[#e31837] animate-bounce" style={{ animationDelay: '300ms' }} />
-                  <span className="text-xs text-gray-500 ml-1">NooNee AI đang gợi ý món...</span>
+                  <span className="text-xs text-gray-500 ml-1">NooNee đang tìm món ngon...</span>
                 </div>
               </div>
             )}
@@ -650,7 +646,7 @@ export default function AIChatBot() {
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Nhập món bạn muốn tìm kiếm hoặc hỏi NooNee AI..."
+              placeholder="Nhập món bạn muốn tìm kiếm hoặc hỏi NooNee..."
               disabled={isLoading}
               className="flex-1 bg-gray-100 hover:bg-gray-100/80 focus:bg-white text-sm text-gray-900 rounded-xl px-3.5 py-2.5 outline-hidden focus:ring-2 focus:ring-[#e31837]/30 border border-transparent focus:border-[#e31837] transition-all"
             />
@@ -663,13 +659,6 @@ export default function AIChatBot() {
               <Send className="w-4 h-4" />
             </button>
           </form>
-
-          {/* Footer */}
-          <div className="bg-gray-100/80 px-3 py-1 text-[10px] text-gray-400 text-center flex items-center justify-center gap-1 shrink-0">
-            <span>NooNee AI</span>
-            <span>•</span>
-            <span>Thực đơn quán NooNee Food</span>
-          </div>
         </div>
       )}
 

@@ -51,12 +51,12 @@ export async function POST(request: NextRequest) {
     );
 
     // System instruction: strictly concise, practical, 100% hidden model/source
-    const systemPrompt = `Bạn là NooNee AI - trợ lý ẩm thực của quán ăn NooNee Food.
+    const systemPrompt = `Bạn là trợ lý tư vấn món của quán ăn NooNee Food.
 DỮ LIỆU THỰC ĐƠN QUÁN NOONEE FOOD:
 ${menuSummary}
 
 QUY TẮC BẮT BUỘC:
-1. Bạn là NooNee AI. TUYỆT ĐỐI KHÔNG BAO GIỜ tiết lộ, nhắc đến hoặc hiển thị bất kỳ tên mô hình AI nào (Gemini, Gemma, GPT,...), không nhắc đến API, nhà cung cấp, hoặc bất kỳ nguồn kỹ thuật nào.
+1. Bạn đại diện cho quán NooNee. TUYỆT ĐỐI KHÔNG BAO GIỜ tiết lộ, nhắc đến hoặc hiển thị bất kỳ tên mô hình AI nào (Gemini, Gemma, GPT,...), không nhắc đến API, nhà cung cấp, hoặc bất kỳ nguồn kỹ thuật nào.
 2. PHONG CÁCH TIN NHẮN: CỰC KỲ NGẮN GỌN, súc tích, đi thẳng vào món ăn. KHÔNG chào hỏi dài dòng, KHÔNG giải thích lan man. Toàn bộ câu trả lời chỉ từ 2 đến 3 câu ngắn gọn.
 3. CHỈ gợi ý các món có trong thực đơn trên. Nêu tên món, giá tiền và 1 lý do ngắn gọn vì sao nên chọn. Có thể gợi ý thêm 1 topping hoặc 1 món nước đi kèm.
 4. ĐẶC BIỆT: Cuối câu trả lời, hãy đính kèm mã ID các món đề xuất theo định dạng:
@@ -124,7 +124,7 @@ Ví dụ: [[RECOMMENDED_FOODS: 4, 45]]`;
       const fallbackItems = await searchFoodsKeyword(lastUserMsg, 2);
       return NextResponse.json({
         success: true,
-        reply: `Dạ NooNee AI gợi ý bạn tham khảo món ăn thơm ngon được yêu thích tại quán:`,
+        reply: `Dạ quán gợi ý bạn tham khảo món ăn thơm ngon được yêu thích tại NooNee:`,
         recommendedProducts: fallbackItems,
       });
     }
@@ -134,7 +134,7 @@ Ví dụ: [[RECOMMENDED_FOODS: 4, 45]]`;
     let replyText = (msgObj?.content || msgObj?.reasoning_content || '').trim();
 
     if (!replyText) {
-      replyText = 'Dạ NooNee AI gợi ý bạn chọn các món ngon bên dưới nhé!';
+      replyText = 'Dạ quán gợi ý bạn chọn các món ngon bên dưới nhé!';
     }
 
     // Extract [[RECOMMENDED_FOODS: 1, 2]]
