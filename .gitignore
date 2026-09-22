@@ -40,3 +40,7 @@ next-env.d.ts
 # Scripts folder
 scripts/
 
+# IDE & Editors
+.idea/
+.vscode/
+*.sw?

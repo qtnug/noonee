@@ -13,6 +13,7 @@ import {
   UtensilsCrossed,
   Layers,
   Activity,
+  Ticket,
   ArrowLeft,
   LogOut,
 } from 'lucide-react';
@@ -47,6 +48,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
     { name: 'Khiếu nại & Hỗ trợ KH', href: '/admin/support', icon: MessageSquare },
     { name: 'Thực đơn & Món ăn', href: '/admin/products', icon: UtensilsCrossed },
     { name: 'Danh mục món ăn', href: '/admin/categories', icon: Layers },
+    { name: 'Kho Voucher ưu đãi', href: '/admin/coupons', icon: Ticket },
     { name: 'Chẩn đoán CSDL Cloud', href: '/admin/diagnostics', icon: Activity },
   ];
 
