@@ -162,7 +162,7 @@ export default function OrdersLookupPage() {
               <form onSubmit={handleManualSearch} className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Nhập mã đơn (VD: NOONEE_12345678...)"
+                  placeholder="Nhập mã đơn (VD: NOONEE12345678...)"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1 h-10 px-3 text-[13px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] font-mono"

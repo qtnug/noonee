@@ -35,16 +35,28 @@ export async function POST(request: NextRequest) {
     });
 
     const content = String(payload.content || payload.description || payload.code || '');
-    const orderCode = parseOrderCodeFromMemo(content);
+    let orderCode = parseOrderCodeFromMemo(content);
 
     if (!orderCode) {
       return NextResponse.json({
         success: false,
-        message: 'Không tìm thấy mã đơn hàng (DH...) trong nội dung chuyển khoản',
+        message: 'Không tìm thấy mã đơn hàng (NOONEE...) trong nội dung chuyển khoản',
       });
     }
 
-    const order = await getOrderByCode(orderCode);
+    let order = await getOrderByCode(orderCode);
+    // Fallback: if order not found, check underscore / non-underscore variations
+    if (!order) {
+      if (orderCode.includes('_')) {
+        order = await getOrderByCode(orderCode.replace('_', ''));
+        if (order) orderCode = order.orderCode;
+      } else if (orderCode.startsWith('NOONEE')) {
+        const withUnderscore = 'NOONEE_' + orderCode.slice(6);
+        order = await getOrderByCode(withUnderscore);
+        if (order) orderCode = order.orderCode;
+      }
+    }
+
     if (!order) {
       return NextResponse.json({
         success: false,

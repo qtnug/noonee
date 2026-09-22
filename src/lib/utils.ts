@@ -45,5 +45,5 @@ export function generateSlug(name: string): string {
 
 export function generateOrderCode(): string {
   const random8Digits = Math.floor(10000000 + Math.random() * 90000000).toString();
-  return `NOONEE_${random8Digits}`;
+  return `NOONEE${random8Digits}`;
 }
