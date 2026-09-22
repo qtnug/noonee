@@ -44,3 +44,8 @@ scripts/
 .idea/
 .vscode/
 *.sw?
+
+# Archives
+*.zip
+*.rar
+*.tar.gz

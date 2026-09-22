@@ -126,8 +126,86 @@
   animation: pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Floating Food Decor Animations & Glow Effects */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(3deg);
+  }
+}
+
+@keyframes floatReverse {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(12px) rotate(-3deg);
+  }
+}
+
+@keyframes floatSway {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) translateX(8px) rotate(2.5deg);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 5s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: floatReverse 6s ease-in-out infinite;
+}
+
+.animate-float-sway {
+  animation: floatSway 7s ease-in-out infinite;
+}
+
+/* Food image glow effects on hover */
+.glow-gold {
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.1));
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.group:hover .glow-gold,
+.glow-gold:hover {
+  filter: drop-shadow(0 0 24px rgba(245, 158, 11, 0.95)) drop-shadow(0 0 8px rgba(251, 191, 36, 0.9));
+}
+
+.glow-red {
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.1));
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.group:hover .glow-red,
+.glow-red:hover {
+  filter: drop-shadow(0 0 24px rgba(227, 24, 55, 0.95)) drop-shadow(0 0 8px rgba(244, 63, 94, 0.9));
+}
+
+.glow-green {
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.1));
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.group:hover .glow-green,
+.glow-green:hover {
+  filter: drop-shadow(0 0 24px rgba(16, 185, 129, 0.95)) drop-shadow(0 0 8px rgba(52, 211, 153, 0.9));
+}
+
+.glow-orange {
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.1));
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.group:hover .glow-orange,
+.glow-orange:hover {
+  filter: drop-shadow(0 0 24px rgba(249, 115, 22, 0.95)) drop-shadow(0 0 8px rgba(251, 146, 60, 0.9));
+}
+
 /* Auto Responsive safety */
 html, body {
   overflow-x: hidden;
   max-width: 100%;
 }
+

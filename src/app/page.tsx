@@ -14,6 +14,7 @@ import ScrollFoodVideo from '@/components/ScrollFoodVideo';
 import ProductCard from '@/components/ProductCard';
 import PromoBanner from '@/components/PromoBanner';
 import GroupOrderBanner from '@/components/GroupOrderBanner';
+import FloatingFoodDecor, { MobileFoodSnackStrip } from '@/components/FloatingFoodDecor';
 
 export const revalidate = 0; // Dynamic
 
@@ -28,8 +29,11 @@ export default async function HomePage() {
   return (
     <div className="bg-[#FFFAF0] min-h-screen">
       {/* 1. HERO BAND (Minimalist & Punchy Editorial Theme) */}
-      <section className="bg-gradient-to-b from-[#fff1f2]/60 via-[#FFFAF0] to-[#FFFAF0] border-b border-[#f0e3d6]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-20">
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#fff1f2]/60 via-[#FFFAF0] to-[#FFFAF0] border-b border-[#f0e3d6]">
+        {/* Floating Ambient Food Elements with Contoured Glow */}
+        <FloatingFoodDecor />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-20 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Left Content Column */}
             <div className="lg:col-span-6 space-y-4 sm:space-y-6">
@@ -43,7 +47,7 @@ export default async function HomePage() {
               </p>
 
               {/* Red & White CTA Button Pair */}
-              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 relative z-20">
                 <Link
                   href="/menu"
                   className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-bold text-[15px] sm:text-[16px] leading-[1.4] px-7 py-3.5 rounded-[8px] shadow-md shadow-red-500/20 transition"
@@ -57,10 +61,13 @@ export default async function HomePage() {
                   Tra cứu đơn hàng
                 </Link>
               </div>
+
+              {/* Mobile Quick Snack & Drink Strip */}
+              <MobileFoodSnackStrip />
             </div>
 
             {/* Right Visual Fragment: Scroll-driven 360 Food Video */}
-            <div className="lg:col-span-6 flex items-center justify-center">
+            <div className="lg:col-span-6 flex items-center justify-center relative z-20">
               <ScrollFoodVideo totalFrames={100} />
             </div>
           </div>
