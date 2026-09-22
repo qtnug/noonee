@@ -549,7 +549,11 @@ export default function OrderTrackingPage() {
               <div className="flex justify-between">
                 <span>Phương thức:</span>
                 <strong className="text-[#181d26] font-semibold">
-                  {order.paymentMethod === 'Sepay' ? 'Chuyển khoản Ngân hàng (Mã VietQR)' : 'Tiền mặt khi nhận hàng (COD)'}
+                  {order.paymentMethod === 'Sepay' 
+                    ? 'Chuyển khoản Ngân hàng (Mã VietQR)' 
+                    : order.paymentMethod === 'Wallet'
+                    ? 'Ví số dư NooNee'
+                    : 'Tiền mặt khi nhận hàng (COD)'}
                 </strong>
               </div>
               <div className="flex justify-between">
@@ -560,12 +564,16 @@ export default function OrderTrackingPage() {
               </div>
               {(() => {
                 const itemsSubtotal = (order.items && order.items.length > 0)
-                  ? order.items.reduce((sum, it) => sum + (it.total || it.price * it.quantity), 0)
+                  ? order.items.reduce((sum, it) => sum + (Number(it.total) || (Number(it.price) * Number(it.quantity)) || 0), 0)
                   : (order.totalAmount + (order.discountAmount || 0));
-                const computedShippingFee = Math.max(
-                  0,
-                  order.totalAmount + (order.walletAmountUsed || 0) + (order.discountAmount || 0) - itemsSubtotal
-                );
+
+                const hasExplicitShipping = order.shippingFee !== undefined && order.shippingFee !== null;
+                const rawShippingFee = hasExplicitShipping
+                  ? Number(order.shippingFee)
+                  : Math.max(0, order.totalAmount + (order.walletAmountUsed || 0) + (order.discountAmount || 0) - itemsSubtotal);
+
+                const isFreeshipCoupon = order.couponCode === 'FREESHIP';
+                const isFreeShip = rawShippingFee === 0 || isFreeshipCoupon;
 
                 return (
                   <>
@@ -573,16 +581,18 @@ export default function OrderTrackingPage() {
                       <span>Tạm tính món:</span>
                       <span className="text-[#181d26] font-medium">{formatVND(itemsSubtotal)}</span>
                     </div>
-                    {order.discountAmount && order.discountAmount > 0 ? (
+                    <div className="flex justify-between">
+                      <span>Phí giao hàng:</span>
+                      {isFreeShip ? (
+                        <span className="text-[#16a34a] font-semibold">0₫ (Miễn phí)</span>
+                      ) : (
+                        <span className="text-[#181d26] font-medium">+ {formatVND(rawShippingFee)}</span>
+                      )}
+                    </div>
+                    {order.discountAmount && order.discountAmount > 0 && !isFreeshipCoupon ? (
                       <div className="flex justify-between text-[#e31837]">
                         <span>Ưu đãi ({order.couponCode || 'Giảm giá'}):</span>
                         <span className="font-semibold">- {formatVND(order.discountAmount)}</span>
-                      </div>
-                    ) : null}
-                    {computedShippingFee > 0 ? (
-                      <div className="flex justify-between">
-                        <span>Phí giao hàng:</span>
-                        <span className="text-[#181d26] font-medium">+ {formatVND(computedShippingFee)}</span>
                       </div>
                     ) : null}
                   </>

@@ -78,6 +78,7 @@ export interface Order {
   deliveryAddress: string;
   notes?: string | null;
   totalAmount: number;
+  shippingFee?: number;
   discountAmount?: number;
   couponCode?: string | null;
   groupCode?: string | null;

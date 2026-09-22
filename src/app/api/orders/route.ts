@@ -217,9 +217,12 @@ export async function POST(request: NextRequest) {
     }
 
     const shippingFee = typeof body.shippingFee === 'number' ? Math.max(0, Math.round(body.shippingFee)) : 0;
+    const isFreeshipCoupon = validCouponCode === 'FREESHIP';
+    const effectiveFoodDiscount = isFreeshipCoupon ? 0 : discountAmount;
+    const finalShippingFee = isFreeshipCoupon ? 0 : shippingFee;
     
     // Calculate total: subtotal minus discount plus shipping
-    const totalBeforeWallet = Math.max(0, subtotal - discountAmount + shippingFee);
+    const totalBeforeWallet = Math.max(0, subtotal - effectiveFoodDiscount + finalShippingFee);
 
     // Handle Virtual Wallet Balance Deduction
     let walletAmountUsed = 0;
@@ -243,7 +246,8 @@ export async function POST(request: NextRequest) {
       deliveryAddress: String(deliveryAddress).trim(),
       notes: notes ? String(notes).trim() : '',
       totalAmount: finalAmountToPay,
-      discountAmount,
+      shippingFee: finalShippingFee,
+      discountAmount: effectiveFoodDiscount,
       couponCode: validCouponCode,
       groupCode: validatedGroupCode,
       paymentMethod: isFullyPaidByWallet ? 'Wallet' : (paymentMethod || 'Sepay'),

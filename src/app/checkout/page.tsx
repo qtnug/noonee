@@ -1082,7 +1082,11 @@ function CheckoutContent() {
                     ) : effectiveShippingFee === 0 ? (
                       <span className="text-[#16a34a] font-bold">0₫ (Miễn phí)</span>
                     ) : (
-                      <span className="font-semibold text-[#181d26]">{formatVND(effectiveShippingFee)}</span>
+                      <span className="font-semibold text-[#181d26]">
+                        {memberShippingDiscount > 0 && appliedCoupon?.code !== 'FREESHIP'
+                          ? formatVND(baseShippingFee)
+                          : formatVND(effectiveShippingFee)}
+                      </span>
                     )}
                   </div>
                 </div>

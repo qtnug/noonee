@@ -90,6 +90,9 @@ async function ensureSchemaColumns(pool: any) {
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'groupCode')
         ALTER TABLE Orders ADD groupCode NVARCHAR(50) NULL;
 
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'shippingFee')
+        ALTER TABLE Orders ADD shippingFee DECIMAL(18, 0) DEFAULT 0;
+
       IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'GroupOrders')
       BEGIN
         CREATE TABLE GroupOrders (
@@ -705,6 +708,7 @@ export async function createOrder(data: {
   deliveryAddress: string;
   notes?: string;
   totalAmount: number;
+  shippingFee?: number;
   discountAmount?: number;
   couponCode?: string | null;
   groupCode?: string | null;
@@ -729,6 +733,7 @@ export async function createOrder(data: {
     deliveryAddress: data.deliveryAddress,
     notes: data.notes || '',
     totalAmount: data.totalAmount,
+    shippingFee: data.shippingFee !== undefined ? data.shippingFee : 0,
     discountAmount: data.discountAmount || 0,
     couponCode: data.couponCode || null,
     groupCode: data.groupCode || null,
@@ -776,6 +781,7 @@ export async function createOrder(data: {
         req.input('address', sql.NVarChar(255), data.deliveryAddress);
         req.input('notes', sql.NVarChar(500), data.notes || '');
         req.input('amount', sql.Decimal(18, 0), data.totalAmount);
+        req.input('shippingFee', sql.Decimal(18, 0), data.shippingFee || 0);
         req.input('discount', sql.Decimal(18, 2), data.discountAmount || 0);
         req.input('coupon', sql.NVarChar(50), data.couponCode || null);
         req.input('groupCode', sql.NVarChar(50), data.groupCode || null);
@@ -784,9 +790,9 @@ export async function createOrder(data: {
         req.input('walletAmount', sql.Decimal(18, 0), data.walletAmountUsed || 0);
 
         const orderRes = await req.query(`
-          INSERT INTO Orders (orderCode, userId, customerName, customerPhone, deliveryAddress, notes, totalAmount, discountAmount, couponCode, groupCode, status, paymentMethod, paymentStatus, walletAmountUsed)
+          INSERT INTO Orders (orderCode, userId, customerName, customerPhone, deliveryAddress, notes, totalAmount, shippingFee, discountAmount, couponCode, groupCode, status, paymentMethod, paymentStatus, walletAmountUsed)
           OUTPUT INSERTED.id
-          VALUES (@code, @userId, @name, @phone, @address, @notes, @amount, @discount, @coupon, @groupCode, 'Pending', @method, @payStatus, @walletAmount)
+          VALUES (@code, @userId, @name, @phone, @address, @notes, @amount, @shippingFee, @discount, @coupon, @groupCode, 'Pending', @method, @payStatus, @walletAmount)
         `);
 
         const orderId = orderRes.recordset[0]?.id;
@@ -841,6 +847,7 @@ export async function getOrderByCode(code: string): Promise<Order | null> {
       const res = await req.query(`
         SELECT o.id, o.orderCode, o.userId, o.customerName, o.customerPhone, o.deliveryAddress, 
                o.notes, CAST(o.totalAmount AS BIGINT) AS totalAmount, 
+               CAST(ISNULL(o.shippingFee, 0) AS BIGINT) AS shippingFee,
                CAST(ISNULL(o.discountAmount, 0) AS BIGINT) AS discountAmount, o.couponCode,
                o.status, o.paymentMethod, o.paymentStatus,
                o.cancelReason, CAST(ISNULL(o.walletAmountUsed, 0) AS BIGINT) AS walletAmountUsed,
@@ -880,6 +887,7 @@ export async function getOrders(filter?: { status?: string; search?: string; use
       let query = `
         SELECT o.id, o.orderCode, o.userId, o.customerName, o.customerPhone, o.deliveryAddress, 
                o.notes, CAST(o.totalAmount AS BIGINT) AS totalAmount,
+               CAST(ISNULL(o.shippingFee, 0) AS BIGINT) AS shippingFee,
                CAST(ISNULL(o.discountAmount, 0) AS BIGINT) AS discountAmount, o.couponCode,
                o.status, o.paymentMethod, o.paymentStatus,
                o.cancelReason, CAST(ISNULL(o.walletAmountUsed, 0) AS BIGINT) AS walletAmountUsed,
