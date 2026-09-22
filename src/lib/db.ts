@@ -340,7 +340,7 @@ interface CacheEntry<T> {
 }
 let categoriesCache: CacheEntry<Category[]> | null = null;
 let productsCache: CacheEntry<Product[]> | null = null;
-const CACHE_TTL_MS = 45000; // 45 seconds TTL
+const CACHE_TTL_MS = 120000; // 2 minutes TTL for high performance DB caching
 
 export function invalidateProductsCache() {
   productsCache = null;
@@ -363,7 +363,7 @@ export async function getCategories(): Promise<Category[]> {
   try {
     const pool = await getCloudPool();
     if (pool) {
-      const result = await pool.request().query('SELECT id, name, slug, description, icon, createdAt FROM Categories ORDER BY id ASC');
+      const result = await pool.request().query('SELECT id, name, slug, description, icon, createdAt FROM Categories WITH (NOLOCK) ORDER BY id ASC');
       if (result.recordset && result.recordset.length > 0) {
         categoriesCache = { data: result.recordset, timestamp: now };
         return result.recordset;
@@ -492,8 +492,8 @@ export async function getAllProductsCached(): Promise<Product[]> {
         SELECT p.id, p.categoryId, c.name AS categoryName, p.name, p.slug, p.description, 
                CAST(p.price AS INT) AS price, p.image, p.isAvailable, p.isFeatured, 
                CAST(p.rating AS FLOAT) AS rating, ISNULL(p.prepTime, 15) AS prepTime, p.toppings, p.createdAt 
-        FROM Products p 
-        LEFT JOIN Categories c ON p.categoryId = c.id
+        FROM Products p WITH (NOLOCK)
+        LEFT JOIN Categories c WITH (NOLOCK) ON p.categoryId = c.id
         ORDER BY p.isFeatured DESC, p.id ASC
       `;
       const result = await pool.request().query(query);

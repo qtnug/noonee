@@ -17,9 +17,12 @@ import {
   Loader2,
   CheckCircle2,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import ProductCard from '@/components/ProductCard';
 import { Product, Category } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+
+const ITEMS_PER_PAGE = 8; // 4 cột x 2 dòng = 8 món mỗi trang
 
 function MenuPageContent() {
   const { user } = useAuth();
@@ -36,12 +39,10 @@ function MenuPageContent() {
   const [onlyDeals, setOnlyDeals] = useState(initialDeal);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [sortBy, setSortBy] = useState<'best-seller' | 'price-asc' | 'price-desc'>('best-seller');
-  const [visibleCount, setVisibleCount] = useState<number>(12);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
-  const observerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) {
@@ -54,15 +55,36 @@ function MenuPageContent() {
     }
   }, [user]);
 
+  // Optimized DB loading: Instant hydration from client session cache + background revalidation
   useEffect(() => {
+    try {
+      const cachedProd = sessionStorage.getItem('noonee_menu_products');
+      const cachedCat = sessionStorage.getItem('noonee_menu_categories');
+      if (cachedProd && cachedCat) {
+        setProducts(JSON.parse(cachedProd));
+        setCategories(JSON.parse(cachedCat));
+        setIsLoading(false);
+      }
+    } catch (e) {}
+
     async function loadData() {
       try {
         const [prodRes, catRes] = await Promise.all([
           fetch('/api/products?limit=200').then((r) => r.json()),
           fetch('/api/categories').then((r) => r.json()),
         ]);
-        if (prodRes.success) setProducts(prodRes.data);
-        if (catRes.success) setCategories(catRes.data);
+        if (prodRes.success) {
+          setProducts(prodRes.data);
+          try {
+            sessionStorage.setItem('noonee_menu_products', JSON.stringify(prodRes.data));
+          } catch (e) {}
+        }
+        if (catRes.success) {
+          setCategories(catRes.data);
+          try {
+            sessionStorage.setItem('noonee_menu_categories', JSON.stringify(catRes.data));
+          } catch (e) {}
+        }
       } catch (e) {
         console.error('Failed to load menu:', e);
       } finally {
@@ -112,10 +134,32 @@ function MenuPageContent() {
     return list;
   }, [products, selectedCategory, onlyDeals, searchQuery, sortBy]);
 
-  // Reset visibleCount when filters change
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
+
+  // Reset page when any filter changes
   useEffect(() => {
-    setVisibleCount(12);
+    setCurrentPage(1);
   }, [selectedCategory, onlyDeals, searchQuery, sortBy]);
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [filteredProducts.length, totalPages, currentPage]);
+
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentProducts = useMemo(() => {
+    return filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredProducts, startIndex]);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+    setCurrentPage(page);
+    const gridElem = document.getElementById('menu-product-grid');
+    if (gridElem) {
+      gridElem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // Track window scroll for back-to-top button
   useEffect(() => {
@@ -125,35 +169,6 @@ function MenuPageContent() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Infinite Scroll Trigger via IntersectionObserver
-  useEffect(() => {
-    if (isLoadingMore || visibleCount >= filteredProducts.length) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && visibleCount < filteredProducts.length) {
-          setIsLoadingMore(true);
-          setTimeout(() => {
-            setVisibleCount((prev) => Math.min(prev + 8, filteredProducts.length));
-            setIsLoadingMore(false);
-          }, 350);
-        }
-      },
-      { threshold: 0.1, rootMargin: '150px' }
-    );
-
-    const el = observerRef.current;
-    if (el) observer.observe(el);
-
-    return () => {
-      if (el) observer.unobserve(el);
-    };
-  }, [visibleCount, filteredProducts.length, isLoadingMore]);
-
-  const displayedProducts = useMemo(() => {
-    return filteredProducts.slice(0, visibleCount);
-  }, [filteredProducts, visibleCount]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -345,7 +360,7 @@ function MenuPageContent() {
                 setSearchQuery('');
                 setSelectedCategory(null);
                 setOnlyDeals(false);
-                setVisibleCount(12);
+                setCurrentPage(1);
               }}
               className="h-10 px-5 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-semibold rounded-[6px] transition"
             >
@@ -353,11 +368,11 @@ function MenuPageContent() {
             </button>
           </div>
         ) : (
-          <div id="menu-product-grid" className="scroll-mt-8 space-y-8">
-            {/* Status bar: displaying count */}
+          <div id="menu-product-grid" className="scroll-mt-8 space-y-6">
+            {/* Status bar: displaying count and page */}
             <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#475569] px-1">
               <span>
-                Hiển thị <strong className="text-[#0f172a] font-bold">{displayedProducts.length}</strong> / {filteredProducts.length} món ăn
+                Hiển thị trang <strong className="text-[#e31837] font-bold">{currentPage}</strong> / {totalPages} (Tổng {filteredProducts.length} món)
               </span>
               {onlyDeals && (
                 <span className="text-[#e31837] font-semibold flex items-center gap-1">
@@ -367,60 +382,82 @@ function MenuPageContent() {
               )}
             </div>
 
-            {/* Grid with smooth progressive card entrance */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
-              {displayedProducts.map((product) => (
-                <div
+            {/* Grid 4 columns x 2 rows (8 items) with scroll reveal effect */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 min-h-[380px]">
+              {currentProducts.map((product, idx) => (
+                <motion.div
                   key={product.id}
-                  className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-forwards"
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-20px' }}
+                  transition={{ duration: 0.35, delay: (idx % 4) * 0.06, ease: 'easeOut' }}
                 >
                   <ProductCard
                     product={product}
                     badgeText={product.isFeatured ? 'Nổi bật' : 'Món ngon'}
                   />
-                </div>
+                </motion.div>
               ))}
             </div>
 
-            {/* Loading more skeletons when scrolling down */}
-            {isLoadingMore && (
-              <div className="pt-4 space-y-4">
-                <div className="flex items-center justify-center gap-2 text-[#e31837] text-[13px] font-semibold">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Đang tải thêm món ngon NooNee...</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
-                  {[1, 2, 3, 4].map((n) => (
-                    <div key={n} className="bg-white rounded-[10px] p-3 sm:p-4 border border-[#dddddd] animate-pulse space-y-2 sm:space-y-3">
-                      <div className="aspect-square bg-[#f8fafc] rounded-[6px]" />
-                      <div className="h-3 sm:h-4 bg-gray-200 rounded w-3/4" />
-                      <div className="h-2.5 sm:h-3 bg-gray-100 rounded w-1/2" />
-                      <div className="h-7 sm:h-9 bg-gray-200 rounded mt-2" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Pagination Controls Bar */}
+            {totalPages > 1 && (
+              <div className="pt-8 pb-2 flex items-center justify-center border-t border-[#dddddd]">
+                <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="h-9 px-3 bg-white border border-[#dddddd] text-[#181d26] text-[13px] font-medium rounded-[6px] hover:bg-[#f8fafc] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                    aria-label="Trang trước"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span className="hidden sm:inline">Trước</span>
+                  </button>
 
-            {/* Sentinel element for infinite scroll observer */}
-            {visibleCount < filteredProducts.length && (
-              <div ref={observerRef} className="pt-4 pb-2 flex flex-col items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setVisibleCount((prev) => Math.min(prev + 8, filteredProducts.length))}
-                  className="px-5 py-2.5 bg-white hover:bg-[#fff1f2] text-[#e31837] border border-[#fecdd3] hover:border-[#e31837] rounded-lg text-[13px] font-bold shadow-2xs transition cursor-pointer"
-                >
-                  Xem thêm món (+{filteredProducts.length - visibleCount} món còn lại)
-                </button>
-              </div>
-            )}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                    const isCurrent = pageNum === currentPage;
+                    const isNearCurrent = Math.abs(pageNum - currentPage) <= 1;
+                    const isFirst = pageNum === 1;
+                    const isLast = pageNum === totalPages;
 
-            {/* Reached the end of menu */}
-            {visibleCount >= filteredProducts.length && filteredProducts.length > 0 && (
-              <div className="pt-8 pb-4 flex justify-center">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#fdf2f2] border border-[#fecdd3] text-[12px] sm:text-[13px] font-medium text-[#e31837]">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Đã hiển thị toàn bộ {filteredProducts.length} món ăn trong thực đơn. Chúc bạn ngon miệng!</span>
+                    if (!isNearCurrent && !isFirst && !isLast) {
+                      if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                        return (
+                          <span key={pageNum} className="w-7 text-center text-gray-400 text-xs">
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`min-w-9 h-9 px-2.5 rounded-[6px] text-[13px] font-semibold transition cursor-pointer shadow-2xs ${
+                          isCurrent
+                            ? 'bg-[#e31837] text-white shadow-xs'
+                            : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="h-9 px-3 bg-white border border-[#dddddd] text-[#181d26] text-[13px] font-medium rounded-[6px] hover:bg-[#f8fafc] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                    aria-label="Trang sau"
+                  >
+                    <span className="hidden sm:inline">Sau</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             )}
