@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import * as XLSX from 'xlsx';
 import {
   Plus,
   Edit2,
@@ -12,6 +13,11 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
+  Download,
+  FileSpreadsheet,
+  FileUp,
+  RotateCcw,
+  Filter,
 } from 'lucide-react';
 import { Product, Category, ProductTopping } from '@/types';
 import { formatVND } from '@/lib/utils';
@@ -21,6 +27,18 @@ export default function AdminProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter & Sorting State
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<number | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'out_of_stock' | 'featured'>('all');
+  const [sortOrder, setSortOrder] = useState<'default' | 'price_asc' | 'price_desc' | 'name_asc'>('default');
+
+  // Excel Import State
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [parsedImportData, setParsedImportData] = useState<any[]>([]);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importFileName, setImportFileName] = useState('');
+  const [importStatusMessage, setImportStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -216,14 +234,188 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleExportExcel = () => {
+    try {
+      const dataToExport = filtered.map((p) => {
+        const cat = categories.find((c) => c.id === p.categoryId);
+        return {
+          'Mã món (ID)': p.id,
+          'Tên món ăn': p.name,
+          'Danh mục': cat?.name || p.categoryName || 'Khác',
+          'Giá bán (VNĐ)': p.price,
+          'Thời gian chế biến (phút)': p.prepTime || 15,
+          'Còn hàng': p.isAvailable ? 'Có' : 'Không',
+          'Món nổi bật': p.isFeatured ? 'Có' : 'Không',
+          'Đánh giá': p.rating || 5.0,
+          'Mô tả': p.description || '',
+          'Link ảnh': p.image || '',
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(dataToExport);
+      ws['!cols'] = [
+        { wch: 10 },
+        { wch: 30 },
+        { wch: 20 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 10 },
+        { wch: 40 },
+        { wch: 40 },
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Thực đơn NooNee');
+      const dateStr = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `NooNee_ThucDon_${dateStr}.xlsx`);
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('Không thể xuất file Excel. Vui lòng thử lại!');
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    const templateData = [
+      {
+        'Tên món ăn': 'Cơm tấm sườn bì chả đặc biệt',
+        'Danh mục': 'Cơm',
+        'Giá bán': 55000,
+        'Thời gian chế biến': 15,
+        'Còn hàng': 'Có',
+        'Nổi bật': 'Có',
+        'Mô tả': 'Sườn cốt lết nướng than hoa đậm đà, chả trứng bùi béo và bì heo giòn thơm',
+        'Link ảnh': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        'Tên món ăn': 'Phở bò tái nạm gia truyền',
+        'Danh mục': 'Bún & Phở',
+        'Giá bán': 50000,
+        'Thời gian chế biến': 12,
+        'Còn hàng': 'Có',
+        'Nổi bật': 'Có',
+        'Mô tả': 'Nước hầm xương ống bò 18 tiếng ngọt thanh, nạm giòn sần sật',
+        'Link ảnh': 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        'Tên món ăn': 'Trà đào cam sả thanh nhiệt',
+        'Danh mục': 'Đồ uống',
+        'Giá bán': 35000,
+        'Thời gian chế biến': 5,
+        'Còn hàng': 'Có',
+        'Nổi bật': 'Không',
+        'Mô tả': 'Trà đào thơm nức hòa quyện sả tươi và cam vàng mọng nước',
+        'Link ảnh': 'https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=800&q=80',
+      },
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    ws['!cols'] = [
+      { wch: 30 },
+      { wch: 18 },
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 40 },
+      { wch: 40 },
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Mau_Nhap_Mon');
+    XLSX.writeFile(wb, 'Mau_Nhap_Mon_NooNee.xlsx');
+  };
+
+  const handleFileImportChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportFileName(file.name);
+    setImportStatusMessage(null);
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const rawJson: any[] = XLSX.utils.sheet_to_json(ws);
+
+        if (!rawJson || rawJson.length === 0) {
+          setImportStatusMessage({ type: 'error', text: 'File Excel không có dữ liệu dòng nào.' });
+          setParsedImportData([]);
+          return;
+        }
+
+        setParsedImportData(rawJson);
+      } catch (err: any) {
+        setImportStatusMessage({ type: 'error', text: 'Không thể đọc file: ' + err.message });
+        setParsedImportData([]);
+      }
+    };
+    reader.readAsBinaryString(file);
+    e.target.value = '';
+  };
+
+  const handleConfirmImport = async () => {
+    if (parsedImportData.length === 0) return;
+    setIsImporting(true);
+    setImportStatusMessage(null);
+
+    try {
+      const res = await fetch('/api/admin/products/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ products: parsedImportData }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Nhập file thất bại');
+      }
+
+      setImportStatusMessage({
+        type: 'success',
+        text: `Đã nhập thành công ${data.count}/${parsedImportData.length} món ăn vào thực đơn!`,
+      });
+      fetchData();
+      setTimeout(() => {
+        setIsImportModalOpen(false);
+        setParsedImportData([]);
+        setImportFileName('');
+        setImportStatusMessage(null);
+      }, 1500);
+    } catch (err: any) {
+      setImportStatusMessage({ type: 'error', text: err.message || 'Lỗi khi nhập món ăn' });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  const filtered = products.filter((p) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase().trim();
-    return p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q));
-  });
+  const filtered = products
+    .filter((p) => {
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesName = p.name.toLowerCase().includes(q);
+        const matchesDesc = p.description && p.description.toLowerCase().includes(q);
+        if (!matchesName && !matchesDesc) return false;
+      }
+      if (selectedCategoryFilter !== 'all' && p.categoryId !== selectedCategoryFilter) {
+        return false;
+      }
+      if (statusFilter === 'available' && !p.isAvailable) return false;
+      if (statusFilter === 'out_of_stock' && p.isAvailable) return false;
+      if (statusFilter === 'featured' && !p.isFeatured) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortOrder === 'price_asc') return a.price - b.price;
+      if (sortOrder === 'price_desc') return b.price - a.price;
+      if (sortOrder === 'name_asc') return a.name.localeCompare(b.name, 'vi');
+      return 0;
+    });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -239,30 +431,152 @@ export default function AdminProductsPage() {
           </p>
         </div>
 
-        <button
-          onClick={openAddModal}
-          className="h-9 sm:h-10 px-3.5 sm:px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white font-medium text-[12px] sm:text-[13px] rounded-[6px] flex items-center gap-1.5 transition self-start sm:self-auto shadow-xs cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Thêm món ăn mới</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+          {/* Export Excel Button */}
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            className="h-9 sm:h-10 px-3 sm:px-3.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 hover:border-emerald-500 font-medium text-[12px] sm:text-[13px] rounded-[6px] flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
+            title="Xuất toàn bộ hoặc kết quả lọc ra file Excel (.xlsx)"
+          >
+            <Download className="w-4 h-4" />
+            <span>Xuất Excel</span>
+          </button>
+
+          {/* Import Excel Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setParsedImportData([]);
+              setImportFileName('');
+              setImportStatusMessage(null);
+              setIsImportModalOpen(true);
+            }}
+            className="h-9 sm:h-10 px-3 sm:px-3.5 bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 hover:border-blue-500 font-medium text-[12px] sm:text-[13px] rounded-[6px] flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
+            title="Tải lên file Excel (.xlsx / .csv) để nhập món ăn hàng loạt"
+          >
+            <FileUp className="w-4 h-4" />
+            <span>Nhập Excel</span>
+          </button>
+
+          {/* Add Product Button */}
+          <button
+            onClick={openAddModal}
+            className="h-9 sm:h-10 px-3.5 sm:px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white font-medium text-[12px] sm:text-[13px] rounded-[6px] flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Thêm món mới</span>
+          </button>
+        </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="bg-white p-3.5 sm:p-4 rounded-[10px] border border-[#dddddd] flex items-center">
-        <div className="relative w-full max-w-sm">
-          <Search className="w-4 h-4 text-[#9297a0] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Tìm kiếm món theo tên hoặc mô tả..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-full h-10 pl-10 pr-4 text-[13px] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] text-[#181d26]"
-          />
+      {/* Advanced Search & Filter Bar */}
+      <div className="bg-white p-3.5 sm:p-4 rounded-[10px] border border-[#dddddd] space-y-3 shadow-2xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3">
+          {/* Search Input */}
+          <div className="lg:col-span-2 relative">
+            <Search className="w-4 h-4 text-[#9297a0] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Tìm món theo tên hoặc mô tả..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full h-10 pl-10 pr-9 text-[13px] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] text-[#181d26]"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setCurrentPage(1);
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition cursor-pointer"
+                title="Xóa tìm kiếm"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Category Filter */}
+          <div>
+            <select
+              value={selectedCategoryFilter}
+              onChange={(e) => {
+                setSelectedCategoryFilter(e.target.value === 'all' ? 'all' : Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="w-full h-10 px-3 text-[13px] bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
+            >
+              <option value="all">Tất cả danh mục ({products.length})</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value as any);
+                setCurrentPage(1);
+              }}
+              className="w-full h-10 px-3 text-[13px] bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
+            >
+              <option value="all">Tất cả trạng thái</option>
+              <option value="available">Đang phục vụ</option>
+              <option value="out_of_stock">Tạm hết hàng</option>
+              <option value="featured">Món nổi bật</option>
+            </select>
+          </div>
+
+          {/* Sort Filter */}
+          <div>
+            <select
+              value={sortOrder}
+              onChange={(e) => {
+                setSortOrder(e.target.value as any);
+                setCurrentPage(1);
+              }}
+              className="w-full h-10 px-3 text-[13px] bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
+            >
+              <option value="default">Sắp xếp: Mặc định</option>
+              <option value="price_asc">Giá: Thấp đến cao</option>
+              <option value="price_desc">Giá: Cao đến thấp</option>
+              <option value="name_asc">Tên: A - Z</option>
+            </select>
+          </div>
         </div>
+
+        {/* Filter status summary & Reset button */}
+        {(searchQuery || selectedCategoryFilter !== 'all' || statusFilter !== 'all' || sortOrder !== 'default') && (
+          <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-[12px] text-gray-500">
+            <span>
+              Tìm thấy <strong className="text-[#e31837] font-bold">{filtered.length}</strong> món phù hợp với bộ lọc
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedCategoryFilter('all');
+                setStatusFilter('all');
+                setSortOrder('default');
+                setCurrentPage(1);
+              }}
+              className="inline-flex items-center gap-1 text-[#e31837] hover:underline font-semibold cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Đặt lại bộ lọc</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Products Table */}
@@ -666,6 +980,170 @@ export default function AdminProductsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Nhập Sản Phẩm từ Excel / CSV */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#181d26]/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-[12px] max-w-2xl w-full p-5 sm:p-7 max-h-[92vh] overflow-y-auto shadow-2xl border border-[#dddddd] space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
+              <div className="flex items-center gap-2">
+                <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
+                <h2 className="text-lg font-bold text-[#181d26]">Nhập món ăn từ file Excel / CSV</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsImportModalOpen(false);
+                  setParsedImportData([]);
+                  setImportFileName('');
+                  setImportStatusMessage(null);
+                }}
+                className="p-1.5 text-[#9297a0] hover:text-[#181d26] rounded-[6px] hover:bg-gray-100 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Instruction & Download Template */}
+            <div className="bg-emerald-50/60 border border-emerald-200 p-3.5 rounded-[8px] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[13px]">
+              <div>
+                <p className="font-semibold text-emerald-900">Mẹo nhập dữ liệu chuẩn:</p>
+                <p className="text-emerald-700 text-[12px] mt-0.5">
+                  Tải file mẫu để xem các cột: Tên món ăn, Danh mục, Giá bán, Mô tả, Link ảnh...
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleDownloadTemplate}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-[6px] text-[12px] font-bold shrink-0 transition cursor-pointer shadow-2xs"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Tải file Excel mẫu</span>
+              </button>
+            </div>
+
+            {/* Upload Box */}
+            <div className="border-2 border-dashed border-gray-300 hover:border-[#e31837] rounded-[10px] p-6 text-center transition bg-gray-50/50 relative">
+              <input
+                type="file"
+                accept=".xlsx, .xls, .csv"
+                onChange={handleFileImportChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              <div className="flex flex-col items-center justify-center space-y-2">
+                <div className="w-12 h-12 rounded-full bg-red-50 text-[#e31837] flex items-center justify-center">
+                  <FileUp className="w-6 h-6" />
+                </div>
+                <div className="text-[14px] font-medium text-[#181d26]">
+                  {importFileName ? (
+                    <span className="text-emerald-600 font-bold">Đã chọn: {importFileName}</span>
+                  ) : (
+                    <span>Kéo thả hoặc bấm để chọn file .xlsx, .xls, .csv</span>
+                  )}
+                </div>
+                <p className="text-[12px] text-gray-500">Hỗ trợ file Excel bảng tính (.xlsx) hoặc tệp CSV</p>
+              </div>
+            </div>
+
+            {/* Status Message */}
+            {importStatusMessage && (
+              <div
+                className={`p-3 rounded-[6px] text-[13px] flex items-center gap-2 ${
+                  importStatusMessage.type === 'success'
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    : 'bg-rose-50 text-rose-800 border border-rose-200'
+                }`}
+              >
+                {importStatusMessage.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                )}
+                <span>{importStatusMessage.text}</span>
+              </div>
+            )}
+
+            {/* Preview Table */}
+            {parsedImportData.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[13px]">
+                  <span className="font-semibold text-[#181d26]">
+                    Xem trước dữ liệu ({parsedImportData.length} món ăn):
+                  </span>
+                  <span className="text-xs text-gray-500">Hiển thị tối đa 5 dòng đầu</span>
+                </div>
+                <div className="border border-gray-200 rounded-lg overflow-x-auto max-h-48 text-[12px]">
+                  <table className="w-full text-left">
+                    <thead className="bg-gray-100 text-gray-700 font-semibold border-b border-gray-200 sticky top-0">
+                      <tr>
+                        <th className="p-2">STT</th>
+                        <th className="p-2">Tên món</th>
+                        <th className="p-2">Danh mục</th>
+                        <th className="p-2">Giá bán</th>
+                        <th className="p-2">Mô tả</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {parsedImportData.slice(0, 5).map((row, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50">
+                          <td className="p-2 text-gray-500">{idx + 1}</td>
+                          <td className="p-2 font-medium text-gray-900">
+                            {row['Tên món ăn'] || row['Tên món'] || row.name || '---'}
+                          </td>
+                          <td className="p-2 text-gray-600">
+                            {row['Danh mục'] || row['Tên danh mục'] || row.categoryName || '---'}
+                          </td>
+                          <td className="p-2 font-bold text-[#e31837]">
+                            {formatVND(Number(row['Giá bán'] || row['Đơn giá'] || row.price || 0))}
+                          </td>
+                          <td className="p-2 text-gray-500 truncate max-w-xs">
+                            {row['Mô tả'] || row.description || '---'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="pt-3 border-t border-[#dddddd] flex justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsImportModalOpen(false);
+                  setParsedImportData([]);
+                  setImportFileName('');
+                  setImportStatusMessage(null);
+                }}
+                className="h-10 px-4 border border-[#dddddd] text-[#181d26] font-medium rounded-[6px] hover:bg-[#f8fafc] transition cursor-pointer text-[13px]"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                disabled={parsedImportData.length === 0 || isImporting}
+                onClick={handleConfirmImport}
+                className="h-10 px-5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 text-white font-semibold rounded-[6px] transition shadow-xs cursor-pointer flex items-center gap-1.5 text-[13px]"
+              >
+                {isImporting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Đang nhập dữ liệu...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Xác nhận nhập ({parsedImportData.length}) món</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

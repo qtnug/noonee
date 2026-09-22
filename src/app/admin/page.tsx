@@ -15,6 +15,10 @@ import {
   XCircle,
   CheckCircle2,
   Loader2,
+  Calendar,
+  Award,
+  Flame,
+  CheckCheck,
 } from 'lucide-react';
 import { formatVND } from '@/lib/utils';
 import { Order } from '@/types';
@@ -22,12 +26,13 @@ import { Order } from '@/types';
 export default function AdminOverviewPage() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState<'today' | 'week' | 'month' | 'quarter' | 'all'>('week');
   const [updatingCode, setUpdatingCode] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const fetchStats = async () => {
+  const fetchStats = async (p = period) => {
     try {
-      const res = await fetch('/api/admin/stats');
+      const res = await fetch(`/api/admin/stats?period=${p}`);
       const data = await res.json();
       if (data.success) {
         setStats(data.data);
@@ -40,10 +45,13 @@ export default function AdminOverviewPage() {
   };
 
   useEffect(() => {
-    fetchStats();
-    const interval = setInterval(fetchStats, 5000);
+    fetchStats(period);
+  }, [period]);
+
+  useEffect(() => {
+    const interval = setInterval(() => fetchStats(period), 8000);
     return () => clearInterval(interval);
-  }, []);
+  }, [period]);
 
   const handleUpdateStatus = async (orderCode: string, newStatus: string, newPaymentStatus?: string) => {
     setUpdatingCode(orderCode);
@@ -83,13 +91,21 @@ export default function AdminOverviewPage() {
         setToastMessage(`Đã cập nhật đơn #${orderCode} sang [${labels[newStatus] || newStatus}]`);
         setTimeout(() => setToastMessage(null), 3000);
       }
-      fetchStats();
+      fetchStats(period);
     } catch (e) {
       console.error(e);
-      fetchStats();
+      fetchStats(period);
     } finally {
       setUpdatingCode(null);
     }
+  };
+
+  const periodLabels: Record<string, string> = {
+    today: 'Hôm nay',
+    week: 'Tuần này (7 ngày)',
+    month: 'Tháng này',
+    quarter: 'Quý này (3 tháng)',
+    all: 'Toàn thời gian',
   };
 
   return (
@@ -131,12 +147,42 @@ export default function AdminOverviewPage() {
         </div>
       )}
 
+      {/* Time Period Filter Bar (Tuần / Tháng / Quý / Hôm nay / Tất cả) */}
+      <div className="bg-white p-3 sm:p-4 rounded-[10px] border border-[#dddddd] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-[13px] font-semibold text-[#181d26]">
+          <Calendar className="w-4 h-4 text-[#e31837]" />
+          <span>Kỳ báo cáo doanh thu:</span>
+          <span className="text-[#e31837] font-bold">({periodLabels[period]})</span>
+        </div>
+
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+          {(['today', 'week', 'month', 'quarter', 'all'] as const).map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPeriod(p)}
+              className={`px-3 py-1.5 text-[12px] rounded-lg transition whitespace-nowrap cursor-pointer ${
+                period === p
+                  ? 'bg-[#e31837] text-white shadow-xs font-bold'
+                  : 'bg-gray-100 hover:bg-gray-200 text-[#475569] font-medium'
+              }`}
+            >
+              {p === 'today' && 'Hôm nay'}
+              {p === 'week' && 'Tuần này'}
+              {p === 'month' && 'Tháng này'}
+              {p === 'quarter' && 'Quý này'}
+              {p === 'all' && 'Toàn thời gian'}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Metric Cards Grid (2-cols on mobile, 4-cols on lg) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {/* Total Revenue */}
         <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-1.5 sm:space-y-2">
           <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
-            <span>Tổng doanh thu</span>
+            <span>Doanh thu ({periodLabels[period]})</span>
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#181d26] flex items-center justify-center">
               <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
@@ -146,14 +192,14 @@ export default function AdminOverviewPage() {
           </div>
           <span className="text-[11px] sm:text-[12px] text-[#006400] font-medium flex items-center gap-1">
             <TrendingUp className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Đã thanh toán</span>
+            <span className="truncate">Doanh thu thực tế</span>
           </span>
         </div>
 
         {/* Total Orders */}
         <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-1.5 sm:space-y-2">
           <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
-            <span>Tổng đơn hàng</span>
+            <span>Tổng đơn ({periodLabels[period]})</span>
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#181d26] flex items-center justify-center">
               <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
@@ -162,40 +208,151 @@ export default function AdminOverviewPage() {
             {stats ? stats.totalOrders : '...'}
           </div>
           <span className="text-[11px] sm:text-[12px] text-[#9297a0] truncate block">
-            Toàn bộ đơn hệ thống
+            {stats?.completedOrders ? `${stats.completedOrders} đơn hoàn tất` : 'Đơn đặt trong kỳ'}
           </span>
         </div>
 
-        {/* Pending Orders */}
+        {/* Average Order Value (AOV) */}
         <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-1.5 sm:space-y-2">
           <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
-            <span>Chờ tiếp nhận</span>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#e31837] flex items-center justify-center">
-              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>TB / Đơn (AOV)</span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#181d26] flex items-center justify-center">
+              <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
             </div>
           </div>
-          <div className="text-lg sm:text-2xl font-semibold text-[#e31837]">
-            {stats ? stats.pendingOrders : '...'}
+          <div className="text-lg sm:text-2xl font-semibold text-[#181d26] truncate">
+            {stats ? formatVND(stats.averageOrderValue || 0) : '...'}
           </div>
-          <span className="text-[11px] sm:text-[12px] text-[#e31837] truncate block">
-            Cần chế biến ngay
+          <span className="text-[11px] sm:text-[12px] text-amber-600 font-medium truncate block">
+            Giá trị trung bình mỗi đơn
           </span>
         </div>
 
-        {/* Delivering Orders */}
+        {/* Live Active Orders */}
         <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-1.5 sm:space-y-2">
           <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
-            <span>Đang giao hàng</span>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#254fad] flex items-center justify-center">
+            <span>Đang xử lý / Giao</span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] flex items-center justify-center">
               <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="text-lg sm:text-2xl font-semibold text-[#254fad]">
-            {stats ? stats.deliveringOrders : '...'}
+          <div className="text-lg sm:text-2xl font-semibold text-[#e31837]">
+            {stats ? (stats.pendingOrders || 0) + (stats.deliveringOrders || 0) : '...'}
           </div>
-          <span className="text-[11px] sm:text-[12px] text-[#254fad] truncate block">
-            Shipper đang vận chuyển
+          <span className="text-[11px] sm:text-[12px] text-[#e31837] truncate block">
+            {stats?.pendingOrders || 0} chờ nấu • {stats?.deliveringOrders || 0} đang giao
           </span>
+        </div>
+      </div>
+
+      {/* Top Best-Selling Dishes & Operating Efficiency Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Top 5 Products */}
+        <div className="lg:col-span-7 bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
+            <div className="flex items-center gap-2">
+              <Flame className="w-4 h-4 text-[#e31837]" />
+              <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
+                Món ăn bán chạy nhất ({periodLabels[period]})
+              </h2>
+            </div>
+            <Link
+              href="/admin/products"
+              className="text-[12px] sm:text-[13px] font-medium text-[#e31837] hover:underline"
+            >
+              Quản lý thực đơn
+            </Link>
+          </div>
+
+          {stats?.topProducts && stats.topProducts.length > 0 ? (
+            <div className="space-y-3">
+              {stats.topProducts.map((prod: any, idx: number) => {
+                const maxQty = stats.topProducts[0]?.quantity || 1;
+                const percent = Math.min(100, Math.round((prod.quantity / maxQty) * 100));
+
+                return (
+                  <div key={prod.name} className="space-y-1">
+                    <div className="flex items-center justify-between text-[13px]">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
+                          idx === 0 ? 'bg-amber-100 text-amber-700' :
+                          idx === 1 ? 'bg-slate-100 text-slate-700' :
+                          idx === 2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {idx + 1}
+                        </span>
+                        <span className="font-semibold text-[#0f172a] truncate">{prod.name}</span>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="font-bold text-[#e31837]">{prod.quantity} phần</span>
+                        <span className="text-[11px] text-gray-400 block">{formatVND(prod.revenue)}</span>
+                      </div>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#e31837] to-amber-500 rounded-full transition-all duration-500"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-[13px] text-[#9297a0]">
+              Chưa có dữ liệu món bán chạy trong kỳ này
+            </div>
+          )}
+        </div>
+
+        {/* Operating Efficiency Card */}
+        <div className="lg:col-span-5 bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6 space-y-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-[#006400]" />
+                <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
+                  Hiệu suất vận hành ({periodLabels[period]})
+                </h2>
+              </div>
+            </div>
+
+            <div className="pt-4 space-y-3.5">
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-gray-600">Đơn hoàn thành thành công</span>
+                <span className="font-bold text-emerald-600">
+                  {stats?.completedOrders || 0} đơn ({stats?.totalOrders ? Math.round(((stats.completedOrders || 0) / stats.totalOrders) * 100) : 0}%)
+                </span>
+              </div>
+              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 rounded-full"
+                  style={{
+                    width: `${stats?.totalOrders ? Math.min(100, Math.round(((stats.completedOrders || 0) / stats.totalOrders) * 100)) : 0}%`,
+                  }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-[13px] pt-1">
+                <span className="text-gray-600">Đơn đã hủy</span>
+                <span className="font-bold text-gray-500">
+                  {stats?.cancelledOrders || 0} đơn
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-[13px] pt-1">
+                <span className="text-gray-600">Tổng sản phẩm trên menu</span>
+                <span className="font-bold text-[#0f172a]">
+                  {stats?.totalProducts || 0} món
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-[#dddddd] flex items-center justify-between text-[12px] text-gray-500">
+            <span>Tự động cập nhật thời gian thực</span>
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+          </div>
         </div>
       </div>
 

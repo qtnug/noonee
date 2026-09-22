@@ -1,14 +1,25 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Search, Tag, UtensilsCrossed, Gift, Users, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Search,
+  Tag,
+  UtensilsCrossed,
+  Gift,
+  Users,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  ArrowUp,
+  Loader2,
+  CheckCircle2,
+} from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import { Product, Category } from '@/types';
 import { useAuth } from '@/context/AuthContext';
-
-const ITEMS_PER_PAGE = 12;
 
 function MenuPageContent() {
   const { user } = useAuth();
@@ -25,9 +36,12 @@ function MenuPageContent() {
   const [onlyDeals, setOnlyDeals] = useState(initialDeal);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [sortBy, setSortBy] = useState<'best-seller' | 'price-asc' | 'price-desc'>('best-seller');
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [visibleCount, setVisibleCount] = useState<number>(12);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
+  const observerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) {
@@ -98,27 +112,51 @@ function MenuPageContent() {
     return list;
   }, [products, selectedCategory, onlyDeals, searchQuery, sortBy]);
 
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
-
+  // Reset visibleCount when filters change
   useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(1);
-    }
-  }, [filteredProducts.length, totalPages, currentPage]);
+    setVisibleCount(12);
+  }, [selectedCategory, onlyDeals, searchQuery, sortBy]);
 
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredProducts.length);
-  const currentProducts = useMemo(() => {
-    return filteredProducts.slice(startIndex, endIndex);
-  }, [filteredProducts, startIndex, endIndex]);
+  // Track window scroll for back-to-top button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages || page === currentPage) return;
-    setCurrentPage(page);
-    const gridElem = document.getElementById('menu-product-grid');
-    if (gridElem) {
-      gridElem.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+  // Infinite Scroll Trigger via IntersectionObserver
+  useEffect(() => {
+    if (isLoadingMore || visibleCount >= filteredProducts.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < filteredProducts.length) {
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setVisibleCount((prev) => Math.min(prev + 8, filteredProducts.length));
+            setIsLoadingMore(false);
+          }, 350);
+        }
+      },
+      { threshold: 0.1, rootMargin: '150px' }
+    );
+
+    const el = observerRef.current;
+    if (el) observer.observe(el);
+
+    return () => {
+      if (el) observer.unobserve(el);
+    };
+  }, [visibleCount, filteredProducts.length, isLoadingMore]);
+
+  const displayedProducts = useMemo(() => {
+    return filteredProducts.slice(0, visibleCount);
+  }, [filteredProducts, visibleCount]);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -205,21 +243,26 @@ function MenuPageContent() {
                 type="text"
                 placeholder="Tìm món ăn, cơm tấm, bún phở, trà..."
                 value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full h-11 pl-10 pr-4 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-11 pl-10 pr-10 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition cursor-pointer"
+                  aria-label="Xóa tìm kiếm"
+                  title="Xóa tìm kiếm"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
             {/* Sort & Quick Deals */}
             <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
               <button
-                onClick={() => {
-                  setOnlyDeals(!onlyDeals);
-                  setCurrentPage(1);
-                }}
+                onClick={() => setOnlyDeals(!onlyDeals)}
                 className={`h-11 px-4 rounded-[6px] text-[13px] font-semibold transition flex items-center gap-1.5 border cursor-pointer ${
                   onlyDeals
                     ? 'bg-[#e31837] text-white border-[#e31837] shadow-xs'
@@ -232,13 +275,12 @@ function MenuPageContent() {
 
               <select
                 value={sortBy}
-                onChange={(e) => {
-                  setSortBy(e.target.value as any);
-                  setCurrentPage(1);
-                }}
-                className="h-11 text-[13px] bg-white border border-[#dddddd] rounded-[6px] px-3 text-[#181d26] font-medium focus:outline-none focus:border-[#e31837] cursor-pointer"
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="h-11 text-[13px] bg-white border border-[#dddddd] rounded-[6px] px-3 text-[#181d26] font-medium focus:outline-none focus:border-[#e31837] cursor-pointer shadow-2xs"
               >
-                <option value="best-seller">Sắp xếp: Bán chạy</option>
+                <option value="best-seller">🔥 Sắp xếp: Bán chạy & Đánh giá</option>
+                <option value="price-asc">💰 Giá: Thấp đến cao</option>
+                <option value="price-desc">💎 Giá: Cao đến thấp</option>
               </select>
             </div>
           </div>
@@ -249,7 +291,6 @@ function MenuPageContent() {
               onClick={() => {
                 setSelectedCategory(null);
                 setOnlyDeals(false);
-                setCurrentPage(1);
               }}
               className={`h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition cursor-pointer ${
                 selectedCategory === null && !onlyDeals
@@ -265,7 +306,6 @@ function MenuPageContent() {
                 onClick={() => {
                   setSelectedCategory(cat.id);
                   setOnlyDeals(false);
-                  setCurrentPage(1);
                 }}
                 className={`h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition cursor-pointer ${
                   selectedCategory === cat.id && !onlyDeals
@@ -305,7 +345,7 @@ function MenuPageContent() {
                 setSearchQuery('');
                 setSelectedCategory(null);
                 setOnlyDeals(false);
-                setCurrentPage(1);
+                setVisibleCount(12);
               }}
               className="h-10 px-5 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-semibold rounded-[6px] transition"
             >
@@ -314,80 +354,92 @@ function MenuPageContent() {
           </div>
         ) : (
           <div id="menu-product-grid" className="scroll-mt-8 space-y-8">
+            {/* Status bar: displaying count */}
+            <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#475569] px-1">
+              <span>
+                Hiển thị <strong className="text-[#0f172a] font-bold">{displayedProducts.length}</strong> / {filteredProducts.length} món ăn
+              </span>
+              {onlyDeals && (
+                <span className="text-[#e31837] font-semibold flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Đang lọc món nổi bật
+                </span>
+              )}
+            </div>
+
+            {/* Grid with smooth progressive card entrance */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
-              {currentProducts.map((product) => (
-                <ProductCard
+              {displayedProducts.map((product) => (
+                <div
                   key={product.id}
-                  product={product}
-                  badgeText={product.isFeatured ? 'Nổi bật' : 'Món ngon'}
-                />
+                  className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-forwards"
+                >
+                  <ProductCard
+                    product={product}
+                    badgeText={product.isFeatured ? 'Nổi bật' : 'Món ngon'}
+                  />
+                </div>
               ))}
             </div>
 
-            {/* Pagination Controls Bar */}
-            {totalPages > 1 && (
-              <div className="pt-6 pb-2 flex items-center justify-center border-t border-[#dddddd]">
-                <div className="flex items-center gap-1.5 flex-wrap justify-center">
-                  <button
-                    type="button"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="h-9 px-3 bg-white border border-[#dddddd] text-[#181d26] text-[13px] font-medium rounded-[6px] hover:bg-[#f8fafc] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 cursor-pointer"
-                    aria-label="Trang trước"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    <span className="hidden sm:inline">Trước</span>
-                  </button>
+            {/* Loading more skeletons when scrolling down */}
+            {isLoadingMore && (
+              <div className="pt-4 space-y-4">
+                <div className="flex items-center justify-center gap-2 text-[#e31837] text-[13px] font-semibold">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Đang tải thêm món ngon NooNee...</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
+                  {[1, 2, 3, 4].map((n) => (
+                    <div key={n} className="bg-white rounded-[10px] p-3 sm:p-4 border border-[#dddddd] animate-pulse space-y-2 sm:space-y-3">
+                      <div className="aspect-square bg-[#f8fafc] rounded-[6px]" />
+                      <div className="h-3 sm:h-4 bg-gray-200 rounded w-3/4" />
+                      <div className="h-2.5 sm:h-3 bg-gray-100 rounded w-1/2" />
+                      <div className="h-7 sm:h-9 bg-gray-200 rounded mt-2" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
-                    const isCurrent = pageNum === currentPage;
-                    const isNearCurrent = Math.abs(pageNum - currentPage) <= 1;
-                    const isFirst = pageNum === 1;
-                    const isLast = pageNum === totalPages;
+            {/* Sentinel element for infinite scroll observer */}
+            {visibleCount < filteredProducts.length && (
+              <div ref={observerRef} className="pt-4 pb-2 flex flex-col items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((prev) => Math.min(prev + 8, filteredProducts.length))}
+                  className="px-5 py-2.5 bg-white hover:bg-[#fff1f2] text-[#e31837] border border-[#fecdd3] hover:border-[#e31837] rounded-lg text-[13px] font-bold shadow-2xs transition cursor-pointer"
+                >
+                  Xem thêm món (+{filteredProducts.length - visibleCount} món còn lại)
+                </button>
+              </div>
+            )}
 
-                    if (!isNearCurrent && !isFirst && !isLast) {
-                      if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
-                        return (
-                          <span key={pageNum} className="w-7 text-center text-gray-400 text-xs">
-                            ...
-                          </span>
-                        );
-                      }
-                      return null;
-                    }
-
-                    return (
-                      <button
-                        key={pageNum}
-                        type="button"
-                        onClick={() => handlePageChange(pageNum)}
-                        className={`min-w-9 h-9 px-2.5 rounded-[6px] text-[13px] font-semibold transition cursor-pointer ${
-                          isCurrent
-                            ? 'bg-[#e31837] text-white shadow-xs'
-                            : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-
-                  <button
-                    type="button"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="h-9 px-3 bg-white border border-[#dddddd] text-[#181d26] text-[13px] font-medium rounded-[6px] hover:bg-[#f8fafc] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 cursor-pointer"
-                    aria-label="Trang sau"
-                  >
-                    <span className="hidden sm:inline">Sau</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+            {/* Reached the end of menu */}
+            {visibleCount >= filteredProducts.length && filteredProducts.length > 0 && (
+              <div className="pt-8 pb-4 flex justify-center">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#fdf2f2] border border-[#fecdd3] text-[12px] sm:text-[13px] font-medium text-[#e31837]">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Đã hiển thị toàn bộ {filteredProducts.length} món ăn trong thực đơn. Chúc bạn ngon miệng!</span>
                 </div>
               </div>
             )}
           </div>
         )}
       </div>
+
+      {/* Floating Scroll To Top Button (Placed on left to avoid Chatbot on right) */}
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          className="fixed bottom-20 sm:bottom-6 left-4 sm:left-6 z-40 p-3 rounded-full bg-[#181d26] text-white hover:bg-[#e31837] shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer animate-in fade-in"
+          aria-label="Cuộn lên đầu trang"
+          title="Cuộn lên đầu trang"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 }

@@ -17,6 +17,7 @@ import {
 import { Product, ProductTopping } from '@/types';
 import { formatVND } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
 
 export function getAvailableToppings(product: Product): ProductTopping[] {
   if (product.toppings && Array.isArray(product.toppings) && product.toppings.length > 0) {
@@ -100,6 +101,7 @@ export default function ProductOptionsModal({
 }: ProductOptionsModalProps) {
   const router = useRouter();
   const { addToCart, setIsCartOpen } = useCart();
+  const toast = useToast();
   const [mounted, setMounted] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<ProductTopping[]>([]);
@@ -161,12 +163,19 @@ export default function ProductOptionsModal({
     setIsSubmitting(true);
     addToCart(product, quantity, selectedToppings, itemNote.trim());
 
-    // Give visual feedback, then close modal and open cart drawer
+    // Close modal and show smooth toast feedback with quick action to open cart
     setTimeout(() => {
       setIsSubmitting(false);
       onClose();
-      setIsCartOpen(true);
-    }, 300);
+      toast.success(
+        `Đã thêm ${quantity > 1 ? `${quantity}x ` : ''}${product.name} vào giỏ hàng`,
+        {
+          label: 'Xem giỏ hàng',
+          onClick: () => setIsCartOpen(true),
+        },
+        'Đã thêm vào giỏ'
+      );
+    }, 200);
   };
 
   const handleBuyNow = () => {
@@ -178,15 +187,20 @@ export default function ProductOptionsModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs transition-opacity"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs transition-opacity"
       onClick={onClose}
     >
       <div
-        className="bg-white w-full max-w-lg rounded-[16px] border border-[#dddddd] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="bg-white w-full sm:max-w-lg rounded-t-[20px] sm:rounded-[16px] border border-[#dddddd] shadow-2xl flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden animate-in fade-in slide-in-from-bottom-8 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Drag Indicator Bar */}
+        <div className="sm:hidden flex items-center justify-center pt-2.5 pb-1 bg-white">
+          <div className="w-10 h-1 bg-gray-300 rounded-full" />
+        </div>
+
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 border-b border-[#dddddd] bg-white sticky top-0 z-10">
+        <div className="p-3.5 sm:p-5 border-b border-[#dddddd] bg-white sticky top-0 z-10">
           <div className="flex items-start justify-between gap-3">
             <div className="flex gap-3.5 items-center">
               {/* Product Thumbnail */}

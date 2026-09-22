@@ -37,6 +37,15 @@ export default function Navbar() {
   const [menuDropdownOpen, setMenuDropdownOpen] = useState(false);
   const [hasUnreadSupport, setHasUnreadSupport] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number>(user?.walletBalance || 0);
+  const [isCartBumping, setIsCartBumping] = useState(false);
+
+  useEffect(() => {
+    if (totalItems > 0) {
+      setIsCartBumping(true);
+      const timer = setTimeout(() => setIsCartBumping(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [totalItems]);
 
   const menuDropdownRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -256,13 +265,17 @@ export default function Navbar() {
           {/* Cart Drawer Trigger */}
           <button
             onClick={() => setIsCartOpen(true)}
-            className="flex items-center gap-1.5 sm:gap-2 h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-lg border border-[#dddddd] hover:border-[#e31837] bg-white text-[#181d26] hover:text-[#e31837] text-[13px] font-medium transition shadow-2xs hover:bg-red-50/30 cursor-pointer"
+            className={`flex items-center gap-1.5 sm:gap-2 h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-lg border transition shadow-2xs cursor-pointer ${
+              isCartBumping
+                ? 'border-[#e31837] bg-rose-50 text-[#e31837] scale-105 shadow-md shadow-red-500/15'
+                : 'border-[#dddddd] hover:border-[#e31837] bg-white text-[#181d26] hover:text-[#e31837] hover:bg-red-50/30'
+            } text-[13px] font-medium duration-200`}
             aria-label="Giỏ hàng"
           >
-            <ShoppingBag className="w-4 h-4 text-inherit" />
+            <ShoppingBag className={`w-4 h-4 text-inherit ${isCartBumping ? 'animate-bounce' : ''}`} />
             <span className="hidden sm:inline">Giỏ hàng</span>
             {totalItems > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[18px] h-4.5 sm:min-w-[20px] sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-[11px] font-bold bg-[#e31837] text-white rounded-full">
+              <span className={`inline-flex items-center justify-center min-w-[18px] h-4.5 sm:min-w-[20px] sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-[11px] font-bold bg-[#e31837] text-white rounded-full transition-transform ${isCartBumping ? 'scale-125' : ''}`}>
                 {totalItems}
               </span>
             )}

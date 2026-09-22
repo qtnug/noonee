@@ -10,6 +10,7 @@ import AIChatBot from '@/components/AIChatBot';
 import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
+import { ToastProvider } from '@/context/ToastContext';
 
 const montserrat = Montserrat({
   subsets: ['latin', 'vietnamese'],
@@ -62,12 +63,14 @@ export default function RootLayout({
         <AuthProvider>
           <FavoritesProvider>
             <CartProvider>
-              <Navbar />
-              <main className="flex-1">{children}</main>
-              <Footer />
-              <CartDrawer />
-              <MobileBottomNav />
-              <AIChatBot />
+              <ToastProvider>
+                <Navbar />
+                <main className="flex-1">{children}</main>
+                <Footer />
+                <CartDrawer />
+                <MobileBottomNav />
+                <AIChatBot />
+              </ToastProvider>
             </CartProvider>
           </FavoritesProvider>
         </AuthProvider>

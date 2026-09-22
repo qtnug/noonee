@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -18,6 +18,15 @@ export default function MobileBottomNav() {
   const pathname = usePathname();
   const { totalItems, setIsCartOpen } = useCart();
   const { user } = useAuth();
+  const [isCartBumping, setIsCartBumping] = useState(false);
+
+  useEffect(() => {
+    if (totalItems > 0) {
+      setIsCartBumping(true);
+      const timer = setTimeout(() => setIsCartBumping(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [totalItems]);
 
   // Hide on admin pages
   if (pathname.startsWith('/admin')) {
@@ -84,12 +93,14 @@ export default function MobileBottomNav() {
         <button
           type="button"
           onClick={() => setIsCartOpen(true)}
-          className="flex flex-col items-center justify-center h-full relative text-[#6b7280] hover:text-[#e31837] transition-colors cursor-pointer"
+          className={`flex flex-col items-center justify-center h-full relative transition-all cursor-pointer ${
+            isCartBumping ? 'text-[#e31837] scale-110' : 'text-[#6b7280] hover:text-[#e31837]'
+          }`}
         >
           <div className="relative">
-            <ShoppingBag className="w-5 h-5 stroke-[1.75]" />
+            <ShoppingBag className={`w-5 h-5 ${isCartBumping ? 'stroke-[2.5] animate-bounce' : 'stroke-[1.75]'}`} />
             {totalItems > 0 && (
-              <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 text-[9px] font-extrabold bg-[#e31837] text-white rounded-full flex items-center justify-center leading-none">
+              <span className={`absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 text-[9px] font-extrabold bg-[#e31837] text-white rounded-full flex items-center justify-center leading-none transition-transform ${isCartBumping ? 'scale-125' : ''}`}>
                 {totalItems}
               </span>
             )}

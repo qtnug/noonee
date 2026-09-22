@@ -2,9 +2,11 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
-import { X, Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingBag, Truck, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { formatVND } from '@/lib/utils';
+
+const FREE_SHIPPING_THRESHOLD = 150000;
 
 export default function CartDrawer() {
   const { cart, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart, totalPrice, totalItems } = useCart();
@@ -20,6 +22,10 @@ export default function CartDrawer() {
   }, [isCartOpen]);
 
   if (!isCartOpen) return null;
+
+  const isEligibleFreeship = totalPrice >= FREE_SHIPPING_THRESHOLD;
+  const remainingForFreeship = Math.max(0, FREE_SHIPPING_THRESHOLD - totalPrice);
+  const freeshipPercent = Math.min(100, Math.round((totalPrice / FREE_SHIPPING_THRESHOLD) * 100));
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -48,6 +54,38 @@ export default function CartDrawer() {
               <X className="w-4 h-4 text-current" />
             </button>
           </div>
+
+          {/* Free Shipping Progress Bar */}
+          {cart.length > 0 && (
+            <div className="px-4 sm:px-6 py-3 bg-[#fff8f5] border-b border-[#fed7aa]/50">
+              <div className="flex items-center justify-between text-[12px] mb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Truck className="w-4 h-4 text-[#e31837] shrink-0" />
+                  {isEligibleFreeship ? (
+                    <span className="font-bold text-emerald-700 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Chúc mừng! Đơn đủ điều kiện Freeship
+                    </span>
+                  ) : (
+                    <span className="text-[#475569]">
+                      Mua thêm <strong className="text-[#e31837] font-bold">{formatVND(remainingForFreeship)}</strong> để được <strong className="text-[#0f172a]">Freeship</strong>
+                    </span>
+                  )}
+                </div>
+                <span className="text-[11px] font-bold text-[#e31837]">{freeshipPercent}%</span>
+              </div>
+              <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-500 rounded-full ${
+                    isEligibleFreeship
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                      : 'bg-gradient-to-r from-[#e31837] via-rose-500 to-amber-500'
+                  }`}
+                  style={{ width: `${freeshipPercent}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Body Items */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 divide-y divide-[#dddddd]">

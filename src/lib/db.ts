@@ -1189,7 +1189,26 @@ export async function cancelOrder(orderCode: string, cancelReason: string, allow
   };
 }
 
-export async function getAdminStats() {
+export async function getAdminStats(period: 'all' | 'today' | 'week' | 'month' | 'quarter' = 'all') {
+  let dateCondition = '1=1';
+  const now = new Date();
+  let cutoffDate: Date | null = null;
+
+  if (period === 'today') {
+    dateCondition = 'createdAt >= CAST(GETDATE() AS DATE)';
+    cutoffDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  } else if (period === 'week') {
+    dateCondition = 'createdAt >= DATEADD(day, -7, GETDATE())';
+    cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  } else if (period === 'month') {
+    dateCondition = 'createdAt >= DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)';
+    cutoffDate = new Date(now.getFullYear(), now.getMonth(), 1);
+  } else if (period === 'quarter') {
+    dateCondition = 'createdAt >= DATEADD(quarter, DATEDIFF(quarter, 0, GETDATE()), 0)';
+    const quarterMonth = Math.floor(now.getMonth() / 3) * 3;
+    cutoffDate = new Date(now.getFullYear(), quarterMonth, 1);
+  }
+
   try {
     const pool = await getCloudPool();
     if (pool) {
@@ -1198,36 +1217,114 @@ export async function getAdminStats() {
           CAST(ISNULL(SUM(CASE WHEN paymentStatus = 'Paid' THEN totalAmount ELSE 0 END), 0) AS BIGINT) AS totalRevenue,
           COUNT(*) AS totalOrders,
           COUNT(CASE WHEN status = 'Pending' THEN 1 END) AS pendingOrders,
-          COUNT(CASE WHEN status = 'Delivering' THEN 1 END) AS deliveringOrders
+          COUNT(CASE WHEN status = 'Delivering' THEN 1 END) AS deliveringOrders,
+          COUNT(CASE WHEN status = 'Completed' THEN 1 END) AS completedOrders,
+          COUNT(CASE WHEN status = 'Cancelled' THEN 1 END) AS cancelledOrders
         FROM Orders
+        WHERE ${dateCondition}
       `);
       const prodRes = await pool.request().query('SELECT COUNT(*) AS cnt FROM Products');
       const recentRes = await pool.request().query(`
         SELECT TOP 10 id, orderCode, customerName, customerPhone, CAST(totalAmount AS BIGINT) AS totalAmount, 
                paymentMethod, paymentStatus, status, createdAt
-        FROM Orders ORDER BY id DESC
+        FROM Orders 
+        WHERE ${dateCondition}
+        ORDER BY id DESC
       `);
+
+      // Orders for calculating top products
+      const allPeriodOrdersRes = await pool.request().query(`
+        SELECT id, totalAmount, paymentStatus, status, items, createdAt
+        FROM Orders
+        WHERE ${dateCondition}
+      `);
+      
+      const ordersList = allPeriodOrdersRes.recordset || [];
+      const topProductsMap: Record<string, { name: string; quantity: number; revenue: number }> = {};
+
+      ordersList.forEach((o: any) => {
+        try {
+          const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+          if (Array.isArray(items)) {
+            items.forEach((item: any) => {
+              const name = item.product?.name || item.name || 'Món ăn';
+              const qty = Number(item.quantity) || 1;
+              const price = Number(item.itemPrice || item.product?.price || 0);
+              if (!topProductsMap[name]) {
+                topProductsMap[name] = { name, quantity: 0, revenue: 0 };
+              }
+              topProductsMap[name].quantity += qty;
+              topProductsMap[name].revenue += price * qty;
+            });
+          }
+        } catch (e) {}
+      });
+
+      const topProducts = Object.values(topProductsMap)
+        .sort((a, b) => b.quantity - a.quantity)
+        .slice(0, 5);
+
+      const totalRevenue = Number(res.recordset[0]?.totalRevenue || 0);
+      const totalOrders = Number(res.recordset[0]?.totalOrders || 0);
+      const averageOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
+
       return {
         ...res.recordset[0],
-        totalProducts: prodRes.recordset[0].cnt,
-        recentOrders: recentRes.recordset || []
+        totalProducts: prodRes.recordset[0]?.cnt || 0,
+        recentOrders: recentRes.recordset || [],
+        topProducts,
+        averageOrderValue,
+        period,
       };
     }
   } catch (e) { console.error('Admin stats error:', e); }
   
-  const orders = await getOrders();
+  const allOrders = await getOrders();
   const products = await getProducts();
-  const totalRevenue = orders.reduce((sum, o) => (o.paymentStatus === 'Paid' ? sum + o.totalAmount : sum), 0);
-  const pendingOrders = orders.filter(o => o.status === 'Pending').length;
-  const deliveringOrders = orders.filter(o => o.status === 'Delivering').length;
+  const filteredOrders = cutoffDate ? allOrders.filter(o => new Date(o.createdAt) >= cutoffDate!) : allOrders;
+
+  const totalRevenue = filteredOrders.reduce((sum, o) => (o.paymentStatus === 'Paid' ? sum + o.totalAmount : sum), 0);
+  const pendingOrders = filteredOrders.filter(o => o.status === 'Pending').length;
+  const deliveringOrders = filteredOrders.filter(o => o.status === 'Delivering').length;
+  const completedOrders = filteredOrders.filter(o => o.status === 'Completed').length;
+  const cancelledOrders = filteredOrders.filter(o => o.status === 'Cancelled').length;
+  const averageOrderValue = filteredOrders.length > 0 ? Math.round(totalRevenue / filteredOrders.length) : 0;
+
+  const topProductsMap: Record<string, { name: string; quantity: number; revenue: number }> = {};
+  filteredOrders.forEach((o) => {
+    try {
+      const items = Array.isArray(o.items) ? o.items : JSON.parse(o.items as any);
+      if (Array.isArray(items)) {
+        items.forEach((item: any) => {
+          const name = item.product?.name || item.name || 'Món ăn';
+          const qty = Number(item.quantity) || 1;
+          const price = Number(item.itemPrice || item.product?.price || 0);
+          if (!topProductsMap[name]) {
+            topProductsMap[name] = { name, quantity: 0, revenue: 0 };
+          }
+          topProductsMap[name].quantity += qty;
+          topProductsMap[name].revenue += price * qty;
+        });
+      }
+    } catch (e) {}
+  });
+
+  const topProducts = Object.values(topProductsMap)
+    .sort((a, b) => b.quantity - a.quantity)
+    .slice(0, 5);
 
   return {
     totalRevenue,
-    totalOrders: orders.length,
+    totalOrders: filteredOrders.length,
     totalProducts: products.length,
     pendingOrders,
     deliveringOrders,
-    recentOrders: orders.slice(0, 5)
+    completedOrders,
+    cancelledOrders,
+    averageOrderValue,
+    topProducts,
+    recentOrders: filteredOrders.slice(0, 10),
+    period,
   };
 }
 

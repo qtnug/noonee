@@ -15,7 +15,10 @@ export async function GET(request: NextRequest) {
       throw authErr;
     }
 
-    const stats = await getAdminStats();
+    const { searchParams } = new URL(request.url);
+    const period = (searchParams.get('period') || 'all') as any;
+
+    const stats = await getAdminStats(period);
     return NextResponse.json({ success: true, data: stats });
   } catch (error: any) {
     console.error('Error fetching admin stats:', error);
