@@ -3,147 +3,98 @@
 import React from 'react';
 import Link from 'next/link';
 import {
-  Sparkles,
   ArrowRight,
-  Share2,
-  CheckCircle2,
-  Percent,
   PlusCircle,
   LogIn,
-  ShoppingBag,
 } from 'lucide-react';
+
+const MARQUEE_STEPS = [
+  { icon: '🏠', label: 'Tạo phòng nhóm' },
+  { icon: '🔗', label: 'Gửi link cho bạn' },
+  { icon: '🍜', label: 'Mọi người chọn món' },
+  { icon: '📦', label: 'Gom 1 đơn duy nhất' },
+  { icon: '🚀', label: 'Giao cùng lúc' },
+];
+
+// Duplicated for seamless infinite loop
+const ALL_STEPS = [...MARQUEE_STEPS, ...MARQUEE_STEPS];
 
 export default function GroupOrderBanner() {
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      <div className="relative overflow-hidden rounded-[20px] sm:rounded-[24px] border border-[#fecdd3] bg-gradient-to-br from-[#fff1f2] via-white to-[#fff8f8] p-6 sm:p-10 lg:p-12 shadow-sm">
-        {/* Background decorative soft circles */}
-        <div className="absolute -top-24 -right-24 w-80 h-80 bg-red-100/60 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-orange-100/50 rounded-full blur-3xl pointer-events-none" />
+    <section className="w-full bg-[#0a0a0a] relative overflow-hidden py-14 sm:py-20">
+      {/* Red glow radial backdrop */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(227,24,55,0.12) 0%, transparent 70%)',
+        }}
+      />
+      {/* Subtle noise texture */}
+      <div
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'repeat',
+          backgroundSize: '128px 128px',
+        }}
+      />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center relative z-10">
-          {/* Left Column: Headline, Highlights & Actions */}
-          <div className="lg:col-span-7 space-y-4 sm:space-y-6">
-            {/* Main Title */}
-            <div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-[#0f172a] leading-tight">
-                Đặt Món Theo Nhóm, <span className="text-[#e31837]">Gom Chung 1 Đơn</span>
-              </h2>
-              <p className="text-[14px] sm:text-[16px] text-[#475569] font-medium leading-relaxed mt-2.5 max-w-xl">
-                Tạo nhóm và gửi link cho bạn bè, đồng nghiệp tự chọn món theo khẩu vị riêng. Hệ thống tự động gom vào 1 đơn, giao cùng lúc và tiết kiệm phí ship.
-              </p>
-            </div>
+      <div className="relative z-10">
+        {/* TOP: Headline */}
+        <div className="text-center px-4 mb-10">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
+            Đặt Món Theo Nhóm,{' '}
+            <span className="text-[#e31837]">Gom Chung 1 Đơn</span>
+          </h2>
+          <p className="mt-3 text-[15px] sm:text-[16px] text-white/50 font-medium max-w-xl mx-auto leading-relaxed">
+            Tạo nhóm, gửi link cho bạn bè tự chọn món — hệ thống gom 1 đơn, giao cùng lúc, tiết kiệm phí ship.
+          </p>
+        </div>
 
-            {/* Feature Highlights Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-              <div className="p-3 bg-white/90 backdrop-blur-xs rounded-[12px] border border-red-100 shadow-2xs">
-                <div className="flex items-center gap-2 text-[#e31837] font-bold text-[13px]">
-                  <Share2 className="w-4 h-4 shrink-0" />
-                  <span>Gửi 1 link duy nhất</span>
-                </div>
-                <p className="text-[12px] text-[#475569] font-medium mt-1">
-                  Mọi người tự vào chọn món trên máy riêng
-                </p>
-              </div>
+        {/* MIDDLE: Infinite marquee */}
+        <div className="relative overflow-hidden mb-10">
+          {/* Left fade mask */}
+          <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 z-10 pointer-events-none"
+            style={{ background: 'linear-gradient(to right, #0a0a0a, transparent)' }} />
+          {/* Right fade mask */}
+          <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 z-10 pointer-events-none"
+            style={{ background: 'linear-gradient(to left, #0a0a0a, transparent)' }} />
 
-              <div className="p-3 bg-white/90 backdrop-blur-xs rounded-[12px] border border-red-100 shadow-2xs">
-                <div className="flex items-center gap-2 text-[#e31837] font-bold text-[13px]">
-                  <ShoppingBag className="w-4 h-4 shrink-0" />
-                  <span>Tự chọn khẩu vị</span>
-                </div>
-                <p className="text-[12px] text-[#475569] font-medium mt-1">
-                  Thêm topping và ghi chú riêng từng người
-                </p>
-              </div>
-
-              <div className="p-3 bg-white/90 backdrop-blur-xs rounded-[12px] border border-red-100 shadow-2xs">
-                <div className="flex items-center gap-2 text-[#e31837] font-bold text-[13px]">
-                  <Percent className="w-4 h-4 shrink-0" />
-                  <span>Tiết kiệm tối đa</span>
-                </div>
-                <p className="text-[12px] text-[#475569] font-medium mt-1">
-                  Giao cùng lúc, tiết kiệm phí vận chuyển
-                </p>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <Link
-                href="/group"
-                className="inline-flex items-center justify-center gap-2 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-bold text-[15px] px-6 py-3 rounded-[8px] shadow-sm transition group"
+          <div className="flex animate-marquee gap-4 w-max py-2">
+            {ALL_STEPS.map((step, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 bg-white/5 border border-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 shrink-0"
               >
-                <PlusCircle className="w-4 h-4" />
-                <span>Tạo phòng nhóm mới</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link
-                href="/group"
-                className="inline-flex items-center justify-center gap-2 bg-white hover:bg-rose-50/70 text-[#0f172a] hover:text-[#e31837] font-bold text-[15px] px-6 py-3 rounded-[8px] border border-[#dddddd] hover:border-[#e31837] transition"
-              >
-                <LogIn className="w-4 h-4 text-[#e31837]" />
-                <span>Tham gia bằng mã</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Right Column: Visual Mockup Showcase of Group Order */}
-          <div className="lg:col-span-5">
-            <div className="bg-white rounded-[18px] border border-red-200 p-5 sm:p-6 shadow-md relative space-y-4">
-              {/* Room Card Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-full bg-[#fff1f2] text-[#e31837] flex items-center justify-center font-bold text-[14px]">
-                    🍜
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-[#181d26] text-[14px] sm:text-[15px]">
-                      Phòng Ăn Trưa Văn Phòng
-                    </h3>
-                    <div className="flex items-center gap-2 text-[11px] text-[#9297a0]">
-                      <span>Mã: <strong className="font-mono text-[#e31837]">#NN-8823</strong></span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1 text-emerald-600 font-medium">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Đang chọn món
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <span className="px-2.5 py-1 bg-red-50 text-[#e31837] font-bold text-[12px] rounded-lg border border-red-100">
-                  5 người
-                </span>
+                <span className="text-2xl">{step.icon}</span>
+                <span className="text-white/80 font-semibold text-[14px] whitespace-nowrap">{step.label}</span>
+                {/* Arrow between steps (not after last in each set) */}
+                {(i % MARQUEE_STEPS.length) < MARQUEE_STEPS.length - 1 && (
+                  <ArrowRight className="w-4 h-4 text-[#e31837]/60 ml-1 shrink-0" />
+                )}
               </div>
-
-              {/* Members Avatars preview */}
-              <div className="flex items-center justify-between pt-1">
-                <div className="flex items-center -space-x-2 overflow-hidden">
-                  <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-blue-500 text-white font-bold text-[11px] flex items-center justify-center">
-                    HQ
-                  </div>
-                  <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-emerald-500 text-white font-bold text-[11px] flex items-center justify-center">
-                    ML
-                  </div>
-                  <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-purple-500 text-white font-bold text-[11px] flex items-center justify-center">
-                    TT
-                  </div>
-                  <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-amber-500 text-white font-bold text-[11px] flex items-center justify-center">
-                    PA
-                  </div>
-                  <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-[#e31837] text-white font-bold text-[11px] flex items-center justify-center">
-                    +1
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <span className="text-[11px] text-gray-500 block">Đã chọn: <strong>7 món</strong></span>
-                  <span className="text-[12px] font-bold text-emerald-600 flex items-center gap-1 justify-end">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Gộp chung 1 lượt giao
-                  </span>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
+        </div>
+
+        {/* BOTTOM: Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4">
+          <Link
+            href="/group"
+            className="inline-flex items-center justify-center gap-2 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-bold text-[15px] px-7 py-3.5 rounded-[12px] shadow-lg shadow-red-900/30 transition group"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Tạo phòng mới</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+          <Link
+            href="/group"
+            className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-bold text-[15px] px-7 py-3.5 rounded-[12px] backdrop-blur-sm transition"
+          >
+            <LogIn className="w-4 h-4 text-[#e31837]" />
+            <span>Tham gia bằng mã</span>
+          </Link>
         </div>
       </div>
     </section>

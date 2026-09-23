@@ -26,6 +26,8 @@ export default async function HomePage() {
     console.error('Error loading featured products:', e);
   }
 
+  const bestSellers = featuredProducts;
+
   return (
     <div className="bg-[#FFFAF0] min-h-screen relative overflow-x-hidden">
       {/* 2-Side Floating Food Elements Distributed Down the Page (Desktop only) */}
@@ -33,13 +35,22 @@ export default async function HomePage() {
 
       {/* 1. HERO BAND (Minimalist & Punchy Editorial Theme) */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#fff1f2]/60 via-[#FFFAF0] to-[#FFFAF0] border-b border-[#f0e3d6]">
+        {/* Subtle noise overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.025] pointer-events-none"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'repeat',
+            backgroundSize: '128px 128px',
+          }}
+        />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-20 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Left Content Column */}
             <div className="lg:col-span-6 space-y-4 sm:space-y-6">
               <h1 className="text-3xl sm:text-5xl lg:text-[46px] font-extrabold tracking-tight text-[#0f172a] leading-[1.15]">
                 Thưởng thức món ngon, <br className="hidden sm:inline" />
-                <span className="text-[#e31837]">chuẩn vị</span> & giao tận nơi
+                <span className="text-[#e31837]">chuẩn vị</span> &amp; giao tận nơi
               </h1>
 
               <p className="text-[15px] sm:text-[17px] text-[#475569] font-medium leading-relaxed max-w-lg">
@@ -106,13 +117,79 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 3. SIGNATURE RED BANNER */}
+      {/* 3. SIGNATURE VIETQR PROMO BANNER (full-width, self-contained) */}
       <PromoBanner />
 
-      {/* 4. GROUP ORDER BANNER (Placed above featured products) */}
+      {/* 4. BEST SELLER STRIP */}
+      {bestSellers.length > 0 && (
+        <section className="bg-[#FFFAF0] py-10 border-b border-[#f0e3d6]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Section header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a]">
+                  🔥 Bán Chạy Nhất
+                </h2>
+                <span className="px-2.5 py-1 rounded-[8px] bg-amber-400 text-[#0f0f0f] text-[12px] font-black shadow-sm">
+                  −20% VietQR
+                </span>
+              </div>
+              <Link
+                href="/menu"
+                className="text-[14px] font-bold text-[#e31837] hover:underline flex items-center gap-1 transition"
+              >
+                <span>Xem tất cả</span>
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {/* Horizontal scrollable snap strip */}
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-none"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {bestSellers.slice(0, 10).map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/menu/${product.id}`}
+                  className="group snap-start shrink-0 w-48 bg-white rounded-[14px] border border-[#f0e3d6] shadow-sm hover:shadow-md hover:border-[#e31837]/30 transition-all overflow-hidden"
+                >
+                  {/* Product image */}
+                  <div className="relative w-full h-32 bg-[#fdf5ec] overflow-hidden">
+                    {product.imageUrl ? (
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-3xl">🍜</div>
+                    )}
+                    {/* HOT badge */}
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-[6px] bg-[#e31837] text-white text-[10px] font-black shadow-sm">
+                      HOT 🔥
+                    </div>
+                  </div>
+                  {/* Product info */}
+                  <div className="p-3 space-y-1">
+                    <p className="text-[13px] font-bold text-[#0f172a] leading-tight line-clamp-2">
+                      {product.name}
+                    </p>
+                    <p className="text-[13px] font-extrabold text-[#e31837]">
+                      {typeof product.price === 'number'
+                        ? product.price.toLocaleString('vi-VN') + 'đ'
+                        : product.price}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 5. GROUP ORDER BANNER */}
       <GroupOrderBanner />
 
-      {/* 5. FEATURED PRODUCTS (2 Rows = 8 Items) */}
+      {/* 6. FEATURED PRODUCTS (2 Rows = 8 Items) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-16">
         <div className="flex items-center justify-between mb-8 pb-3 border-b border-[#dddddd]">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a]">
