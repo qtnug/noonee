@@ -2,7 +2,17 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Search, RefreshCw, Eye, CookingPot, Truck, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import {
+  CiShoppingBasket as ShoppingBag,
+  CiSearch as Search,
+  CiRedo as RefreshCw,
+  CiRead as Eye,
+  CiBowlNoodles as CookingPot,
+  CiDeliveryTruck as Truck,
+  CiCircleCheck as CheckCircle2,
+  CiCircleRemove as XCircle,
+  CiRedo as Loader2,
+} from 'react-icons/ci';
 import { Order } from '@/types';
 import { formatVND, formatDate } from '@/lib/utils';
 

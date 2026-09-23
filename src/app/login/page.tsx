@@ -3,7 +3,16 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { User, Lock, ArrowRight, Check, AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
+import {
+  CiUser as User,
+  CiLock as Lock,
+  CiCircleChevRight as ArrowRight,
+  CiCircleCheck as Check,
+  CiCircleAlert as AlertCircle,
+  CiRead as Eye,
+  CiImageOff as EyeOff,
+  CiRedo as Loader2,
+} from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
 import AddressAutocompleteInput from '@/components/AddressAutocompleteInput';
 

@@ -3,23 +3,23 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  DollarSign,
-  ShoppingBag,
-  Clock,
-  Truck,
-  ArrowRight,
-  TrendingUp,
-  UtensilsCrossed,
-  Activity,
-  CookingPot,
-  XCircle,
-  CheckCircle2,
-  Loader2,
-  Calendar,
-  Award,
-  Flame,
-  CheckCheck,
-} from 'lucide-react';
+  CiDollar as DollarSign,
+  CiShoppingBasket as ShoppingBag,
+  CiClock2 as Clock,
+  CiDeliveryTruck as Truck,
+  CiCircleChevRight as ArrowRight,
+  CiCircleChevUp as TrendingUp,
+  CiForkAndKnife as UtensilsCrossed,
+  CiWavePulse1 as Activity,
+  CiBowlNoodles as CookingPot,
+  CiCircleRemove as XCircle,
+  CiCircleCheck as CheckCircle2,
+  CiRedo as Loader2,
+  CiCalendar as Calendar,
+  CiMedal as Award,
+  CiBowlNoodles as Flame,
+  CiCircleCheck as CheckCheck,
+} from 'react-icons/ci';
 import { formatVND } from '@/lib/utils';
 import { Order } from '@/types';
 import {

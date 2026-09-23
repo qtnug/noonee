@@ -2,7 +2,14 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ArrowLeft } from 'lucide-react';
+import {
+  CiShoppingBasket as ShoppingBag,
+  CiTrash as Trash2,
+  CiCirclePlus as Plus,
+  CiCircleMinus as Minus,
+  CiCircleChevRight as ArrowRight,
+  CiCircleChevLeft as ArrowLeft,
+} from 'react-icons/ci';
 import { useCart } from '@/context/CartContext';
 import { formatVND } from '@/lib/utils';
 

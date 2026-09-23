@@ -2,16 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  MessageSquare,
-  AlertTriangle,
-  Send,
-  CheckCircle2,
-  RefreshCw,
-  User,
-  ShoppingBag,
-  Clock,
-  ArrowLeft,
-} from 'lucide-react';
+  CiChat1 as MessageSquare,
+  CiWarning as AlertTriangle,
+  CiPaperplane as Send,
+  CiCircleCheck as CheckCircle2,
+  CiRedo as RefreshCw,
+  CiUser as User,
+  CiShoppingBasket as ShoppingBag,
+  CiClock2 as Clock,
+  CiCircleChevLeft as ArrowLeft,
+} from 'react-icons/ci';
 import { SupportMessage } from '@/types';
 import { formatDate } from '@/lib/utils';
 

@@ -3,7 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, ShoppingBag, ArrowRight, User as UserIcon, ShieldAlert, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  CiSearch as Search,
+  CiShoppingBasket as ShoppingBag,
+  CiCircleChevRight as ArrowRight,
+  CiUser as UserIcon,
+  CiWarning as ShieldAlert,
+  CiCircleChevLeft as ChevronLeft,
+  CiCircleChevRight as ChevronRight,
+} from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
 import { Order } from '@/types';
 import { formatVND, formatDate } from '@/lib/utils';

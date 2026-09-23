@@ -1,7 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { CheckCircle2, AlertCircle, Info, X, ExternalLink } from 'lucide-react';
+import {
+  CiCircleCheck as CheckCircle2,
+  CiCircleAlert as AlertCircle,
+  CiCircleInfo as Info,
+  CiCircleRemove as X,
+  CiExport as ExternalLink,
+} from 'react-icons/ci';
 
 export interface ToastAction {
   label: string;

@@ -2,21 +2,21 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  Activity,
-  Database,
-  QrCode,
-  CheckCircle2,
-  RefreshCw,
-  Server,
-  Zap,
-  Globe,
-  ImageIcon,
-  Check,
-  Clock,
-  Play,
-  Loader2,
-  ShieldCheck,
-} from 'lucide-react';
+  CiWavePulse1 as Activity,
+  CiDatabase as Database,
+  CiBarcode as QrCode,
+  CiCircleCheck as CheckCircle2,
+  CiRedo as RefreshCw,
+  CiServer as Server,
+  CiStar as Zap,
+  CiGlobe as Globe,
+  CiImageOn as ImageIcon,
+  CiCircleCheck as Check,
+  CiClock2 as Clock,
+  CiPlay1 as Play,
+  CiRedo as Loader2,
+  CiCircleCheck as ShieldCheck,
+} from 'react-icons/ci';
 
 interface ApiTestItem {
   id: string;

@@ -3,22 +3,22 @@
 import React, { useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
 import {
-  Plus,
-  Edit2,
-  Trash2,
-  X,
-  Search,
-  UploadCloud,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  Download,
-  FileSpreadsheet,
-  FileUp,
-  RotateCcw,
-  Filter,
-} from 'lucide-react';
+  CiCirclePlus as Plus,
+  CiEdit as Edit2,
+  CiTrash as Trash2,
+  CiCircleRemove as X,
+  CiSearch as Search,
+  CiSaveUp1 as UploadCloud,
+  CiRedo as Loader2,
+  CiCircleCheck as CheckCircle2,
+  CiCircleAlert as AlertCircle,
+  CiClock2 as Clock,
+  CiSaveDown1 as Download,
+  CiReceipt as FileSpreadsheet,
+  CiFileOn as FileUp,
+  CiUndo as RotateCcw,
+  CiFilter as Filter,
+} from 'react-icons/ci';
 import { Product, Category, ProductTopping } from '@/types';
 import { formatVND } from '@/lib/utils';
 

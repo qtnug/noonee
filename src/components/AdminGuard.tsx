@@ -2,7 +2,14 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Lock, User as UserIcon, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import {
+  CiCircleCheck as ShieldCheck,
+  CiLock as Lock,
+  CiUser as UserIcon,
+  CiCircleAlert as AlertCircle,
+  CiCircleChevLeft as ArrowLeft,
+  CiRedo as Loader2,
+} from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
 import HypotrochoidLoader from '@/components/HypotrochoidLoader';
 

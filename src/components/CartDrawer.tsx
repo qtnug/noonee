@@ -2,7 +2,13 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
-import { X, Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
+import {
+  CiCircleRemove as X,
+  CiTrash as Trash2,
+  CiCirclePlus as Plus,
+  CiCircleMinus as Minus,
+  CiShoppingBasket as ShoppingBag,
+} from 'react-icons/ci';
 import { useCart } from '@/context/CartContext';
 import { formatVND } from '@/lib/utils';
 

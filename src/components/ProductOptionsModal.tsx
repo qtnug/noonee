@@ -4,16 +4,16 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import {
-  X,
-  Plus,
-  Minus,
-  ShoppingBag,
-  Check,
-  CheckSquare,
-  Square,
-  Sparkles,
-  Zap,
-} from 'lucide-react';
+  CiCircleRemove as X,
+  CiCirclePlus as Plus,
+  CiCircleMinus as Minus,
+  CiShoppingBasket as ShoppingBag,
+  CiCircleCheck as Check,
+  CiSquareCheck as CheckSquare,
+  CiStop1 as Square,
+  CiStar as Sparkles,
+  CiStar as Zap,
+} from 'react-icons/ci';
 import { Product, ProductTopping } from '@/types';
 import { formatVND } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';

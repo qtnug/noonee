@@ -3,7 +3,18 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, AlertTriangle, ShoppingCart, RefreshCcw, CheckCircle2, ArrowRight, Home, Sparkles, Check } from 'lucide-react';
+import {
+  CiCircleChevLeft as ArrowLeft,
+  CiRedo as Loader2,
+  CiWarning as AlertTriangle,
+  CiShoppingCart as ShoppingCart,
+  CiRedo as RefreshCcw,
+  CiCircleCheck as CheckCircle2,
+  CiCircleChevRight as ArrowRight,
+  CiHome as Home,
+  CiStar as Sparkles,
+  CiCircleCheck as Check,
+} from 'react-icons/ci';
 import VietQRCode from '@/components/VietQRCode';
 import { Order, CartItem } from '@/types';
 import { formatVND } from '@/lib/utils';

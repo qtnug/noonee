@@ -2,22 +2,22 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import {
-  Plus,
-  FolderPlus,
-  Pencil,
-  Trash2,
-  Search,
-  X,
-  Check,
-  AlertCircle,
-  Loader2,
-  Utensils,
-  Coffee,
-  Sparkles,
-  Sandwich,
-  Flame,
-  Layers,
-} from 'lucide-react';
+  CiCirclePlus as Plus,
+  CiFolderOn as FolderPlus,
+  CiEdit as Pencil,
+  CiTrash as Trash2,
+  CiSearch as Search,
+  CiCircleRemove as X,
+  CiCircleCheck as Check,
+  CiCircleAlert as AlertCircle,
+  CiRedo as Loader2,
+  CiForkAndKnife as Utensils,
+  CiCoffeeCup as Coffee,
+  CiStar as Sparkles,
+  CiBurger as Sandwich,
+  CiBowlNoodles as Flame,
+  CiGrid31 as Layers,
+} from 'react-icons/ci';
 import { Category, Product } from '@/types';
 
 const POPULAR_ICONS = [

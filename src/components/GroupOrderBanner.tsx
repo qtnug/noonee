@@ -3,10 +3,10 @@
 import React from 'react';
 import Link from 'next/link';
 import {
-  ArrowRight,
-  PlusCircle,
-  LogIn,
-} from 'lucide-react';
+  CiCircleChevRight as ArrowRight,
+  CiCirclePlus as PlusCircle,
+  CiLogin as LogIn,
+} from 'react-icons/ci';
 
 const MARQUEE_STEPS = [
   { icon: '🏠', label: 'Tạo phòng nhóm' },

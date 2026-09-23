@@ -1,7 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Star, ShieldCheck, Clock, Utensils, ChevronRight } from 'lucide-react';
+import {
+  CiStar as Star,
+  CiCircleCheck as ShieldCheck,
+  CiClock2 as Clock,
+  CiForkAndKnife as Utensils,
+  CiCircleChevRight as ChevronRight,
+} from 'react-icons/ci';
 import { getProductBySlug, getProducts } from '@/lib/db';
 import { formatVND } from '@/lib/utils';
 import ProductDetailActions from './ProductDetailActions';

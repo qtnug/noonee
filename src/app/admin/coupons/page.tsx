@@ -2,22 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Ticket,
-  Plus,
-  Trash2,
-  Copy,
-  Check,
-  RefreshCw,
-  Search,
-  Sparkles,
-  Calendar,
-  Users,
-  ShieldCheck,
-  Loader2,
-  X,
-  Shuffle,
-  AlertCircle,
-} from 'lucide-react';
+  CiDiscount1 as Ticket,
+  CiCirclePlus as Plus,
+  CiTrash as Trash2,
+  CiReceipt as Copy,
+  CiCircleCheck as Check,
+  CiRedo as RefreshCw,
+  CiSearch as Search,
+  CiStar as Sparkles,
+  CiCalendar as Calendar,
+  CiUser as Users,
+  CiCircleCheck as ShieldCheck,
+  CiRedo as Loader2,
+  CiCircleRemove as X,
+  CiShuffle as Shuffle,
+  CiCircleAlert as AlertCircle,
+} from 'react-icons/ci';
 import { Coupon } from '@/types';
 import { formatVND } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';

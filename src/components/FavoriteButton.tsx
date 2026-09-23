@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Heart } from 'lucide-react';
+import {
+  CiHeart as Heart,
+} from 'react-icons/ci';
 import { useFavorites } from '@/context/FavoritesContext';
 
 interface FavoriteButtonProps {

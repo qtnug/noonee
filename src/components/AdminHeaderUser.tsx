@@ -2,7 +2,10 @@
 
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, ExternalLink } from 'lucide-react';
+import {
+  CiLogout as LogOut,
+  CiExport as ExternalLink,
+} from 'react-icons/ci';
 import Link from 'next/link';
 
 export default function AdminHeaderUser() {

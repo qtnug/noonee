@@ -3,18 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Flame,
-  Sparkles,
-  Ticket,
-  Check,
-  ArrowRight,
-  UtensilsCrossed,
-  Coffee,
-  Sandwich,
-  Loader2,
-  Info,
-  X,
-} from 'lucide-react';
+  CiBowlNoodles as Flame,
+  CiStar as Sparkles,
+  CiDiscount1 as Ticket,
+  CiCircleCheck as Check,
+  CiCircleChevRight as ArrowRight,
+  CiForkAndKnife as UtensilsCrossed,
+  CiCoffeeCup as Coffee,
+  CiBurger as Sandwich,
+  CiRedo as Loader2,
+  CiCircleInfo as Info,
+  CiCircleRemove as X,
+} from 'react-icons/ci';
 import { Product } from '@/types';
 import { formatVND } from '@/lib/utils';
 import ProductCard from '@/components/ProductCard';

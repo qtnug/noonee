@@ -3,23 +3,23 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
-  MapPin,
-  Phone,
-  Clock,
-  Mail,
-  Send,
-  MessageSquare,
-  CheckCircle2,
-  AlertTriangle,
-  RefreshCw,
-  User,
-  ShoppingBag,
-  Sparkles,
-  Loader2,
-  HelpCircle,
-  ShieldCheck,
-  Headphones,
-} from 'lucide-react';
+  CiMapPin as MapPin,
+  CiPhone as Phone,
+  CiClock2 as Clock,
+  CiMail as Mail,
+  CiPaperplane as Send,
+  CiChat1 as MessageSquare,
+  CiCircleCheck as CheckCircle2,
+  CiWarning as AlertTriangle,
+  CiRedo as RefreshCw,
+  CiUser as User,
+  CiShoppingBasket as ShoppingBag,
+  CiStar as Sparkles,
+  CiRedo as Loader2,
+  CiCircleQuestion as HelpCircle,
+  CiCircleCheck as ShieldCheck,
+  CiHeadphones as Headphones,
+} from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
 import { SupportMessage } from '@/types';
 import { formatDate } from '@/lib/utils';

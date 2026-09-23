@@ -3,7 +3,9 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Loader2 } from 'lucide-react';
+import {
+  CiRedo as Loader2,
+} from 'react-icons/ci';
 
 export default function RegisterPage() {
   const router = useRouter();

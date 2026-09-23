@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Star, MessageSquare, CheckCircle2, Loader2, Award } from 'lucide-react';
+import {
+  CiStar as Star,
+  CiChat1 as MessageSquare,
+  CiCircleCheck as CheckCircle2,
+  CiRedo as Loader2,
+  CiMedal as Award,
+} from 'react-icons/ci';
 import { Review } from '@/types';
 import { formatDate } from '@/lib/utils';
 

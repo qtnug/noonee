@@ -2,7 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Tag, Sparkles, ArrowRight, Check } from 'lucide-react';
+import {
+  CiShoppingTag as Tag,
+  CiStar as Sparkles,
+  CiCircleChevRight as ArrowRight,
+  CiCircleCheck as Check,
+} from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
 
 export default function PromoBanner() {

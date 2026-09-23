@@ -4,19 +4,19 @@ import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
-  Search,
-  Tag,
-  UtensilsCrossed,
-  Gift,
-  Users,
-  Sparkles,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  ArrowUp,
-  Loader2,
-  CheckCircle2,
-} from 'lucide-react';
+  CiSearch as Search,
+  CiShoppingTag as Tag,
+  CiForkAndKnife as UtensilsCrossed,
+  CiGift as Gift,
+  CiUser as Users,
+  CiStar as Sparkles,
+  CiCircleChevLeft as ChevronLeft,
+  CiCircleChevRight as ChevronRight,
+  CiCircleRemove as X,
+  CiCircleChevUp as ArrowUp,
+  CiRedo as Loader2,
+  CiCircleCheck as CheckCircle2,
+} from 'react-icons/ci';
 import { motion } from 'framer-motion';
 import ProductCard from '@/components/ProductCard';
 import { Product, Category } from '@/types';

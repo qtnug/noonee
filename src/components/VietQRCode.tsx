@@ -2,7 +2,14 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Copy, Check, QrCode, AlertCircle, RefreshCw, CheckCircle2 } from 'lucide-react';
+import {
+  CiReceipt as Copy,
+  CiCircleCheck as Check,
+  CiBarcode as QrCode,
+  CiCircleAlert as AlertCircle,
+  CiRedo as RefreshCw,
+  CiCircleCheck as CheckCircle2,
+} from 'react-icons/ci';
 import { formatVND } from '@/lib/utils';
 import { getVietQRImageUrl } from '@/lib/sepay';
 

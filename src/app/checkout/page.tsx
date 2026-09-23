@@ -4,24 +4,24 @@ import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-  QrCode,
-  Banknote,
-  ShieldCheck,
-  ArrowLeft,
-  ArrowRight,
-  Loader2,
-  Tag,
-  CheckCircle,
-  ChevronDown,
-  ChevronUp,
-  Award,
-  Wallet,
-  AlertCircle,
-  Users,
-  Sparkles,
-  X,
-  Truck,
-} from 'lucide-react';
+  CiBarcode as QrCode,
+  CiMoneyBill as Banknote,
+  CiCircleCheck as ShieldCheck,
+  CiCircleChevLeft as ArrowLeft,
+  CiCircleChevRight as ArrowRight,
+  CiRedo as Loader2,
+  CiShoppingTag as Tag,
+  CiCircleCheck as CheckCircle,
+  CiCircleChevDown as ChevronDown,
+  CiCircleChevUp as ChevronUp,
+  CiMedal as Award,
+  CiWallet as Wallet,
+  CiCircleAlert as AlertCircle,
+  CiUser as Users,
+  CiStar as Sparkles,
+  CiCircleRemove as X,
+  CiDeliveryTruck as Truck,
+} from 'react-icons/ci';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatVND } from '@/lib/utils';

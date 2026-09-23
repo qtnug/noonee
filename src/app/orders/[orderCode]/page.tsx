@@ -4,24 +4,24 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ArrowLeft,
-  CheckCircle2,
-  Clock,
-  Truck,
-  CookingPot,
-  QrCode,
-  MapPin,
-  FileText,
-  Loader2,
-  MessageSquare,
-  AlertTriangle,
-  Send,
-  Star,
-  X,
-  ShieldAlert,
-  Edit3,
-  Users,
-} from 'lucide-react';
+  CiCircleChevLeft as ArrowLeft,
+  CiCircleCheck as CheckCircle2,
+  CiClock2 as Clock,
+  CiDeliveryTruck as Truck,
+  CiBowlNoodles as CookingPot,
+  CiBarcode as QrCode,
+  CiMapPin as MapPin,
+  CiFileOn as FileText,
+  CiRedo as Loader2,
+  CiChat1 as MessageSquare,
+  CiWarning as AlertTriangle,
+  CiPaperplane as Send,
+  CiStar as Star,
+  CiCircleRemove as X,
+  CiWarning as ShieldAlert,
+  CiEdit as Edit3,
+  CiUser as Users,
+} from 'react-icons/ci';
 import { Order, SupportMessage, Review } from '@/types';
 import { formatVND, formatDate } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';

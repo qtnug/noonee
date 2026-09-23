@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  MapPin,
-  Loader2,
-  X,
-  Navigation,
-} from 'lucide-react';
+  CiMapPin as MapPin,
+  CiRedo as Loader2,
+  CiCircleRemove as X,
+  CiLocationArrow1 as Navigation,
+} from 'react-icons/ci';
 import { GoongPrediction, DistanceCalculationResult } from '@/lib/goong';
 import { formatVND } from '@/lib/utils';
 

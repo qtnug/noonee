@@ -4,19 +4,19 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Users,
-  PlusCircle,
-  LogIn,
-  Sparkles,
-  Percent,
-  QrCode,
-  CheckCircle2,
-  ArrowRight,
-  ShieldCheck,
-  UtensilsCrossed,
-  Clock,
-  Loader2,
-} from 'lucide-react';
+  CiUser as Users,
+  CiCirclePlus as PlusCircle,
+  CiLogin as LogIn,
+  CiStar as Sparkles,
+  CiPercent as Percent,
+  CiBarcode as QrCode,
+  CiCircleCheck as CheckCircle2,
+  CiCircleChevRight as ArrowRight,
+  CiCircleCheck as ShieldCheck,
+  CiForkAndKnife as UtensilsCrossed,
+  CiClock2 as Clock,
+  CiRedo as Loader2,
+} from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
 
 export default function GroupOrderLandingPage() {

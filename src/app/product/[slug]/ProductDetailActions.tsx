@@ -2,7 +2,17 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Minus, ShoppingBag, Check, CheckSquare, Square, PenLine, Sparkles, ArrowRight } from 'lucide-react';
+import {
+  CiCirclePlus as Plus,
+  CiCircleMinus as Minus,
+  CiShoppingBasket as ShoppingBag,
+  CiCircleCheck as Check,
+  CiSquareCheck as CheckSquare,
+  CiStop1 as Square,
+  CiEdit as PenLine,
+  CiStar as Sparkles,
+  CiCircleChevRight as ArrowRight,
+} from 'react-icons/ci';
 import { Product, ProductTopping } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { formatVND } from '@/lib/utils';

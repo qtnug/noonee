@@ -4,19 +4,19 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Menu,
-  X,
-  ShieldCheck,
-  LayoutDashboard,
-  ShoppingBag,
-  MessageSquare,
-  UtensilsCrossed,
-  Layers,
-  Activity,
-  Ticket,
-  ArrowLeft,
-  LogOut,
-} from 'lucide-react';
+  CiMenuBurger as Menu,
+  CiCircleRemove as X,
+  CiCircleCheck as ShieldCheck,
+  CiGrid42 as LayoutDashboard,
+  CiShoppingBasket as ShoppingBag,
+  CiChat1 as MessageSquare,
+  CiForkAndKnife as UtensilsCrossed,
+  CiGrid31 as Layers,
+  CiWavePulse1 as Activity,
+  CiDiscount1 as Ticket,
+  CiCircleChevLeft as ArrowLeft,
+  CiLogout as LogOut,
+} from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
 import AdminHeaderUser from '@/components/AdminHeaderUser';
 

@@ -3,7 +3,10 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
+import {
+  CiCircleChevRight as ArrowRight,
+  CiCircleChevLeft as ArrowLeft,
+} from 'react-icons/ci';
 
 interface SideFoodItem {
   id: string;

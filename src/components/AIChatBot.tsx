@@ -3,17 +3,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
-  Sparkles,
-  X,
-  Send,
-  RotateCcw,
-  Bot,
-  User,
-  ShoppingBag,
-  ChevronDown,
-  Check,
-  Star,
-} from 'lucide-react';
+  CiStar as Sparkles,
+  CiCircleRemove as X,
+  CiPaperplane as Send,
+  CiUndo as RotateCcw,
+  CiFaceSmile as Bot,
+  CiUser as User,
+  CiShoppingBasket as ShoppingBag,
+  CiCircleChevDown as ChevronDown,
+  CiCircleCheck as Check,
+  CiStar as Star,
+} from 'react-icons/ci';
 import { Product } from '@/types';
 import { formatVND } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
