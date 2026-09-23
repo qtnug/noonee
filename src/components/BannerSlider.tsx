@@ -11,6 +11,9 @@ import {
   PlusCircle,
   LogIn,
   Flame,
+  Utensils,
+  Truck,
+  Clock,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -25,6 +28,90 @@ interface BannerSliderProps {
     price: number | string;
     imageUrl?: string;
   }[];
+}
+
+/* ─────────────────────────────────────────────
+   Slide 0 — Hero "Thưởng thức món ngon"
+───────────────────────────────────────────── */
+function SlideHero() {
+  return (
+    <div
+      className="relative w-full h-full flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12 px-6 sm:px-10 lg:px-16 py-10 sm:py-14"
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,241,242,0.18) 0%, transparent 60%)',
+      }}
+    >
+      {/* Warm glow */}
+      <div className="absolute -top-24 -left-24 w-80 h-80 bg-rose-500/8 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-amber-400/6 rounded-full blur-3xl pointer-events-none" />
+
+      {/* LEFT: Text */}
+      <div className="flex-1 space-y-5 relative z-10 text-center lg:text-left">
+        {/* Eyebrow badge */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl">
+          <span className="w-2 h-2 rounded-full bg-[#e31837] animate-pulse" />
+          <span className="text-[11px] font-bold text-white/70 uppercase tracking-widest">
+            NooNee Food
+          </span>
+        </div>
+
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.12] text-white">
+          Thưởng thức món ngon,{' '}
+          <br className="hidden sm:inline" />
+          <span
+            style={{
+              background: 'linear-gradient(135deg,#e31837 0%,#ff6b35 60%,#f59e0b 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            chuẩn vị
+          </span>{' '}
+          &amp; giao tận nơi
+        </h2>
+
+        <p className="text-[15px] text-white/55 leading-relaxed max-w-md mx-auto lg:mx-0 font-medium">
+          Bún phở, cơm tấm và đồ uống thanh mát chế biến trong ngày. Đặt món dễ dàng, luôn nóng hổi.
+        </p>
+
+        {/* CTA Buttons */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 justify-center lg:justify-start">
+          <Link
+            href="/menu"
+            className="inline-flex items-center justify-center gap-2 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-bold text-[15px] px-7 py-3.5 rounded-[12px] shadow-lg shadow-red-900/30 transition group"
+          >
+            <Utensils className="w-4 h-4" />
+            <span>Khám phá thực đơn</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+          <Link
+            href="/orders"
+            className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-bold text-[15px] px-7 py-3.5 rounded-[12px] backdrop-blur-sm transition"
+          >
+            <span>Tra cứu đơn hàng</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* RIGHT: Trust pills */}
+      <div className="flex-shrink-0 relative z-10 flex flex-col gap-3 w-full max-w-xs lg:max-w-[220px]">
+        {[
+          { icon: <Truck className="w-4 h-4" />, label: 'Giao nóng 30 phút' },
+          { icon: <Utensils className="w-4 h-4" />, label: 'Chế biến chuẩn vị' },
+          { icon: <Clock className="w-4 h-4" />, label: 'Mở cửa 06:00 – 24:00' },
+        ].map(({ icon, label }, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-3 bg-white/5 border border-white/8 backdrop-blur-sm rounded-[14px] px-4 py-3"
+          >
+            <span className="text-[#e31837]">{icon}</span>
+            <span className="text-white/75 text-[13px] font-semibold">{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 /* ─────────────────────────────────────────────
@@ -351,14 +438,14 @@ function SlideGroupOrder() {
 /* ─────────────────────────────────────────────
    Main Slider Shell
 ───────────────────────────────────────────── */
-const SLIDE_LABELS = ['VietQR −20%', '🔥 Bán Chạy', '👥 Đặt Nhóm'];
+const SLIDE_LABELS = ['🍜 Món Ngon', 'VietQR −20%', '🔥 Bán Chạy', '👥 Đặt Nhóm'];
 const AUTO_PLAY_INTERVAL = 6000;
 
 export default function BannerSlider({ bestSellers }: BannerSliderProps) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const total = 3;
+  const total = 4;
 
   const next = useCallback(() => setCurrent((c) => (c + 1) % total), []);
   const prev = useCallback(() => setCurrent((c) => (c - 1 + total) % total), []);
@@ -372,6 +459,7 @@ export default function BannerSlider({ bestSellers }: BannerSliderProps) {
   }, [paused, next]);
 
   const slides = [
+    <SlideHero key="hero" />,
     <SlideVietQR key="vietqr" />,
     <SlideBestSeller key="bestseller" products={bestSellers} />,
     <SlideGroupOrder key="group" />,
