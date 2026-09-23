@@ -1,10 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
-  ChevronLeft,
-  ChevronRight,
   ArrowRight,
   Check,
   Tag,
@@ -438,25 +436,19 @@ function SlideGroupOrder() {
 /* ─────────────────────────────────────────────
    Main Slider Shell
 ───────────────────────────────────────────── */
-const SLIDE_LABELS = ['🍜 Món Ngon', 'VietQR −20%', '🔥 Bán Chạy', '👥 Đặt Nhóm'];
 const AUTO_PLAY_INTERVAL = 6000;
 
 export default function BannerSlider({ bestSellers }: BannerSliderProps) {
   const [current, setCurrent] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const total = 4;
 
   const next = useCallback(() => setCurrent((c) => (c + 1) % total), []);
-  const prev = useCallback(() => setCurrent((c) => (c - 1 + total) % total), []);
-  const goTo = (i: number) => setCurrent(i);
 
   // Auto-play
   useEffect(() => {
-    if (paused) return;
-    timerRef.current = setInterval(next, AUTO_PLAY_INTERVAL);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [paused, next]);
+    const timer = setInterval(next, AUTO_PLAY_INTERVAL);
+    return () => clearInterval(timer);
+  }, [next]);
 
   const slides = [
     <SlideHero key="hero" />,
@@ -466,14 +458,10 @@ export default function BannerSlider({ bestSellers }: BannerSliderProps) {
   ];
 
   return (
-    <section
-      className="w-full bg-[#0f0f0f] relative overflow-hidden"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
+    <section className="w-full bg-[#0f0f0f] relative">
       {/* SVG noise */}
       <div
-        className="absolute inset-0 opacity-[0.035] pointer-events-none"
+        className="absolute inset-0 opacity-[0.035] pointer-events-none z-0"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
           backgroundRepeat: 'repeat',
@@ -481,77 +469,26 @@ export default function BannerSlider({ bestSellers }: BannerSliderProps) {
         }}
       />
 
-      {/* Slide viewport */}
-      <div className="relative overflow-hidden" style={{ minHeight: '360px' }}>
+      {/*
+        Viewport: overflow-hidden, full width.
+        Track: display grid with 4 columns each 100% wide,
+               shift left by translateX(-current * 25%)
+               because the track itself is 400% wide.
+      */}
+      <div className="overflow-hidden relative z-10">
         <div
-          className="flex transition-transform duration-500 ease-[cubic-bezier(0.77,0,0.175,1)]"
-          style={{ transform: `translateX(-${current * 100}%)`, width: `${total * 100}%` }}
+          className="grid transition-transform duration-700 ease-[cubic-bezier(0.77,0,0.175,1)]"
+          style={{
+            gridTemplateColumns: `repeat(${total}, 100%)`,
+            width: `${total * 100}%`,
+            transform: `translateX(-${(current / total) * 100}%)`,
+          }}
         >
           {slides.map((slide, i) => (
-            <div key={i} className="w-full flex-shrink-0" style={{ width: `${100 / total}%` }}>
+            <div key={i} className="w-full" style={{ minHeight: '380px' }}>
               {slide}
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Controls bar */}
-      <div className="relative z-20 flex items-center justify-between px-6 sm:px-10 lg:px-16 py-4 border-t border-white/5">
-        {/* Dot indicators + labels */}
-        <div className="flex items-center gap-2">
-          {SLIDE_LABELS.map((label, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              className={`group flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 text-[12px] font-semibold ${
-                current === i
-                  ? 'bg-white/10 border-white/20 text-white'
-                  : 'bg-transparent border-white/0 text-white/30 hover:text-white/60 hover:border-white/10'
-              }`}
-            >
-              {/* Active progress bar inside dot */}
-              <span
-                className={`relative w-2 h-2 rounded-full flex-shrink-0 transition-colors ${
-                  current === i ? 'bg-[#e31837]' : 'bg-white/20'
-                }`}
-              >
-                {current === i && (
-                  <span className="absolute inset-0 rounded-full bg-[#e31837] animate-ping opacity-60" />
-                )}
-              </span>
-              <span className="hidden sm:inline">{label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Progress bar */}
-        <div className="hidden sm:flex flex-1 mx-6 h-0.5 bg-white/5 rounded-full overflow-hidden">
-          <div
-            key={current}
-            className="h-full bg-[#e31837] rounded-full"
-            style={{
-              width: paused ? `${((current + 1) / total) * 100}%` : '0%',
-              animation: paused ? 'none' : `progressBar ${AUTO_PLAY_INTERVAL}ms linear forwards`,
-            }}
-          />
-        </div>
-
-        {/* Arrow buttons */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={prev}
-            aria-label="Slide trước"
-            className="w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white/60 hover:text-white transition-all flex items-center justify-center"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            onClick={next}
-            aria-label="Slide tiếp theo"
-            className="w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white/60 hover:text-white transition-all flex items-center justify-center"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
         </div>
       </div>
 
@@ -559,10 +496,6 @@ export default function BannerSlider({ bestSellers }: BannerSliderProps) {
         @keyframes shimmer {
           0%   { background-position: -200% center; }
           100% { background-position:  200% center; }
-        }
-        @keyframes progressBar {
-          from { width: 0%; }
-          to   { width: 100%; }
         }
       `}</style>
     </section>
