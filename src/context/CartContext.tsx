@@ -104,7 +104,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         },
       ];
     });
-    setIsCartOpen(true);
   };
 
   const removeFromCart = (cartItemId: string | number) => {
