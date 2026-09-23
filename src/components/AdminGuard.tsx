@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { ShieldCheck, Lock, User as UserIcon, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import HypotrochoidLoader from '@/components/HypotrochoidLoader';
 
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
   const { user, login, logout, isLoading } = useAuth();
@@ -16,10 +17,10 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-4">
-        <div className="flex items-center gap-3 text-[#41454d]">
-          <Loader2 className="w-6 h-6 animate-spin text-[#e31837]" />
-          <span className="text-[14px] font-medium">Đang kiểm tra quyền quản trị...</span>
-        </div>
+        <HypotrochoidLoader
+          size={110}
+          label="Đang kiểm tra quyền quản trị..."
+        />
       </div>
     );
   }
