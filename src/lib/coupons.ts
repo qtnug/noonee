@@ -16,7 +16,35 @@ export function generateRandomCouponCode(prefix: string = 'NOONEE'): string {
 }
 
 export const AVAILABLE_COUPONS: Coupon[] = [
-  // 1. New User & VietQR
+  // ── LOẠI 1: FREESHIP (giảm phí giao hàng) ──────────────────────────────────
+  {
+    code: 'FREESHIP',
+    name: 'Miễn phí giao hàng (Freeship)',
+    description: 'Miễn toàn bộ phí giao hàng cho đơn từ 120.000 ₫.',
+    discountType: 'fixed',
+    discountValue: 0, // xử lý riêng: shippingFee = 0
+    minOrderAmount: 120000,
+    badge: 'Freeship',
+    expiryDate: '2026-12-31',
+    usageLimit: 500,
+    usedCount: 162,
+    couponType: 'freeship',
+  },
+  {
+    code: 'SHIP15K',
+    name: 'Giảm 15k phí giao hàng',
+    description: 'Hỗ trợ 15.000 ₫ phí vận chuyển cho đơn từ 80.000 ₫.',
+    discountType: 'fixed',
+    discountValue: 15000,
+    minOrderAmount: 80000,
+    badge: 'Giảm ship 15k',
+    expiryDate: '2026-12-31',
+    usageLimit: 300,
+    usedCount: 88,
+    couponType: 'freeship',
+  },
+
+  // ── LOẠI 2: GIẢM ĐỒ ĂN (food_discount) ────────────────────────────────────
   {
     code: 'VIETQR20',
     name: 'Giảm 20% đơn đầu tiên bằng VietQR',
@@ -31,120 +59,10 @@ export const AVAILABLE_COUPONS: Coupon[] = [
     expiryDate: '2026-12-31',
     usageLimit: 1000,
     usedCount: 84,
+    couponType: 'food_discount',
   },
   {
-    code: 'FREESHIP',
-    name: 'Miễn phí giao hàng (Tặng 15k)',
-    description: 'Hỗ trợ 15.000 ₫ chi phí vận chuyển cho mọi đơn hàng từ 120.000 ₫.',
-    discountType: 'fixed',
-    discountValue: 15000,
-    minOrderAmount: 120000,
-    badge: 'Freeship 15k',
-    expiryDate: '2026-12-31',
-    usageLimit: 500,
-    usedCount: 162,
-  },
-
-  // 2. Đơn Cơm & Món chính độc quyền (STT 3: mã ngẫu nhiên khó đoán)
-  {
-    code: 'COM_R9X4A',
-    name: 'Độc quyền Cơm & Món chính - Giảm 20k',
-    description: 'Giảm 20.000 ₫ cho các đơn có Cơm rang, Cơm tấm, Phở bò từ 70.000 ₫.',
-    discountType: 'fixed',
-    discountValue: 20000,
-    minOrderAmount: 70000,
-    categoryExclusive: 'rice',
-    badge: 'Đơn cơm -20k',
-    expiryDate: '2026-12-31',
-    usageLimit: 200,
-    usedCount: 43,
-  },
-  {
-    code: 'COM_M82K7',
-    name: 'Độc quyền Cơm trưa NooNee - Giảm 15k',
-    description: 'Giảm 15.000 ₫ cho đơn có món Cơm & Món chính từ 50.000 ₫.',
-    discountType: 'fixed',
-    discountValue: 15000,
-    minOrderAmount: 50000,
-    categoryExclusive: 'rice',
-    badge: 'Đơn cơm -15k',
-    expiryDate: '2026-12-31',
-    usageLimit: 300,
-    usedCount: 78,
-  },
-
-  // 3. Đồ uống độc quyền (STT 3: mã ngẫu nhiên khó đoán)
-  {
-    code: 'NUOC_D7H1P',
-    name: 'Độc quyền Trà sữa & Đồ uống - Giảm 15k',
-    description: 'Giảm 15.000 ₫ cho đơn có Trà sữa, Trà đào, Cà phê hoặc Chè từ 45.000 ₫.',
-    discountType: 'fixed',
-    discountValue: 15000,
-    minOrderAmount: 45000,
-    categoryExclusive: 'drinks',
-    badge: 'Đồ uống -15k',
-    expiryDate: '2026-12-31',
-    usageLimit: 250,
-    usedCount: 56,
-  },
-  {
-    code: 'NUOC_T5W9E',
-    name: 'Tiệc Trà chiều NooNee - Giảm 25k',
-    description: 'Giảm 25.000 ₫ cho hóa đơn Đồ uống từ 80.000 ₫ trở lên.',
-    discountType: 'fixed',
-    discountValue: 25000,
-    minOrderAmount: 80000,
-    categoryExclusive: 'drinks',
-    badge: 'Đồ uống -25k',
-    expiryDate: '2026-12-31',
-    usageLimit: 150,
-    usedCount: 29,
-  },
-
-  // 4. Mã giảm phần trăm 20% - 30% - 50% (STT 3)
-  {
-    code: 'GIAM_P20X8',
-    name: 'Ưu đãi tiệc ngon - Giảm 20%',
-    description: 'Giảm 20% tối đa 35.000 ₫ cho toàn bộ thực đơn đơn từ 80.000 ₫.',
-    discountType: 'percentage',
-    discountValue: 20,
-    maxDiscountAmount: 35000,
-    minOrderAmount: 80000,
-    badge: 'Giảm 20%',
-    expiryDate: '2026-12-31',
-    usageLimit: 200,
-    usedCount: 88,
-  },
-  {
-    code: 'GIAM_P30K9',
-    name: 'Đại tiệc NooNee - Giảm 30%',
-    description: 'Giảm sâu 30% tối đa 50.000 ₫ cho hóa đơn từ 120.000 ₫.',
-    discountType: 'percentage',
-    discountValue: 30,
-    maxDiscountAmount: 50000,
-    minOrderAmount: 120000,
-    badge: 'Giảm 30%',
-    expiryDate: '2026-11-30',
-    usageLimit: 100,
-    usedCount: 61,
-  },
-  {
-    code: 'GIAM_P50Q3',
-    name: 'Siêu Deal Vàng - Giảm 50%',
-    description: 'Giảm cực lớn 50% tối đa 70.000 ₫ cho đơn hàng từ 160.000 ₫.',
-    discountType: 'percentage',
-    discountValue: 50,
-    maxDiscountAmount: 70000,
-    minOrderAmount: 160000,
-    badge: 'Siêu Deal 50%',
-    expiryDate: '2026-10-31',
-    usageLimit: 60,
-    usedCount: 37,
-  },
-
-  // 5. Mã giảm tiền mặt 10k - 20k - 30k - 50k (STT 3)
-  {
-    code: 'GIAM_10K7D',
+    code: 'GIAM10K',
     name: 'Tiết kiệm nhanh - Giảm 10k',
     description: 'Giảm ngay 10.000 ₫ cho đơn hàng từ 50.000 ₫.',
     discountType: 'fixed',
@@ -154,9 +72,10 @@ export const AVAILABLE_COUPONS: Coupon[] = [
     expiryDate: '2026-12-31',
     usageLimit: 500,
     usedCount: 145,
+    couponType: 'food_discount',
   },
   {
-    code: 'GIAM_20W4F',
+    code: 'GIAM20K',
     name: 'Ăn ngon chuẩn vị - Giảm 20k',
     description: 'Giảm ngay 20.000 ₫ cho đơn hàng từ 90.000 ₫.',
     discountType: 'fixed',
@@ -166,9 +85,10 @@ export const AVAILABLE_COUPONS: Coupon[] = [
     expiryDate: '2026-12-31',
     usageLimit: 300,
     usedCount: 112,
+    couponType: 'food_discount',
   },
   {
-    code: 'GIAM_30Z8C',
+    code: 'GIAM30K',
     name: 'Ăn no thỏa thích - Giảm 30k',
     description: 'Giảm ngay 30.000 ₫ cho đơn hàng từ 140.000 ₫.',
     discountType: 'fixed',
@@ -178,51 +98,22 @@ export const AVAILABLE_COUPONS: Coupon[] = [
     expiryDate: '2026-12-31',
     usageLimit: 200,
     usedCount: 83,
+    couponType: 'food_discount',
   },
   {
-    code: 'GIAM_50M2B',
-    name: 'Combo bạn bè - Giảm 50k',
-    description: 'Giảm ngay 50.000 ₫ cho đơn hàng từ 220.000 ₫.',
-    discountType: 'fixed',
-    discountValue: 50000,
-    minOrderAmount: 220000,
-    badge: 'Giảm 50k',
-    expiryDate: '2026-12-31',
-    usageLimit: 120,
-    usedCount: 49,
-  },
-
-  // 6. Mã độc quyền Bán Chạy (STT 11: 1 lần dùng)
-  {
-    code: 'BEST_HOT25',
-    name: 'Độc quyền Bán Chạy - Giảm 25k (1 lần dùng)',
-    description: 'Ưu đãi dành riêng cho đơn có món Best Seller từ 80.000 ₫. Mỗi khách dùng 1 lần.',
-    discountType: 'fixed',
-    discountValue: 25000,
+    code: 'GIAM20P',
+    name: 'Ưu đãi tiệc ngon - Giảm 20%',
+    description: 'Giảm 20% tối đa 35.000 ₫ cho đơn từ 80.000 ₫.',
+    discountType: 'percentage',
+    discountValue: 20,
+    maxDiscountAmount: 35000,
     minOrderAmount: 80000,
-    categoryExclusive: 'best_seller',
-    isOneTimeUse: true,
-    badge: 'Hot Deal 25k',
+    badge: 'Giảm 20%',
     expiryDate: '2026-12-31',
-    usageLimit: 150,
-    usedCount: 42,
+    usageLimit: 200,
+    usedCount: 88,
+    couponType: 'food_discount',
   },
-  {
-    code: 'BEST_HOT35',
-    name: 'Top Món Hot NooNee - Giảm 35k (1 lần dùng)',
-    description: 'Ưu đãi độc quyền cho đơn có món Bán Chạy từ 130.000 ₫. Mỗi khách dùng 1 lần.',
-    discountType: 'fixed',
-    discountValue: 35000,
-    minOrderAmount: 130000,
-    categoryExclusive: 'best_seller',
-    isOneTimeUse: true,
-    badge: 'Best Seller 35k',
-    expiryDate: '2026-12-31',
-    usageLimit: 100,
-    usedCount: 31,
-  },
-
-  // 7. Đặc quyền Hạng Thành Viên
   {
     code: 'SILVER10',
     name: 'Voucher Thành Viên Bạc - Giảm 10k',
@@ -235,6 +126,7 @@ export const AVAILABLE_COUPONS: Coupon[] = [
     expiryDate: '2026-12-31',
     usageLimit: 9999,
     usedCount: 19,
+    couponType: 'food_discount',
   },
   {
     code: 'GOLD25',
@@ -248,20 +140,7 @@ export const AVAILABLE_COUPONS: Coupon[] = [
     expiryDate: '2026-12-31',
     usageLimit: 9999,
     usedCount: 8,
-  },
-  {
-    code: 'GOLDVIP',
-    name: 'Voucher VIP Vàng - Giảm 15%',
-    description: 'Đặc quyền từ Hạng Vàng trở lên: Giảm 15% tối đa 45.000 ₫ cho đơn từ 200.000 ₫.',
-    discountType: 'percentage',
-    discountValue: 15,
-    maxDiscountAmount: 45000,
-    minOrderAmount: 200000,
-    badge: 'Từ Hạng Vàng',
-    minTier: 'Gold',
-    expiryDate: '2026-12-31',
-    usageLimit: 9999,
-    usedCount: 6,
+    couponType: 'food_discount',
   },
   {
     code: 'DIAMOND50',
@@ -275,20 +154,7 @@ export const AVAILABLE_COUPONS: Coupon[] = [
     expiryDate: '2026-12-31',
     usageLimit: 9999,
     usedCount: 3,
-  },
-  {
-    code: 'DIAMONDVIP',
-    name: 'Voucher VIP Kim Cương - Giảm 20%',
-    description: 'Đặc quyền Hạng Kim Cương: Giảm 20% tối đa 80.000 ₫ cho đơn từ 250.000 ₫.',
-    discountType: 'percentage',
-    discountValue: 20,
-    maxDiscountAmount: 80000,
-    minOrderAmount: 250000,
-    badge: 'VIP Kim Cương',
-    minTier: 'Diamond',
-    expiryDate: '2026-12-31',
-    usageLimit: 9999,
-    usedCount: 2,
+    couponType: 'food_discount',
   },
 ];
 
@@ -309,6 +175,14 @@ const TIER_VI_NAME: Record<MembershipTierName, string> = {
 // Functions to query & manage coupons
 export function getAllCoupons(): Coupon[] {
   return [...AVAILABLE_COUPONS, ...customCoupons];
+}
+
+export function getFoodDiscountCoupons(): Coupon[] {
+  return getAllCoupons().filter(c => c.couponType === 'food_discount' || !c.couponType);
+}
+
+export function getFreeshippingCoupons(): Coupon[] {
+  return getAllCoupons().filter(c => c.couponType === 'freeship');
 }
 
 export function findCouponByCode(code: string): Coupon | undefined {
@@ -480,6 +354,11 @@ export function validateCoupon(
       message: `Đơn hàng của bạn cần đạt tối thiểu ${formatVND(coupon.minOrderAmount)} để sử dụng mã này`,
       discountAmount: 0,
     };
+  }
+
+  // Freeship coupons: discountAmount = 0 (handled separately via shippingFee logic)
+  if (coupon.couponType === 'freeship' && coupon.code === 'FREESHIP') {
+    return { valid: true, discountAmount: 0, coupon };
   }
 
   let discountAmount = 0;

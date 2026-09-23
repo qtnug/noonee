@@ -113,6 +113,8 @@ export interface Coupon {
   isOneTimeUse?: boolean;
   isActive?: boolean;
   createdAt?: string;
+  /** Phân loại voucher: 'food_discount' = giảm giá đồ ăn, 'freeship' = miễn/giảm phí giao hàng */
+  couponType?: 'food_discount' | 'freeship';
 }
 
 export interface PaymentRecord {

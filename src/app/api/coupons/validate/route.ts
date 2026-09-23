@@ -3,14 +3,45 @@ import { validateCoupon } from '@/lib/coupons';
 import { hasUserPaidFirstVietqr, getUserSpendingStats } from '@/lib/db';
 import { getMembershipTier } from '@/lib/membership';
 import { authenticateRequest } from '@/lib/auth';
+import { checkRateLimit, getClientIp, getRateLimitHeaders } from '@/lib/rateLimit';
+import { verifyHoneypot, sanitizeText } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const authUser = authenticateRequest(request);
-    const { code, subtotal, paymentMethod, userId } = await request.json();
+    const ip = getClientIp(request);
+    
+    // Anti-brute-force rate limiting: max 15 coupon checks per minute per IP
+    const rateCheck = checkRateLimit(`coupon_val:${ip}`, 15, 60000);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Bạn đã kiểm tra mã giảm giá quá nhiều lần. Vui lòng chờ 1 phút trước khi thử lại.',
+        },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateCheck.limit, rateCheck.remaining, rateCheck.resetMs),
+        }
+      );
+    }
 
+    const body = await request.json();
+
+    // Honeypot bot trap check
+    const hpResult = verifyHoneypot(body, { clientIp: ip });
+    if (hpResult.isBot) {
+      return NextResponse.json(
+        { success: false, message: 'Yêu cầu bị từ chối do phát hiện bot tự động.' },
+        { status: 400 }
+      );
+    }
+
+    const { code, subtotal, paymentMethod, userId } = body;
+    const cleanCode = sanitizeText(code, 50).toUpperCase();
+
+    const authUser = authenticateRequest(request);
     const targetUserId = authUser ? authUser.userId : (userId ? Number(userId) : null);
 
     let isNewUser = true;
@@ -26,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = validateCoupon(
-      code,
+      cleanCode,
       Number(subtotal) || 0,
       paymentMethod || 'Sepay',
       isNewUser,

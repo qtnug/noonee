@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { customerName, customerPhone, deliveryAddress, notes, items, paymentMethod, couponCode, useWallet, groupCode, hp_bot_trap } = body;
+    const { customerName, customerPhone, deliveryAddress, notes, items, paymentMethod, couponCode, freeshipCouponCode, useWallet, groupCode, hp_bot_trap } = body;
 
     // Anti-bot honeypot check (STT 1)
     if (hp_bot_trap) {
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Validate Coupon
+    // Validate Food Discount Coupon
     let discountAmount = 0;
     let validCouponCode: string | null = null;
 
@@ -185,6 +185,24 @@ export async function POST(request: NextRequest) {
         discountAmount = validation.discountAmount;
         validCouponCode = validation.coupon ? validation.coupon.code : String(couponCode).toUpperCase();
         incrementCouponUsage(validCouponCode);
+      }
+    }
+
+    // Validate Freeship Coupon
+    let validFreeshipCode: string | null = null;
+    let freeshipDiscount = 0;
+    if (freeshipCouponCode) {
+      const [isFirstPaid2, spendingStats2] = await Promise.all([
+        hasUserPaidFirstVietqr(userId),
+        getUserSpendingStats(userId),
+      ]);
+      const userTier2 = getMembershipTier(spendingStats2.totalSpent).tier;
+      const isNewUser2 = !isFirstPaid2;
+      const freeshipValidation = validateCoupon(freeshipCouponCode, subtotal, paymentMethod || 'Sepay', isNewUser2, userTier2, items);
+      if (freeshipValidation.valid && freeshipValidation.coupon?.couponType === 'freeship') {
+        validFreeshipCode = freeshipValidation.coupon.code;
+        freeshipDiscount = freeshipValidation.discountAmount;
+        incrementCouponUsage(validFreeshipCode);
       }
     }
 
@@ -217,11 +235,13 @@ export async function POST(request: NextRequest) {
     }
 
     const shippingFee = typeof body.shippingFee === 'number' ? Math.max(0, Math.round(body.shippingFee)) : 0;
-    const isFreeshipCoupon = validCouponCode === 'FREESHIP';
-    const effectiveFoodDiscount = isFreeshipCoupon ? 0 : discountAmount;
-    const finalShippingFee = isFreeshipCoupon ? 0 : shippingFee;
-    
-    // Calculate total: subtotal minus discount plus shipping
+    // Apply freeship coupon to shipping fee
+    const isFullFreeship = validFreeshipCode === 'FREESHIP';
+    const effectiveShippingDiscount = isFullFreeship ? shippingFee : Math.min(shippingFee, freeshipDiscount);
+    const finalShippingFee = Math.max(0, shippingFee - effectiveShippingDiscount);
+    const effectiveFoodDiscount = discountAmount; // includes food coupon + group discount
+    // Remove unused variable
+    // Calculate total: subtotal minus all discounts plus effective shipping
     const totalBeforeWallet = Math.max(0, subtotal - effectiveFoodDiscount + finalShippingFee);
 
     // Handle Virtual Wallet Balance Deduction

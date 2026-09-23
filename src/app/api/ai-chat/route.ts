@@ -6,6 +6,8 @@ import {
   searchFoodsKeyword,
 } from '@/lib/foodMenu';
 import { Product } from '@/types';
+import { checkRateLimit, getClientIp, getRateLimitHeaders } from '@/lib/rateLimit';
+import { verifyHoneypot, sanitizeText } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +18,34 @@ interface ChatMessage {
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+
+    // Rate Limit: 15 AI chats per minute per IP
+    const rateCheck = checkRateLimit(`aichat:${ip}`, 15, 60000);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Bạn đang gửi câu hỏi quá nhanh. Vui lòng chờ 1 phút trước khi tiếp tục trò chuyện cùng AI.',
+        },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateCheck.limit, rateCheck.remaining, rateCheck.resetMs),
+        }
+      );
+    }
+
     const body = await request.json();
+
+    // Honeypot bot detection
+    const hpResult = verifyHoneypot(body, { clientIp: ip });
+    if (hpResult.isBot) {
+      return NextResponse.json(
+        { success: false, message: 'Yêu cầu bị từ chối do phát hiện bot tự động.' },
+        { status: 400 }
+      );
+    }
+
     const messages: ChatMessage[] = body.messages || [];
 
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -26,7 +55,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
+    const rawLastUserMsg = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
+    const lastUserMsg = sanitizeText(rawLastUserMsg, 500);
     const menuSummary = await getFoodMenuSummaryForPrompt();
     const allProducts = await getFoodMenuItems();
 

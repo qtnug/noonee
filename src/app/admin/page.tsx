@@ -22,6 +22,19 @@ import {
 } from 'lucide-react';
 import { formatVND } from '@/lib/utils';
 import { Order } from '@/types';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+} from 'recharts';
 
 export default function AdminOverviewPage() {
   const [stats, setStats] = useState<any>(null);
@@ -245,113 +258,183 @@ export default function AdminOverviewPage() {
         </div>
       </div>
 
-      {/* Top Best-Selling Dishes & Operating Efficiency Section */}
+      {/* ── BIỂU ĐỒ PHÂN BỔ TRẠNG THÁI ĐƠN HÀNG + TOP SẢN PHẨM ─────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Top 5 Products */}
+
+        {/* Pie Chart: Trạng thái đơn hàng */}
+        <div className="lg:col-span-5 bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-[#dddddd]">
+            <Activity className="w-4 h-4 text-[#e31837]" />
+            <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
+              Phân bổ trạng thái đơn ({periodLabels[period]})
+            </h2>
+          </div>
+
+          {stats ? (() => {
+            const pieData = [
+              { name: 'Hoàn thành', value: stats.completedOrders || 0, color: '#16a34a' },
+              { name: 'Đang giao', value: stats.deliveringOrders || 0, color: '#2563eb' },
+              { name: 'Chờ nấu', value: stats.pendingOrders || 0, color: '#f59e0b' },
+              { name: 'Đã hủy', value: stats.cancelledOrders || 0, color: '#e31837' },
+            ].filter(d => d.value > 0);
+
+            if (pieData.length === 0) {
+              return (
+                <div className="py-10 text-center text-[13px] text-[#9297a0]">
+                  Chưa có dữ liệu đơn hàng trong kỳ này
+                </div>
+              );
+            }
+
+            return (
+              <div>
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={85}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: any, name: any) => [`${value} đơn`, name]}
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #ddd', fontSize: '12px' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {pieData.map(d => (
+                    <div key={d.name} className="flex items-center gap-2 text-[12px]">
+                      <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+                      <span className="text-[#555a64]">{d.name}</span>
+                      <span className="font-bold text-[#181d26] ml-auto">{d.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })() : (
+            <div className="py-10 flex items-center justify-center">
+              <Loader2 className="w-6 h-6 animate-spin text-[#e31837]" />
+            </div>
+          )}
+        </div>
+
+        {/* Bar Chart: Top 5 sản phẩm bán chạy */}
         <div className="lg:col-span-7 bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
             <div className="flex items-center gap-2">
               <Flame className="w-4 h-4 text-[#e31837]" />
               <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
-                Món ăn bán chạy nhất ({periodLabels[period]})
+                Top 5 món bán chạy ({periodLabels[period]})
               </h2>
             </div>
-            <Link
-              href="/admin/products"
-              className="text-[12px] sm:text-[13px] font-medium text-[#e31837] hover:underline"
-            >
+            <Link href="/admin/products" className="text-[12px] sm:text-[13px] font-medium text-[#e31837] hover:underline">
               Quản lý thực đơn
             </Link>
           </div>
 
           {stats?.topProducts && stats.topProducts.length > 0 ? (
-            <div className="space-y-3">
-              {stats.topProducts.map((prod: any, idx: number) => {
-                const maxQty = stats.topProducts[0]?.quantity || 1;
-                const percent = Math.min(100, Math.round((prod.quantity / maxQty) * 100));
-
-                return (
-                  <div key={prod.name} className="space-y-1">
-                    <div className="flex items-center justify-between text-[13px]">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
-                          idx === 0 ? 'bg-amber-100 text-amber-700' :
-                          idx === 1 ? 'bg-slate-100 text-slate-700' :
-                          idx === 2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {idx + 1}
-                        </span>
-                        <span className="font-semibold text-[#0f172a] truncate">{prod.name}</span>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <span className="font-bold text-[#e31837]">{prod.quantity} phần</span>
-                        <span className="text-[11px] text-gray-400 block">{formatVND(prod.revenue)}</span>
-                      </div>
-                    </div>
-                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#e31837] to-amber-500 rounded-full transition-all duration-500"
-                        style={{ width: `${percent}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart
+                data={stats.topProducts.map((p: any) => ({ name: p.name.length > 14 ? p.name.substring(0, 14) + '…' : p.name, 'Số phần': p.quantity, revenue: p.revenue, fullName: p.name }))}
+                margin={{ top: 4, right: 8, left: -20, bottom: 4 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#555a64' }} />
+                <YAxis tick={{ fontSize: 11, fill: '#9297a0' }} allowDecimals={false} />
+                <Tooltip
+                  formatter={(value: any, name: any, props: any) => [
+                    `${value} phần`,
+                    props?.payload?.fullName || name,
+                  ]}
+                  contentStyle={{ borderRadius: '8px', border: '1px solid #ddd', fontSize: '12px' }}
+                />
+                <Bar dataKey="Số phần" fill="#e31837" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
           ) : (
-            <div className="py-8 text-center text-[13px] text-[#9297a0]">
+            <div className="py-10 text-center text-[13px] text-[#9297a0]">
               Chưa có dữ liệu món bán chạy trong kỳ này
             </div>
           )}
-        </div>
 
-        {/* Operating Efficiency Card */}
-        <div className="lg:col-span-5 bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6 space-y-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-[#006400]" />
-                <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
-                  Hiệu suất vận hành ({periodLabels[period]})
-                </h2>
-              </div>
+          {/* Danh sách chi tiết kèm doanh thu */}
+          {stats?.topProducts && stats.topProducts.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-[#f0f0f0]">
+              {stats.topProducts.slice(0, 5).map((prod: any, idx: number) => (
+                <div key={prod.name} className="flex items-center justify-between text-[12px]">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                      idx === 0 ? 'bg-amber-100 text-amber-700' :
+                      idx === 1 ? 'bg-slate-100 text-slate-700' :
+                      idx === 2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'
+                    }`}>{idx + 1}</span>
+                    <span className="text-[#0f172a] truncate font-medium">{prod.name}</span>
+                  </div>
+                  <div className="text-right shrink-0 ml-2">
+                    <span className="font-bold text-[#e31837]">{prod.quantity} phần</span>
+                    <span className="text-[10px] text-gray-400 ml-1">• {formatVND(prod.revenue)}</span>
+                  </div>
+                </div>
+              ))}
             </div>
+          )}
+        </div>
+      </div>
 
-            <div className="pt-4 space-y-3.5">
-              <div className="flex items-center justify-between text-[13px]">
-                <span className="text-gray-600">Đơn hoàn thành thành công</span>
-                <span className="font-bold text-emerald-600">
-                  {stats?.completedOrders || 0} đơn ({stats?.totalOrders ? Math.round(((stats.completedOrders || 0) / stats.totalOrders) * 100) : 0}%)
-                </span>
-              </div>
-              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 rounded-full"
-                  style={{
-                    width: `${stats?.totalOrders ? Math.min(100, Math.round(((stats.completedOrders || 0) / stats.totalOrders) * 100)) : 0}%`,
-                  }}
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-[13px] pt-1">
-                <span className="text-gray-600">Đơn đã hủy</span>
-                <span className="font-bold text-gray-500">
-                  {stats?.cancelledOrders || 0} đơn
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between text-[13px] pt-1">
-                <span className="text-gray-600">Tổng sản phẩm trên menu</span>
-                <span className="font-bold text-[#0f172a]">
-                  {stats?.totalProducts || 0} món
-                </span>
-              </div>
+      {/* Hiệu suất vận hành */}
+      <div className="bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6">
+        <div className="flex items-center gap-2 pb-3 border-b border-[#dddddd] mb-4">
+          <Activity className="w-4 h-4 text-[#006400]" />
+          <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
+            Hiệu suất vận hành ({periodLabels[period]})
+          </h2>
+          <span className="ml-auto inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <div className="flex items-center justify-between text-[13px] mb-1">
+              <span className="text-gray-600 flex items-center gap-1">
+                <CheckCheck className="w-3.5 h-3.5 text-emerald-500" /> Đơn hoàn thành
+              </span>
+              <span className="font-bold text-emerald-600">
+                {stats?.completedOrders || 0} ({stats?.totalOrders ? Math.round(((stats.completedOrders || 0) / stats.totalOrders) * 100) : 0}%)
+              </span>
+            </div>
+            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                style={{ width: `${stats?.totalOrders ? Math.min(100, Math.round(((stats.completedOrders || 0) / stats.totalOrders) * 100)) : 0}%` }}
+              />
             </div>
           </div>
-
-          <div className="pt-4 border-t border-[#dddddd] flex items-center justify-between text-[12px] text-gray-500">
-            <span>Tự động cập nhật thời gian thực</span>
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+          <div>
+            <div className="flex items-center justify-between text-[13px] mb-1">
+              <span className="text-gray-600 flex items-center gap-1">
+                <XCircle className="w-3.5 h-3.5 text-red-400" /> Đơn đã hủy
+              </span>
+              <span className="font-bold text-gray-500">{stats?.cancelledOrders || 0} đơn</span>
+            </div>
+            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-red-400 rounded-full transition-all duration-500"
+                style={{ width: `${stats?.totalOrders ? Math.min(100, Math.round(((stats.cancelledOrders || 0) / stats.totalOrders) * 100)) : 0}%` }}
+              />
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-[13px]">
+            <span className="text-gray-600 flex items-center gap-1">
+              <UtensilsCrossed className="w-3.5 h-3.5 text-[#9297a0]" /> Tổng sản phẩm
+            </span>
+            <span className="font-bold text-[#0f172a]">{stats?.totalProducts || 0} món</span>
           </div>
         </div>
       </div>

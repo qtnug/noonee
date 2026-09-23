@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import CartDrawer from '@/components/CartDrawer';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import AIChatBot from '@/components/AIChatBot';
+import HoneypotTrap from '@/components/HoneypotTrap';
 import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
@@ -70,6 +71,7 @@ export default function RootLayout({
                 <CartDrawer />
                 <MobileBottomNav />
                 <AIChatBot />
+                <HoneypotTrap />
               </ToastProvider>
             </CartProvider>
           </FavoritesProvider>

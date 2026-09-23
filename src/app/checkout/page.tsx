@@ -20,6 +20,7 @@ import {
   Users,
   Sparkles,
   X,
+  Truck,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -49,13 +50,17 @@ function CheckoutContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Coupon state
+  // Coupon state - dual coupon system: 1 food discount + 1 freeship
   const [couponInput, setCouponInput] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [discountAmount, setDiscountAmount] = useState(0);
+  const [appliedFoodCoupon, setAppliedFoodCoupon] = useState<Coupon | null>(null);
+  const [foodDiscountAmount, setFoodDiscountAmount] = useState(0);
+  const [appliedFreeshipCoupon, setAppliedFreeshipCoupon] = useState<Coupon | null>(null);
+  const [freeshipDiscountAmount, setFreeshipDiscountAmount] = useState(0);
   const [couponError, setCouponError] = useState('');
   const [couponSuccess, setCouponSuccess] = useState('');
   const [showCouponsList, setShowCouponsList] = useState(false);
+  // couponSlot tracks which slot user is currently selecting for
+  const [couponSlot, setCouponSlot] = useState<'food' | 'freeship'>('food');
   const [isNewUser, setIsNewUser] = useState(true);
   const [tierInfo, setTierInfo] = useState<MembershipTierInfo | null>(null);
   const [walletBalance, setWalletBalance] = useState<number>(0);
@@ -128,11 +133,11 @@ function CheckoutContent() {
 
   const handlePaymentMethodChange = (method: 'Sepay' | 'COD') => {
     setPaymentMethod(method);
-    if (appliedCoupon && appliedCoupon.requiresVietQR && method !== 'Sepay') {
-      setAppliedCoupon(null);
-      setDiscountAmount(0);
+    if (appliedFoodCoupon && appliedFoodCoupon.requiresVietQR && method !== 'Sepay') {
+      setAppliedFoodCoupon(null);
+      setFoodDiscountAmount(0);
       setCouponSuccess('');
-      setCouponError(`Mã ${appliedCoupon.code} chỉ áp dụng cho Chuyển khoản VietQR. Mã đã được gỡ.`);
+      setCouponError(`Mã ${appliedFoodCoupon.code} chỉ áp dụng cho Chuyển khoản VietQR. Mã đã được gỡ.`);
     }
   };
 
@@ -145,9 +150,9 @@ function CheckoutContent() {
     name: it.product.name,
   }));
 
-  // Best coupon recommendation (Item 10)
-  const sortedCouponsWithDiscount = useMemo(() => {
-    const list = getAllCoupons();
+  // Sorted food coupons with discount recommendation
+  const sortedFoodCoupons = useMemo(() => {
+    const list = getAllCoupons().filter(c => c.couponType === 'food_discount' || !c.couponType);
     return list.map((c) => {
       const check = validateCoupon(c.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
       return {
@@ -162,28 +167,66 @@ function CheckoutContent() {
     });
   }, [effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, cartProductItems]);
 
-  const bestCoupon = useMemo(() => {
-    const first = sortedCouponsWithDiscount[0];
-    if (first && first.check.valid && first.discountAmount > 0) {
-      return first;
-    }
-    return null;
-  }, [sortedCouponsWithDiscount]);
+  // Sorted freeship coupons
+  const sortedFreeshipCoupons = useMemo(() => {
+    const list = getAllCoupons().filter(c => c.couponType === 'freeship');
+    return list.map((c) => {
+      const check = validateCoupon(c.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
+      return {
+        coupon: c,
+        check,
+        discountAmount: check.valid ? check.discountAmount : 0,
+      };
+    }).sort((a, b) => {
+      if (a.check.valid && !b.check.valid) return -1;
+      if (!a.check.valid && b.check.valid) return 1;
+      return 0;
+    });
+  }, [effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, cartProductItems]);
 
-  // Test Case 3.1: Revalidate coupon if subtotal changes or drops below minimum order amount
+  // Combined sorted coupons for modal (food first, then freeship)
+  const sortedCouponsWithDiscount = useMemo(() => {
+    return [...sortedFoodCoupons, ...sortedFreeshipCoupons];
+  }, [sortedFoodCoupons, sortedFreeshipCoupons]);
+
+  const bestFoodCoupon = useMemo(() => {
+    const first = sortedFoodCoupons[0];
+    if (first && first.check.valid && first.discountAmount > 0) return first;
+    return null;
+  }, [sortedFoodCoupons]);
+
+  const bestFreeshipCoupon = useMemo(() => {
+    const first = sortedFreeshipCoupons[0];
+    if (first && first.check.valid) return first;
+    return null;
+  }, [sortedFreeshipCoupons]);
+
+  // Revalidate food coupon if subtotal changes
   useEffect(() => {
-    if (appliedCoupon && effectiveTotalPrice > 0) {
-      const recheck = validateCoupon(appliedCoupon.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
+    if (appliedFoodCoupon && effectiveTotalPrice > 0) {
+      const recheck = validateCoupon(appliedFoodCoupon.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
       if (!recheck.valid) {
-        setAppliedCoupon(null);
-        setDiscountAmount(0);
+        setAppliedFoodCoupon(null);
+        setFoodDiscountAmount(0);
         setCouponSuccess('');
-        setCouponError(`Mã giảm giá "${appliedCoupon.code}" đã bị hủy: ${recheck.message || 'Không đủ điều kiện'}`);
+        setCouponError(`Mã giảm giá "${appliedFoodCoupon.code}" đã bị hủy: ${recheck.message || 'Không đủ điều kiện'}`);
       } else {
-        setDiscountAmount(recheck.discountAmount);
+        setFoodDiscountAmount(recheck.discountAmount);
       }
     }
-  }, [effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, appliedCoupon, cart]);
+  }, [effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, appliedFoodCoupon, cart]);
+
+  // Revalidate freeship coupon if subtotal changes
+  useEffect(() => {
+    if (appliedFreeshipCoupon && effectiveTotalPrice > 0) {
+      const recheck = validateCoupon(appliedFreeshipCoupon.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
+      if (!recheck.valid) {
+        setAppliedFreeshipCoupon(null);
+        setFreeshipDiscountAmount(0);
+        setCouponError(`Mã freeship "${appliedFreeshipCoupon.code}" đã bị hủy: ${recheck.message || 'Không đủ điều kiện'}`);
+      }
+    }
+  }, [effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, appliedFreeshipCoupon, cart]);
 
   const handleApplyCoupon = (codeToApply?: string) => {
     const code = (codeToApply || couponInput).trim().toUpperCase();
@@ -201,15 +244,31 @@ function CheckoutContent() {
       return;
     }
 
-    setAppliedCoupon(res.coupon || null);
-    setDiscountAmount(res.discountAmount);
-    setCouponSuccess(`Đã áp dụng mã "${code}" thành công!`);
+    const coupon = res.coupon!;
+    const isFreeship = coupon.couponType === 'freeship';
+
+    if (isFreeship) {
+      setAppliedFreeshipCoupon(coupon);
+      setFreeshipDiscountAmount(res.discountAmount);
+      setCouponSuccess(`Đã áp dụng mã freeship "${code}" thành công!`);
+    } else {
+      setAppliedFoodCoupon(coupon);
+      setFoodDiscountAmount(res.discountAmount);
+      setCouponSuccess(`Đã áp dụng mã "${code}" thành công! Tiết kiệm ${formatVND(res.discountAmount)}`);
+    }
     setCouponInput('');
   };
 
-  const handleRemoveCoupon = () => {
-    setAppliedCoupon(null);
-    setDiscountAmount(0);
+  const handleRemoveFoodCoupon = () => {
+    setAppliedFoodCoupon(null);
+    setFoodDiscountAmount(0);
+    setCouponSuccess('');
+    setCouponError('');
+  };
+
+  const handleRemoveFreeshipCoupon = () => {
+    setAppliedFreeshipCoupon(null);
+    setFreeshipDiscountAmount(0);
     setCouponSuccess('');
     setCouponError('');
   };
@@ -221,9 +280,14 @@ function CheckoutContent() {
   const baseShippingFee = distanceData ? distanceData.shippingFee : 15000;
   const memberShippingDiscount = tierInfo ? Math.min(baseShippingFee, tierInfo.shippingDiscount) : 0;
   const shippingFeeAfterMember = Math.max(0, baseShippingFee - memberShippingDiscount);
-  const effectiveShippingFee = appliedCoupon?.code === 'FREESHIP' ? 0 : shippingFeeAfterMember;
-  const couponDiscountExcludingFreeship = appliedCoupon?.code === 'FREESHIP' ? 0 : discountAmount;
-  const totalDiscounts = couponDiscountExcludingFreeship + groupDiscountAmount;
+  // Freeship coupon: nếu mã là FREESHIP thì miễn toàn bộ, nếu mã freeship có discountValue thì giảm theo giá trị đó
+  const freeshipCouponDiscount = appliedFreeshipCoupon
+    ? (appliedFreeshipCoupon.code === 'FREESHIP'
+      ? shippingFeeAfterMember
+      : Math.min(shippingFeeAfterMember, freeshipDiscountAmount))
+    : 0;
+  const effectiveShippingFee = Math.max(0, shippingFeeAfterMember - freeshipCouponDiscount);
+  const totalDiscounts = foodDiscountAmount + (groupOrder ? (groupOrder.discountAmount || 0) : 0);
   const totalBeforeWallet = Math.max(0, effectiveTotalPrice - totalDiscounts + effectiveShippingFee);
 
   const walletDeduction = useWallet && walletBalance > 0 ? Math.min(walletBalance, totalBeforeWallet) : 0;
@@ -326,7 +390,12 @@ function CheckoutContent() {
       const currentBaseFee = currentDistanceData ? currentDistanceData.shippingFee : baseShippingFee;
       const currentMemberDisc = tierInfo ? Math.min(currentBaseFee, tierInfo.shippingDiscount) : 0;
       const currentShippingAfterMember = Math.max(0, currentBaseFee - currentMemberDisc);
-      const finalShippingFee = appliedCoupon?.code === 'FREESHIP' ? 0 : currentShippingAfterMember;
+      const currentFreeshipDisc = appliedFreeshipCoupon
+        ? (appliedFreeshipCoupon.code === 'FREESHIP'
+          ? currentShippingAfterMember
+          : Math.min(currentShippingAfterMember, freeshipDiscountAmount))
+        : 0;
+      const finalShippingFee = Math.max(0, currentShippingAfterMember - currentFreeshipDisc);
 
       const groupItems = groupOrder
         ? groupOrder.members.flatMap((m) =>
@@ -383,7 +452,8 @@ function CheckoutContent() {
         deliveryAddress: deliveryAddress.trim(),
         notes: groupOrder ? `[Đơn nhóm ${groupOrder.code}] ${notes.trim()}`.trim() : notes.trim(),
         paymentMethod: isFullyCoveredByWallet ? 'Wallet' : paymentMethod,
-        couponCode: appliedCoupon ? appliedCoupon.code : null,
+        couponCode: appliedFoodCoupon ? appliedFoodCoupon.code : null,
+        freeshipCouponCode: appliedFreeshipCoupon ? appliedFreeshipCoupon.code : null,
         groupCode: groupOrder ? groupOrder.code : null,
         shippingFee: finalShippingFee,
         useWallet: useWallet && walletDeduction > 0,
@@ -804,118 +874,141 @@ function CheckoutContent() {
                 </div>
               )}
 
-              {/* Coupon Section (STT 18: Button to open modal, rather than raw input) */}
-              <div className="pt-4 border-t border-[#fecdd3] space-y-2">
+              {/* Coupon Section - Dual: 1 Giảm đồ ăn + 1 Freeship */}
+              <div className="pt-4 border-t border-[#fecdd3] space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] font-semibold text-[#181d26] flex items-center gap-1.5">
                     <Tag className="w-4 h-4 text-[#e31837]" />
-                    <span>Mã ưu đãi & Voucher</span>
+                    <span>Mã ưu đãi</span>
                   </span>
+                  <span className="text-[11px] text-[#9297a0]">Tối đa 2 mã / đơn</span>
                 </div>
 
-                {appliedCoupon ? (
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-[8px] flex items-center justify-between gap-2 shadow-2xs">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                        <CheckCircle className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono font-bold text-emerald-900 text-[13px]">{appliedCoupon.code}</span>
-                          <span className="text-[11px] font-extrabold text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-300">
-                            -{formatVND(discountAmount)}
+                {/* Slot 1: Giảm đồ ăn */}
+                <div>
+                  <p className="text-[11px] font-bold text-[#e31837] uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                    <Tag className="w-3 h-3" /> Mã giảm đồ ăn
+                  </p>
+                  {appliedFoodCoupon ? (
+                    <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-[8px] flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <div className="min-w-0">
+                          <span className="font-mono font-bold text-emerald-900 text-[12px]">{appliedFoodCoupon.code}</span>
+                          <span className="ml-2 text-[11px] font-extrabold text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-300">
+                            -{formatVND(foodDiscountAmount)}
                           </span>
+                          <p className="text-[10px] text-emerald-700 truncate mt-0.5">{appliedFoodCoupon.name}</p>
                         </div>
-                        <p className="text-[11px] text-emerald-700 truncate">{appliedCoupon.name}</p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setShowCouponsList(true)}
-                        className="text-[12px] font-semibold text-[#e31837] hover:underline cursor-pointer"
-                      >
-                        Đổi mã
-                      </button>
-                      <span className="text-gray-300">|</span>
-                      <button
-                        type="button"
-                        onClick={handleRemoveCoupon}
-                        className="text-[12px] font-semibold text-[#64748b] hover:text-[#e31837] hover:underline cursor-pointer"
-                      >
-                        Gỡ
+                      <button type="button" onClick={handleRemoveFoodCoupon} className="p-1 text-gray-400 hover:text-red-500 cursor-pointer shrink-0" title="Gỡ mã">
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2.5">
-                    {bestCoupon && (
-                      <div className="p-3 bg-red-50/90 border border-[#fecdd3] rounded-[8px] flex items-center justify-between gap-2 shadow-2xs">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-7 h-7 rounded-full bg-[#e31837] text-white flex items-center justify-center shrink-0">
-                            <Sparkles className="w-3.5 h-3.5" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-[10px] font-extrabold uppercase bg-[#e31837] text-white px-1.5 py-0.5 rounded">Gợi ý tốt nhất</span>
-                              <span className="font-mono font-bold text-[#181d26] text-[12px]">{bestCoupon.coupon.code}</span>
+                  ) : (
+                    <div className="space-y-2">
+                      {bestFoodCoupon && (
+                        <div className="p-2.5 bg-red-50/80 border border-[#fecdd3] rounded-[8px] flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Sparkles className="w-3.5 h-3.5 text-[#e31837] shrink-0" />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1 flex-wrap">
+                                <span className="text-[9px] font-extrabold uppercase bg-[#e31837] text-white px-1 py-0.5 rounded">Gợi ý</span>
+                                <span className="font-mono font-bold text-[#181d26] text-[12px]">{bestFoodCoupon.coupon.code}</span>
+                              </div>
+                              <span className="text-[10px] text-[#006400] font-bold">Tiết kiệm {formatVND(bestFoodCoupon.discountAmount)}</span>
                             </div>
-                            <span className="text-[11px] text-[#006400] font-bold block mt-0.5">
-                              Tiết kiệm {formatVND(bestCoupon.discountAmount)} cho đơn này
-                            </span>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => handleApplyCoupon(bestFoodCoupon.coupon.code)}
+                            className="px-2.5 py-1 bg-[#e31837] hover:bg-[#be0e27] text-white text-[11px] font-bold rounded-[4px] shrink-0 cursor-pointer"
+                          >Áp dụng</button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleApplyCoupon(bestCoupon.coupon.code)}
-                          className="px-3 py-1.5 bg-[#e31837] hover:bg-[#be0e27] text-white text-[11px] font-bold rounded-[4px] shrink-0 cursor-pointer shadow-xs transition"
-                        >
-                          Áp dụng
-                        </button>
-                      </div>
-                    )}
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => { setCouponSlot('food'); setShowCouponsList(true); }}
+                        className="w-full p-2.5 bg-white hover:bg-red-50/40 border border-dashed border-[#e31837] rounded-[8px] flex items-center justify-between transition cursor-pointer"
+                      >
+                        <span className="text-[12px] font-semibold text-[#e31837]">Chọn mã giảm đồ ăn</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-[#e31837]" />
+                      </button>
+                    </div>
+                  )}
+                </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setShowCouponsList(true)}
-                      className="w-full p-3 bg-white hover:bg-red-50/40 border border-dashed border-[#e31837] rounded-[8px] flex items-center justify-between text-left transition cursor-pointer group shadow-2xs"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-[6px] bg-[#fff1f2] text-[#e31837] flex items-center justify-center shrink-0 group-hover:scale-105 transition">
-                          <Tag className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <span className="text-[13px] font-bold text-[#181d26] group-hover:text-[#e31837] transition">
-                            Chọn hoặc nhập mã ưu đãi
+                {/* Slot 2: Freeship */}
+                <div>
+                  <p className="text-[11px] font-bold text-[#2563eb] uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                    <Truck className="w-3 h-3" /> Mã Freeship (giảm phí giao)
+                  </p>
+                  {appliedFreeshipCoupon ? (
+                    <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-[8px] flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <CheckCircle className="w-4 h-4 text-blue-600 shrink-0" />
+                        <div className="min-w-0">
+                          <span className="font-mono font-bold text-blue-900 text-[12px]">{appliedFreeshipCoupon.code}</span>
+                          <span className="ml-2 text-[11px] font-extrabold text-blue-700 bg-white px-1.5 py-0.5 rounded border border-blue-300">
+                            Miễn/giảm phí ship
                           </span>
-                          <span className="text-[11px] text-[#9297a0] block">
-                            Có sẵn {getAllCoupons().length} mã giảm giá
-                          </span>
+                          <p className="text-[10px] text-blue-700 truncate mt-0.5">{appliedFreeshipCoupon.name}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 text-[#e31837] font-semibold text-[12px] shrink-0">
-                        <span>Chọn mã</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </div>
-                    </button>
-                  </div>
-                )}
+                      <button type="button" onClick={handleRemoveFreeshipCoupon} className="p-1 text-gray-400 hover:text-red-500 cursor-pointer shrink-0" title="Gỡ mã">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {bestFreeshipCoupon && (
+                        <div className="p-2.5 bg-blue-50/80 border border-blue-200 rounded-[8px] flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Truck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1 flex-wrap">
+                                <span className="text-[9px] font-extrabold uppercase bg-blue-600 text-white px-1 py-0.5 rounded">Gợi ý</span>
+                                <span className="font-mono font-bold text-[#181d26] text-[12px]">{bestFreeshipCoupon.coupon.code}</span>
+                              </div>
+                              <span className="text-[10px] text-blue-700 font-bold">Miễn phí giao hàng</span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleApplyCoupon(bestFreeshipCoupon.coupon.code)}
+                            className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-[4px] shrink-0 cursor-pointer"
+                          >Áp dụng</button>
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => { setCouponSlot('freeship'); setShowCouponsList(true); }}
+                        className="w-full p-2.5 bg-white hover:bg-blue-50/40 border border-dashed border-blue-400 rounded-[8px] flex items-center justify-between transition cursor-pointer"
+                      >
+                        <span className="text-[12px] font-semibold text-blue-600">Chọn mã freeship</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-blue-600" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Error / Success messages */}
+                {couponError && <p className="text-[12px] text-[#e31837] font-medium">{couponError}</p>}
+                {couponSuccess && !couponError && <p className="text-[12px] text-[#006400] font-medium">{couponSuccess}</p>}
 
                 {/* Voucher Modal / Dialog */}
                 {showCouponsList && (
                   <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
                     <div className="bg-white rounded-[12px] border border-[#dddddd] shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh]">
                       {/* Modal Header */}
-                      <div className="p-4 bg-gradient-to-r from-[#181d26] to-[#2c3440] text-white flex items-center justify-between">
+                      <div className={`p-4 text-white flex items-center justify-between ${couponSlot === 'freeship' ? 'bg-gradient-to-r from-blue-700 to-blue-500' : 'bg-gradient-to-r from-[#181d26] to-[#2c3440]'}`}>
                         <div className="flex items-center gap-2">
-                          <Tag className="w-4 h-4 text-[#e31837]" />
-                          <h3 className="font-bold text-[15px] text-white">Chọn hoặc nhập mã ưu đãi</h3>
+                          {couponSlot === 'freeship' ? <Truck className="w-4 h-4 text-blue-200" /> : <Tag className="w-4 h-4 text-[#e31837]" />}
+                          <h3 className="font-bold text-[15px] text-white">
+                            {couponSlot === 'freeship' ? 'Chọn mã Freeship' : 'Chọn mã giảm đồ ăn'}
+                          </h3>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setShowCouponsList(false)}
-                          className="p-1 text-gray-300 hover:text-white rounded cursor-pointer"
-                        >
+                        <button type="button" onClick={() => setShowCouponsList(false)} className="p-1 text-gray-300 hover:text-white rounded cursor-pointer">
                           <X className="w-4 h-4" />
                         </button>
                       </div>
@@ -925,7 +1018,7 @@ function CheckoutContent() {
                         {/* Custom Input Bar inside modal */}
                         <div>
                           <label className="block text-[12px] font-bold text-[#181d26] mb-1.5">
-                            Nhập mã giảm giá khác:
+                            Nhập mã {couponSlot === 'freeship' ? 'freeship' : 'giảm giá'} khác:
                           </label>
                           <div className="flex gap-2">
                             <input
@@ -938,65 +1031,62 @@ function CheckoutContent() {
                                   handleApplyCoupon();
                                 }
                               }}
-                              placeholder="Nhập mã (VD: COM_R9X4A, FREESHIP)..."
-                              className="flex-1 h-9 px-3 text-[12px] uppercase font-mono font-bold bg-[#f8fafc] border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837]"
+                              placeholder={couponSlot === 'freeship' ? 'VD: FREESHIP, SHIP15K...' : 'VD: GIAM20K, VIETQR20...'}
+                              className={`flex-1 h-9 px-3 text-[12px] uppercase font-mono font-bold bg-[#f8fafc] border rounded-[6px] focus:outline-none ${couponSlot === 'freeship' ? 'border-blue-200 focus:border-blue-500' : 'border-[#dddddd] focus:border-[#e31837]'}`}
                             />
                             <button
                               type="button"
                               onClick={() => handleApplyCoupon()}
                               disabled={!couponInput.trim()}
-                              className="h-9 px-4 bg-[#e31837] hover:bg-[#be0e27] text-white text-[12px] font-semibold rounded-[6px] transition cursor-pointer disabled:opacity-50 shrink-0"
+                              className={`h-9 px-4 text-white text-[12px] font-semibold rounded-[6px] transition cursor-pointer disabled:opacity-50 shrink-0 ${couponSlot === 'freeship' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-[#e31837] hover:bg-[#be0e27]'}`}
                             >
                               Áp dụng
                             </button>
                           </div>
-                          {couponError && (
-                            <p className="text-[12px] text-[#e31837] font-medium mt-1.5">{couponError}</p>
-                          )}
-                          {couponSuccess && !couponError && (
-                            <p className="text-[12px] text-[#006400] font-medium mt-1.5">{couponSuccess}</p>
-                          )}
+                          {couponError && <p className="text-[12px] text-[#e31837] font-medium mt-1.5">{couponError}</p>}
+                          {couponSuccess && !couponError && <p className="text-[12px] text-[#006400] font-medium mt-1.5">{couponSuccess}</p>}
                         </div>
 
-                        {/* Available Coupons List (Sorted by highest discount first) */}
+                        {/* Available Coupons List (filtered by slot) */}
                         <div className="space-y-2.5 pt-2 border-t border-[#dddddd]">
                           <span className="text-[12px] font-bold text-[#181d26] block">
-                            Mã ưu đãi có sẵn ({getAllCoupons().length}):
+                            {couponSlot === 'freeship' ? 'Mã Freeship có sẵn:' : 'Mã giảm đồ ăn có sẵn:'}
                           </span>
-                          {sortedCouponsWithDiscount.map(({ coupon: c, check, discountAmount: disc }) => {
-                            const isApplied = appliedCoupon?.code === c.code;
+                          {(couponSlot === 'freeship' ? sortedFreeshipCoupons : sortedFoodCoupons).map(({ coupon: c, check, discountAmount: disc }) => {
+                            const isFreeship = c.couponType === 'freeship';
+                            const isApplied = isFreeship
+                              ? appliedFreeshipCoupon?.code === c.code
+                              : appliedFoodCoupon?.code === c.code;
                             const isEligible = check.valid;
-                            const isHighest = isEligible && bestCoupon?.coupon.code === c.code;
+                            const isBestFood = !isFreeship && isEligible && bestFoodCoupon?.coupon.code === c.code;
 
                             return (
                               <div
                                 key={c.code}
                                 className={`p-3 rounded-[8px] border text-[12px] transition ${
                                   isApplied
-                                    ? 'border-[#006400] bg-emerald-50/70 shadow-2xs'
-                                    : isHighest
+                                    ? (isFreeship ? 'border-blue-400 bg-blue-50/70' : 'border-[#006400] bg-emerald-50/70')
+                                    : isBestFood
                                     ? 'border-[#e31837] bg-[#fff1f2]/30 shadow-xs'
                                     : isEligible
-                                    ? 'border-red-200 bg-white hover:border-[#e31837] shadow-2xs'
+                                    ? (isFreeship ? 'border-blue-200 bg-white hover:border-blue-400' : 'border-red-200 bg-white hover:border-[#e31837]')
                                     : 'border-[#dddddd] bg-[#f8fafc] opacity-75'
                                 }`}
                               >
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className="font-mono font-bold text-[13px] text-[#e31837]">{c.code}</span>
-                                    {isHighest && (
-                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#e31837] text-white font-extrabold">
-                                        Gợi ý tốt nhất
-                                      </span>
+                                    <span className={`font-mono font-bold text-[13px] ${isFreeship ? 'text-blue-700' : 'text-[#e31837]'}`}>{c.code}</span>
+                                    {isBestFood && (
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#e31837] text-white font-extrabold">Tốt nhất</span>
                                     )}
                                     {c.badge && (
-                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#fff1f2] text-[#e31837] font-bold border border-[#fecdd3]">
+                                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold border ${isFreeship ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-[#fff1f2] text-[#e31837] border-[#fecdd3]'}`}>
                                         {c.badge}
                                       </span>
                                     )}
                                   </div>
                                   {isApplied ? (
-                                    <span className="text-[#006400] font-bold text-[12px] flex items-center gap-1 shrink-0">
+                                    <span className={`font-bold text-[12px] flex items-center gap-1 shrink-0 ${isFreeship ? 'text-blue-700' : 'text-[#006400]'}`}>
                                       <CheckCircle className="w-3.5 h-3.5" /> Đang áp dụng
                                     </span>
                                   ) : (
@@ -1005,11 +1095,11 @@ function CheckoutContent() {
                                       disabled={!isEligible}
                                       onClick={() => {
                                         handleApplyCoupon(c.code);
-                                        setShowCouponsList(false);
+                                        if (isEligible) setShowCouponsList(false);
                                       }}
                                       className={`px-3 py-1.5 rounded-[4px] text-[12px] font-bold transition shrink-0 cursor-pointer ${
                                         isEligible
-                                          ? 'bg-[#e31837] text-white hover:bg-[#be0e27] shadow-xs'
+                                          ? (isFreeship ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-[#e31837] text-white hover:bg-[#be0e27]')
                                           : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                       }`}
                                     >
@@ -1020,14 +1110,13 @@ function CheckoutContent() {
                                 <p className="text-[12px] font-medium text-[#181d26] mt-1.5">{c.name}</p>
                                 <p className="text-[11px] text-[#64748b] mt-0.5">{c.description}</p>
                                 {isEligible && disc > 0 && (
-                                  <p className="text-[11px] text-[#006400] font-bold mt-1">
-                                    Tiết kiệm: -{formatVND(disc)}
-                                  </p>
+                                  <p className="text-[11px] text-[#006400] font-bold mt-1">Tiết kiệm: -{formatVND(disc)}</p>
+                                )}
+                                {isEligible && isFreeship && disc === 0 && (
+                                  <p className="text-[11px] text-blue-700 font-bold mt-1">Miễn toàn bộ phí giao hàng!</p>
                                 )}
                                 {!isEligible && (
-                                  <p className="text-[11px] text-amber-700 mt-1 font-medium italic">
-                                    * {check.message}
-                                  </p>
+                                  <p className="text-[11px] text-amber-700 mt-1 font-medium italic">* {check.message}</p>
                                 )}
                               </div>
                             );
@@ -1049,6 +1138,8 @@ function CheckoutContent() {
                   </div>
                 )}
               </div>
+
+
 
               {/* Receipt Bill Breakdown (Item 12: Món ăn -> Phí ship -> Mã giảm -> Giảm thành viên -> Tổng tiền) */}
               <div className="bg-white rounded-[8px] p-4 sm:p-5 border border-[#dddddd] space-y-3 shadow-2xs font-mono text-[13px]">
@@ -1083,37 +1174,43 @@ function CheckoutContent() {
                       <span className="text-[#16a34a] font-bold">0₫ (Miễn phí)</span>
                     ) : (
                       <span className="font-semibold text-[#181d26]">
-                        {memberShippingDiscount > 0 && appliedCoupon?.code !== 'FREESHIP'
-                          ? formatVND(baseShippingFee)
-                          : formatVND(effectiveShippingFee)}
+                        {formatVND(effectiveShippingFee)}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* 3. Mã giảm giá nếu có */}
-                {couponDiscountExcludingFreeship > 0 && (
-                  <div className="flex justify-between text-[#e31837] font-semibold">
-                    <span>Mã giảm giá ({appliedCoupon?.code}):</span>
-                    <span>-{formatVND(couponDiscountExcludingFreeship)}</span>
+                {/* 3. Mã freeship nếu có */}
+                {appliedFreeshipCoupon && freeshipCouponDiscount > 0 && (
+                  <div className="flex justify-between text-blue-700 font-semibold">
+                    <span>Mã freeship ({appliedFreeshipCoupon.code}):</span>
+                    <span>-{formatVND(freeshipCouponDiscount)}</span>
                   </div>
                 )}
 
-                {/* 4. Giảm giá thành viên / đơn nhóm nếu có */}
-                {memberShippingDiscount > 0 && appliedCoupon?.code !== 'FREESHIP' && (
+                {/* 4. Mã giảm đồ ăn nếu có */}
+                {appliedFoodCoupon && foodDiscountAmount > 0 && (
+                  <div className="flex justify-between text-[#e31837] font-semibold">
+                    <span>Mã giảm giá ({appliedFoodCoupon.code}):</span>
+                    <span>-{formatVND(foodDiscountAmount)}</span>
+                  </div>
+                )}
+
+                {/* 5. Giảm giá thành viên / đơn nhóm nếu có */}
+                {memberShippingDiscount > 0 && !appliedFreeshipCoupon && (
                   <div className="flex justify-between text-[#16a34a] font-medium">
                     <span>Ưu đãi thành viên ({tierInfo?.name}):</span>
                     <span>-{formatVND(memberShippingDiscount)}</span>
                   </div>
                 )}
-                {groupDiscountAmount > 0 && (
+                {groupOrder && (groupOrder.discountAmount || 0) > 0 && (
                   <div className="flex justify-between text-[#16a34a] font-medium">
                     <span>Giảm giá đơn nhóm ({groupOrder?.discountPercentage}%):</span>
-                    <span>-{formatVND(groupDiscountAmount)}</span>
+                    <span>-{formatVND(groupOrder.discountAmount || 0)}</span>
                   </div>
                 )}
 
-                {/* 5. Trừ ví ảo nếu có */}
+                {/* 6. Trừ ví ảo nếu có */}
                 {useWallet && walletDeduction > 0 && (
                   <div className="flex justify-between text-[#2563eb] font-semibold">
                     <span>Trừ từ số dư ví ảo:</span>
@@ -1121,7 +1218,7 @@ function CheckoutContent() {
                   </div>
                 )}
 
-                {/* 6. Tổng thanh toán */}
+                {/* 7. Tổng thanh toán */}
                 <div className="flex justify-between text-[15px] sm:text-[16px] font-extrabold text-[#181d26] pt-3 border-t border-dashed border-[#dddddd]">
                   <span>TỔNG TIỀN:</span>
                   <span className="text-[#e31837] text-lg">
@@ -1129,6 +1226,7 @@ function CheckoutContent() {
                   </span>
                 </div>
               </div>
+
 
               {isOutOfRange && (
                 <div className="p-3 bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] rounded-[8px] text-[12px] font-medium flex items-center gap-2">

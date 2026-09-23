@@ -48,6 +48,7 @@ export default function AdminCouponsPage() {
   const [categoryExclusive, setCategoryExclusive] = useState<'all' | 'rice' | 'drinks' | 'best_seller'>('all');
   const [minTier, setMinTier] = useState<string>('');
   const [isOneTimeUse, setIsOneTimeUse] = useState(false);
+  const [couponType, setCouponType] = useState<'food_discount' | 'freeship'>('food_discount');
 
   const fetchCoupons = async () => {
     try {
@@ -119,6 +120,7 @@ export default function AdminCouponsPage() {
           categoryExclusive,
           minTier: minTier || undefined,
           isOneTimeUse,
+          couponType,
         }),
       });
 
@@ -171,6 +173,7 @@ export default function AdminCouponsPage() {
     setCategoryExclusive('all');
     setMinTier('');
     setIsOneTimeUse(false);
+    setCouponType('food_discount');
     setFormError('');
   };
 
@@ -239,22 +242,22 @@ export default function AdminCouponsPage() {
 
         <div className="bg-white rounded-[10px] p-4 border border-[#dddddd] shadow-2xs space-y-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9297a0]">
-            Mã Cơm & Đồ uống
+            Mã Giảm Đồ Ăn
           </span>
-          <div className="text-xl font-bold text-[#2563eb]">
-            {coupons.filter((c) => c.categoryExclusive === 'rice' || c.categoryExclusive === 'drinks').length}
+          <div className="text-xl font-bold text-[#e31837]">
+            {coupons.filter((c) => c.couponType === 'food_discount' || !c.couponType).length}
           </div>
-          <p className="text-[11px] text-[#555a64]">Độc quyền theo ngành hàng</p>
+          <p className="text-[11px] text-[#555a64]">Giảm giá trực tiếp món ăn</p>
         </div>
 
-        <div className="bg-white rounded-[10px] p-4 border border-[#dddddd] shadow-2xs space-y-1">
+        <div className="bg-white rounded-[10px] p-4 border border-[#2563eb]/20 shadow-2xs space-y-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9297a0]">
-            Mã Bán chạy & 1 Lần
+            Mã Freeship
           </span>
-          <div className="text-xl font-bold text-amber-600">
-            {coupons.filter((c) => c.isOneTimeUse || c.categoryExclusive === 'best_seller').length}
+          <div className="text-xl font-bold text-[#2563eb]">
+            {coupons.filter((c) => c.couponType === 'freeship').length}
           </div>
-          <p className="text-[11px] text-[#555a64]">Best-seller độc quyền</p>
+          <p className="text-[11px] text-[#2563eb]">Miễn/Giảm phí giao hàng</p>
         </div>
 
         <div className="bg-white rounded-[10px] p-4 border border-[#dddddd] shadow-2xs space-y-1">
@@ -267,6 +270,7 @@ export default function AdminCouponsPage() {
           <p className="text-[11px] text-[#555a64]">Đặc quyền Bạc, Vàng, VIP</p>
         </div>
       </div>
+
 
       {/* Filter / Search Bar */}
       <div className="bg-white p-3.5 rounded-[10px] border border-[#dddddd] flex items-center justify-between gap-3">
@@ -316,16 +320,21 @@ export default function AdminCouponsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredCoupons.map((c) => {
+                  filteredCoupons.map((c) => {
                   const used = c.usedCount || 0;
                   const limit = c.usageLimit || 100;
                   const percentUsed = Math.min(100, Math.round((used / limit) * 100));
+                  const isFreeship = c.couponType === 'freeship';
 
                   return (
-                    <tr key={c.code} className="hover:bg-[#fff9f9]/50 transition">
+                    <tr key={c.code} className={`hover:bg-[#f8fafc]/80 transition ${isFreeship ? 'hover:bg-blue-50/30' : 'hover:bg-[#fff9f9]/50'}`}>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-bold text-[13px] text-[#e31837] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3]">
+                          <span className={`font-mono font-bold text-[13px] px-2 py-0.5 rounded border ${
+                            isFreeship
+                              ? 'text-blue-700 bg-blue-50 border-blue-200'
+                              : 'text-[#e31837] bg-red-50 border-[#fecdd3]'
+                          }`}>
                             {c.code}
                           </span>
                           <button
@@ -341,11 +350,22 @@ export default function AdminCouponsPage() {
                             )}
                           </button>
                         </div>
-                        {c.badge && (
-                          <span className="inline-block mt-1 text-[10px] font-semibold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">
-                            {c.badge}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1 mt-1">
+                          {isFreeship ? (
+                            <span className="inline-block text-[10px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                              🚚 Freeship
+                            </span>
+                          ) : (
+                            <span className="inline-block text-[10px] font-semibold text-[#e31837] bg-red-50 px-1.5 py-0.5 rounded border border-[#fecdd3]">
+                              🍱 Giảm đồ ăn
+                            </span>
+                          )}
+                          {c.badge && (
+                            <span className="inline-block text-[10px] font-semibold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">
+                              {c.badge}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       <td className="py-3 px-4 max-w-[220px]">
@@ -467,6 +487,35 @@ export default function AdminCouponsPage() {
                   <span>{formError}</span>
                 </div>
               )}
+
+              {/* Loại Voucher */}
+              <div className="space-y-1">
+                <label className="font-semibold text-[#181d26]">Loại voucher:</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCouponType('food_discount')}
+                    className={`h-10 px-3 rounded-[6px] border text-[12px] font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                      couponType === 'food_discount'
+                        ? 'bg-[#fff1f2] border-[#e31837] text-[#e31837]'
+                        : 'bg-white border-[#dddddd] text-[#555a64] hover:border-[#e31837]'
+                    }`}
+                  >
+                    🍱 Giảm đồ ăn
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCouponType('freeship')}
+                    className={`h-10 px-3 rounded-[6px] border text-[12px] font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                      couponType === 'freeship'
+                        ? 'bg-blue-50 border-blue-500 text-blue-700'
+                        : 'bg-white border-[#dddddd] text-[#555a64] hover:border-blue-400'
+                    }`}
+                  >
+                    🚚 Freeship
+                  </button>
+                </div>
+              </div>
 
               {/* Code Bar with Random Generator */}
               <div className="space-y-1">
