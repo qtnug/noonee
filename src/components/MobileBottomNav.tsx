@@ -4,13 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Home,
-  UtensilsCrossed,
-  Users,
-  ShoppingBag,
-  ClipboardList,
-  User,
-} from 'lucide-react';
+  CiHome,
+  CiForkAndKnife,
+  CiUser,
+  CiShoppingBasket,
+  CiReceipt,
+} from 'react-icons/ci';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -37,26 +36,26 @@ export default function MobileBottomNav() {
     {
       name: 'Trang chủ',
       href: '/',
-      icon: Home,
+      icon: CiHome,
       isActive: pathname === '/',
     },
     {
       name: 'Thực đơn',
       href: '/menu',
-      icon: UtensilsCrossed,
+      icon: CiForkAndKnife,
       isActive: pathname.startsWith('/menu'),
     },
     {
       name: 'Đơn nhóm',
       href: '/group',
-      icon: Users,
+      icon: CiUser,
       badge: '-10%',
       isActive: pathname.startsWith('/group'),
     },
     {
       name: 'Đơn hàng',
       href: '/orders',
-      icon: ClipboardList,
+      icon: CiReceipt,
       isActive: pathname.startsWith('/orders'),
     },
   ];
@@ -98,7 +97,7 @@ export default function MobileBottomNav() {
           }`}
         >
           <div className="relative">
-            <ShoppingBag className={`w-5 h-5 ${isCartBumping ? 'stroke-[2.5] animate-bounce' : 'stroke-[1.75]'}`} />
+            <CiShoppingBasket className="w-6 h-6 stroke-1" />
             {totalItems > 0 && (
               <span className={`absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 text-[9px] font-extrabold bg-[#e31837] text-white rounded-full flex items-center justify-center leading-none transition-transform ${isCartBumping ? 'scale-125' : ''}`}>
                 {totalItems}

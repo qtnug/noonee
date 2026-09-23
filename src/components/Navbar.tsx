@@ -4,25 +4,24 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  ShoppingBag,
-  User as UserIcon,
-  ShieldCheck,
-  Menu,
-  X,
-  ChevronDown,
-  Heart,
-  KeyRound,
-  LogOut,
-  Flame,
-  Users,
-  UtensilsCrossed,
-  Coffee,
-  Sandwich,
-  Phone,
-  HelpCircle,
-  Wallet,
-  Ticket,
-} from 'lucide-react';
+  CiShoppingBasket,
+  CiUser,
+  CiCircleCheck,
+  CiMenuBurger,
+  CiCircleRemove,
+  CiCircleChevDown,
+  CiHeart,
+  CiLock,
+  CiLogout,
+  CiBowlNoodles,
+  CiForkAndKnife,
+  CiCoffeeCup,
+  CiBurger,
+  CiPhone,
+  CiCircleQuestion,
+  CiWallet,
+  CiDiscount1,
+} from 'react-icons/ci';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatVND } from '@/lib/utils';
@@ -119,12 +118,12 @@ export default function Navbar() {
   }
 
   const categories = [
-    { name: 'Tất cả thực đơn', href: '/menu', icon: UtensilsCrossed, desc: 'Hơn 50+ món ngon chuẩn vị' },
-    { name: 'Cơm', href: '/menu?categoryId=1', icon: UtensilsCrossed, desc: 'Cơm rang, cơm tấm sườn' },
-    { name: 'Bún mì', href: '/menu?categoryId=4', icon: UtensilsCrossed, desc: 'Bún bò Huế, bún trộn, mì xào' },
-    { name: 'Phở', href: '/menu?categoryId=5', icon: UtensilsCrossed, desc: 'Phở bò tái nạm gia truyền' },
-    { name: 'Đồ ăn vặt', href: '/menu?categoryId=2', icon: Sandwich, desc: 'Bánh tráng trộn, khoai chiên' },
-    { name: 'Đồ uống & Tráng miệng', href: '/menu?categoryId=3', icon: Coffee, desc: 'Trà sữa, trà đào, sữa chua' },
+    { name: 'Tất cả thực đơn', href: '/menu', icon: CiForkAndKnife, desc: 'Hơn 50+ món ngon chuẩn vị' },
+    { name: 'Cơm', href: '/menu?categoryId=1', icon: CiForkAndKnife, desc: 'Cơm rang, cơm tấm sườn' },
+    { name: 'Bún mì', href: '/menu?categoryId=4', icon: CiBowlNoodles, desc: 'Bún bò Huế, bún trộn, mì xào' },
+    { name: 'Phở', href: '/menu?categoryId=5', icon: CiBowlNoodles, desc: 'Phở bò tái nạm gia truyền' },
+    { name: 'Đồ ăn vặt', href: '/menu?categoryId=2', icon: CiBurger, desc: 'Bánh tráng trộn, khoai chiên' },
+    { name: 'Đồ uống & Tráng miệng', href: '/menu?categoryId=3', icon: CiCoffeeCup, desc: 'Trà sữa, trà đào, sữa chua' },
   ];
 
   return (
@@ -140,16 +139,16 @@ export default function Navbar() {
 
           {/* Desktop Nav Links */}
           <nav className="hidden lg:flex items-center gap-1.5 text-[14px]">
-            {/* Thực đơn Dropdown */}
+            {/* Thực đơn Dropdown - Clickable Link to /menu */}
             <div
               className="relative"
               ref={menuDropdownRef}
               onMouseEnter={() => setMenuDropdownOpen(true)}
               onMouseLeave={() => setMenuDropdownOpen(false)}
             >
-              <button
-                type="button"
-                onClick={() => setMenuDropdownOpen(!menuDropdownOpen)}
+              <Link
+                href="/menu"
+                onClick={() => setMenuDropdownOpen(false)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all cursor-pointer ${
                   pathname.startsWith('/menu') && !pathname.includes('deal=true')
                     ? 'bg-red-50 text-[#e31837] font-bold'
@@ -157,12 +156,12 @@ export default function Navbar() {
                 }`}
               >
                 <span>Thực đơn</span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                <CiCircleChevDown
+                  className={`w-4 h-4 transition-transform duration-200 stroke-1 ${
                     menuDropdownOpen ? 'rotate-180 text-[#e31837]' : 'text-[#64748b]'
                   }`}
                 />
-              </button>
+              </Link>
 
               {/* Category Dropdown Menu */}
               {menuDropdownOpen && (
@@ -179,7 +178,7 @@ export default function Navbar() {
                             className="flex items-start gap-3 p-2 rounded-lg hover:bg-[#fff1f2] transition group text-left"
                           >
                             <div className="w-8 h-8 rounded-md bg-red-50 text-[#e31837] flex items-center justify-center shrink-0 group-hover:bg-[#e31837] group-hover:text-white transition">
-                              <Icon className="w-4 h-4" />
+                              <Icon className="w-5 h-5 stroke-1" />
                             </div>
                             <div>
                               <p className="text-[13px] font-bold text-[#0f172a] group-hover:text-[#e31837]">
@@ -207,7 +206,7 @@ export default function Navbar() {
                   : 'text-[#1e293b] hover:text-[#e31837] hover:bg-red-50/70 font-semibold'
               }`}
             >
-              <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
+              <CiBowlNoodles className="w-5 h-5 text-amber-500 stroke-1" />
               <span>Bán chạy</span>
             </Link>
 
@@ -220,7 +219,7 @@ export default function Navbar() {
                   : 'text-[#1e293b] hover:text-[#e31837] hover:bg-red-50/70 font-semibold'
               }`}
             >
-              <Users className="w-4 h-4 text-[#e31837]" />
+              <CiUser className="w-5 h-5 text-[#e31837] stroke-1" />
               <span>Đơn nhóm</span>
               <span className="text-[10px] font-extrabold px-1.5 py-0.5 bg-gradient-to-r from-[#e31837] to-pink-500 text-white rounded-full shadow-xs animate-pulse">
                 -10%
@@ -272,7 +271,7 @@ export default function Navbar() {
             } text-[13px] font-medium duration-200`}
             aria-label="Giỏ hàng"
           >
-            <ShoppingBag className={`w-4 h-4 text-inherit ${isCartBumping ? 'animate-bounce' : ''}`} />
+            <CiShoppingBasket className={`w-5 h-5 text-inherit stroke-1 ${isCartBumping ? 'animate-bounce' : ''}`} />
             <span className="hidden sm:inline">Giỏ hàng</span>
             {totalItems > 0 && (
               <span className={`inline-flex items-center justify-center min-w-[18px] h-4.5 sm:min-w-[20px] sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-[11px] font-bold bg-[#e31837] text-white rounded-full transition-transform ${isCartBumping ? 'scale-125' : ''}`}>
@@ -281,7 +280,7 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* User Account / Avatar Dropdown (STT 15: Displays Wallet Balance & Voucher Wallet link) */}
+          {/* User Account / Avatar Dropdown */}
           {user ? (
             <div className="relative" ref={userMenuRef}>
               <button
@@ -297,19 +296,19 @@ export default function Navbar() {
                 <span className="hidden md:inline text-[13px] font-semibold text-[#181d26] max-w-[100px] truncate">
                   {user.fullName || user.username}
                 </span>
-                <ChevronDown className="w-3.5 h-3.5 text-[#9297a0] hidden sm:inline" />
+                <CiCircleChevDown className="w-4 h-4 text-[#9297a0] hidden sm:inline stroke-1" />
               </button>
 
               {userMenuOpen && (
                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-[#dddddd] py-2 z-50 text-[13px] divide-y divide-[#f0f0f0] animate-in fade-in slide-in-from-top-1 duration-150">
-                  {/* User Info & Wallet Balance Header (STT 15) */}
+                  {/* User Info & Wallet Balance Header */}
                   <div className="px-4 py-3 bg-gradient-to-r from-red-50/80 via-white to-amber-50/50">
                     <p className="font-semibold text-[#181d26] text-[14px] truncate">{user.fullName}</p>
                     <p className="text-[12px] text-[#9297a0] truncate">@{user.username}</p>
 
                     <div className="mt-2.5 pt-2 border-t border-red-100 flex items-center justify-between">
                       <span className="text-[12px] text-[#555a64] flex items-center gap-1 font-medium">
-                        <Wallet className="w-3.5 h-3.5 text-[#e31837]" />
+                        <CiWallet className="w-4 h-4 text-[#e31837] stroke-1" />
                         Số dư ví:
                       </span>
                       <span className="text-[13px] font-bold text-[#e31837]">
@@ -324,17 +323,17 @@ export default function Navbar() {
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#e31837] transition font-medium"
                     >
-                      <UserIcon className="w-4 h-4 text-[#e31837]" />
+                      <CiUser className="w-4 h-4 text-[#e31837] stroke-1" />
                       <span>Hồ sơ & Hạng thành viên</span>
                     </Link>
 
-                    {/* Kho Voucher (STT 1) */}
+                    {/* Kho Voucher */}
                     <Link
                       href="/profile?tab=vouchers"
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#e31837] transition font-medium"
                     >
-                      <Ticket className="w-4 h-4 text-[#e31837]" />
+                      <CiDiscount1 className="w-4 h-4 text-[#e31837] stroke-1" />
                       <div className="flex items-center justify-between w-full">
                         <span>Kho Voucher của tôi</span>
                         <span className="text-[10px] font-bold px-1.5 py-0.2 bg-red-100 text-[#e31837] rounded-full">
@@ -348,7 +347,7 @@ export default function Navbar() {
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#e31837] transition font-medium"
                     >
-                      <Heart className="w-4 h-4 text-[#e31837]" />
+                      <CiHeart className="w-4 h-4 text-[#e31837] stroke-1" />
                       <span>Món ăn yêu thích</span>
                     </Link>
 
@@ -357,7 +356,7 @@ export default function Navbar() {
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#e31837] transition font-medium"
                     >
-                      <KeyRound className="w-4 h-4 text-[#e31837]" />
+                      <CiLock className="w-4 h-4 text-[#e31837] stroke-1" />
                       <span>Đổi mật khẩu</span>
                     </Link>
 
@@ -366,7 +365,7 @@ export default function Navbar() {
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#e31837] transition font-medium"
                     >
-                      <ShoppingBag className="w-4 h-4 text-[#e31837]" />
+                      <CiShoppingBasket className="w-4 h-4 text-[#e31837] stroke-1" />
                       <span>Đơn hàng của tôi</span>
                     </Link>
 
@@ -376,7 +375,7 @@ export default function Navbar() {
                         onClick={() => setUserMenuOpen(false)}
                         className="flex items-center gap-2.5 px-4 py-2 text-[#e31837] hover:bg-[#fff1f2] transition font-semibold border-t border-[#f1f5f9] mt-1 pt-2"
                       >
-                        <ShieldCheck className="w-4 h-4 text-[#e31837]" />
+                        <CiCircleCheck className="w-4 h-4 text-[#e31837] stroke-1" />
                         <span>Trang quản trị (Admin)</span>
                       </Link>
                     )}
@@ -391,7 +390,7 @@ export default function Navbar() {
                       }}
                       className="w-full text-left flex items-center gap-2.5 px-4 py-2 text-[#e31837] hover:bg-[#fff1f2] font-medium transition cursor-pointer"
                     >
-                      <LogOut className="w-4 h-4" />
+                      <CiLogout className="w-4 h-4 stroke-1" />
                       <span>Đăng xuất</span>
                     </button>
                   </div>
@@ -403,7 +402,7 @@ export default function Navbar() {
               href="/login"
               className="inline-flex items-center gap-1.5 h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-lg text-[13px] text-[#333840] hover:text-[#e31837] hover:bg-red-50/60 font-medium transition"
             >
-              <UserIcon className="w-4 h-4" />
+              <CiUser className="w-4 h-4 stroke-1" />
               <span className="hidden sm:inline">Đăng nhập</span>
             </Link>
           )}
@@ -422,7 +421,7 @@ export default function Navbar() {
             className="lg:hidden p-1.5 sm:p-2 text-[#0f172a] hover:text-[#e31837] rounded-lg hover:bg-gray-100 transition relative"
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileMenuOpen ? <CiCircleRemove className="w-6 h-6 stroke-1" /> : <CiMenuBurger className="w-5 h-5 stroke-1" />}
             {hasUnreadSupport && (
               <span className="w-2 h-2 rounded-full bg-[#e31837] ring-2 ring-white absolute top-1 right-1 animate-pulse" />
             )}
@@ -440,7 +439,7 @@ export default function Navbar() {
               className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#e31837] transition"
             >
               <span className="flex items-center gap-2">
-                <UtensilsCrossed className="w-4 h-4 text-[#e31837]" />
+                <CiForkAndKnife className="w-5 h-5 text-[#e31837] stroke-1" />
                 Tất cả thực đơn
               </span>
             </Link>
@@ -490,7 +489,7 @@ export default function Navbar() {
               className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#e31837] transition"
             >
               <span className="flex items-center gap-2">
-                <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
+                <CiBowlNoodles className="w-5 h-5 text-amber-500 stroke-1" />
                 Món bán chạy
               </span>
               <span className="text-[10px] font-bold px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded">
@@ -504,7 +503,7 @@ export default function Navbar() {
               className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#e31837] transition"
             >
               <span className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#e31837]" />
+                <CiUser className="w-5 h-5 text-[#e31837] stroke-1" />
                 Đặt đơn nhóm
               </span>
               <span className="text-[10px] font-extrabold px-2 py-0.5 bg-[#e31837] text-white rounded-full">
@@ -518,7 +517,7 @@ export default function Navbar() {
               className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#e31837] transition"
             >
               <span className="flex items-center gap-2">
-                <ShoppingBag className="w-4 h-4 text-[#e31837]" />
+                <CiShoppingBasket className="w-5 h-5 text-[#e31837] stroke-1" />
                 Tra cứu đơn hàng
               </span>
             </Link>
@@ -530,7 +529,7 @@ export default function Navbar() {
               className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#e31837] transition"
             >
               <span className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-[#e31837]" />
+                <CiPhone className="w-5 h-5 text-[#e31837] stroke-1" />
                 Liên hệ & CSKH
               </span>
               {hasUnreadSupport && (
@@ -539,13 +538,13 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* User Info & Wallet in Mobile (STT 15) */}
+          {/* User Info & Wallet in Mobile */}
           {user ? (
             <div className="pt-3 border-t border-[#dddddd] space-y-2">
               <div className="px-2 py-2 bg-red-50/70 rounded-[8px] flex items-center justify-between text-[13px]">
                 <span className="text-[#555a64] flex items-center gap-1.5">
-                  <Wallet className="w-4 h-4 text-[#e31837]" />
-                  Số dư ví ảo:
+                  <CiWallet className="w-4 h-4 text-[#e31837] stroke-1" />
+                  Số dư ví:
                 </span>
                 <strong className="text-[#e31837] font-bold">{formatVND(walletBalance)}</strong>
               </div>
@@ -555,7 +554,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-2 py-2 px-2.5 rounded-lg text-[13px] font-medium text-[#181d26] hover:bg-red-50"
               >
-                <UserIcon className="w-4 h-4 text-[#e31837]" />
+                <CiUser className="w-4 h-4 text-[#e31837] stroke-1" />
                 <span>Hồ sơ & Hạng thành viên</span>
               </Link>
 
@@ -564,7 +563,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-2 py-2 px-2.5 rounded-lg text-[13px] font-medium text-[#e31837] hover:bg-red-50"
               >
-                <Ticket className="w-4 h-4" />
+                <CiDiscount1 className="w-4 h-4 stroke-1" />
                 <span>Kho Voucher ưu đãi</span>
               </Link>
 
@@ -576,7 +575,7 @@ export default function Navbar() {
                 }}
                 className="w-full text-left flex items-center gap-2 py-2 px-2.5 rounded-lg text-[13px] text-[#e31837] font-medium hover:bg-red-50 cursor-pointer"
               >
-                <LogOut className="w-4 h-4" />
+                <CiLogout className="w-4 h-4 stroke-1" />
                 <span>Đăng xuất ({user.fullName})</span>
               </button>
             </div>
@@ -587,7 +586,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#e31837] text-white rounded-lg text-sm font-semibold"
               >
-                <UserIcon className="w-4 h-4" />
+                <CiUser className="w-5 h-5 stroke-1" />
                 <span>Đăng nhập tài khoản</span>
               </Link>
             </div>

@@ -1,12 +1,12 @@
 import React from 'react';
 import Link from 'next/link';
 import {
-  Truck,
-  ShieldCheck,
-  Clock,
-  Utensils,
-  ChevronRight,
-} from 'lucide-react';
+  CiDeliveryTruck,
+  CiCircleCheck,
+  CiClock2,
+  CiForkAndKnife,
+  CiCircleChevRight,
+} from 'react-icons/ci';
 import { getProducts } from '@/lib/db';
 import ScrollFoodVideo from '@/components/ScrollFoodVideo';
 import ProductCard from '@/components/ProductCard';
@@ -85,28 +85,28 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#e31837] flex items-center justify-center shrink-0">
-                <Truck className="w-4 h-4" />
+                <CiDeliveryTruck className="w-5 h-5 stroke-1" />
               </div>
               <span className="text-[13px] sm:text-[14px] font-bold text-[#0f172a]">Giao nóng 30 phút</span>
             </div>
 
             <div className="flex items-center justify-center md:justify-start gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#e31837] flex items-center justify-center shrink-0">
-                <Utensils className="w-4 h-4" />
+                <CiForkAndKnife className="w-5 h-5 stroke-1" />
               </div>
               <span className="text-[13px] sm:text-[14px] font-bold text-[#0f172a]">Chế biến chuẩn vị</span>
             </div>
 
             <div className="flex items-center justify-center md:justify-start gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#e31837] flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-4 h-4" />
+                <CiCircleCheck className="w-5 h-5 stroke-1" />
               </div>
               <span className="text-[13px] sm:text-[14px] font-bold text-[#0f172a]">Nguyên liệu tươi sạch</span>
             </div>
 
             <div className="flex items-center justify-center md:justify-start gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#e31837] flex items-center justify-center shrink-0">
-                <Clock className="w-4 h-4" />
+                <CiClock2 className="w-5 h-5 stroke-1" />
               </div>
               <span className="text-[13px] sm:text-[14px] font-bold text-[#0f172a]">Mở cửa 06:00 - 24:00</span>
             </div>
@@ -128,7 +128,7 @@ export default async function HomePage() {
             className="text-[14px] font-bold text-[#e31837] hover:underline flex items-center gap-1 transition"
           >
             <span>Xem tất cả</span>
-            <ChevronRight className="w-4 h-4" />
+            <CiCircleChevRight className="w-5 h-5" />
           </Link>
         </div>
 

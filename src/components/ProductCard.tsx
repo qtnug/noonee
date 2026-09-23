@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Star, Heart, Clock } from 'lucide-react';
+import { CiStar, CiHeart, CiCirclePlus } from 'react-icons/ci';
 import { Product } from '@/types';
 import { formatVND } from '@/lib/utils';
 import { useFavorites } from '@/context/FavoritesContext';
@@ -38,7 +38,7 @@ export default function ProductCard({
           e.stopPropagation();
           toggleFavorite(product.id);
         }}
-        className={`absolute top-3 right-3 z-10 p-1.5 rounded-full border shadow-xs transition cursor-pointer ${
+        className={`absolute top-3 right-3 z-10 p-1 rounded-full border shadow-xs transition cursor-pointer ${
           favorited
             ? 'bg-white text-[#e31837] border-[#fecdd3]'
             : 'bg-white/90 hover:bg-white text-[#9297a0] hover:text-[#e31837] border-[#dddddd]'
@@ -46,7 +46,7 @@ export default function ProductCard({
         aria-label={favorited ? 'Bỏ thích món' : 'Yêu thích món'}
         title={favorited ? 'Đã yêu thích' : 'Thêm vào yêu thích'}
       >
-        <Heart className={`w-3.5 h-3.5 ${favorited ? 'fill-[#e31837] text-[#e31837]' : ''}`} />
+        <CiHeart className={`w-4 h-4 stroke-1 ${favorited ? 'text-[#e31837] fill-[#e31837]' : ''}`} />
       </button>
 
       {/* Product Image Container (1:1 Square) */}
@@ -74,7 +74,7 @@ export default function ProductCard({
               </h3>
             </Link>
             <span className="flex items-center gap-0.5 text-[#333840] font-medium text-[11px] sm:text-[12px] shrink-0 pt-0.5">
-              <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-400 text-amber-400" />
+              <CiStar className="w-3.5 h-3.5 fill-amber-400 text-amber-400 stroke-1" />
               <span>{product.rating ? product.rating.toFixed(1) : '5.0'}</span>
             </span>
           </div>
@@ -108,7 +108,7 @@ export default function ProductCard({
             }`}
             title={product.isAvailable ? 'Chọn món & Tùy chọn khẩu vị' : 'Tạm hết hàng'}
           >
-            <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <CiCirclePlus className="w-4 h-4 stroke-1" />
             <span>Thêm</span>
           </button>
         </div>

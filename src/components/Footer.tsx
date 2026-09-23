@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Phone, MapPin, Clock, ShieldCheck, Mail, ArrowRight } from 'lucide-react';
+import { CiPhone, CiMapPin, CiClock2 } from 'react-icons/ci';
 
 export default function Footer() {
   const pathname = usePathname();
@@ -112,15 +112,15 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2.5 text-[14px] text-[#475569] font-medium">
               <li className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-[#e31837] shrink-0 mt-0.5" />
+                <CiMapPin className="w-5 h-5 text-[#e31837] shrink-0 stroke-1" />
                 <span>120 Yên Lãng, Đống Đa, Hà Nội</span>
               </li>
               <li className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-[#e31837] shrink-0" />
+                <CiPhone className="w-5 h-5 text-[#e31837] shrink-0 stroke-1" />
                 <span>Hotline: <strong className="text-[#0f172a] font-bold">0988.888.888</strong></span>
               </li>
               <li className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#e31837] shrink-0" />
+                <CiClock2 className="w-5 h-5 text-[#e31837] shrink-0 stroke-1" />
                 <span>Giờ phục vụ: 06:00 - 24:00</span>
               </li>
             </ul>

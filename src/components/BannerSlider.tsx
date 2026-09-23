@@ -3,16 +3,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import {
-  ArrowRight,
-  Check,
-  PlusCircle,
-  LogIn,
-  Flame,
-  Utensils,
-  Truck,
-  Clock,
-  Sparkles,
-} from 'lucide-react';
+  CiDeliveryTruck,
+  CiForkAndKnife,
+  CiClock2,
+  CiCircleChevRight,
+  CiCircleCheck,
+  CiCirclePlus,
+  CiLogin,
+  CiBowlNoodles,
+} from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
 
 /* ─────────────────────────────────────────────
@@ -67,7 +66,7 @@ const DEFAULT_HOT_PRODUCTS: ProductItem[] = [
 ───────────────────────────────────────────── */
 function SlideHero() {
   return (
-    <div className="relative w-full h-full min-h-[420px] flex items-center justify-center px-4 sm:px-8 lg:px-12 py-10 sm:py-14">
+    <div className="relative w-full h-full min-h-[420px] flex items-center justify-center px-4 sm:px-8 lg:px-12 py-10 sm:py-14 pb-16">
       {/* Subtle ambient light */}
       <div className="absolute -top-24 -left-24 w-80 h-80 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-amber-500/8 rounded-full blur-3xl pointer-events-none" />
@@ -75,11 +74,6 @@ function SlideHero() {
       <div className="max-w-7xl mx-auto w-full flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12 relative z-10">
         {/* Left: Headline & CTA */}
         <div className="flex-1 space-y-5 text-center lg:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.1] text-xs font-semibold text-zinc-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-            <span className="w-2 h-2 rounded-full bg-[#e31837] animate-pulse" />
-            <span>NooNee Food • Tươi Ngon Mỗi Ngày</span>
-          </div>
-
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.15] text-white">
             Thưởng thức món ngon,{' '}
             <br className="hidden sm:inline" />
@@ -95,9 +89,9 @@ function SlideHero() {
               href="/menu"
               className="inline-flex items-center justify-center gap-2 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-bold text-[15px] px-7 py-3.5 rounded-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_16px_rgba(227,24,55,0.35)] transition group"
             >
-              <Utensils className="w-4 h-4" />
+              <CiForkAndKnife className="w-5 h-5 text-white stroke-1" />
               <span>Khám phá thực đơn</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <CiCircleChevRight className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
               href="/orders"
@@ -108,18 +102,18 @@ function SlideHero() {
           </div>
         </div>
 
-        {/* Right: Tactile Trust cards (SkeuDesign style) */}
+        {/* Right: Tactile Trust cards (Circum Icons style) */}
         <div className="flex-shrink-0 w-full max-w-sm lg:max-w-[280px] flex flex-col gap-3">
           {[
-            { icon: <Truck className="w-5 h-5 text-[#e31837]" />, title: 'Giao nóng 30 phút', desc: 'Đóng gói giữ nhiệt cẩn thận' },
-            { icon: <Utensils className="w-5 h-5 text-[#e31837]" />, title: 'Chế biến chuẩn vị', desc: 'Nguyên liệu tươi sạch trong ngày' },
-            { icon: <Clock className="w-5 h-5 text-[#e31837]" />, title: 'Mở cửa 06:00 – 24:00', desc: 'Sẵn sàng phục vụ cả ngày lẫn đêm' },
+            { icon: <CiDeliveryTruck className="w-6 h-6 text-[#e31837]" />, title: 'Giao nóng 30 phút', desc: 'Đóng gói giữ nhiệt cẩn thận' },
+            { icon: <CiForkAndKnife className="w-6 h-6 text-[#e31837]" />, title: 'Chế biến chuẩn vị', desc: 'Nguyên liệu tươi sạch trong ngày' },
+            { icon: <CiClock2 className="w-6 h-6 text-[#e31837]" />, title: 'Mở cửa 06:00 – 24:00', desc: 'Sẵn sàng phục vụ cả ngày lẫn đêm' },
           ].map(({ icon, title, desc }, idx) => (
             <div
               key={idx}
               className="flex items-start gap-3.5 bg-zinc-900/80 border border-zinc-800 hover:border-zinc-700/80 rounded-[14px] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_4px_12px_rgba(0,0,0,0.3)] transition"
             >
-              <div className="w-9 h-9 rounded-lg bg-red-950/60 border border-red-800/30 flex items-center justify-center shrink-0 mt-0.5">
+              <div className="w-10 h-10 rounded-lg bg-red-950/60 border border-red-800/30 flex items-center justify-center shrink-0 mt-0.5">
                 {icon}
               </div>
               <div>
@@ -135,7 +129,7 @@ function SlideHero() {
 }
 
 /* ─────────────────────────────────────────────
-   Slide 1 — VietQR Promo Banner (No text gradient, solid colors, clean UI)
+   Slide 1 — VietQR Promo Banner (No tags, solid text)
 ───────────────────────────────────────────── */
 function SlideVietQR() {
   const [copied, setCopied] = useState(false);
@@ -148,19 +142,14 @@ function SlideVietQR() {
   };
 
   return (
-    <div className="relative w-full h-full min-h-[420px] flex items-center justify-center px-4 sm:px-8 lg:px-12 py-10 sm:py-14">
+    <div className="relative w-full h-full min-h-[420px] flex items-center justify-center px-4 sm:px-8 lg:px-12 py-10 sm:py-14 pb-16">
       {/* Ambient glows */}
       <div className="absolute -top-28 -right-28 w-96 h-96 bg-red-600/12 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto w-full flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-16 relative z-10">
-        {/* Left: Text & Coupon (Solid single-color text) */}
+        {/* Left: Text & Coupon (Solid single-color text, no tags) */}
         <div className="flex-1 space-y-5 text-center lg:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.1] text-xs font-semibold text-zinc-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Thanh toán quét mã tiện lợi</span>
-          </div>
-
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.15] text-white">
             Thanh toán <span className="text-[#e31837]">VietQR</span>
             <br />
@@ -188,7 +177,7 @@ function SlideVietQR() {
               >
                 {copied ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <CiCircleCheck className="w-4 h-4 text-emerald-400 stroke-2" />
                     <span className="text-emerald-400">Đã chép</span>
                   </>
                 ) : (
@@ -202,26 +191,24 @@ function SlideVietQR() {
               className="inline-flex items-center justify-center gap-2 bg-[#e31837] hover:bg-[#be0e27] text-white font-bold text-[14px] px-6 py-3.5 rounded-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_16px_rgba(227,24,55,0.35)] transition group"
             >
               <span>Đặt món ngay</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <CiCircleChevRight className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
 
-        {/* Right: Tactile VietQR Card (Skeudesign / SmoothUI fintech pass style) */}
+        {/* Right: Tactile VietQR Card (Clean minimal, no tags) */}
         <div className="flex-shrink-0 w-[240px] sm:w-[280px]">
           <div className="relative bg-zinc-900/90 border border-zinc-800 rounded-[24px] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_20px_40px_rgba(0,0,0,0.6)] overflow-hidden">
             <div className="absolute -top-8 -right-8 w-28 h-28 bg-[#e31837]/20 rounded-full blur-2xl pointer-events-none" />
 
             <div className="flex items-center justify-between mb-4 relative z-10">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-[#e31837] flex items-center justify-center">
+                <div className="w-7 h-7 rounded-full bg-[#e31837] flex items-center justify-center">
                   <span className="text-white text-[9px] font-black">VQ</span>
                 </div>
-                <span className="text-white font-bold text-[13px] tracking-wider">VIETQR</span>
+                <span className="text-white font-bold text-[14px] tracking-wider">VIETQR</span>
               </div>
-              <div className="px-2.5 py-1 rounded-[8px] bg-amber-400 text-zinc-950 text-[12px] font-black shadow-md shadow-amber-500/20">
-                −20%
-              </div>
+              <span className="text-zinc-400 text-[11px] font-semibold tracking-wider">QUICK PAY</span>
             </div>
 
             {/* High-contrast QR Matrix */}
@@ -254,7 +241,7 @@ function SlideVietQR() {
             </div>
 
             <div className="mt-3 relative z-10 text-center space-y-0.5">
-              <p className="text-zinc-500 text-[10px] font-semibold uppercase tracking-widest">Quét thanh toán</p>
+              <p className="text-zinc-500 text-[10px] font-semibold uppercase tracking-widest">Quét thanh toán tức thì</p>
               <p className="text-zinc-300 text-[12px] font-bold font-mono tracking-wider">VIETQR20</p>
             </div>
           </div>
@@ -265,7 +252,7 @@ function SlideVietQR() {
 }
 
 /* ─────────────────────────────────────────────
-   Slide 2 — Best Seller (Exact 4 items, No VietQR promo mention)
+   Slide 2 — Best Seller (Exact 4 items, No tags, No VietQR promo)
 ───────────────────────────────────────────── */
 function SlideBestSeller({ products }: { products?: ProductItem[] }) {
   const displayProducts = (products && products.length > 0)
@@ -273,18 +260,14 @@ function SlideBestSeller({ products }: { products?: ProductItem[] }) {
     : DEFAULT_HOT_PRODUCTS;
 
   return (
-    <div className="relative w-full h-full min-h-[420px] flex items-center justify-center px-4 sm:px-8 lg:px-12 py-10 sm:py-14">
+    <div className="relative w-full h-full min-h-[420px] flex items-center justify-center px-4 sm:px-8 lg:px-12 py-10 sm:py-14 pb-16">
       {/* Subtle background glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[550px] h-44 bg-amber-500/8 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto w-full space-y-6 relative z-10">
-        {/* Header (Clean, no VietQR discount text) */}
+        {/* Header (Clean, no tags, no VietQR discount text) */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.1] text-xs font-semibold text-amber-400 mb-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-              <Flame className="w-3.5 h-3.5 text-amber-400" />
-              <span>Được yêu thích nhất</span>
-            </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
               Món Bán Chạy Nhất
             </h2>
@@ -298,11 +281,11 @@ function SlideBestSeller({ products }: { products?: ProductItem[] }) {
             className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-white font-semibold text-[13px] sm:text-[14px] transition shrink-0 group self-start sm:self-end px-3.5 py-2 rounded-[10px] bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
           >
             <span>Xem tất cả thực đơn</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            <CiCircleChevRight className="w-5 h-5 text-zinc-300 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 
-        {/* Exactly 4 Clean Tactile Product Cards */}
+        {/* Exactly 4 Clean Tactile Product Cards (No HOT badges) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-1">
           {displayProducts.map((p) => {
             const imgSrc = p.image || p.imageUrl || '';
@@ -322,11 +305,10 @@ function SlideBestSeller({ products }: { products?: ProductItem[] }) {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-3xl">🍜</div>
+                    <div className="w-full h-full flex items-center justify-center text-3xl">
+                      <CiBowlNoodles className="w-10 h-10 text-zinc-500" />
+                    </div>
                   )}
-                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded-[6px] bg-[#e31837] text-white text-[10px] font-bold shadow-sm tracking-wide">
-                    HOT 🔥
-                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -352,7 +334,7 @@ function SlideBestSeller({ products }: { products?: ProductItem[] }) {
 }
 
 /* ─────────────────────────────────────────────
-   Slide 3 — Group Order
+   Slide 3 — Group Order (No tags)
 ───────────────────────────────────────────── */
 const GROUP_STEPS = [
   { icon: '🏠', title: 'Tạo phòng nhóm', desc: 'Chọn món trước hoặc gửi link mời bạn bè' },
@@ -364,7 +346,7 @@ const GROUP_STEPS = [
 
 function SlideGroupOrder() {
   return (
-    <div className="relative w-full h-full min-h-[420px] flex items-center justify-center px-4 sm:px-8 lg:px-12 py-10 sm:py-14 text-center">
+    <div className="relative w-full h-full min-h-[420px] flex items-center justify-center px-4 sm:px-8 lg:px-12 py-10 sm:py-14 pb-16 text-center">
       {/* Red glow backdrop */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -375,10 +357,6 @@ function SlideGroupOrder() {
 
       <div className="max-w-7xl mx-auto w-full space-y-6 relative z-10">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.1] text-xs font-semibold text-zinc-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Tính năng đặt đơn nhóm thông minh</span>
-          </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
             Đặt Món Theo Nhóm,{' '}
             <span className="text-[#e31837]">Gom Chung 1 Đơn</span>
@@ -410,15 +388,15 @@ function SlideGroupOrder() {
             href="/group"
             className="inline-flex items-center justify-center gap-2 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-bold text-[15px] px-7 py-3.5 rounded-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_16px_rgba(227,24,55,0.35)] transition group"
           >
-            <PlusCircle className="w-4 h-4" />
+            <CiCirclePlus className="w-5 h-5 text-white" />
             <span>Tạo phòng mới</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <CiCircleChevRight className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform" />
           </Link>
           <Link
             href="/group"
             className="inline-flex items-center justify-center gap-2 bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.12] text-white font-bold text-[15px] px-7 py-3.5 rounded-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] transition"
           >
-            <LogIn className="w-4 h-4 text-[#e31837]" />
+            <CiLogin className="w-5 h-5 text-[#e31837]" />
             <span>Tham gia bằng mã phòng</span>
           </Link>
         </div>
@@ -428,7 +406,7 @@ function SlideGroupOrder() {
 }
 
 /* ─────────────────────────────────────────────
-   Main Banner Slider
+   Main Banner Slider (With Clickable Dots)
 ───────────────────────────────────────────── */
 const AUTO_PLAY_INTERVAL = 6000;
 const TOTAL_SLIDES = 4;
@@ -523,6 +501,24 @@ export default function BannerSlider({ bestSellers }: BannerSliderProps) {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Clickable Dot Indicators */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 shadow-lg">
+        {slides.map((_, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => setCurrent(idx)}
+            className={`transition-all duration-300 cursor-pointer ${
+              current === idx
+                ? 'w-7 h-2 bg-[#e31837] rounded-full shadow-[0_0_8px_rgba(227,24,55,0.7)]'
+                : 'w-2 h-2 bg-white/35 hover:bg-white/75 rounded-full'
+            }`}
+            aria-label={`Chuyển đến banner ${idx + 1}`}
+            title={`Banner ${idx + 1}`}
+          />
+        ))}
       </div>
     </section>
   );
