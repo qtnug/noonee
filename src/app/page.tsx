@@ -28,12 +28,12 @@ export default async function HomePage() {
       {/* 1. HERO SECTION (100% Faithful to landingpage.png) */}
       <section className="relative overflow-hidden bg-[#FFFAF0] lg:h-[calc(100vh-64px)] min-h-[680px] flex items-center">
         {/* The 6 Food Dishes Collage (Desktop presentation) */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:block absolute inset-0 pointer-events-none">
           <HeroFoodCollage />
         </div>
 
-        {/* Hero Left Content Column */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-20 py-12 lg:py-0">
+        {/* Hero Left Content Column (Left margin aligned to x=126px on 1800px viewport) */}
+        <div className="max-w-[1680px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-16 w-full relative z-20 py-12 lg:py-0">
           <div className="max-w-xl lg:max-w-2xl">
             <h1 className="text-4xl sm:text-5xl lg:text-[54px] xl:text-[62px] 2xl:text-[68px] font-extrabold tracking-tight text-[#0f172a] leading-[1.12]">
               <span className="block whitespace-nowrap">Thưởng thức món ngon</span>
@@ -70,24 +70,24 @@ export default async function HomePage() {
               <Image
                 src="/foods_nobg/gapopcorn_hero.png"
                 alt="Gà popcorn"
-                width={972}
-                height={494}
+                width={949}
+                height={516}
                 priority
                 className="w-4/5 h-auto drop-shadow-2xl z-10"
               />
               <Image
                 src="/foods_nobg/trasua_hero.png"
                 alt="Trà sữa"
-                width={442}
-                height={735}
+                width={527}
+                height={741}
                 priority
                 className="w-1/3 h-auto drop-shadow-lg absolute -right-2 top-0"
               />
               <Image
                 src="/foods_nobg/banhxeo_hero.png"
                 alt="Bánh xèo"
-                width={1020}
-                height={660}
+                width={988}
+                height={631}
                 priority
                 className="w-3/5 h-auto drop-shadow-lg absolute -left-2 -bottom-2"
               />
