@@ -20,15 +20,16 @@ export default function HeroFoodCollage() {
         </div>
       </div>
 
-      {/* 2. Bottom-Left Bánh Xèo Giòn Rụm - Natural bottom overflow matching mockup, perfectly below buttons */}
-      <div className="absolute bottom-[-10%] xl:bottom-[-12%] 2xl:bottom-[-14%] left-[-1%] xl:left-[0%] h-[32%] xl:h-[35%] 2xl:h-[38%] aspect-[745/355] pointer-events-auto">
+      {/* 2. Bottom-Left Bánh Xèo Giòn Rụm - Exact horizontal & vertical anchor matching mockup */}
+      <div className="absolute bottom-[-6%] xl:bottom-[-8%] 2xl:bottom-[-10%] left-[3%] xl:left-[5%] 2xl:left-[6.25%] w-[42vw] max-w-[730px] min-w-[460px] pointer-events-auto">
         <Image
           src="/images/hero_banhxeo.png"
           alt="Bánh xèo giòn rụm tôm thịt"
-          fill
+          width={745}
+          height={355}
           priority
-          sizes="(max-width: 1800px) 35vw, 600px"
-          className="object-contain object-left-bottom pointer-events-none select-none"
+          sizes="(max-width: 1800px) 42vw, 730px"
+          className="w-full h-auto object-contain select-none pointer-events-none"
         />
       </div>
     </div>

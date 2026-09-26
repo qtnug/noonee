@@ -35,29 +35,29 @@ export default async function HomePage() {
         {/* Hero Left Content Column - Exact left margin & typography matching mockup */}
         <div className="max-w-[1800px] mx-auto px-6 sm:px-10 lg:px-16 xl:px-20 2xl:px-[127px] w-full relative z-20">
           <div className="max-w-xl lg:max-w-3xl xl:max-w-4xl">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[46px] xl:text-[56px] 2xl:text-[66px] font-black tracking-tight text-[#0f172a] leading-[1.14]">
+            <h1 className="font-sans text-3xl sm:text-4xl md:text-5xl lg:text-[48px] xl:text-[58px] 2xl:text-[66px] font-extrabold tracking-tight text-[#0f172a] leading-[1.12]">
               <span className="block whitespace-nowrap">Thưởng thức món ngon</span>
               <span className="block whitespace-nowrap mt-1 sm:mt-1.5 xl:mt-2">
                 <span className="text-[#e31837]">chuẩn vị</span> &amp; giao tận nơi
               </span>
             </h1>
 
-            <div className="mt-4 sm:mt-5 xl:mt-7 2xl:mt-8 text-[15px] sm:text-[16px] xl:text-[18px] 2xl:text-[19px] text-[#677992] font-normal leading-relaxed space-y-1">
+            <div className="mt-4 sm:mt-5 xl:mt-7 2xl:mt-8 text-[16px] sm:text-[17px] xl:text-[18px] 2xl:text-[19px] text-[#677992] font-normal leading-[1.6] space-y-1">
               <p>Bún phở, cơm tấm và đồ uống thanh mát chế biến trong ngày.</p>
               <p>Đặt món dễ dàng, luôn nóng hổi.</p>
             </div>
 
-            {/* Red & White Action Buttons - Matches mockup size, rounded corners, and spacing */}
-            <div className="mt-7 sm:mt-9 xl:mt-11 2xl:mt-12 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 sm:gap-4 xl:gap-5">
+            {/* Red & White Action Buttons - Exactly matches mockup button size, corners, and fonts */}
+            <div className="mt-7 sm:mt-9 xl:mt-11 2xl:mt-12 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 xl:gap-5">
               <Link
                 href="/menu"
-                className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#c9122c] active:bg-[#a50b20] text-white font-bold text-[15px] sm:text-[16px] xl:text-[18px] px-8 xl:px-10 py-3.5 sm:py-4 xl:py-4.5 rounded-2xl shadow-lg shadow-red-500/20 transition duration-200 hover:scale-[1.02] active:scale-[0.98] text-center min-w-[220px] xl:min-w-[270px]"
+                className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#c9122c] active:bg-[#a50b20] text-white font-bold text-[16px] sm:text-[17px] xl:text-[18px] w-full sm:w-[280px] xl:w-[318px] h-[58px] sm:h-[64px] xl:h-[72px] rounded-xl shadow-lg shadow-red-500/20 transition duration-200 hover:scale-[1.02] active:scale-[0.98] text-center"
               >
                 Khám phá thực đơn
               </Link>
               <Link
                 href="/orders"
-                className="inline-flex items-center justify-center bg-white hover:bg-neutral-50 active:bg-neutral-100 text-[#0f172a] hover:text-[#e31837] font-bold text-[15px] sm:text-[16px] xl:text-[18px] px-8 xl:px-10 py-3.5 sm:py-4 xl:py-4.5 rounded-2xl border-2 border-[#e2e8f0] shadow-xs transition duration-200 hover:scale-[1.02] active:scale-[0.98] text-center min-w-[200px] xl:min-w-[250px]"
+                className="inline-flex items-center justify-center bg-white hover:bg-neutral-50 active:bg-neutral-100 text-[#0f172a] hover:text-[#e31837] font-bold text-[16px] sm:text-[17px] xl:text-[18px] w-full sm:w-[260px] xl:w-[295px] h-[58px] sm:h-[64px] xl:h-[72px] rounded-xl border-[1.5px] border-[#dddddd] hover:border-[#cccccc] shadow-xs transition duration-200 hover:scale-[1.02] active:scale-[0.98] text-center"
               >
                 Tra cứu đơn hàng
               </Link>
