@@ -8,7 +8,7 @@ export default function HeroFoodCollage() {
     <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
       {/* 1. Bánh tráng trộn sốt me (Top-Right Plate) */}
       <div
-        className="absolute top-[0.5%] right-[0%] w-[41.6vw] max-w-[750px] min-w-[380px] z-[2] transition-transform duration-500 ease-out hover:scale-105 pointer-events-auto cursor-pointer drop-shadow-xl"
+        className="absolute top-[0%] right-[0%] w-[38vw] max-w-[720px] min-w-[320px] z-[2] transition-transform duration-500 ease-out hover:scale-105 pointer-events-auto cursor-pointer drop-shadow-xl"
         title="Bánh tráng trộn sốt me"
       >
         <Image
@@ -23,7 +23,7 @@ export default function HeroFoodCollage() {
 
       {/* 2. Trà sữa trân châu đường đen (Far-Right Edge) */}
       <div
-        className="absolute top-[31.5%] right-[1.5%] w-[16.1vw] max-w-[290px] min-w-[140px] z-[4] transition-transform duration-500 ease-out hover:scale-105 pointer-events-auto cursor-pointer drop-shadow-lg"
+        className="absolute top-[28%] xl:top-[30%] right-[1%] w-[14vw] max-w-[260px] min-w-[120px] z-[4] transition-transform duration-500 ease-out hover:scale-105 pointer-events-auto cursor-pointer drop-shadow-lg"
         title="Trà sữa trân châu"
       >
         <Image
@@ -36,9 +36,9 @@ export default function HeroFoodCollage() {
         />
       </div>
 
-      {/* 3. Bánh xèo giòn rụm tôm thịt (Bottom-Left) */}
+      {/* 3. Bánh xèo giòn rụm tôm thịt (Bottom-Left) - Bottom overflow preserves clearance with buttons */}
       <div
-        className="absolute bottom-[-2%] left-[3.3%] w-[38.3vw] max-w-[690px] min-w-[350px] z-[2] transition-transform duration-500 ease-out hover:scale-105 pointer-events-auto cursor-pointer drop-shadow-xl"
+        className="absolute bottom-[-10vw] xl:bottom-[-8vw] 2xl:bottom-[-6vw] left-[2%] w-[34vw] max-w-[620px] min-w-[280px] z-[2] transition-transform duration-500 ease-out hover:scale-105 pointer-events-auto cursor-pointer drop-shadow-xl"
         title="Bánh xèo giòn rụm"
       >
         <Image
@@ -53,7 +53,7 @@ export default function HeroFoodCollage() {
 
       {/* 4. Trà thái xanh mát lạnh (Bottom-Center) */}
       <div
-        className="absolute bottom-[-2%] left-[41.6%] w-[15.0vw] max-w-[270px] min-w-[140px] z-[2] transition-transform duration-500 ease-out hover:scale-105 pointer-events-auto cursor-pointer drop-shadow-lg"
+        className="absolute bottom-[-4vw] xl:bottom-[-3vw] 2xl:bottom-[-2vw] left-[40%] xl:left-[41%] w-[13vw] max-w-[240px] min-w-[120px] z-[2] transition-transform duration-500 ease-out hover:scale-105 pointer-events-auto cursor-pointer drop-shadow-lg"
         title="Trà thái xanh"
       >
         <Image
@@ -68,7 +68,7 @@ export default function HeroFoodCollage() {
 
       {/* 5. Phô mai que kéo sợi (Bottom-Right) */}
       <div
-        className="absolute bottom-[-2%] right-[0%] w-[36.1vw] max-w-[650px] min-w-[320px] z-[2] transition-transform duration-500 ease-out hover:scale-105 pointer-events-auto cursor-pointer drop-shadow-xl"
+        className="absolute bottom-[-6vw] xl:bottom-[-5vw] 2xl:bottom-[-4vw] right-[0%] w-[33vw] max-w-[600px] min-w-[280px] z-[2] transition-transform duration-500 ease-out hover:scale-105 pointer-events-auto cursor-pointer drop-shadow-xl"
         title="Phô mai que kéo sợi"
       >
         <Image
@@ -81,9 +81,9 @@ export default function HeroFoodCollage() {
         />
       </div>
 
-      {/* 6. Gà popcorn giòn cay (Center-Right centerpiece, exact coordinates) */}
+      {/* 6. Gà popcorn giòn cay (Center-Right centerpiece, shifted right to prevent text overlap) */}
       <div
-        className="absolute top-[34.7%] left-[52.3%] w-[31.0vw] max-w-[560px] min-w-[320px] z-[10] transition-transform duration-500 ease-out hover:scale-105 pointer-events-auto cursor-pointer drop-shadow-2xl"
+        className="absolute top-[34%] xl:top-[35%] 2xl:top-[34%] left-[53%] xl:left-[52%] 2xl:left-[51%] w-[28vw] xl:w-[29vw] 2xl:w-[30vw] max-w-[540px] min-w-[280px] z-[10] transition-transform duration-500 ease-out hover:scale-105 pointer-events-auto cursor-pointer drop-shadow-2xl"
         title="Gà popcorn giòn cay"
       >
         <Image
