@@ -225,3 +225,24 @@ html, body {
   100% { background-position: 200% center; }
 }
 
+/* === Conveyor Belt Marquee for Best Sellers === */
+@keyframes foodConveyor {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-food-conveyor {
+  display: flex;
+  width: max-content;
+  animation: foodConveyor 32s linear infinite;
+  will-change: transform;
+}
+
+.animate-food-conveyor:hover {
+  animation-play-state: paused;
+}
+
