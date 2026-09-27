@@ -1,13 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import {
-  CiDeliveryTruck,
-  CiCircleCheck,
-  CiClock2,
-  CiForkAndKnife,
-  CiCircleChevRight,
-} from 'react-icons/ci';
+import { CiCircleChevRight } from 'react-icons/ci';
 import { getProducts } from '@/lib/db';
 import ProductCard from '@/components/ProductCard';
 import BannerSlider from '@/components/BannerSlider';
@@ -16,11 +10,19 @@ import HeroFoodCollage from '@/components/HeroFoodCollage';
 export const revalidate = 0; // Dynamic
 
 export default async function HomePage() {
+  let allProducts: any[] = [];
   let featuredProducts: any[] = [];
+  let bestSellers: any[] = [];
   try {
-    featuredProducts = await getProducts({ isFeatured: true });
+    allProducts = await getProducts();
+    featuredProducts = allProducts.filter((p) => p.isFeatured);
+    // 8 best sellers: prioritized featured products, padded with popular items
+    bestSellers = [
+      ...featuredProducts,
+      ...allProducts.filter((p) => !p.isFeatured),
+    ].slice(0, 8);
   } catch (e) {
-    console.error('Error loading featured products:', e);
+    console.error('Error loading products for homepage:', e);
   }
 
   return (
@@ -96,43 +98,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 2. COMPACT TRUST BAR (Minimalist, Zero Fluff) */}
-      <section className="border-b border-[#f0e3d6] bg-[#fdf5ec]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#e31837] flex items-center justify-center shrink-0">
-                <CiDeliveryTruck className="w-5 h-5 stroke-1" />
-              </div>
-              <span className="text-[13px] sm:text-[14px] font-bold text-[#0f172a]">Giao nóng 30 phút</span>
-            </div>
-
-            <div className="flex items-center justify-center md:justify-start gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#e31837] flex items-center justify-center shrink-0">
-                <CiForkAndKnife className="w-5 h-5 stroke-1" />
-              </div>
-              <span className="text-[13px] sm:text-[14px] font-bold text-[#0f172a]">Chế biến chuẩn vị</span>
-            </div>
-
-            <div className="flex items-center justify-center md:justify-start gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#e31837] flex items-center justify-center shrink-0">
-                <CiCircleCheck className="w-5 h-5 stroke-1" />
-              </div>
-              <span className="text-[13px] sm:text-[14px] font-bold text-[#0f172a]">Nguyên liệu tươi sạch</span>
-            </div>
-
-            <div className="flex items-center justify-center md:justify-start gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#e31837] flex items-center justify-center shrink-0">
-                <CiClock2 className="w-5 h-5 stroke-1" />
-              </div>
-              <span className="text-[13px] sm:text-[14px] font-bold text-[#0f172a]">Mở cửa 06:00 - 24:00</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. INTERACTIVE BANNER SLIDER (VietQR | Bán Chạy | Đặt Nhóm) */}
-      <BannerSlider bestSellers={featuredProducts} />
+      {/* 2. BEST SELLER CAROUSEL BANNER (8 Items Looping Carousel) */}
+      <BannerSlider bestSellers={bestSellers} />
 
       {/* 4. FEATURED PRODUCTS (2 Rows = 8 Items) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-16">
