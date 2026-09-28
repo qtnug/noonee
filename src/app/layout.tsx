@@ -3,6 +3,7 @@ import localFont from 'next/font/local';
 import { Montserrat } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/Navbar';
+import NavbarPromoMarquee from '@/components/NavbarPromoMarquee';
 import Footer from '@/components/Footer';
 import CartDrawer from '@/components/CartDrawer';
 import MobileBottomNav from '@/components/MobileBottomNav';
@@ -66,6 +67,7 @@ export default function RootLayout({
             <CartProvider>
               <ToastProvider>
                 <Navbar />
+                <NavbarPromoMarquee />
                 <main className="flex-1">{children}</main>
                 <Footer />
                 <CartDrawer />
