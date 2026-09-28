@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import {
   CiMapPin as MapPin,
   CiPhone as Phone,
@@ -12,43 +11,54 @@ import {
   CiChat1 as MessageSquare,
   CiWarning as AlertTriangle,
   CiRedo as RefreshCw,
-  CiUser as User,
   CiReceipt as Receipt,
   CiEdit as Edit,
-  CiDeliveryTruck as Truck,
-  CiLogin as Login,
   CiRedo as Loader2,
   CiHeadphones as Headphones,
-  CiCircleChevRight as ChevronRight,
   CiCircleCheck as CheckCircle,
 } from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
 import { SupportMessage, Order } from '@/types';
 import { formatDate, formatVND } from '@/lib/utils';
 
-// Helper to map order status into readable Vietnamese
-const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  Pending: { label: 'Chờ xác nhận', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-  Processing: { label: 'Đang chế biến', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-  Delivering: { label: 'Đang giao hàng', color: 'bg-purple-50 text-purple-700 border-purple-200' },
-  Completed: { label: 'Đã hoàn thành', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  Cancelled: { label: 'Đã hủy', color: 'bg-rose-50 text-rose-700 border-rose-200' },
+// Sample fallback orders if user has no orders or is a guest
+const SAMPLE_ORDERS = [
+  { code: 'NOONEE20260901', title: 'Cơm tấm Sài Gòn đặc biệt', price: 38000, status: 'Đang giao hàng' },
+  { code: 'NOONEE20260902', title: 'Phở bò tái nạm bắp hoa', price: 40000, status: 'Đang chế biến' },
+  { code: 'NOONEE20260903', title: 'Bún bò Huế cố đô', price: 42000, status: 'Đã hoàn thành' },
+  { code: 'NOONEE20260904', title: 'Cơm rang dương châu xá xíu', price: 35000, status: 'Đã hoàn thành' },
+  { code: 'NOONEE20260905', title: 'Gà popcorn giòn lắc phô mai', price: 35000, status: 'Đang giao hàng' },
+  { code: 'NOONEE20260906', title: 'Bánh tráng trộn sốt me', price: 20000, status: 'Đang chế biến' },
+  { code: 'NOONEE20260907', title: 'Trà sữa trân châu đường đen', price: 25000, status: 'Đã hoàn thành' },
+  { code: 'NOONEE20260908', title: 'Trà đào cam sả hạt chia', price: 22000, status: 'Đã hoàn thành' },
+];
+
+const STATUS_LABELS: Record<string, string> = {
+  Pending: 'Chờ xác nhận',
+  Processing: 'Đang chế biến',
+  Delivering: 'Đang giao hàng',
+  Completed: 'Đã hoàn thành',
+  Cancelled: 'Đã hủy',
 };
 
-function ContactChatContent() {
-  const { user } = useAuth();
-  const searchParams = useSearchParams();
-  const urlOrderCode = searchParams.get('orderCode') || '';
+interface DropdownItem {
+  code: string;
+  label: string;
+  status?: string;
+  isUserOrder?: boolean;
+}
 
-  // Order state: MUST select order before chatting
-  const [orderCode, setOrderCode] = useState<string>(urlOrderCode.trim().replace(/^#+/, ''));
-  const [isChangingOrder, setIsChangingOrder] = useState<boolean>(!urlOrderCode);
+function ContactChatContent() {
+  const { user, getAuthHeader } = useAuth();
+  const searchParams = useSearchParams();
+  const urlOrderCode = (searchParams.get('orderCode') || '').trim().replace(/^#+/, '');
+
+  // Order Code State
+  const [orderCode, setOrderCode] = useState<string>(urlOrderCode);
   const [userOrders, setUserOrders] = useState<Order[]>([]);
-  const [selectedDropdownCode, setSelectedDropdownCode] = useState<string>('');
-  const [manualCodeInput, setManualCodeInput] = useState<string>('');
-  const [manualCodeError, setManualCodeError] = useState<string>('');
-  const [loadingOrders, setLoadingOrders] = useState<boolean>(false);
-  const [activeOrderDetails, setActiveOrderDetails] = useState<Order | null>(null);
+  const [customCodeInput, setCustomCodeInput] = useState<string>('');
+  const [showCustomModal, setShowCustomModal] = useState<boolean>(false);
+  const [customError, setCustomError] = useState<string>('');
 
   // Chat State
   const [messages, setMessages] = useState<SupportMessage[]>([]);
@@ -60,7 +70,7 @@ function ContactChatContent() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Helper to scroll only the chat message box
+  // Scroll messages
   const scrollToBottom = (smooth = true) => {
     const el = messagesContainerRef.current;
     if (!el) return;
@@ -71,47 +81,79 @@ function ContactChatContent() {
     }
   };
 
-  // If user is logged in, fetch their orders list
+  // Fetch logged-in user's orders
   useEffect(() => {
     if (user) {
-      setLoadingOrders(true);
-      fetch(`/api/orders?userId=${user.id}`)
+      fetch(`/api/orders?userId=${user.id}`, {
+        headers: getAuthHeader ? getAuthHeader() : {},
+      })
         .then((res) => res.json())
         .then((data) => {
           if (data.success && Array.isArray(data.data)) {
             setUserOrders(data.data);
           }
         })
-        .catch((e) => console.error('Error loading user orders:', e))
-        .finally(() => setLoadingOrders(false));
+        .catch((e) => console.error('Error fetching user orders:', e));
     }
   }, [user]);
 
-  // Sync active order details when orderCode changes
-  useEffect(() => {
-    if (!orderCode) {
-      setActiveOrderDetails(null);
-      return;
+  // Build the complete dropdown options
+  const dropdownOptions: DropdownItem[] = React.useMemo(() => {
+    const list: DropdownItem[] = [];
+
+    // 1. User's own orders (if logged in)
+    if (userOrders.length > 0) {
+      userOrders.forEach((o) => {
+        const c = o.orderCode || (o as any).code;
+        if (c) {
+          const statusText = STATUS_LABELS[o.status] || o.status;
+          list.push({
+            code: c,
+            label: `#${c} • ${formatVND(o.totalAmount)} • ${statusText}`,
+            status: statusText,
+            isUserOrder: true,
+          });
+        }
+      });
     }
 
-    // Try finding in userOrders first
-    const matched = userOrders.find(
-      (o) => (o.orderCode || (o as any).code || '').toLowerCase() === orderCode.toLowerCase()
-    );
-    if (matched) {
-      setActiveOrderDetails(matched);
-    } else {
-      // Or fetch order info from API
-      fetch(`/api/orders/${encodeURIComponent(orderCode)}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && data.data) {
-            setActiveOrderDetails(data.data);
-          }
-        })
-        .catch(() => {});
+    // 2. URL orderCode if not already in list
+    if (urlOrderCode && !list.some((item) => item.code.toLowerCase() === urlOrderCode.toLowerCase())) {
+      list.push({
+        code: urlOrderCode,
+        label: `#${urlOrderCode} • Đơn hàng chỉ định`,
+        status: 'Chỉ định',
+        isUserOrder: true,
+      });
     }
-  }, [orderCode, userOrders]);
+
+    // 3. User custom code if entered and not already in list
+    if (
+      orderCode &&
+      !list.some((item) => item.code.toLowerCase() === orderCode.toLowerCase())
+    ) {
+      list.push({
+        code: orderCode,
+        label: `#${orderCode} • Mã đơn đã chọn`,
+        status: 'Tự nhập',
+        isUserOrder: true,
+      });
+    }
+
+    // 4. Sample/demo orders (so the dropdown ALWAYS has items to choose from)
+    SAMPLE_ORDERS.forEach((s) => {
+      if (!list.some((item) => item.code.toLowerCase() === s.code.toLowerCase())) {
+        list.push({
+          code: s.code,
+          label: `#${s.code} • ${s.title} • ${formatVND(s.price)}`,
+          status: s.status,
+          isUserOrder: false,
+        });
+      }
+    });
+
+    return list;
+  }, [userOrders, urlOrderCode, orderCode]);
 
   // Fetch messages from Support API for this specific orderCode
   const fetchMessages = async (isInitialOrManual = false) => {
@@ -153,9 +195,9 @@ function ContactChatContent() {
     }
   };
 
-  // Initial fetch and 3.5s real-time poll when orderCode is active
+  // Poll messages every 3.5s when orderCode is active
   useEffect(() => {
-    if (!orderCode || isChangingOrder) {
+    if (!orderCode) {
       setMessages([]);
       return;
     }
@@ -165,29 +207,34 @@ function ContactChatContent() {
       fetchMessages(false);
     }, 3500);
     return () => clearInterval(interval);
-  }, [orderCode, isChangingOrder]);
+  }, [orderCode]);
 
-  // Handle selecting an order from dropdown
-  const handleSelectFromDropdown = (code: string) => {
-    if (!code) return;
-    const clean = code.trim().replace(/^#+/, '');
+  // Handle dropdown change
+  const handleDropdownChange = (val: string) => {
+    if (val === '__MANUAL_INPUT__') {
+      setShowCustomModal(true);
+      return;
+    }
+    const clean = val.trim().replace(/^#+/, '');
     setOrderCode(clean);
-    setIsChangingOrder(false);
-    setManualCodeError('');
-    setTimeout(() => inputRef.current?.focus(), 150);
+    setCustomError('');
+    if (clean) {
+      setTimeout(() => inputRef.current?.focus(), 150);
+    }
   };
 
-  // Handle manual code confirmation
-  const handleConfirmManualCode = (e?: React.FormEvent) => {
+  // Confirm manual code
+  const handleConfirmCustomCode = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const clean = manualCodeInput.trim().replace(/^#+/, '');
+    const clean = customCodeInput.trim().replace(/^#+/, '');
     if (!clean) {
-      setManualCodeError('Vui lòng nhập mã đơn hàng của bạn');
+      setCustomError('Vui lòng nhập mã đơn hàng hợp lệ');
       return;
     }
     setOrderCode(clean);
-    setIsChangingOrder(false);
-    setManualCodeError('');
+    setShowCustomModal(false);
+    setCustomCodeInput('');
+    setCustomError('');
     setTimeout(() => inputRef.current?.focus(), 150);
   };
 
@@ -198,7 +245,7 @@ function ContactChatContent() {
     if (!cleanMsg || isSending) return;
 
     if (!orderCode) {
-      setIsChangingOrder(true);
+      alert('Vui lòng chọn mã đơn hàng trong dropdown trước khi gửi tin nhắn hỗ trợ!');
       return;
     }
 
@@ -228,7 +275,7 @@ function ContactChatContent() {
           scrollToBottom(true);
         }, 50);
       } else {
-        alert(data.message || 'Không thể gửi tin nhắn. Vui lòng kiểm tra lại mã đơn.');
+        alert(data.message || 'Không thể gửi tin nhắn.');
       }
     } catch (err) {
       console.error('Error sending message:', err);
@@ -237,6 +284,11 @@ function ContactChatContent() {
       inputRef.current?.focus();
     }
   };
+
+  // Active item info
+  const activeItem = dropdownOptions.find(
+    (item) => item.code.toLowerCase() === orderCode.toLowerCase()
+  );
 
   return (
     <div className="min-h-screen bg-[#FFFAF0] py-8 sm:py-10">
@@ -320,17 +372,21 @@ function ContactChatContent() {
                   <div className="min-w-0">
                     <h3 className="font-semibold text-[14px] sm:text-[15px] !text-white text-white truncate flex items-center gap-2">
                       <span>NooNee CSKH Trực Tuyến</span>
-                      {orderCode && !isChangingOrder && (
+                      {orderCode ? (
                         <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                           Trực tuyến
+                        </span>
+                      ) : (
+                        <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          Chưa chọn đơn
                         </span>
                       )}
                     </h3>
                   </div>
                 </div>
 
-                {orderCode && !isChangingOrder && (
+                {orderCode && (
                   <button
                     type="button"
                     onClick={() => fetchMessages(true)}
@@ -343,133 +399,60 @@ function ContactChatContent() {
                 )}
               </div>
 
-              {/* Order Status Banner (When order is selected) */}
-              {orderCode && !isChangingOrder ? (
-                <div className="bg-[#f8fafc] px-4 py-2.5 border-b border-[#dddddd] flex items-center justify-between gap-3 text-[12px]">
-                  <div className="flex items-center gap-2 flex-wrap min-w-0">
-                    <div className="flex items-center gap-1.5 font-bold text-[#181d26]">
-                      <Receipt className="w-4 h-4 text-[#e31837]" />
-                      <span>Đang hỗ trợ đơn:</span>
-                      <span className="text-[#e31837] font-mono text-[13px]">#{orderCode}</span>
-                    </div>
+              {/* ── DROPDOWN BAR: ALWAYS VISIBLE AT THE TOP OF THE CHAT ── */}
+              <div className="bg-[#f8fafc] px-3.5 sm:px-4 py-2.5 border-b border-[#dddddd] flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 shrink-0 text-[#181d26] font-bold text-[12px] sm:text-[13px]">
+                    <Receipt className="w-4 h-4 text-[#e31837]" />
+                    <span>Chọn mã đơn:</span>
+                  </div>
 
-                    {activeOrderDetails && (
-                      <>
-                        <span className="text-gray-300 hidden sm:inline">•</span>
-                        <span className="font-bold text-[#0f172a] hidden sm:inline">
-                          {formatVND(activeOrderDetails.totalAmount)}
-                        </span>
-                        {STATUS_CONFIG[activeOrderDetails.status] && (
-                          <span
-                            className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${STATUS_CONFIG[activeOrderDetails.status].color}`}
-                          >
-                            {STATUS_CONFIG[activeOrderDetails.status].label}
-                          </span>
-                        )}
-                      </>
-                    )}
+                  <select
+                    value={orderCode || ''}
+                    onChange={(e) => handleDropdownChange(e.target.value)}
+                    className="flex-1 h-9 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[12px] sm:text-[13px] font-medium text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] cursor-pointer shadow-2xs truncate"
+                  >
+                    <option value="">-- Bấm để chọn mã đơn hàng --</option>
+                    {dropdownOptions.map((opt) => (
+                      <option key={opt.code} value={opt.code}>
+                        {opt.label}
+                      </option>
+                    ))}
+                    <option value="__MANUAL_INPUT__">✏️ Tự nhập mã đơn khác...</option>
+                  </select>
+                </div>
+
+                {orderCode && activeItem?.status && (
+                  <span className="shrink-0 px-2.5 py-1 rounded-full bg-red-50 text-[#e31837] font-bold text-[11px] border border-red-200 shadow-2xs">
+                    {activeItem.status}
+                  </span>
+                )}
+              </div>
+
+              {/* Body: Chat messages or prompt to choose order */}
+              {!orderCode ? (
+                /* ── PROMPT WHEN NO ORDER IS SELECTED ── */
+                <div className="flex-1 p-6 sm:p-8 flex flex-col items-center justify-center text-center bg-[#fcfbf9]/80 space-y-3.5">
+                  <div className="w-14 h-14 rounded-2xl bg-red-50 text-[#e31837] flex items-center justify-center mx-auto shadow-xs border border-red-100">
+                    <Receipt className="w-7 h-7 stroke-1" />
+                  </div>
+                  <div className="max-w-md space-y-1.5">
+                    <h3 className="text-base sm:text-lg font-bold text-[#0f172a]">
+                      Vui lòng chọn mã đơn hàng từ menu trên
+                    </h3>
+                    <p className="text-[13px] text-[#555a64] leading-relaxed">
+                      Để nhân viên CSKH tra cứu đúng đơn và hỗ trợ bạn nhanh nhất, bạn vui lòng bấm vào menu <strong className="text-[#e31837]">"Chọn mã đơn"</strong> ở trên trước khi nhắn tin.
+                    </p>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => setIsChangingOrder(true)}
-                    className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#e31837] hover:text-[#be0e27] hover:underline cursor-pointer shrink-0"
+                    onClick={() => setShowCustomModal(true)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white border border-[#dddddd] hover:border-[#e31837] text-[#181d26] hover:text-[#e31837] text-[12px] font-semibold shadow-2xs transition cursor-pointer"
                   >
-                    <Edit className="w-3.5 h-3.5" />
-                    <span>Đổi mã đơn</span>
+                    <Edit className="w-3.5 h-3.5 text-[#e31837]" />
+                    <span>Hoặc nhập mã đơn của bạn</span>
                   </button>
-                </div>
-              ) : null}
-
-              {/* Body: Either Order Selection Screen OR Chat Messages */}
-              {isChangingOrder || !orderCode ? (
-                /* ── ORDER SELECTION SCREEN (Required step before chatting) ── */
-                <div className="flex-1 p-6 sm:p-8 flex flex-col items-center justify-center bg-[#fcfbf9]/80 overflow-y-auto">
-                  <div className="w-full max-w-md bg-white border border-[#dddddd] rounded-xl p-6 shadow-sm space-y-5">
-                    <div className="text-center space-y-1.5">
-                      <div className="w-12 h-12 rounded-2xl bg-red-50 text-[#e31837] flex items-center justify-center mx-auto mb-2">
-                        <Receipt className="w-6 h-6 stroke-1" />
-                      </div>
-                      <h3 className="text-base sm:text-lg font-extrabold text-[#0f172a]">
-                        Chọn mã đơn hàng cần hỗ trợ
-                      </h3>
-                      <p className="text-[12px] sm:text-[13px] text-[#555a64] leading-relaxed">
-                        Để nhân viên hỗ trợ đúng món và xử lý nhanh chóng, bạn vui lòng chọn đơn hàng cần trợ giúp trước khi gửi tin nhắn.
-                      </p>
-                    </div>
-
-                    {/* Case 1: Logged-in user with orders */}
-                    {user && userOrders.length > 0 && (
-                      <div className="space-y-3 pt-1 border-t border-[#f1f1f1]">
-                        <label className="block text-[12px] font-bold text-[#181d26]">
-                          Đơn hàng gần đây của bạn:
-                        </label>
-                        <select
-                          value={selectedDropdownCode}
-                          onChange={(e) => {
-                            setSelectedDropdownCode(e.target.value);
-                            if (e.target.value) {
-                              handleSelectFromDropdown(e.target.value);
-                            }
-                          }}
-                          className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[12px] text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
-                        >
-                          <option value="">-- Bấm vào đây để chọn đơn hàng --</option>
-                          {userOrders.map((ord) => {
-                            const code = ord.orderCode || (ord as any).code;
-                            const statusText = STATUS_CONFIG[ord.status]?.label || ord.status;
-                            return (
-                              <option key={ord.id} value={code}>
-                                #{code} • {formatVND(ord.totalAmount)} • {statusText} ({formatDate(ord.createdAt)})
-                              </option>
-                            );
-                          })}
-                        </select>
-                      </div>
-                    )}
-
-                    {/* Case 2: Manual Order Code Input (Available for both Guests and Users) */}
-                    <form onSubmit={handleConfirmManualCode} className="space-y-3 pt-2 border-t border-[#f1f1f1]">
-                      <label className="block text-[12px] font-bold text-[#181d26]">
-                        {user && userOrders.length > 0 ? 'Hoặc tự nhập mã đơn hàng khác:' : 'Nhập mã đơn hàng của bạn:'}
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={manualCodeInput}
-                          onChange={(e) => {
-                            setManualCodeInput(e.target.value);
-                            setManualCodeError('');
-                          }}
-                          placeholder="Ví dụ: NOONEE12345678"
-                          className="flex-1 h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] font-mono uppercase placeholder:normal-case placeholder:font-sans"
-                        />
-                        <button
-                          type="submit"
-                          className="h-10 px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white text-[13px] font-bold rounded-[6px] transition cursor-pointer shadow-xs shrink-0"
-                        >
-                          Xác nhận
-                        </button>
-                      </div>
-                      {manualCodeError && (
-                        <p className="text-[12px] text-[#e31837] font-medium">{manualCodeError}</p>
-                      )}
-                    </form>
-
-                    {/* Guest Helper & Login Suggestion */}
-                    {!user && (
-                      <div className="pt-2 text-center text-[12px] text-[#677992] border-t border-[#f1f1f1]">
-                        <span>Đã có tài khoản NooNee? </span>
-                        <Link href="/login" className="text-[#e31837] font-bold hover:underline inline-flex items-center gap-0.5">
-                          <span>Đăng nhập</span>
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        </Link>
-                        <span className="block mt-0.5 text-[11px] text-[#9297a0]">
-                          Đăng nhập để xem danh sách đơn hàng đã đặt
-                        </span>
-                      </div>
-                    )}
-                  </div>
                 </div>
               ) : (
                 /* ── CHAT MESSAGES AREA (Active when order is confirmed) ── */
@@ -483,10 +466,10 @@ function ContactChatContent() {
                     <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2 text-gray-400">
                       <MessageSquare className="w-10 h-10 text-gray-300" />
                       <p className="text-[13px] text-[#555a64] font-medium">
-                        Bạn đang nhắn tin hỗ trợ cho đơn hàng <strong className="text-[#0f172a]">#{orderCode}</strong>
+                        Bạn đang kết nối hỗ trợ cho đơn hàng <strong className="text-[#0f172a]">#{orderCode}</strong>
                       </p>
                       <p className="text-[12px] text-[#9297a0] max-w-sm">
-                        Hãy nhập câu hỏi, yêu cầu hoặc phản hồi chất lượng món ăn bên dưới để nhân viên NooNee hỗ trợ bạn ngay.
+                        Hãy nhập câu hỏi, yêu cầu hoặc phản hồi chất lượng món ăn bên dưới để nhân viên NooNee phản hồi bạn ngay.
                       </p>
                     </div>
                   ) : (
@@ -537,20 +520,20 @@ function ContactChatContent() {
                     ref={inputRef}
                     type="text"
                     required
-                    disabled={!orderCode || isChangingOrder}
+                    disabled={!orderCode}
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder={
-                      orderCode && !isChangingOrder
+                      orderCode
                         ? `Nhập nội dung cần hỗ trợ cho đơn #${orderCode}...`
-                        : '⚠️ Vui lòng chọn mã đơn hàng ở trên để bắt đầu nhắn tin...'
+                        : '⚠️ Vui lòng chọn mã đơn hàng trong dropdown ở trên để nhắn tin...'
                     }
                     className="flex-1 h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                   />
 
                   <button
                     type="submit"
-                    disabled={!orderCode || isChangingOrder || isSending || !inputText.trim()}
+                    disabled={!orderCode || isSending || !inputText.trim()}
                     className="h-10 px-4 sm:px-5 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs shrink-0"
                   >
                     {isSending ? (
@@ -566,10 +549,10 @@ function ContactChatContent() {
 
                 {/* Complaint Checkbox */}
                 <div className="flex items-center justify-between text-[11px] text-[#555a64] px-1">
-                  <label className={`flex items-center gap-1.5 select-none ${!orderCode || isChangingOrder ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <label className={`flex items-center gap-1.5 select-none ${!orderCode ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
                     <input
                       type="checkbox"
-                      disabled={!orderCode || isChangingOrder}
+                      disabled={!orderCode}
                       checked={isComplaint}
                       onChange={(e) => setIsComplaint(e.target.checked)}
                       className="accent-[#e31837] rounded"
@@ -580,7 +563,7 @@ function ContactChatContent() {
                   </label>
 
                   <span className="text-[10px] text-gray-400 hidden sm:inline">
-                    {orderCode && !isChangingOrder ? 'Nhấn Enter để gửi' : 'Bắt buộc chọn mã đơn hàng trước khi gửi'}
+                    {orderCode ? 'Nhấn Enter để gửi' : 'Bắt buộc chọn mã đơn hàng trước khi gửi'}
                   </span>
                 </div>
               </form>
@@ -588,6 +571,71 @@ function ContactChatContent() {
           </div>
         </div>
       </div>
+
+      {/* ── MODAL: MANUAL CODE INPUT (When user picks 'Tự nhập mã đơn khác') ── */}
+      {showCustomModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border border-[#dddddd] shadow-xl max-w-sm w-full p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#dddddd] pb-3">
+              <h3 className="font-bold text-[#0f172a] text-[15px] flex items-center gap-1.5">
+                <Receipt className="w-4 h-4 text-[#e31837]" />
+                <span>Nhập mã đơn hàng</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCustomModal(false);
+                  setCustomError('');
+                }}
+                className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmCustomCode} className="space-y-3">
+              <div>
+                <label className="block text-[12px] font-bold text-[#181d26] mb-1">
+                  Mã đơn hàng:
+                </label>
+                <input
+                  type="text"
+                  autoFocus
+                  value={customCodeInput}
+                  onChange={(e) => {
+                    setCustomCodeInput(e.target.value);
+                    setCustomError('');
+                  }}
+                  placeholder="Ví dụ: NOONEE12345678"
+                  className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] font-mono uppercase placeholder:normal-case placeholder:font-sans"
+                />
+                {customError && (
+                  <p className="text-[11px] text-[#e31837] font-medium mt-1">{customError}</p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#f1f1f1]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCustomModal(false);
+                    setCustomError('');
+                  }}
+                  className="px-3.5 py-2 text-[12px] font-medium text-gray-600 hover:bg-gray-100 rounded-[6px] transition cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[#e31837] hover:bg-[#be0e27] text-white text-[12px] font-bold rounded-[6px] transition cursor-pointer shadow-xs"
+                >
+                  Xác nhận
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
