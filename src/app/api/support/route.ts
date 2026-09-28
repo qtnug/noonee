@@ -49,6 +49,15 @@ export async function POST(request: NextRequest) {
       resolvedRole = 'admin';
     }
 
+    // Require orderCode for customer support inquiries
+    const cleanOrderCode = orderCode ? String(orderCode).trim().replace(/^#+/, '') : '';
+    if (resolvedRole === 'customer' && !cleanOrderCode) {
+      return NextResponse.json(
+        { success: false, message: 'Vui lòng chọn hoặc nhập mã đơn hàng trước khi gửi yêu cầu hỗ trợ' },
+        { status: 400 }
+      );
+    }
+
     const resolvedUserId = authUser ? authUser.userId : (userId ? parseInt(String(userId)) : null);
 
     const newMsg = await createSupportMessage({

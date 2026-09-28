@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import {
   CiMapPin as MapPin,
   CiPhone as Phone,
@@ -9,57 +10,57 @@ import {
   CiMail as Mail,
   CiPaperplane as Send,
   CiChat1 as MessageSquare,
-  CiCircleCheck as CheckCircle2,
   CiWarning as AlertTriangle,
   CiRedo as RefreshCw,
   CiUser as User,
-  CiShoppingBasket as ShoppingBag,
-  CiStar as Sparkles,
+  CiReceipt as Receipt,
+  CiEdit as Edit,
+  CiDeliveryTruck as Truck,
+  CiLogin as Login,
   CiRedo as Loader2,
-  CiCircleQuestion as HelpCircle,
-  CiCircleCheck as ShieldCheck,
   CiHeadphones as Headphones,
+  CiCircleChevRight as ChevronRight,
+  CiCircleCheck as CheckCircle,
 } from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
-import { SupportMessage } from '@/types';
-import { formatDate } from '@/lib/utils';
+import { SupportMessage, Order } from '@/types';
+import { formatDate, formatVND } from '@/lib/utils';
+
+// Helper to map order status into readable Vietnamese
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  Pending: { label: 'Chờ xác nhận', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+  Processing: { label: 'Đang chế biến', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+  Delivering: { label: 'Đang giao hàng', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+  Completed: { label: 'Đã hoàn thành', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  Cancelled: { label: 'Đã hủy', color: 'bg-rose-50 text-rose-700 border-rose-200' },
+};
 
 function ContactChatContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const urlOrderCode = searchParams.get('orderCode') || '';
 
+  // Order state: MUST select order before chatting
+  const [orderCode, setOrderCode] = useState<string>(urlOrderCode.trim().replace(/^#+/, ''));
+  const [isChangingOrder, setIsChangingOrder] = useState<boolean>(!urlOrderCode);
+  const [userOrders, setUserOrders] = useState<Order[]>([]);
+  const [selectedDropdownCode, setSelectedDropdownCode] = useState<string>('');
+  const [manualCodeInput, setManualCodeInput] = useState<string>('');
+  const [manualCodeError, setManualCodeError] = useState<string>('');
+  const [loadingOrders, setLoadingOrders] = useState<boolean>(false);
+  const [activeOrderDetails, setActiveOrderDetails] = useState<Order | null>(null);
+
   // Chat State
   const [messages, setMessages] = useState<SupportMessage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
-  const [inputText, setInputText] = useState('');
-  const [isComplaint, setIsComplaint] = useState(false);
-
-  // Identity & Session state
-  const [guestSessionId, setGuestSessionId] = useState<string>('');
-  const [orderCode, setOrderCode] = useState(urlOrderCode);
-  const [userOrders, setUserOrders] = useState<string[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState<boolean>(false);
+  const [isSending, setIsSending] = useState<boolean>(false);
+  const [inputText, setInputText] = useState<string>('');
+  const [isComplaint, setIsComplaint] = useState<boolean>(false);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize unique guest session for chat isolation
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      let saved = localStorage.getItem('noonee_guest_chat_session');
-      if (!saved) {
-        saved = 'GUEST_' + Math.random().toString(36).substring(2, 10).toUpperCase();
-        localStorage.setItem('noonee_guest_chat_session', saved);
-      }
-      setGuestSessionId(saved);
-    }
-  }, []);
-
-  // Compute active chat room identifier: orderCode if selected, otherwise USER_id or guest session
-  const activeChatKey = orderCode.trim() || (user?.id ? `USER_${user.id}` : guestSessionId);
-
-  // Helper to scroll only the chat message box (never jumps or scrolls the outer webpage)
+  // Helper to scroll only the chat message box
   const scrollToBottom = (smooth = true) => {
     const el = messagesContainerRef.current;
     if (!el) return;
@@ -70,32 +71,56 @@ function ContactChatContent() {
     }
   };
 
-  // If user is logged in, fetch 3 recent orders for quick selection
+  // If user is logged in, fetch their orders list
   useEffect(() => {
     if (user) {
-      fetch('/api/orders')
+      setLoadingOrders(true);
+      fetch(`/api/orders?userId=${user.id}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.success && Array.isArray(data.data)) {
-            const codes = data.data.map((o: any) => o.code).slice(0, 3);
-            setUserOrders(codes);
+            setUserOrders(data.data);
+          }
+        })
+        .catch((e) => console.error('Error loading user orders:', e))
+        .finally(() => setLoadingOrders(false));
+    }
+  }, [user]);
+
+  // Sync active order details when orderCode changes
+  useEffect(() => {
+    if (!orderCode) {
+      setActiveOrderDetails(null);
+      return;
+    }
+
+    // Try finding in userOrders first
+    const matched = userOrders.find(
+      (o) => (o.orderCode || (o as any).code || '').toLowerCase() === orderCode.toLowerCase()
+    );
+    if (matched) {
+      setActiveOrderDetails(matched);
+    } else {
+      // Or fetch order info from API
+      fetch(`/api/orders/${encodeURIComponent(orderCode)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.data) {
+            setActiveOrderDetails(data.data);
           }
         })
         .catch(() => {});
     }
-  }, [user]);
+  }, [orderCode, userOrders]);
 
-  // Fetch messages from Support API for this isolated session / order
+  // Fetch messages from Support API for this specific orderCode
   const fetchMessages = async (isInitialOrManual = false) => {
-    if (!activeChatKey) return;
+    if (!orderCode) return;
     try {
-      const res = await fetch(`/api/support?orderCode=${encodeURIComponent(activeChatKey)}`);
+      const res = await fetch(`/api/support?orderCode=${encodeURIComponent(orderCode)}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         const incoming: SupportMessage[] = data.data;
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('noonee_last_viewed_support', Date.now().toString());
-        }
 
         setMessages((prev) => {
           if (
@@ -124,26 +149,58 @@ function ContactChatContent() {
     } catch (e) {
       console.error('Error loading chat messages:', e);
     } finally {
-      setLoading(false);
+      setLoadingMessages(false);
     }
   };
 
-  // Initial fetch and 3.5s real-time poll
+  // Initial fetch and 3.5s real-time poll when orderCode is active
   useEffect(() => {
-    if (!activeChatKey) return;
-    setLoading(true);
+    if (!orderCode || isChangingOrder) {
+      setMessages([]);
+      return;
+    }
+    setLoadingMessages(true);
     fetchMessages(true);
     const interval = setInterval(() => {
       fetchMessages(false);
     }, 3500);
     return () => clearInterval(interval);
-  }, [activeChatKey]);
+  }, [orderCode, isChangingOrder]);
+
+  // Handle selecting an order from dropdown
+  const handleSelectFromDropdown = (code: string) => {
+    if (!code) return;
+    const clean = code.trim().replace(/^#+/, '');
+    setOrderCode(clean);
+    setIsChangingOrder(false);
+    setManualCodeError('');
+    setTimeout(() => inputRef.current?.focus(), 150);
+  };
+
+  // Handle manual code confirmation
+  const handleConfirmManualCode = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const clean = manualCodeInput.trim().replace(/^#+/, '');
+    if (!clean) {
+      setManualCodeError('Vui lòng nhập mã đơn hàng của bạn');
+      return;
+    }
+    setOrderCode(clean);
+    setIsChangingOrder(false);
+    setManualCodeError('');
+    setTimeout(() => inputRef.current?.focus(), 150);
+  };
 
   // Handle Send Message
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const cleanMsg = inputText.trim();
-    if (!cleanMsg || isSending || !activeChatKey) return;
+    if (!cleanMsg || isSending) return;
+
+    if (!orderCode) {
+      setIsChangingOrder(true);
+      return;
+    }
 
     const senderName = user?.fullName || user?.username || 'Khách hàng';
 
@@ -153,7 +210,7 @@ function ContactChatContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderCode: activeChatKey,
+          orderCode: orderCode.trim(),
           userId: user?.id || null,
           senderRole: 'customer',
           senderName,
@@ -170,6 +227,8 @@ function ContactChatContent() {
         setTimeout(() => {
           scrollToBottom(true);
         }, 50);
+      } else {
+        alert(data.message || 'Không thể gửi tin nhắn. Vui lòng kiểm tra lại mã đơn.');
       }
     } catch (err) {
       console.error('Error sending message:', err);
@@ -185,10 +244,10 @@ function ContactChatContent() {
         {/* Header Band */}
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0f172a] tracking-tight">
-            Tư Vấn & Hỗ Trợ Trực Tuyến NooNee
+            Tư Vấn & Hỗ Trợ Đơn Hàng NooNee
           </h1>
           <p className="text-[14px] sm:text-[15px] text-[#41454d] leading-relaxed">
-            Nhắn tin trực tiếp với đội ngũ Chăm sóc khách hàng và Quản trị viên để được giải đáp thắc mắc, tư vấn món ngon hoặc tiếp nhận xử lý đơn hàng tức thì.
+            Chọn mã đơn hàng để kết nối trực tiếp với đội ngũ Chăm sóc khách hàng NooNee, giải đáp thắc mắc và xử lý đơn hàng nhanh chóng.
           </p>
         </div>
 
@@ -249,7 +308,7 @@ function ContactChatContent() {
             </div>
           </div>
 
-          {/* Right Column: Interactive Live Chat Area */}
+          {/* Right Column: Interactive Support Chat Area */}
           <div className="lg:col-span-8">
             <div className="bg-white rounded-[10px] border border-[#dddddd] shadow-sm overflow-hidden flex flex-col h-[600px] sm:h-[640px]">
               {/* Chat Window Top Bar */}
@@ -260,120 +319,239 @@ function ContactChatContent() {
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-semibold text-[14px] sm:text-[15px] !text-white text-white truncate flex items-center gap-2">
-                      <span className="text-white">NooNee CSKH Trực Tuyến</span>
+                      <span>NooNee CSKH Trực Tuyến</span>
+                      {orderCode && !isChangingOrder && (
+                        <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          Trực tuyến
+                        </span>
+                      )}
                     </h3>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => fetchMessages(true)}
-                  disabled={loading}
-                  className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-[6px] transition cursor-pointer"
-                  title="Tải lại tin nhắn"
-                >
-                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                </button>
-              </div>
-
-              {/* Chat Topic Filter Bar (Without name input) */}
-              <div className="bg-[#f8fafc] px-3.5 py-2.5 border-b border-[#dddddd] flex items-center justify-between gap-2 text-[12px]">
-                <div className="flex items-center gap-2">
-                  <span className="text-[#555a64] font-medium">Chủ đề hỗ trợ:</span>
-                  <select
-                    value={orderCode}
-                    onChange={(e) => setOrderCode(e.target.value)}
-                    className="h-7 px-2.5 bg-white border border-[#dddddd] rounded-[4px] text-[12px] font-medium text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
+                {orderCode && !isChangingOrder && (
+                  <button
+                    type="button"
+                    onClick={() => fetchMessages(true)}
+                    disabled={loadingMessages}
+                    className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-[6px] transition cursor-pointer"
+                    title="Tải lại tin nhắn"
                   >
-                    <option value="">Hỗ trợ chung</option>
-                    {orderCode && !userOrders.includes(orderCode) && (
-                      <option value={orderCode}>Đơn hàng #{orderCode}</option>
-                    )}
-                    {userOrders.map((code) => (
-                      <option key={code} value={code}>
-                        Đơn hàng #{code}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="text-[11px] text-[#9297a0]">
-                  {user ? (user.fullName || user.username) : 'Khách vãng lai'}
-                </div>
-              </div>
-
-              {/* Messages Scrollable Area */}
-              <div ref={messagesContainerRef} className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-[#fcfbf9]/60">
-                {loading && messages.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-gray-400 text-[13px] gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin text-[#e31837]" />
-                    <span>Đang kết nối tới tổng đài hỗ trợ...</span>
-                  </div>
-                ) : messages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2 text-gray-400">
-                    <MessageSquare className="w-10 h-10 text-gray-300" />
-                    <p className="text-[13px] text-[#555a64] font-medium">Xin chào! Bạn cần NooNee hỗ trợ điều gì hôm nay?</p>
-                    <p className="text-[12px] text-[#9297a0]">Gửi tin nhắn bên dưới, nhân viên hỗ trợ sẽ phản hồi bạn ngay.</p>
-                  </div>
-                ) : (
-                  messages.map((m) => {
-                    const isAdmin = m.senderRole === 'admin';
-                    return (
-                      <div
-                        key={m.id}
-                        className={`flex flex-col ${isAdmin ? 'items-start' : 'items-end'}`}
-                      >
-                        <div className="flex items-center gap-1.5 mb-1 px-1">
-                          <span className={`text-[11px] font-semibold ${isAdmin ? 'text-[#e31837]' : 'text-[#181d26]'}`}>
-                            {isAdmin ? 'NooNee CSKH' : m.senderName}
-                          </span>
-                          <span className="text-[10px] text-gray-400">
-                            {formatDate(m.createdAt)}
-                          </span>
-                        </div>
-
-                        <div
-                          className={`max-w-md sm:max-w-lg p-3 rounded-[8px] text-[13px] leading-relaxed shadow-2xs ${
-                            isAdmin
-                              ? 'bg-white border border-[#dddddd] text-[#181d26] rounded-tl-xs'
-                              : m.isComplaint
-                              ? 'bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] rounded-tr-xs font-medium'
-                              : 'bg-[#e31837] text-white rounded-tr-xs'
-                          }`}
-                        >
-                          {m.isComplaint && (
-                            <div className="flex items-center gap-1 text-[11px] font-bold text-[#e31837] mb-1">
-                              <AlertTriangle className="w-3.5 h-3.5" />
-                              <span>KHIẾU NẠI ĐƠN HÀNG</span>
-                            </div>
-                          )}
-                          <p className="whitespace-pre-wrap break-words">{m.message}</p>
-                        </div>
-                      </div>
-                    );
-                  })
+                    <RefreshCw className={`w-4 h-4 ${loadingMessages ? 'animate-spin' : ''}`} />
+                  </button>
                 )}
               </div>
 
-              {/* Chat Input & Controls (Suggestions removed) */}
+              {/* Order Status Banner (When order is selected) */}
+              {orderCode && !isChangingOrder ? (
+                <div className="bg-[#f8fafc] px-4 py-2.5 border-b border-[#dddddd] flex items-center justify-between gap-3 text-[12px]">
+                  <div className="flex items-center gap-2 flex-wrap min-w-0">
+                    <div className="flex items-center gap-1.5 font-bold text-[#181d26]">
+                      <Receipt className="w-4 h-4 text-[#e31837]" />
+                      <span>Đang hỗ trợ đơn:</span>
+                      <span className="text-[#e31837] font-mono text-[13px]">#{orderCode}</span>
+                    </div>
 
-              {/* Chat Input & Controls */}
+                    {activeOrderDetails && (
+                      <>
+                        <span className="text-gray-300 hidden sm:inline">•</span>
+                        <span className="font-bold text-[#0f172a] hidden sm:inline">
+                          {formatVND(activeOrderDetails.totalAmount)}
+                        </span>
+                        {STATUS_CONFIG[activeOrderDetails.status] && (
+                          <span
+                            className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${STATUS_CONFIG[activeOrderDetails.status].color}`}
+                          >
+                            {STATUS_CONFIG[activeOrderDetails.status].label}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsChangingOrder(true)}
+                    className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#e31837] hover:text-[#be0e27] hover:underline cursor-pointer shrink-0"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                    <span>Đổi mã đơn</span>
+                  </button>
+                </div>
+              ) : null}
+
+              {/* Body: Either Order Selection Screen OR Chat Messages */}
+              {isChangingOrder || !orderCode ? (
+                /* ── ORDER SELECTION SCREEN (Required step before chatting) ── */
+                <div className="flex-1 p-6 sm:p-8 flex flex-col items-center justify-center bg-[#fcfbf9]/80 overflow-y-auto">
+                  <div className="w-full max-w-md bg-white border border-[#dddddd] rounded-xl p-6 shadow-sm space-y-5">
+                    <div className="text-center space-y-1.5">
+                      <div className="w-12 h-12 rounded-2xl bg-red-50 text-[#e31837] flex items-center justify-center mx-auto mb-2">
+                        <Receipt className="w-6 h-6 stroke-1" />
+                      </div>
+                      <h3 className="text-base sm:text-lg font-extrabold text-[#0f172a]">
+                        Chọn mã đơn hàng cần hỗ trợ
+                      </h3>
+                      <p className="text-[12px] sm:text-[13px] text-[#555a64] leading-relaxed">
+                        Để nhân viên hỗ trợ đúng món và xử lý nhanh chóng, bạn vui lòng chọn đơn hàng cần trợ giúp trước khi gửi tin nhắn.
+                      </p>
+                    </div>
+
+                    {/* Case 1: Logged-in user with orders */}
+                    {user && userOrders.length > 0 && (
+                      <div className="space-y-3 pt-1 border-t border-[#f1f1f1]">
+                        <label className="block text-[12px] font-bold text-[#181d26]">
+                          Đơn hàng gần đây của bạn:
+                        </label>
+                        <select
+                          value={selectedDropdownCode}
+                          onChange={(e) => {
+                            setSelectedDropdownCode(e.target.value);
+                            if (e.target.value) {
+                              handleSelectFromDropdown(e.target.value);
+                            }
+                          }}
+                          className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[12px] text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
+                        >
+                          <option value="">-- Bấm vào đây để chọn đơn hàng --</option>
+                          {userOrders.map((ord) => {
+                            const code = ord.orderCode || (ord as any).code;
+                            const statusText = STATUS_CONFIG[ord.status]?.label || ord.status;
+                            return (
+                              <option key={ord.id} value={code}>
+                                #{code} • {formatVND(ord.totalAmount)} • {statusText} ({formatDate(ord.createdAt)})
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Case 2: Manual Order Code Input (Available for both Guests and Users) */}
+                    <form onSubmit={handleConfirmManualCode} className="space-y-3 pt-2 border-t border-[#f1f1f1]">
+                      <label className="block text-[12px] font-bold text-[#181d26]">
+                        {user && userOrders.length > 0 ? 'Hoặc tự nhập mã đơn hàng khác:' : 'Nhập mã đơn hàng của bạn:'}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={manualCodeInput}
+                          onChange={(e) => {
+                            setManualCodeInput(e.target.value);
+                            setManualCodeError('');
+                          }}
+                          placeholder="Ví dụ: NOONEE12345678"
+                          className="flex-1 h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] font-mono uppercase placeholder:normal-case placeholder:font-sans"
+                        />
+                        <button
+                          type="submit"
+                          className="h-10 px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white text-[13px] font-bold rounded-[6px] transition cursor-pointer shadow-xs shrink-0"
+                        >
+                          Xác nhận
+                        </button>
+                      </div>
+                      {manualCodeError && (
+                        <p className="text-[12px] text-[#e31837] font-medium">{manualCodeError}</p>
+                      )}
+                    </form>
+
+                    {/* Guest Helper & Login Suggestion */}
+                    {!user && (
+                      <div className="pt-2 text-center text-[12px] text-[#677992] border-t border-[#f1f1f1]">
+                        <span>Đã có tài khoản NooNee? </span>
+                        <Link href="/login" className="text-[#e31837] font-bold hover:underline inline-flex items-center gap-0.5">
+                          <span>Đăng nhập</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+                        <span className="block mt-0.5 text-[11px] text-[#9297a0]">
+                          Đăng nhập để xem danh sách đơn hàng đã đặt
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* ── CHAT MESSAGES AREA (Active when order is confirmed) ── */
+                <div ref={messagesContainerRef} className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-[#fcfbf9]/60">
+                  {loadingMessages && messages.length === 0 ? (
+                    <div className="h-full flex items-center justify-center text-gray-400 text-[13px] gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-[#e31837]" />
+                      <span>Đang tải tin nhắn hỗ trợ cho đơn #{orderCode}...</span>
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2 text-gray-400">
+                      <MessageSquare className="w-10 h-10 text-gray-300" />
+                      <p className="text-[13px] text-[#555a64] font-medium">
+                        Bạn đang nhắn tin hỗ trợ cho đơn hàng <strong className="text-[#0f172a]">#{orderCode}</strong>
+                      </p>
+                      <p className="text-[12px] text-[#9297a0] max-w-sm">
+                        Hãy nhập câu hỏi, yêu cầu hoặc phản hồi chất lượng món ăn bên dưới để nhân viên NooNee hỗ trợ bạn ngay.
+                      </p>
+                    </div>
+                  ) : (
+                    messages.map((m) => {
+                      const isAdmin = m.senderRole === 'admin';
+                      return (
+                        <div
+                          key={m.id}
+                          className={`flex flex-col ${isAdmin ? 'items-start' : 'items-end'}`}
+                        >
+                          <div className="flex items-center gap-1.5 mb-1 px-1">
+                            <span className={`text-[11px] font-semibold ${isAdmin ? 'text-[#e31837]' : 'text-[#181d26]'}`}>
+                              {isAdmin ? 'NooNee CSKH' : m.senderName}
+                            </span>
+                            <span className="text-[10px] text-gray-400">
+                              {formatDate(m.createdAt)}
+                            </span>
+                          </div>
+
+                          <div
+                            className={`max-w-md sm:max-w-lg p-3 rounded-[8px] text-[13px] leading-relaxed shadow-2xs ${
+                              isAdmin
+                                ? 'bg-white border border-[#dddddd] text-[#181d26] rounded-tl-xs'
+                                : m.isComplaint
+                                ? 'bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] rounded-tr-xs font-medium'
+                                : 'bg-[#e31837] text-white rounded-tr-xs'
+                            }`}
+                          >
+                            {m.isComplaint && (
+                              <div className="flex items-center gap-1 text-[11px] font-bold text-[#e31837] mb-1">
+                                <AlertTriangle className="w-3.5 h-3.5" />
+                                <span>KHIẾU NẠI ĐƠN HÀNG</span>
+                              </div>
+                            )}
+                            <p className="whitespace-pre-wrap break-words">{m.message}</p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {/* Chat Input & Controls (Disabled when no orderCode is selected) */}
               <form onSubmit={handleSendMessage} className="p-3 sm:p-3.5 bg-white border-t border-[#dddddd] space-y-2">
                 <div className="flex items-center gap-2">
                   <input
                     ref={inputRef}
                     type="text"
                     required
+                    disabled={!orderCode || isChangingOrder}
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
-                    placeholder="Nhập nội dung cần hỗ trợ hoặc khiếu nại..."
-                    className="flex-1 h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                    placeholder={
+                      orderCode && !isChangingOrder
+                        ? `Nhập nội dung cần hỗ trợ cho đơn #${orderCode}...`
+                        : '⚠️ Vui lòng chọn mã đơn hàng ở trên để bắt đầu nhắn tin...'
+                    }
+                    className="flex-1 h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                   />
 
                   <button
                     type="submit"
-                    disabled={isSending || !inputText.trim()}
-                    className="h-10 px-4 sm:px-5 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-xs shrink-0"
+                    disabled={!orderCode || isChangingOrder || isSending || !inputText.trim()}
+                    className="h-10 px-4 sm:px-5 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs shrink-0"
                   >
                     {isSending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -388,9 +566,10 @@ function ContactChatContent() {
 
                 {/* Complaint Checkbox */}
                 <div className="flex items-center justify-between text-[11px] text-[#555a64] px-1">
-                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                  <label className={`flex items-center gap-1.5 select-none ${!orderCode || isChangingOrder ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
                     <input
                       type="checkbox"
+                      disabled={!orderCode || isChangingOrder}
                       checked={isComplaint}
                       onChange={(e) => setIsComplaint(e.target.checked)}
                       className="accent-[#e31837] rounded"
@@ -401,7 +580,7 @@ function ContactChatContent() {
                   </label>
 
                   <span className="text-[10px] text-gray-400 hidden sm:inline">
-                    Nhấn Enter để gửi
+                    {orderCode && !isChangingOrder ? 'Nhấn Enter để gửi' : 'Bắt buộc chọn mã đơn hàng trước khi gửi'}
                   </span>
                 </div>
               </form>
