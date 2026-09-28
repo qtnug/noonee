@@ -35,15 +35,15 @@ export default async function ProductDetailPage({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-12">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-[12px] sm:text-[13px] text-[#41454d]">
-          <Link href="/" className="hover:text-[#e31837] transition">
+          <Link href="/" className="hover:text-[#A30029] transition">
             Trang chủ
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-[#9297a0]" />
-          <Link href="/menu" className="hover:text-[#e31837] transition">
+          <Link href="/menu" className="hover:text-[#A30029] transition">
             Thực đơn
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-[#9297a0]" />
-          <span className="text-[#e31837] font-semibold truncate">{product.name}</span>
+          <span className="text-[#A30029] font-semibold truncate">{product.name}</span>
         </div>
 
         {/* Product Grid */}
@@ -56,7 +56,7 @@ export default async function ProductDetailPage({
               alt={product.name}
               className="w-full h-full object-cover"
             />
-            <span className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-white text-[#e31837] text-[11px] sm:text-[12px] font-bold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-[4px] border border-[#fecdd3] shadow-xs">
+            <span className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-white text-[#A30029] text-[11px] sm:text-[12px] font-bold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-[4px] border border-[#fecdd3] shadow-xs">
               {product.categoryName || 'Món ăn'}
             </span>
             <FavoriteButton
@@ -83,13 +83,13 @@ export default async function ProductDetailPage({
               </div>
 
               <div className="flex items-baseline gap-2.5">
-                <span className="text-2xl sm:text-3xl font-bold text-[#e31837]">
+                <span className="text-2xl sm:text-3xl font-bold text-[#A30029]">
                   {formatVND(product.price)}
                 </span>
               </div>
 
               <div className="border-t border-b border-[#dddddd] py-4 sm:py-5 space-y-2">
-                <h3 className="text-[12px] font-semibold uppercase text-[#e31837] tracking-wider">
+                <h3 className="text-[12px] font-semibold uppercase text-[#A30029] tracking-wider">
                   Mô tả món ăn
                 </h3>
                 <p className="text-[13px] sm:text-[14px] text-[#41454d] leading-relaxed">
@@ -100,7 +100,7 @@ export default async function ProductDetailPage({
               {/* Prep time badge */}
               <div>
                 <div className="inline-flex items-center gap-2 p-2.5 sm:p-3 rounded-[6px] bg-[#fff1f2]/50 border border-[#fecdd3] text-[12px] sm:text-[13px] text-[#41454d]">
-                  <Clock className="w-4 h-4 text-[#e31837] shrink-0" />
+                  <Clock className="w-4 h-4 text-[#A30029] shrink-0" />
                   <span>Chuẩn bị trong {product.prepTime || 15} phút</span>
                 </div>
               </div>

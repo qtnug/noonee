@@ -309,13 +309,13 @@ function ContactChatContent() {
           <div className="lg:col-span-4 space-y-4">
             <div className="bg-white rounded-[10px] border border-[#dddddd] p-5 sm:p-6 shadow-xs space-y-4">
               <h2 className="text-base font-bold text-[#181d26] pb-3 border-b border-[#dddddd] flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#e31837]" />
+                <MapPin className="w-4 h-4 text-[#A30029]" />
                 Thông tin nhà hàng NooNee
               </h2>
 
               <div className="space-y-3.5 text-[13px] text-[#41454d]">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-[6px] bg-red-50 flex items-center justify-center shrink-0 mt-0.5 text-[#e31837]">
+                  <div className="w-8 h-8 rounded-[6px] bg-red-50 flex items-center justify-center shrink-0 mt-0.5 text-[#A30029]">
                     <MapPin className="w-4 h-4" />
                   </div>
                   <div>
@@ -325,12 +325,12 @@ function ContactChatContent() {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-[6px] bg-red-50 flex items-center justify-center shrink-0 mt-0.5 text-[#e31837]">
+                  <div className="w-8 h-8 rounded-[6px] bg-red-50 flex items-center justify-center shrink-0 mt-0.5 text-[#A30029]">
                     <Phone className="w-4 h-4" />
                   </div>
                   <div>
                     <strong className="block text-[#181d26]">Hotline khẩn cấp:</strong>
-                    <a href="tel:0988888888" className="text-[#e31837] font-bold text-[14px] hover:underline">
+                    <a href="tel:0988888888" className="text-[#A30029] font-bold text-[14px] hover:underline">
                       0988.888.888
                     </a>
                     <span className="block text-[11px] text-[#9297a0]">Hỗ trợ nhanh các đơn gấp</span>
@@ -338,7 +338,7 @@ function ContactChatContent() {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-[6px] bg-red-50 flex items-center justify-center shrink-0 mt-0.5 text-[#e31837]">
+                  <div className="w-8 h-8 rounded-[6px] bg-red-50 flex items-center justify-center shrink-0 mt-0.5 text-[#A30029]">
                     <Clock className="w-4 h-4" />
                   </div>
                   <div>
@@ -348,7 +348,7 @@ function ContactChatContent() {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-[6px] bg-red-50 flex items-center justify-center shrink-0 mt-0.5 text-[#e31837]">
+                  <div className="w-8 h-8 rounded-[6px] bg-red-50 flex items-center justify-center shrink-0 mt-0.5 text-[#A30029]">
                     <Mail className="w-4 h-4" />
                   </div>
                   <div>
@@ -366,7 +366,7 @@ function ContactChatContent() {
               {/* Chat Window Top Bar */}
               <div className="p-3.5 sm:p-4 bg-gradient-to-r from-[#181d26] to-[#262c36] text-white flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-9 h-9 rounded-full bg-[#e31837] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
+                  <div className="w-9 h-9 rounded-full bg-[#A30029] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
                     <Headphones className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
@@ -403,14 +403,14 @@ function ContactChatContent() {
               <div className="bg-[#f8fafc] px-3.5 sm:px-4 py-2.5 border-b border-[#dddddd] flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 shrink-0 text-[#181d26] font-bold text-[12px] sm:text-[13px]">
-                    <Receipt className="w-4 h-4 text-[#e31837]" />
+                    <Receipt className="w-4 h-4 text-[#A30029]" />
                     <span>Chọn mã đơn:</span>
                   </div>
 
                   <select
                     value={orderCode || ''}
                     onChange={(e) => handleDropdownChange(e.target.value)}
-                    className="flex-1 h-9 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[12px] sm:text-[13px] font-medium text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] cursor-pointer shadow-2xs truncate"
+                    className="flex-1 h-9 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[12px] sm:text-[13px] font-medium text-[#181d26] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] cursor-pointer shadow-2xs truncate"
                   >
                     <option value="">-- Bấm để chọn mã đơn hàng --</option>
                     {dropdownOptions.map((opt) => (
@@ -423,7 +423,7 @@ function ContactChatContent() {
                 </div>
 
                 {orderCode && activeItem?.status && (
-                  <span className="shrink-0 px-2.5 py-1 rounded-full bg-red-50 text-[#e31837] font-bold text-[11px] border border-red-200 shadow-2xs">
+                  <span className="shrink-0 px-2.5 py-1 rounded-full bg-red-50 text-[#A30029] font-bold text-[11px] border border-red-200 shadow-2xs">
                     {activeItem.status}
                   </span>
                 )}
@@ -433,7 +433,7 @@ function ContactChatContent() {
               {!orderCode ? (
                 /* ── PROMPT WHEN NO ORDER IS SELECTED ── */
                 <div className="flex-1 p-6 sm:p-8 flex flex-col items-center justify-center text-center bg-[#fcfbf9]/80 space-y-3.5">
-                  <div className="w-14 h-14 rounded-2xl bg-red-50 text-[#e31837] flex items-center justify-center mx-auto shadow-xs border border-red-100">
+                  <div className="w-14 h-14 rounded-2xl bg-red-50 text-[#A30029] flex items-center justify-center mx-auto shadow-xs border border-red-100">
                     <Receipt className="w-7 h-7 stroke-1" />
                   </div>
                   <div className="max-w-md space-y-1.5">
@@ -441,16 +441,16 @@ function ContactChatContent() {
                       Vui lòng chọn mã đơn hàng từ menu trên
                     </h3>
                     <p className="text-[13px] text-[#555a64] leading-relaxed">
-                      Để nhân viên CSKH tra cứu đúng đơn và hỗ trợ bạn nhanh nhất, bạn vui lòng bấm vào menu <strong className="text-[#e31837]">"Chọn mã đơn"</strong> ở trên trước khi nhắn tin.
+                      Để nhân viên CSKH tra cứu đúng đơn và hỗ trợ bạn nhanh nhất, bạn vui lòng bấm vào menu <strong className="text-[#A30029]">"Chọn mã đơn"</strong> ở trên trước khi nhắn tin.
                     </p>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setShowCustomModal(true)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white border border-[#dddddd] hover:border-[#e31837] text-[#181d26] hover:text-[#e31837] text-[12px] font-semibold shadow-2xs transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white border border-[#dddddd] hover:border-[#A30029] text-[#181d26] hover:text-[#A30029] text-[12px] font-semibold shadow-2xs transition cursor-pointer"
                   >
-                    <Edit className="w-3.5 h-3.5 text-[#e31837]" />
+                    <Edit className="w-3.5 h-3.5 text-[#A30029]" />
                     <span>Hoặc nhập mã đơn của bạn</span>
                   </button>
                 </div>
@@ -459,7 +459,7 @@ function ContactChatContent() {
                 <div ref={messagesContainerRef} className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-[#fcfbf9]/60">
                   {loadingMessages && messages.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-gray-400 text-[13px] gap-2">
-                      <Loader2 className="w-5 h-5 animate-spin text-[#e31837]" />
+                      <Loader2 className="w-5 h-5 animate-spin text-[#A30029]" />
                       <span>Đang tải tin nhắn hỗ trợ cho đơn #{orderCode}...</span>
                     </div>
                   ) : messages.length === 0 ? (
@@ -481,7 +481,7 @@ function ContactChatContent() {
                           className={`flex flex-col ${isAdmin ? 'items-start' : 'items-end'}`}
                         >
                           <div className="flex items-center gap-1.5 mb-1 px-1">
-                            <span className={`text-[11px] font-semibold ${isAdmin ? 'text-[#e31837]' : 'text-[#181d26]'}`}>
+                            <span className={`text-[11px] font-semibold ${isAdmin ? 'text-[#A30029]' : 'text-[#181d26]'}`}>
                               {isAdmin ? 'NooNee CSKH' : m.senderName}
                             </span>
                             <span className="text-[10px] text-gray-400">
@@ -494,12 +494,12 @@ function ContactChatContent() {
                               isAdmin
                                 ? 'bg-white border border-[#dddddd] text-[#181d26] rounded-tl-xs'
                                 : m.isComplaint
-                                ? 'bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] rounded-tr-xs font-medium'
-                                : 'bg-[#e31837] text-white rounded-tr-xs'
+                                ? 'bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] rounded-tr-xs font-medium'
+                                : 'bg-[#A30029] text-white rounded-tr-xs'
                             }`}
                           >
                             {m.isComplaint && (
-                              <div className="flex items-center gap-1 text-[11px] font-bold text-[#e31837] mb-1">
+                              <div className="flex items-center gap-1 text-[11px] font-bold text-[#A30029] mb-1">
                                 <AlertTriangle className="w-3.5 h-3.5" />
                                 <span>KHIẾU NẠI ĐƠN HÀNG</span>
                               </div>
@@ -528,13 +528,13 @@ function ContactChatContent() {
                         ? `Nhập nội dung cần hỗ trợ cho đơn #${orderCode}...`
                         : '⚠️ Vui lòng chọn mã đơn hàng trong dropdown ở trên để nhắn tin...'
                     }
-                    className="flex-1 h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+                    className="flex-1 h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                   />
 
                   <button
                     type="submit"
                     disabled={!orderCode || isSending || !inputText.trim()}
-                    className="h-10 px-4 sm:px-5 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs shrink-0"
+                    className="h-10 px-4 sm:px-5 bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs shrink-0"
                   >
                     {isSending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -555,9 +555,9 @@ function ContactChatContent() {
                       disabled={!orderCode}
                       checked={isComplaint}
                       onChange={(e) => setIsComplaint(e.target.checked)}
-                      className="accent-[#e31837] rounded"
+                      className="accent-[#A30029] rounded"
                     />
-                    <span className={isComplaint ? 'text-[#e31837] font-semibold' : ''}>
+                    <span className={isComplaint ? 'text-[#A30029] font-semibold' : ''}>
                       Đánh dấu đây là khiếu nại chất lượng món / đơn hàng
                     </span>
                   </label>
@@ -578,7 +578,7 @@ function ContactChatContent() {
           <div className="bg-white rounded-xl border border-[#dddddd] shadow-xl max-w-sm w-full p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-[#dddddd] pb-3">
               <h3 className="font-bold text-[#0f172a] text-[15px] flex items-center gap-1.5">
-                <Receipt className="w-4 h-4 text-[#e31837]" />
+                <Receipt className="w-4 h-4 text-[#A30029]" />
                 <span>Nhập mã đơn hàng</span>
               </h3>
               <button
@@ -607,10 +607,10 @@ function ContactChatContent() {
                     setCustomError('');
                   }}
                   placeholder="Ví dụ: NOONEE12345678"
-                  className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] font-mono uppercase placeholder:normal-case placeholder:font-sans"
+                  className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029] font-mono uppercase placeholder:normal-case placeholder:font-sans"
                 />
                 {customError && (
-                  <p className="text-[11px] text-[#e31837] font-medium mt-1">{customError}</p>
+                  <p className="text-[11px] text-[#A30029] font-medium mt-1">{customError}</p>
                 )}
               </div>
 
@@ -627,7 +627,7 @@ function ContactChatContent() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#e31837] hover:bg-[#be0e27] text-white text-[12px] font-bold rounded-[6px] transition cursor-pointer shadow-xs"
+                  className="px-4 py-2 bg-[#A30029] hover:bg-[#850021] text-white text-[12px] font-bold rounded-[6px] transition cursor-pointer shadow-xs"
                 >
                   Xác nhận
                 </button>

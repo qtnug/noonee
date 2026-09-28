@@ -268,7 +268,7 @@ export default function OrderTrackingPage() {
   if (loading) {
     return (
       <div className="max-w-xl mx-auto px-4 py-24 text-center space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-[#e31837] mx-auto" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#A30029] mx-auto" />
         <p className="text-[14px] text-[#41454d]">Đang tải trạng thái đơn hàng...</p>
       </div>
     );
@@ -278,7 +278,7 @@ export default function OrderTrackingPage() {
     return (
       <div className="max-w-xl mx-auto px-4 py-24 text-center space-y-4">
         <h2 className="text-xl font-normal text-[#181d26]">Không tìm thấy đơn hàng</h2>
-        <Link href="/orders" className="text-[13px] text-[#e31837] hover:underline">
+        <Link href="/orders" className="text-[13px] text-[#A30029] hover:underline">
           Quay lại danh sách đơn hàng
         </Link>
       </div>
@@ -317,17 +317,17 @@ export default function OrderTrackingPage() {
           <div className="flex items-start sm:items-center gap-3">
             <Link
               href="/orders"
-              className="p-2 text-[#41454d] hover:text-[#e31837] bg-white border border-[#dddddd] rounded-[6px] transition shrink-0 mt-0.5 sm:mt-0"
+              className="p-2 text-[#41454d] hover:text-[#A30029] bg-white border border-[#dddddd] rounded-[6px] transition shrink-0 mt-0.5 sm:mt-0"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl sm:text-2xl font-normal text-[#181d26]">
-                  Đơn hàng <span className="text-[#e31837] font-bold">#{order.orderCode}</span>
+                  Đơn hàng <span className="text-[#A30029] font-bold">#{order.orderCode}</span>
                 </h1>
                 {order.status === 'Cancelled' ? (
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-[4px] border bg-[#fff1f2] text-[#e31837] border-[#fecdd3]">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-[4px] border bg-[#fff1f2] text-[#A30029] border-[#fecdd3]">
                     Đã hủy đơn
                   </span>
                 ) : (
@@ -335,7 +335,7 @@ export default function OrderTrackingPage() {
                     className={`text-[11px] font-semibold px-2 py-0.5 rounded-[4px] border ${
                       order.paymentStatus === 'Paid'
                         ? 'bg-[#f8fafc] text-[#006400] border-[#39bf45]'
-                        : 'bg-[#fff1f2] text-[#e31837] border-[#fecdd3]'
+                        : 'bg-[#fff1f2] text-[#A30029] border-[#fecdd3]'
                     }`}
                   >
                     {order.paymentStatus === 'Paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
@@ -344,7 +344,7 @@ export default function OrderTrackingPage() {
                 {order.groupCode && (
                   <Link
                     href={`/group/${order.groupCode}`}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-[4px] border bg-[#fee2e2] text-[#e31837] border-[#fecdd3] hover:bg-[#fecdd3] transition"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-[4px] border bg-[#fee2e2] text-[#A30029] border-[#fecdd3] hover:bg-[#fecdd3] transition"
                   >
                     <Users className="w-3 h-3" /> Đơn nhóm #{order.groupCode}
                   </Link>
@@ -360,7 +360,7 @@ export default function OrderTrackingPage() {
             {/* Link directly to Live Chat for this order (STT 4 & 5) */}
             <Link
               href={`/contact?orderCode=${encodeURIComponent(order.orderCode)}`}
-              className="h-9 sm:h-10 px-3 sm:px-3.5 bg-white border border-[#e31837] text-[#e31837] hover:bg-[#fff1f2] rounded-[6px] text-[12px] sm:text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs"
+              className="h-9 sm:h-10 px-3 sm:px-3.5 bg-white border border-[#A30029] text-[#A30029] hover:bg-[#fff1f2] rounded-[6px] text-[12px] sm:text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs"
             >
               <MessageSquare className="w-4 h-4" />
               <span>Cần hỗ trợ? (Chat quán)</span>
@@ -375,7 +375,7 @@ export default function OrderTrackingPage() {
                   setCancelReasonInput('');
                   setCancelError('');
                 }}
-                className="h-9 sm:h-10 px-3 sm:px-3.5 bg-white border border-gray-300 text-[#41454d] hover:text-[#e31837] hover:border-red-300 hover:bg-red-50 rounded-[6px] text-[12px] sm:text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                className="h-9 sm:h-10 px-3 sm:px-3.5 bg-white border border-gray-300 text-[#41454d] hover:text-[#A30029] hover:border-red-300 hover:bg-red-50 rounded-[6px] text-[12px] sm:text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
               >
                 <X className="w-4 h-4 text-red-500" />
                 <span>Hủy đơn</span>
@@ -385,7 +385,7 @@ export default function OrderTrackingPage() {
             {order.status !== 'Cancelled' && order.paymentStatus === 'Unpaid' && order.paymentMethod === 'Sepay' && (
               <Link
                 href={`/payment/${order.orderCode}`}
-                className="h-9 sm:h-10 px-3.5 sm:px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white rounded-[6px] text-[12px] sm:text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs"
+                className="h-9 sm:h-10 px-3.5 sm:px-4 bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white rounded-[6px] text-[12px] sm:text-[13px] font-semibold flex items-center gap-1.5 transition shadow-xs"
               >
                 <QrCode className="w-4 h-4" />
                 <span>Thanh toán VietQR</span>
@@ -425,11 +425,11 @@ export default function OrderTrackingPage() {
         {order.status === 'Cancelled' ? (
           <div className="bg-[#fff1f2] rounded-[10px] p-4 sm:p-8 border border-[#fecdd3] space-y-4 shadow-xs">
             <div className="flex items-start gap-3 sm:gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-[8px] bg-[#e31837] text-white flex items-center justify-center shrink-0 shadow-xs">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-[8px] bg-[#A30029] text-white flex items-center justify-center shrink-0 shadow-xs">
                 <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div className="flex-1 space-y-1.5">
-                <h2 className="text-base sm:text-lg font-bold text-[#e31837]">
+                <h2 className="text-base sm:text-lg font-bold text-[#A30029]">
                   Đơn hàng này đã bị hủy
                 </h2>
                 {order.cancelReason ? (
@@ -476,9 +476,9 @@ export default function OrderTrackingPage() {
                     <div
                       className={`w-9 h-9 sm:w-11 sm:h-11 rounded-[6px] flex items-center justify-center transition shadow-xs ${
                         isCurrent
-                          ? 'bg-[#e31837] text-white animate-pulse'
+                          ? 'bg-[#A30029] text-white animate-pulse'
                           : isFinished
-                          ? 'bg-[#fff1f2] border border-[#fecdd3] text-[#e31837]'
+                          ? 'bg-[#fff1f2] border border-[#fecdd3] text-[#A30029]'
                           : 'bg-[#f8fafc] border border-[#dddddd] text-[#9297a0]'
                       }`}
                     >
@@ -488,7 +488,7 @@ export default function OrderTrackingPage() {
                       <h4
                         className={`text-[11px] sm:text-[13px] font-medium leading-tight ${
                           isCurrent
-                            ? 'text-[#e31837] font-bold'
+                            ? 'text-[#A30029] font-bold'
                             : isFinished
                             ? 'text-[#181d26]'
                             : 'text-[#9297a0]'
@@ -512,7 +512,7 @@ export default function OrderTrackingPage() {
           {/* Recipient info */}
           <div className="bg-white rounded-[10px] p-6 border border-[#dddddd] space-y-4 text-[13px] shadow-xs">
             <h3 className="text-[14px] font-semibold text-[#181d26] flex items-center gap-2 pb-2 border-b border-[#dddddd]">
-              <MapPin className="w-4 h-4 text-[#e31837]" />
+              <MapPin className="w-4 h-4 text-[#A30029]" />
               <span>Địa chỉ nhận món</span>
             </h3>
             <div className="space-y-2 text-[#41454d]">
@@ -531,7 +531,7 @@ export default function OrderTrackingPage() {
               {order.notes && (
                 <div>
                   <span className="text-[#9297a0] text-[12px] block">Ghi chú của khách:</span>
-                  <span className="text-[#e31837] bg-[#fff1f2] p-2 rounded-[4px] block border border-[#fecdd3] mt-1 font-medium">
+                  <span className="text-[#A30029] bg-[#fff1f2] p-2 rounded-[4px] block border border-[#fecdd3] mt-1 font-medium">
                     {order.notes}
                   </span>
                 </div>
@@ -542,7 +542,7 @@ export default function OrderTrackingPage() {
           {/* Payment info */}
           <div className="bg-white rounded-[10px] p-6 border border-[#dddddd] space-y-4 text-[13px] shadow-xs">
             <h3 className="text-[14px] font-semibold text-[#181d26] flex items-center gap-2 pb-2 border-b border-[#dddddd]">
-              <FileText className="w-4 h-4 text-[#e31837]" />
+              <FileText className="w-4 h-4 text-[#A30029]" />
               <span>Thông tin thanh toán</span>
             </h3>
             <div className="space-y-2.5 text-[#41454d]">
@@ -558,7 +558,7 @@ export default function OrderTrackingPage() {
               </div>
               <div className="flex justify-between">
                 <span>Trạng thái:</span>
-                <strong className={order.paymentStatus === 'Paid' ? 'text-[#006400] font-semibold' : 'text-[#e31837] font-semibold'}>
+                <strong className={order.paymentStatus === 'Paid' ? 'text-[#006400] font-semibold' : 'text-[#A30029] font-semibold'}>
                   {order.paymentStatus === 'Paid' ? 'Đã thanh toán thành công' : 'Chưa thanh toán'}
                 </strong>
               </div>
@@ -590,7 +590,7 @@ export default function OrderTrackingPage() {
                       )}
                     </div>
                     {order.discountAmount && order.discountAmount > 0 && !isFreeshipCoupon ? (
-                      <div className="flex justify-between text-[#e31837]">
+                      <div className="flex justify-between text-[#A30029]">
                         <span>Ưu đãi ({order.couponCode || 'Giảm giá'}):</span>
                         <span className="font-semibold">- {formatVND(order.discountAmount)}</span>
                       </div>
@@ -606,7 +606,7 @@ export default function OrderTrackingPage() {
               ) : null}
               <div className="flex justify-between text-[15px] font-bold text-[#181d26] pt-3 border-t border-[#dddddd]">
                 <span>Tổng thanh toán:</span>
-                <span className="text-[#e31837] text-lg">{formatVND(order.totalAmount)}</span>
+                <span className="text-[#A30029] text-lg">{formatVND(order.totalAmount)}</span>
               </div>
             </div>
           </div>
@@ -625,8 +625,8 @@ export default function OrderTrackingPage() {
 
                   {item.toppings && (
                     <div className="text-[12px] text-[#41454d] flex items-center gap-1.5 flex-wrap">
-                      <span className="font-semibold text-[#e31837]">Món thêm:</span>
-                      <span className="bg-[#fff1f2] px-2 py-0.5 rounded border border-[#fecdd3] text-[#e31837]">
+                      <span className="font-semibold text-[#A30029]">Món thêm:</span>
+                      <span className="bg-[#fff1f2] px-2 py-0.5 rounded border border-[#fecdd3] text-[#A30029]">
                         {item.toppings}
                       </span>
                     </div>
@@ -645,7 +645,7 @@ export default function OrderTrackingPage() {
 
                 <div className="text-right shrink-0">
                   <span className="text-[#41454d] mr-4 text-[13px]">x{item.quantity}</span>
-                  <span className="font-bold text-[#e31837] text-[15px]">
+                  <span className="font-bold text-[#A30029] text-[15px]">
                     {formatVND(item.total || item.price * item.quantity)}
                   </span>
                 </div>
@@ -699,7 +699,7 @@ export default function OrderTrackingPage() {
                   <div key={item.productId} className="pt-6 first:pt-0 space-y-3">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 bg-[#f8fafc] rounded-[8px] border border-[#dddddd]">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-[6px] bg-[#fff1f2] border border-[#fecdd3] flex items-center justify-center text-[#e31837] shrink-0">
+                        <div className="w-9 h-9 rounded-[6px] bg-[#fff1f2] border border-[#fecdd3] flex items-center justify-center text-[#A30029] shrink-0">
                           <CookingPot className="w-4 h-4" />
                         </div>
                         <div>
@@ -729,7 +729,7 @@ export default function OrderTrackingPage() {
                               }`}
                             />
                           ))}
-                          <span className="text-[12px] font-bold text-[#e31837] ml-2">
+                          <span className="text-[12px] font-bold text-[#A30029] ml-2">
                             {existing.rating} / 5 sao
                           </span>
                         </div>
@@ -756,9 +756,9 @@ export default function OrderTrackingPage() {
                                 [item.productId]: true,
                               }));
                             }}
-                            className="h-7 px-3 bg-white border border-[#dddddd] hover:border-[#e31837] text-[12px] font-medium text-[#181d26] rounded-[4px] transition flex items-center gap-1 cursor-pointer"
+                            className="h-7 px-3 bg-white border border-[#dddddd] hover:border-[#A30029] text-[12px] font-medium text-[#181d26] rounded-[4px] transition flex items-center gap-1 cursor-pointer"
                           >
-                            <Edit3 className="w-3.5 h-3.5 text-[#e31837]" />
+                            <Edit3 className="w-3.5 h-3.5 text-[#A30029]" />
                             <span>Sửa đánh giá</span>
                           </button>
                         </div>
@@ -788,7 +788,7 @@ export default function OrderTrackingPage() {
                               />
                             </button>
                           ))}
-                          <span className="text-[12px] font-semibold text-[#e31837] ml-2">
+                          <span className="text-[12px] font-semibold text-[#A30029] ml-2">
                             {currentRating} sao
                           </span>
                         </div>
@@ -803,7 +803,7 @@ export default function OrderTrackingPage() {
                               [item.productId]: e.target.value,
                             }))
                           }
-                          className="w-full p-2.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                          className="w-full p-2.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                         />
 
                         <div className="flex gap-2 justify-end">
@@ -824,7 +824,7 @@ export default function OrderTrackingPage() {
                           <button
                             onClick={() => handleItemReview(item.productId, item.productName)}
                             disabled={isSubmitting}
-                            className="h-8 px-4 bg-[#e31837] hover:bg-[#be0e27] text-white text-[12px] font-medium rounded-[4px] transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            className="h-8 px-4 bg-[#A30029] hover:bg-[#850021] text-white text-[12px] font-medium rounded-[4px] transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
                           >
                             {isSubmitting ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -851,7 +851,7 @@ export default function OrderTrackingPage() {
             {/* Modal Header */}
             <div className="p-4 border-b border-[#dddddd] bg-[#f8fafc] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-[#e31837]" />
+                <MessageSquare className="w-5 h-5 text-[#A30029]" />
                 <div>
                   <h3 className="text-[15px] font-semibold text-[#181d26]">
                     Hỗ trợ & Khiếu nại đơn #{order.orderCode}
@@ -895,12 +895,12 @@ export default function OrderTrackingPage() {
                           isCustomer
                             ? msg.isComplaint
                               ? 'bg-[#fff1f2] border border-[#fecdd3] text-[#181d26] rounded-tr-xs'
-                              : 'bg-[#e31837] text-white rounded-tr-xs'
+                              : 'bg-[#A30029] text-white rounded-tr-xs'
                             : 'bg-[#f8fafc] border border-[#dddddd] text-[#181d26] rounded-tl-xs'
                         }`}
                       >
                         {msg.isComplaint && (
-                          <div className="text-[11px] font-bold text-[#e31837] mb-1 flex items-center gap-1">
+                          <div className="text-[11px] font-bold text-[#A30029] mb-1 flex items-center gap-1">
                             <AlertTriangle className="w-3 h-3" /> NỘI DUNG KHIẾU NẠI:
                           </div>
                         )}
@@ -914,12 +914,12 @@ export default function OrderTrackingPage() {
 
             {/* Chat input form */}
             <form onSubmit={handleSendChat} className="p-4 border-t border-[#dddddd] bg-[#f8fafc] space-y-2.5">
-              <label className="flex items-center gap-2 text-[12px] text-[#e31837] font-semibold cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-[12px] text-[#A30029] font-semibold cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={isComplaint}
                   onChange={(e) => setIsComplaint(e.target.checked)}
-                  className="rounded text-[#e31837] focus:ring-[#e31837]"
+                  className="rounded text-[#A30029] focus:ring-[#A30029]"
                 />
                 <span>Đánh dấu đây là Khiếu nại món ăn (Bếp & Quán sẽ ưu tiên xử lý khẩn cấp)</span>
               </label>
@@ -931,12 +931,12 @@ export default function OrderTrackingPage() {
                   placeholder={isComplaint ? "Mô tả chi tiết vấn đề bạn đang khiếu nại..." : "Nhập câu hỏi hoặc yêu cầu hỗ trợ..."}
                   value={chatText}
                   onChange={(e) => setChatText(e.target.value)}
-                  className="flex-1 h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                  className="flex-1 h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                 />
                 <button
                   type="submit"
                   disabled={isSendingChat || !chatText.trim()}
-                  className="h-10 px-4 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
+                  className="h-10 px-4 bg-[#A30029] hover:bg-[#850021] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
                 >
                   {isSendingChat ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   <span>Gửi</span>
@@ -952,7 +952,7 @@ export default function OrderTrackingPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-[12px] w-full max-w-md shadow-2xl border border-[#dddddd] p-5 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
-              <div className="flex items-center gap-2 text-[#e31837] font-bold text-[16px]">
+              <div className="flex items-center gap-2 text-[#A30029] font-bold text-[16px]">
                 <AlertTriangle className="w-5 h-5" />
                 <span>Xác nhận hủy đơn #{order.orderCode}</span>
               </div>
@@ -983,7 +983,7 @@ export default function OrderTrackingPage() {
                   value={cancelReasonInput}
                   onChange={(e) => setCancelReasonInput(e.target.value)}
                   placeholder="VD: Đổi ý muốn đặt món khác, đặt nhầm địa chỉ..."
-                  className="w-full p-2.5 text-[13px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837]"
+                  className="w-full p-2.5 text-[13px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#A30029]"
                 />
               </div>
             </div>
@@ -1005,7 +1005,7 @@ export default function OrderTrackingPage() {
                 type="button"
                 disabled={isCancellingOrder}
                 onClick={handleCustomerCancelOrder}
-                className="px-4 py-2 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
+                className="px-4 py-2 bg-[#A30029] hover:bg-[#850021] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
               >
                 {isCancellingOrder ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 <span>Đồng ý hủy đơn</span>

@@ -210,7 +210,7 @@ export default function PaymentPage() {
   if (loading) {
     return (
       <div className="max-w-xl mx-auto px-4 py-24 text-center space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-[#e31837] mx-auto" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#A30029] mx-auto" />
         <p className="text-[14px] text-[#41454d]">Đang tải thông tin đơn hàng...</p>
       </div>
     );
@@ -219,14 +219,14 @@ export default function PaymentPage() {
   if (!order) {
     return (
       <div className="max-w-xl mx-auto px-4 py-24 text-center space-y-4">
-        <div className="w-14 h-14 bg-[#fff1f2] text-[#e31837] rounded-[10px] flex items-center justify-center mx-auto border border-[#fecdd3]">
+        <div className="w-14 h-14 bg-[#fff1f2] text-[#A30029] rounded-[10px] flex items-center justify-center mx-auto border border-[#fecdd3]">
           <AlertTriangle className="w-6 h-6" />
         </div>
         <h2 className="text-xl font-normal text-[#181d26]">Không tìm thấy đơn hàng</h2>
         <p className="text-[13px] text-[#41454d]">Mã đơn hàng {orderCode} không tồn tại hoặc đã bị xóa.</p>
         <Link
           href="/menu"
-          className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#e31837] hover:bg-[#be0e27] text-white rounded-[6px] text-[13px] font-semibold transition"
+          className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#A30029] hover:bg-[#850021] text-white rounded-[6px] text-[13px] font-semibold transition"
         >
           Xem thực đơn
         </Link>
@@ -244,9 +244,9 @@ export default function PaymentPage() {
               onClick={isPaid || order.paymentStatus === 'Paid' ? handleGoToOrder : handleCancelAndReturnToCart}
               disabled={isCancelling}
               title={isPaid || order.paymentStatus === 'Paid' ? 'Xem đơn hàng' : 'Quay lại giỏ hàng và hủy đơn'}
-              className="p-2 text-[#41454d] hover:text-[#e31837] bg-white border border-[#dddddd] rounded-[6px] transition cursor-pointer hover:border-[#e31837]"
+              className="p-2 text-[#41454d] hover:text-[#A30029] bg-white border border-[#dddddd] rounded-[6px] transition cursor-pointer hover:border-[#A30029]"
             >
-              {isCancelling ? <Loader2 className="w-4 h-4 animate-spin text-[#e31837]" /> : <ArrowLeft className="w-4 h-4" />}
+              {isCancelling ? <Loader2 className="w-4 h-4 animate-spin text-[#A30029]" /> : <ArrowLeft className="w-4 h-4" />}
             </button>
             <div>
               <h1 className="text-2xl font-normal text-[#181d26]">
@@ -260,7 +260,7 @@ export default function PaymentPage() {
 
           <div className="text-right">
             <span className="text-[12px] text-[#9297a0] block">Số tiền cần thanh toán</span>
-            <span className="text-2xl font-bold text-[#e31837]">{formatVND(order.totalAmount)}</span>
+            <span className="text-2xl font-bold text-[#A30029]">{formatVND(order.totalAmount)}</span>
           </div>
         </div>
 
@@ -283,7 +283,7 @@ export default function PaymentPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-[#f8fafc] border border-[#dddddd] rounded-[10px]">
             <div className="text-[13px] text-[#41454d] space-y-0.5">
               <span className="font-semibold text-[#181d26] flex items-center gap-1.5">
-                <ShoppingCart className="w-4 h-4 text-[#e31837]" />
+                <ShoppingCart className="w-4 h-4 text-[#A30029]" />
                 Bạn muốn đổi món hoặc chọn lại địa chỉ?
               </span>
               <p className="text-[12px] text-[#9297a0]">
@@ -293,12 +293,12 @@ export default function PaymentPage() {
             <button
               onClick={handleCancelAndReturnToCart}
               disabled={isCancelling}
-              className="px-4 py-2.5 bg-white border border-[#dddddd] hover:border-[#e31837] text-[#181d26] hover:text-[#e31837] text-[13px] font-medium rounded-[8px] transition shrink-0 flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
+              className="px-4 py-2.5 bg-white border border-[#dddddd] hover:border-[#A30029] text-[#181d26] hover:text-[#A30029] text-[13px] font-medium rounded-[8px] transition shrink-0 flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
             >
               {isCancelling ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[#e31837]" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#A30029]" />
               ) : (
-                <RefreshCcw className="w-4 h-4 text-[#e31837]" />
+                <RefreshCcw className="w-4 h-4 text-[#A30029]" />
               )}
               <span>Hủy & Hoàn lại giỏ hàng</span>
             </button>
@@ -307,7 +307,7 @@ export default function PaymentPage() {
 
         {/* Order Item Preview */}
         <div className="bg-white rounded-[10px] p-6 border border-[#dddddd] space-y-3 shadow-xs">
-          <h3 className="text-[12px] font-semibold uppercase text-[#e31837] tracking-wider">
+          <h3 className="text-[12px] font-semibold uppercase text-[#A30029] tracking-wider">
             Món ăn trong đơn hàng
           </h3>
           <div className="divide-y divide-[#dddddd] text-[13px]">
@@ -344,7 +344,7 @@ export default function PaymentPage() {
 
             <button
               onClick={handleGoToOrder}
-              className="w-full py-2.5 px-4 bg-[#e31837] hover:bg-[#be0e27] text-white rounded-[6px] text-[13px] font-semibold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+              className="w-full py-2.5 px-4 bg-[#A30029] hover:bg-[#850021] text-white rounded-[6px] text-[13px] font-semibold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
             >
               <span>Theo dõi đơn hàng ({countdown}s)</span>
               <ArrowRight className="w-4 h-4" />

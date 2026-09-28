@@ -40,7 +40,7 @@ export default async function HomePage() {
             <h1 className="font-sans text-3xl sm:text-4xl md:text-5xl lg:text-[44px] xl:text-[52px] 2xl:text-[60px] font-extrabold tracking-tight text-[#0f172a] leading-[1.12]">
               <span className="block whitespace-nowrap">Thưởng thức món ngon</span>
               <span className="block whitespace-nowrap mt-1 sm:mt-1.5">
-                <span className="text-[#e31837]">chuẩn vị</span> &amp; giao tận nơi
+                <span className="text-[#A30029]">chuẩn vị</span> &amp; giao tận nơi
               </span>
             </h1>
 
@@ -53,13 +53,13 @@ export default async function HomePage() {
             <div className="mt-5 sm:mt-6 xl:mt-7 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
               <Link
                 href="/menu"
-                className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#c9122c] active:bg-[#a50b20] text-white font-bold text-[15px] sm:text-[16px] px-7 sm:px-8 py-3 sm:py-3.5 rounded-xl shadow-md shadow-red-500/20 transition duration-200 hover:scale-[1.02] active:scale-[0.98] text-center"
+                className="inline-flex items-center justify-center bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white font-bold text-[15px] sm:text-[16px] px-7 sm:px-8 py-3 sm:py-3.5 rounded-xl shadow-md shadow-red-500/20 transition duration-200 hover:scale-[1.02] active:scale-[0.98] text-center"
               >
                 Khám phá thực đơn
               </Link>
               <Link
                 href="/orders"
-                className="inline-flex items-center justify-center bg-white hover:bg-neutral-50 active:bg-neutral-100 text-[#0f172a] hover:text-[#e31837] font-bold text-[15px] sm:text-[16px] px-7 sm:px-8 py-3 sm:py-3.5 rounded-xl border border-[#dddddd] hover:border-[#cccccc] shadow-xs transition duration-200 hover:scale-[1.02] active:scale-[0.98] text-center"
+                className="inline-flex items-center justify-center bg-white hover:bg-neutral-50 active:bg-neutral-100 text-[#0f172a] hover:text-[#A30029] font-bold text-[15px] sm:text-[16px] px-7 sm:px-8 py-3 sm:py-3.5 rounded-xl border border-[#dddddd] hover:border-[#cccccc] shadow-xs transition duration-200 hover:scale-[1.02] active:scale-[0.98] text-center"
               >
                 Tra cứu đơn hàng
               </Link>
@@ -109,7 +109,7 @@ export default async function HomePage() {
           </h2>
           <Link
             href="/menu"
-            className="text-[14px] font-bold text-[#e31837] hover:underline flex items-center gap-1 transition"
+            className="text-[14px] font-bold text-[#A30029] hover:underline flex items-center gap-1 transition"
           >
             <span>Xem tất cả</span>
             <CiCircleChevRight className="w-5 h-5" />

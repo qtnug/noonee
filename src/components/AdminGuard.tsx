@@ -78,7 +78,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="w-14 h-14 rounded-[12px] bg-[#e31837] text-white flex items-center justify-center mx-auto shadow-md">
+        <div className="w-14 h-14 rounded-[12px] bg-[#A30029] text-white flex items-center justify-center mx-auto shadow-md">
           <ShieldCheck className="w-8 h-8" />
         </div>
         <h2 className="mt-4 text-2xl font-bold tracking-tight text-[#181d26]">
@@ -103,7 +103,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
               <button
                 type="button"
                 onClick={logout}
-                className="text-[12px] font-semibold text-[#e31837] hover:underline block"
+                className="text-[12px] font-semibold text-[#A30029] hover:underline block"
               >
                 Đăng xuất tài khoản này để đăng nhập Admin
               </button>
@@ -111,7 +111,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
           )}
 
           {errorMsg && (
-            <div className="p-3.5 bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] rounded-[8px] text-[13px] flex items-center gap-2">
+            <div className="p-3.5 bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] rounded-[8px] text-[13px] flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -132,7 +132,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="admin"
-                  className="w-full h-11 pl-10 pr-3.5 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[8px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                  className="w-full h-11 pl-10 pr-3.5 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[8px] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition"
                 />
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full h-11 pl-10 pr-3.5 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[8px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                  className="w-full h-11 pl-10 pr-3.5 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[8px] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition"
                 />
               </div>
             </div>
@@ -159,7 +159,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-11 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-medium text-[14px] rounded-[8px] flex items-center justify-center gap-2 transition disabled:opacity-50 shadow-xs mt-2"
+              className="w-full h-11 bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white font-medium text-[14px] rounded-[8px] flex items-center justify-center gap-2 transition disabled:opacity-50 shadow-xs mt-2"
             >
               {isSubmitting ? (
                 <>
@@ -178,7 +178,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
           <div className="pt-4 border-t border-[#dddddd] text-center">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 text-[13px] text-[#41454d] hover:text-[#e31837] transition font-medium"
+              className="inline-flex items-center gap-1.5 text-[13px] text-[#41454d] hover:text-[#A30029] transition font-medium"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Quay về trang mua sắm</span>

@@ -162,21 +162,21 @@ export default function FloatingFoodDecor() {
                   {isLeft ? (
                     <>
                       {item.badgeLabel && (
-                        <span className="text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-[#e31837] px-1.5 py-0.5 rounded-full border border-rose-200/60">
+                        <span className="text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-[#A30029] px-1.5 py-0.5 rounded-full border border-rose-200/60">
                           {item.badgeLabel}
                         </span>
                       )}
                       <span className="text-[12px] font-bold text-[#0f172a]">{item.name}</span>
-                      <span className="text-[12px] font-extrabold text-[#e31837]">{item.price}</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-[#e31837]" />
+                      <span className="text-[12px] font-extrabold text-[#A30029]">{item.price}</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-[#A30029]" />
                     </>
                   ) : (
                     <>
-                      <ArrowLeft className="w-3.5 h-3.5 text-[#e31837]" />
-                      <span className="text-[12px] font-extrabold text-[#e31837]">{item.price}</span>
+                      <ArrowLeft className="w-3.5 h-3.5 text-[#A30029]" />
+                      <span className="text-[12px] font-extrabold text-[#A30029]">{item.price}</span>
                       <span className="text-[12px] font-bold text-[#0f172a]">{item.name}</span>
                       {item.badgeLabel && (
-                        <span className="text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-[#e31837] px-1.5 py-0.5 rounded-full border border-rose-200/60">
+                        <span className="text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-[#A30029] px-1.5 py-0.5 rounded-full border border-rose-200/60">
                           {item.badgeLabel}
                         </span>
                       )}

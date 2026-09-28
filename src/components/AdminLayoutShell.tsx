@@ -58,7 +58,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
       <aside className="hidden lg:flex w-64 bg-white text-[#333840] sticky top-0 h-screen flex-col border-r border-[#dddddd] shrink-0 z-30 overflow-hidden">
         {/* Brand Header */}
         <div className="h-16 px-6 border-b border-[#dddddd] flex items-center gap-3">
-          <div className="w-8 h-8 rounded-[6px] bg-[#e31837] text-white flex items-center justify-center font-medium shadow-xs">
+          <div className="w-8 h-8 rounded-[6px] bg-[#A30029] text-white flex items-center justify-center font-medium shadow-xs">
             <ShieldCheck className="w-4 h-4" />
           </div>
           <div>
@@ -82,14 +82,14 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
                 href={link.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-[6px] text-[13px] font-medium transition ${
                   isActive
-                    ? 'bg-[#e31837] text-white shadow-xs'
+                    ? 'bg-[#A30029] text-white shadow-xs'
                     : 'text-[#41454d] hover:text-[#181d26] hover:bg-[#f8fafc]'
                 }`}
               >
                 <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#9297a0]'}`} />
                 <span className="flex-1 truncate">{link.name}</span>
                 {link.href === '/admin/support' && hasUnreadComplaint && (
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#e31837] ring-2 ring-white animate-pulse shrink-0" title="Có tin nhắn khiếu nại chưa xử lý" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#A30029] ring-2 ring-white animate-pulse shrink-0" title="Có tin nhắn khiếu nại chưa xử lý" />
                 )}
               </Link>
             );
@@ -107,7 +107,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
           </Link>
           <button
             onClick={logout}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[6px] text-[13px] font-medium text-[#e31837] hover:bg-[#fff1f2] transition text-left cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[6px] text-[13px] font-medium text-[#A30029] hover:bg-[#fff1f2] transition text-left cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span>Đăng xuất</span>
@@ -129,7 +129,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
             {/* Drawer Header */}
             <div className="h-16 px-5 border-b border-[#dddddd] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-[6px] bg-[#e31837] text-white flex items-center justify-center font-medium shadow-xs">
+                <div className="w-8 h-8 rounded-[6px] bg-[#A30029] text-white flex items-center justify-center font-medium shadow-xs">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <div>
@@ -162,14 +162,14 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
                     onClick={() => setMobileDrawerOpen(false)}
                     className={`flex items-center gap-3 px-3.5 py-3 rounded-lg text-[14px] font-medium transition ${
                       isActive
-                        ? 'bg-[#e31837] text-white shadow-xs'
+                        ? 'bg-[#A30029] text-white shadow-xs'
                         : 'text-[#41454d] hover:text-[#181d26] hover:bg-[#f8fafc]'
                     }`}
                   >
                     <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#9297a0]'}`} />
                     <span className="flex-1 truncate">{link.name}</span>
                     {link.href === '/admin/support' && hasUnreadComplaint && (
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#e31837] ring-2 ring-white animate-pulse shrink-0" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#A30029] ring-2 ring-white animate-pulse shrink-0" />
                     )}
                   </Link>
                 );
@@ -191,7 +191,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
                   setMobileDrawerOpen(false);
                   logout();
                 }}
-                className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg text-[13px] font-medium text-[#e31837] hover:bg-[#fff1f2] border border-[#fecdd3] bg-white transition cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg text-[13px] font-medium text-[#A30029] hover:bg-[#fff1f2] border border-[#fecdd3] bg-white transition cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Đăng xuất tài khoản</span>
@@ -209,7 +209,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
             {/* Mobile Hamburger Toggle */}
             <button
               onClick={() => setMobileDrawerOpen(true)}
-              className="lg:hidden p-2 text-[#333840] hover:text-[#e31837] hover:bg-gray-100 rounded-lg transition"
+              className="lg:hidden p-2 text-[#333840] hover:text-[#A30029] hover:bg-gray-100 rounded-lg transition"
               aria-label="Mở menu quản trị"
             >
               <Menu className="w-5 h-5" />

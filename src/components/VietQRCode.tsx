@@ -100,7 +100,7 @@ export default function VietQRCode({
         <div className="pt-1">
           <Link
             href={`/orders/${orderCode}?paymentSuccess=true`}
-            className="inline-flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-semibold px-5 py-2.5 rounded-[6px] shadow-xs transition"
+            className="inline-flex items-center justify-center bg-[#A30029] hover:bg-[#850021] text-white text-[13px] font-semibold px-5 py-2.5 rounded-[6px] shadow-xs transition"
           >
             Theo dõi đơn hàng
           </Link>
@@ -112,7 +112,7 @@ export default function VietQRCode({
   return (
     <div className="bg-white border border-[#dddddd] rounded-[12px] p-6 sm:p-8 space-y-6 shadow-xs">
       <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[4px] bg-[#fff1f2] text-[#e31837] text-[12px] font-bold border border-[#fecdd3]">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[4px] bg-[#fff1f2] text-[#A30029] text-[12px] font-bold border border-[#fecdd3]">
           <QrCode className="w-3.5 h-3.5" />
           <span>Thanh toán Chuyển khoản VietQR</span>
         </div>
@@ -132,7 +132,7 @@ export default function VietQRCode({
             className="w-56 h-56 sm:w-64 sm:h-64 object-contain rounded-[6px]"
           />
           <div className="absolute inset-x-0 -bottom-3 flex justify-center">
-            <span className="bg-[#e31837] text-white text-[11px] font-bold px-3 py-0.5 rounded-full shadow-xs">
+            <span className="bg-[#A30029] text-white text-[11px] font-bold px-3 py-0.5 rounded-full shadow-xs">
               Khớp lệnh tự động sau 3 giây
             </span>
           </div>
@@ -149,10 +149,10 @@ export default function VietQRCode({
         <div className="flex justify-between items-center py-1.5 border-b border-[#dddddd]">
           <span className="text-[#41454d]">Số tài khoản:</span>
           <div className="flex items-center gap-2">
-            <span className="font-mono font-bold text-[#e31837] text-[15px]">{accountNo}</span>
+            <span className="font-mono font-bold text-[#A30029] text-[15px]">{accountNo}</span>
             <button
               onClick={handleCopyAcc}
-              className="p-1 text-[#9297a0] hover:text-[#e31837] hover:bg-white rounded-[4px] border border-transparent hover:border-[#dddddd] transition"
+              className="p-1 text-[#9297a0] hover:text-[#A30029] hover:bg-white rounded-[4px] border border-transparent hover:border-[#dddddd] transition"
               title="Sao chép số tài khoản"
             >
               {copiedAcc ? <Check className="w-3.5 h-3.5 text-[#006400]" /> : <Copy className="w-3.5 h-3.5" />}
@@ -167,7 +167,7 @@ export default function VietQRCode({
 
         <div className="flex justify-between items-center py-1.5 border-b border-[#dddddd]">
           <span className="text-[#41454d]">Số tiền cần thanh toán:</span>
-          <span className="font-bold text-[#e31837] text-[16px]">{formatVND(amount)}</span>
+          <span className="font-bold text-[#A30029] text-[16px]">{formatVND(amount)}</span>
         </div>
 
         <div className="flex justify-between items-center py-2 bg-white p-3 rounded-[6px] border border-[#fecdd3]">
@@ -176,12 +176,12 @@ export default function VietQRCode({
             <span className="text-[11px] text-[#9297a0]">Giữ nguyên mã đơn để hệ thống tự động xác nhận</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-mono font-bold text-[#e31837] text-[15px] bg-[#fff1f2] px-2.5 py-1 rounded-[4px] border border-[#fecdd3]">
+            <span className="font-mono font-bold text-[#A30029] text-[15px] bg-[#fff1f2] px-2.5 py-1 rounded-[4px] border border-[#fecdd3]">
               {orderCode}
             </span>
             <button
               onClick={handleCopyMemo}
-              className="p-1.5 bg-white text-[#41454d] hover:text-[#e31837] rounded-[4px] border border-[#dddddd] hover:bg-[#fff1f2] transition"
+              className="p-1.5 bg-white text-[#41454d] hover:text-[#A30029] rounded-[4px] border border-[#dddddd] hover:bg-[#fff1f2] transition"
               title="Sao chép nội dung"
             >
               {copiedMemo ? <Check className="w-4 h-4 text-[#006400]" /> : <Copy className="w-4 h-4" />}
@@ -192,7 +192,7 @@ export default function VietQRCode({
 
       {/* Real-time Checking Status */}
       <div className="flex items-center justify-center gap-2 text-[13px] text-[#41454d] pt-1">
-        <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#e31837]" />
+        <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#A30029]" />
         <span>Hệ thống đang tự động kiểm tra giao dịch chuyển khoản...</span>
       </div>
 

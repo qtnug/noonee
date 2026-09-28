@@ -138,7 +138,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                         t.action?.onClick();
                         removeToast(t.id);
                       }}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold text-[#e31837] hover:text-[#be0e27] bg-[#fff1f2] hover:bg-[#ffe4e6] px-2.5 py-1 rounded-md border border-[#fecdd3] transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-[#A30029] hover:text-[#850021] bg-[#fff1f2] hover:bg-[#ffe4e6] px-2.5 py-1 rounded-md border border-[#fecdd3] transition-colors cursor-pointer"
                     >
                       <span>{t.action.label}</span>
                       <ExternalLink className="w-3 h-3" />

@@ -21,7 +21,7 @@ export default function Footer() {
           <div className="space-y-3">
             <Link href="/" className="inline-block">
               <span className="font-friem text-3xl tracking-wide text-[#0f172a]">
-                NooNee<span className="text-[#e31837]">.</span>
+                NooNee<span className="text-[#A30029]">.</span>
               </span>
             </Link>
             <p className="text-[14px] text-[#475569] font-medium leading-relaxed">
@@ -36,38 +36,38 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2.5 text-[14px] text-[#475569] font-medium">
               <li>
-                <Link href="/menu" className="hover:text-[#e31837] transition">
+                <Link href="/menu" className="hover:text-[#A30029] transition">
                   Tất cả món ăn
                 </Link>
               </li>
               <li>
-                <Link href="/menu?categoryId=1" className="hover:text-[#e31837] transition">
+                <Link href="/menu?categoryId=1" className="hover:text-[#A30029] transition">
                   Cơm
                 </Link>
               </li>
               <li>
-                <Link href="/menu?categoryId=4" className="hover:text-[#e31837] transition">
+                <Link href="/menu?categoryId=4" className="hover:text-[#A30029] transition">
                   Bún mì
                 </Link>
               </li>
               <li>
-                <Link href="/menu?categoryId=5" className="hover:text-[#e31837] transition">
+                <Link href="/menu?categoryId=5" className="hover:text-[#A30029] transition">
                   Phở
                 </Link>
               </li>
               <li>
-                <Link href="/menu?categoryId=2" className="hover:text-[#e31837] transition">
+                <Link href="/menu?categoryId=2" className="hover:text-[#A30029] transition">
                   Đồ ăn vặt
                 </Link>
               </li>
               <li>
-                <Link href="/menu?categoryId=3" className="hover:text-[#e31837] transition">
+                <Link href="/menu?categoryId=3" className="hover:text-[#A30029] transition">
                   Đồ uống & Tráng miệng
                 </Link>
               </li>
               <li>
-                <Link href="/group" className="hover:text-[#e31837] transition flex items-center gap-1.5 font-semibold">
-                  <span className="text-[#e31837] font-bold text-[11px] bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-full">
+                <Link href="/group" className="hover:text-[#A30029] transition flex items-center gap-1.5 font-semibold">
+                  <span className="text-[#A30029] font-bold text-[11px] bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-full">
                     -10%
                   </span>
                   <span>Đặt đơn nhóm</span>
@@ -83,22 +83,22 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2.5 text-[14px] text-[#475569] font-medium">
               <li>
-                <Link href="/contact" className="hover:text-[#e31837] transition">
+                <Link href="/contact" className="hover:text-[#A30029] transition">
                   Chăm sóc khách hàng & Khiếu nại
                 </Link>
               </li>
               <li>
-                <Link href="/orders" className="hover:text-[#e31837] transition">
+                <Link href="/orders" className="hover:text-[#A30029] transition">
                   Tra cứu lịch sử đơn hàng
                 </Link>
               </li>
               <li>
-                <Link href="/profile" className="hover:text-[#e31837] transition">
+                <Link href="/profile" className="hover:text-[#A30029] transition">
                   Hạng thành viên & Điểm thưởng
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-[#e31837] transition">
+                <Link href="/privacy" className="hover:text-[#A30029] transition">
                   Chính sách bảo mật & Giao hàng
                 </Link>
               </li>
@@ -112,15 +112,15 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2.5 text-[14px] text-[#475569] font-medium">
               <li className="flex items-start gap-2">
-                <CiMapPin className="w-5 h-5 text-[#e31837] shrink-0 stroke-1" />
+                <CiMapPin className="w-5 h-5 text-[#A30029] shrink-0 stroke-1" />
                 <span>120 Yên Lãng, Đống Đa, Hà Nội</span>
               </li>
               <li className="flex items-center gap-2">
-                <CiPhone className="w-5 h-5 text-[#e31837] shrink-0 stroke-1" />
+                <CiPhone className="w-5 h-5 text-[#A30029] shrink-0 stroke-1" />
                 <span>Hotline: <strong className="text-[#0f172a] font-bold">0988.888.888</strong></span>
               </li>
               <li className="flex items-center gap-2">
-                <CiClock2 className="w-5 h-5 text-[#e31837] shrink-0 stroke-1" />
+                <CiClock2 className="w-5 h-5 text-[#A30029] shrink-0 stroke-1" />
                 <span>Giờ phục vụ: 06:00 - 24:00</span>
               </li>
             </ul>

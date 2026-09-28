@@ -132,7 +132,7 @@ export default function BestSellerPage() {
         <div className="bg-white rounded-[14px] border border-[#dddddd] p-5 sm:p-7 shadow-xs space-y-4">
           <div className="flex items-center justify-between border-b border-[#dddddd] pb-3">
             <h2 className="text-lg sm:text-xl font-bold text-[#181d26] flex items-center gap-2">
-              <Ticket className="w-5 h-5 text-[#e31837]" />
+              <Ticket className="w-5 h-5 text-[#A30029]" />
               Voucher độc quyền
             </h2>
           </div>
@@ -147,14 +147,14 @@ export default function BestSellerPage() {
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#e31837] bg-white px-2 py-0.5 rounded border border-[#fecdd3]">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#A30029] bg-white px-2 py-0.5 rounded border border-[#fecdd3]">
                         {c.badge}
                       </span>
                       <span className="text-[11px] font-bold text-[#41454d] bg-gray-100 px-2 py-0.5 rounded">
                         {c.minOrder}
                       </span>
                     </div>
-                    <h3 className="font-bold text-[16px] text-[#e31837] pt-1">{c.discount}</h3>
+                    <h3 className="font-bold text-[16px] text-[#A30029] pt-1">{c.discount}</h3>
                     <p className="text-[12px] text-[#41454d] leading-relaxed">{c.minOrder}</p>
                   </div>
 
@@ -162,7 +162,7 @@ export default function BestSellerPage() {
                     <button
                       type="button"
                       onClick={() => setConditionModalCoupon(c)}
-                      className="text-[12px] text-[#555a64] hover:text-[#e31837] font-medium flex items-center gap-1 cursor-pointer transition underline"
+                      className="text-[12px] text-[#555a64] hover:text-[#A30029] font-medium flex items-center gap-1 cursor-pointer transition underline"
                     >
                       <Info className="w-3.5 h-3.5" />
                       <span>Điều kiện</span>
@@ -174,7 +174,7 @@ export default function BestSellerPage() {
                       className={`flex items-center gap-1 px-4 py-1.5 text-[12px] font-semibold rounded-[6px] transition cursor-pointer shadow-2xs ${
                         isSaved
                           ? 'bg-[#16a34a] text-white'
-                          : 'bg-[#e31837] hover:bg-[#be0e27] text-white'
+                          : 'bg-[#A30029] hover:bg-[#850021] text-white'
                       }`}
                     >
                       {isSaved ? (
@@ -200,8 +200,8 @@ export default function BestSellerPage() {
               onClick={() => setSelectedCategory('all')}
               className={`px-4 py-2 rounded-[8px] text-[13px] font-semibold transition cursor-pointer ${
                 selectedCategory === 'all'
-                  ? 'bg-[#e31837] text-white shadow-xs'
-                  : 'bg-white border border-[#dddddd] text-[#41454d] hover:bg-red-50 hover:text-[#e31837]'
+                  ? 'bg-[#A30029] text-white shadow-xs'
+                  : 'bg-white border border-[#dddddd] text-[#41454d] hover:bg-red-50 hover:text-[#A30029]'
               }`}
             >
               🔥 Tất cả món Hot ({products.length})
@@ -210,8 +210,8 @@ export default function BestSellerPage() {
               onClick={() => setSelectedCategory(1)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-[13px] font-semibold transition cursor-pointer ${
                 selectedCategory === 1
-                  ? 'bg-[#e31837] text-white shadow-xs'
-                  : 'bg-white border border-[#dddddd] text-[#41454d] hover:bg-red-50 hover:text-[#e31837]'
+                  ? 'bg-[#A30029] text-white shadow-xs'
+                  : 'bg-white border border-[#dddddd] text-[#41454d] hover:bg-red-50 hover:text-[#A30029]'
               }`}
             >
               <UtensilsCrossed className="w-3.5 h-3.5" />
@@ -221,8 +221,8 @@ export default function BestSellerPage() {
               onClick={() => setSelectedCategory(2)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-[13px] font-semibold transition cursor-pointer ${
                 selectedCategory === 2
-                  ? 'bg-[#e31837] text-white shadow-xs'
-                  : 'bg-white border border-[#dddddd] text-[#41454d] hover:bg-red-50 hover:text-[#e31837]'
+                  ? 'bg-[#A30029] text-white shadow-xs'
+                  : 'bg-white border border-[#dddddd] text-[#41454d] hover:bg-red-50 hover:text-[#A30029]'
               }`}
             >
               <Sandwich className="w-3.5 h-3.5" />
@@ -232,8 +232,8 @@ export default function BestSellerPage() {
               onClick={() => setSelectedCategory(3)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-[13px] font-semibold transition cursor-pointer ${
                 selectedCategory === 3
-                  ? 'bg-[#e31837] text-white shadow-xs'
-                  : 'bg-white border border-[#dddddd] text-[#41454d] hover:bg-red-50 hover:text-[#e31837]'
+                  ? 'bg-[#A30029] text-white shadow-xs'
+                  : 'bg-white border border-[#dddddd] text-[#41454d] hover:bg-red-50 hover:text-[#A30029]'
               }`}
             >
               <Coffee className="w-3.5 h-3.5" />
@@ -243,7 +243,7 @@ export default function BestSellerPage() {
 
           <Link
             href="/menu"
-            className="text-[13px] font-semibold text-[#e31837] hover:underline flex items-center gap-1 whitespace-nowrap"
+            className="text-[13px] font-semibold text-[#A30029] hover:underline flex items-center gap-1 whitespace-nowrap"
           >
             <span>Xem toàn bộ thực đơn</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -253,7 +253,7 @@ export default function BestSellerPage() {
         {/* 4. DISHES GRID WITH RANKING BADGES */}
         {loading ? (
           <div className="py-24 text-center text-gray-400 space-y-2">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#e31837]" />
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#A30029]" />
             <p className="text-[14px]">Đang tải danh sách món ăn bán chạy nhất...</p>
           </div>
         ) : filteredProducts.length === 0 ? (
@@ -262,7 +262,7 @@ export default function BestSellerPage() {
             <p className="text-[14px] text-[#41454d] font-medium">Không có món ăn nào trong danh mục này</p>
             <Link
               href="/menu"
-              className="inline-block px-4 py-2 bg-[#e31837] text-white text-[13px] font-semibold rounded-[6px]"
+              className="inline-block px-4 py-2 bg-[#A30029] text-white text-[13px] font-semibold rounded-[6px]"
             >
               Quay lại thực đơn
             </Link>
@@ -296,7 +296,7 @@ export default function BestSellerPage() {
           <div className="bg-white rounded-[12px] border border-[#dddddd] shadow-2xl max-w-md w-full overflow-hidden flex flex-col animate-in zoom-in-95">
             <div className="p-4 bg-gradient-to-r from-[#181d26] to-[#2c3440] text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Ticket className="w-4 h-4 text-[#e31837]" />
+                <Ticket className="w-4 h-4 text-[#A30029]" />
                 <h3 className="font-bold text-[15px] text-white">Chi tiết điều kiện voucher</h3>
               </div>
               <button
@@ -310,7 +310,7 @@ export default function BestSellerPage() {
 
             <div className="p-5 space-y-3.5 text-[13px]">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#e31837] bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#A30029] bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
                   {conditionModalCoupon.badge}
                 </span>
                 <h4 className="text-[17px] font-bold text-[#181d26] mt-1.5">{conditionModalCoupon.discount}</h4>
@@ -329,7 +329,7 @@ export default function BestSellerPage() {
               <button
                 type="button"
                 onClick={() => setConditionModalCoupon(null)}
-                className="px-4 py-2 bg-[#e31837] text-white text-[13px] font-semibold rounded-[6px] transition cursor-pointer hover:bg-[#be0e27]"
+                className="px-4 py-2 bg-[#A30029] text-white text-[13px] font-semibold rounded-[6px] transition cursor-pointer hover:bg-[#850021]"
               >
                 Đã hiểu
               </button>

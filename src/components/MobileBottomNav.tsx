@@ -70,13 +70,13 @@ export default function MobileBottomNav() {
               key={item.name}
               href={item.href}
               className={`flex flex-col items-center justify-center h-full relative transition-colors ${
-                item.isActive ? 'text-[#e31837]' : 'text-[#6b7280] hover:text-[#181d26]'
+                item.isActive ? 'text-[#A30029]' : 'text-[#6b7280] hover:text-[#181d26]'
               }`}
             >
               <div className="relative">
                 <Icon className={`w-5 h-5 ${item.isActive ? 'stroke-[2.5]' : 'stroke-[1.75]'}`} />
                 {item.badge && (
-                  <span className="absolute -top-1.5 -right-3 text-[9px] font-extrabold px-1 bg-[#e31837] text-white rounded-full leading-tight animate-pulse">
+                  <span className="absolute -top-1.5 -right-3 text-[9px] font-extrabold px-1 bg-[#A30029] text-white rounded-full leading-tight animate-pulse">
                     {item.badge}
                   </span>
                 )}
@@ -93,13 +93,13 @@ export default function MobileBottomNav() {
           type="button"
           onClick={() => setIsCartOpen(true)}
           className={`flex flex-col items-center justify-center h-full relative transition-all cursor-pointer ${
-            isCartBumping ? 'text-[#e31837] scale-110' : 'text-[#6b7280] hover:text-[#e31837]'
+            isCartBumping ? 'text-[#A30029] scale-110' : 'text-[#6b7280] hover:text-[#A30029]'
           }`}
         >
           <div className="relative">
             <CiShoppingBasket className="w-6 h-6 stroke-1" />
             {totalItems > 0 && (
-              <span className={`absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 text-[9px] font-extrabold bg-[#e31837] text-white rounded-full flex items-center justify-center leading-none transition-transform ${isCartBumping ? 'scale-125' : ''}`}>
+              <span className={`absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 text-[9px] font-extrabold bg-[#A30029] text-white rounded-full flex items-center justify-center leading-none transition-transform ${isCartBumping ? 'scale-125' : ''}`}>
                 {totalItems}
               </span>
             )}

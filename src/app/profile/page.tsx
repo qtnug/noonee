@@ -241,7 +241,7 @@ function ProfileContent() {
   if (!user) {
     return (
       <div className="max-w-md mx-auto px-4 py-24 text-center space-y-5">
-        <div className="w-16 h-16 rounded-full bg-[#fff1f2] text-[#e31837] flex items-center justify-center mx-auto border border-[#fecdd3]">
+        <div className="w-16 h-16 rounded-full bg-[#fff1f2] text-[#A30029] flex items-center justify-center mx-auto border border-[#fecdd3]">
           <UserIcon className="w-8 h-8" />
         </div>
         <h1 className="text-2xl font-normal text-[#181d26]">Vui lòng đăng nhập</h1>
@@ -251,7 +251,7 @@ function ProfileContent() {
         <div className="pt-2 flex gap-3 justify-center">
           <Link
             href="/login"
-            className="px-6 py-3 bg-[#e31837] hover:bg-[#be0e27] text-white font-medium text-[14px] rounded-[6px] shadow-xs transition"
+            className="px-6 py-3 bg-[#A30029] hover:bg-[#850021] text-white font-medium text-[14px] rounded-[6px] shadow-xs transition"
           >
             Đăng nhập ngay
           </Link>
@@ -278,7 +278,7 @@ function ProfileContent() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               {/* Circular Avatar Logo */}
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#e31837] text-white flex items-center justify-center text-2xl sm:text-3xl font-bold shadow-md shrink-0 border-2 border-white ring-2 ring-[#fecdd3]">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#A30029] text-white flex items-center justify-center text-2xl sm:text-3xl font-bold shadow-md shrink-0 border-2 border-white ring-2 ring-[#fecdd3]">
                 {user.fullName ? user.fullName.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
               </div>
 
@@ -311,7 +311,7 @@ function ProfileContent() {
               </div>
               <Link
                 href="/orders"
-                className="inline-flex items-center gap-1.5 h-10 px-4 rounded-[8px] bg-[#fff1f2] hover:bg-[#ffe4e6] text-[#e31837] border border-[#fecdd3] text-[13px] font-medium transition"
+                className="inline-flex items-center gap-1.5 h-10 px-4 rounded-[8px] bg-[#fff1f2] hover:bg-[#ffe4e6] text-[#A30029] border border-[#fecdd3] text-[13px] font-medium transition"
               >
                 <ShoppingBag className="w-4 h-4" />
                 <span>Đơn hàng của tôi</span>
@@ -326,7 +326,7 @@ function ProfileContent() {
             onClick={() => setActiveTab('tier')}
             className={`flex items-center gap-2 py-4 px-3 sm:px-4 text-[14px] font-semibold border-b-2 transition whitespace-nowrap cursor-pointer ${
               activeTab === 'tier'
-                ? 'border-[#e31837] text-[#e31837]'
+                ? 'border-[#A30029] text-[#A30029]'
                 : 'border-transparent text-[#41454d] hover:text-[#181d26]'
             }`}
           >
@@ -339,13 +339,13 @@ function ProfileContent() {
             onClick={() => setActiveTab('vouchers')}
             className={`flex items-center gap-2 py-4 px-3 sm:px-4 text-[14px] font-semibold border-b-2 transition whitespace-nowrap cursor-pointer ${
               activeTab === 'vouchers'
-                ? 'border-[#e31837] text-[#e31837]'
+                ? 'border-[#A30029] text-[#A30029]'
                 : 'border-transparent text-[#41454d] hover:text-[#181d26]'
             }`}
           >
             <Ticket className="w-4 h-4" />
             <span>Kho Voucher ưu đãi</span>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-100 text-[#e31837] rounded-full">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-100 text-[#A30029] rounded-full">
               Mới
             </span>
           </button>
@@ -354,7 +354,7 @@ function ProfileContent() {
             onClick={() => setActiveTab('favorites')}
             className={`flex items-center gap-2 py-4 px-3 sm:px-4 text-[14px] font-semibold border-b-2 transition whitespace-nowrap cursor-pointer ${
               activeTab === 'favorites'
-                ? 'border-[#e31837] text-[#e31837]'
+                ? 'border-[#A30029] text-[#A30029]'
                 : 'border-transparent text-[#41454d] hover:text-[#181d26]'
             }`}
           >
@@ -366,7 +366,7 @@ function ProfileContent() {
             onClick={() => setActiveTab('password')}
             className={`flex items-center gap-2 py-4 px-3 sm:px-4 text-[14px] font-semibold border-b-2 transition whitespace-nowrap cursor-pointer ${
               activeTab === 'password'
-                ? 'border-[#e31837] text-[#e31837]'
+                ? 'border-[#A30029] text-[#A30029]'
                 : 'border-transparent text-[#41454d] hover:text-[#181d26]'
             }`}
           >
@@ -378,7 +378,7 @@ function ProfileContent() {
             onClick={() => setActiveTab('info')}
             className={`flex items-center gap-2 py-4 px-3 sm:px-4 text-[14px] font-semibold border-b-2 transition whitespace-nowrap cursor-pointer ${
               activeTab === 'info'
-                ? 'border-[#e31837] text-[#e31837]'
+                ? 'border-[#A30029] text-[#A30029]'
                 : 'border-transparent text-[#41454d] hover:text-[#181d26]'
             }`}
           >
@@ -396,9 +396,9 @@ function ProfileContent() {
               <div className="bg-white rounded-[10px] p-3.5 sm:p-4 border border-[#dddddd] shadow-2xs space-y-1">
                 <div className="flex items-center justify-between text-[#9297a0]">
                   <span className="text-[11px] font-semibold uppercase tracking-wider">Tổng tiền</span>
-                  <CreditCard className="w-3.5 h-3.5 text-[#e31837]" />
+                  <CreditCard className="w-3.5 h-3.5 text-[#A30029]" />
                 </div>
-                <div className="text-lg sm:text-xl font-bold text-[#e31837] truncate">
+                <div className="text-lg sm:text-xl font-bold text-[#A30029] truncate">
                   {formatVND(stats.totalSpent)}
                 </div>
                 <p className="text-[11px] text-[#41454d] truncate">
@@ -410,7 +410,7 @@ function ProfileContent() {
               <div className="bg-white rounded-[10px] p-3.5 sm:p-4 border border-[#dddddd] shadow-2xs space-y-1">
                 <div className="flex items-center justify-between text-[#9297a0]">
                   <span className="text-[11px] font-semibold uppercase tracking-wider">Hạng thành viên</span>
-                  <Award className="w-3.5 h-3.5 text-[#e31837]" />
+                  <Award className="w-3.5 h-3.5 text-[#A30029]" />
                 </div>
                 <div className="text-lg sm:text-xl font-bold text-[#181d26] truncate">
                   {tier.name}
@@ -453,7 +453,7 @@ function ProfileContent() {
             <div className={`bg-gradient-to-r ${tier.bgGradient} bg-white rounded-[16px] p-6 sm:p-8 border shadow-xs space-y-6`}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <span className="text-[12px] font-bold uppercase tracking-wider text-[#e31837]">
+                  <span className="text-[12px] font-bold uppercase tracking-wider text-[#A30029]">
                     Hành trình thăng hạng của bạn
                   </span>
                   <h2 className="text-xl sm:text-2xl font-bold text-[#181d26] mt-1">
@@ -463,7 +463,7 @@ function ProfileContent() {
                 {tier.nextTier && (
                   <div className="text-left sm:text-right">
                     <span className="text-[12px] text-[#41454d] block">Mục tiêu tiếp theo:</span>
-                    <strong className="text-[15px] font-bold text-[#e31837]">
+                    <strong className="text-[15px] font-bold text-[#A30029]">
                       {tier.nextTier === 'Silver' && '🥈 Hạng Bạc (500k)'}
                       {tier.nextTier === 'Gold' && '🥇 Hạng Vàng (1.500k)'}
                       {tier.nextTier === 'Diamond' && '💎 Hạng Kim Cương (3.500k)'}
@@ -476,7 +476,7 @@ function ProfileContent() {
               <div className="space-y-2">
                 <div className="w-full h-3.5 bg-gray-200 rounded-full overflow-hidden p-0.5">
                   <div
-                    className="h-full bg-[#e31837] rounded-full transition-all duration-500 shadow-xs"
+                    className="h-full bg-[#A30029] rounded-full transition-all duration-500 shadow-xs"
                     style={{ width: `${Math.max(5, tier.progress)}%` }}
                   />
                 </div>
@@ -491,7 +491,7 @@ function ProfileContent() {
               {/* LỢI ÍCH TO NỔI BẬT (STT 7) */}
               <div className="pt-4 border-t border-[#dddddd]/70 space-y-4">
                 <h3 className="text-[15px] font-bold text-[#181d26] flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-[#e31837]" />
+                  <Sparkles className="w-5 h-5 text-[#A30029]" />
                   <span>ĐẶC QUYỀN NỔI BẬT CỦA HẠNG {tier.name.toUpperCase()}:</span>
                 </h3>
 
@@ -512,11 +512,11 @@ function ProfileContent() {
 
                   {/* Highlight 2: Exclusive Vouchers */}
                   <div className="bg-white/90 rounded-[12px] p-4 border border-[#dddddd] shadow-2xs space-y-1.5">
-                    <div className="w-9 h-9 rounded-full bg-red-50 text-[#e31837] flex items-center justify-center font-bold">
+                    <div className="w-9 h-9 rounded-full bg-red-50 text-[#A30029] flex items-center justify-center font-bold">
                       <Ticket className="w-5 h-5" />
                     </div>
                     <h4 className="text-[13px] font-bold text-[#181d26]">Kho Voucher Độc Quyền</h4>
-                    <p className="text-[18px] font-extrabold text-[#e31837]">
+                    <p className="text-[18px] font-extrabold text-[#A30029]">
                       {tier.vouchers.length} Mã Giảm Giá
                     </p>
                     <p className="text-[11px] text-[#41454d]">
@@ -546,7 +546,7 @@ function ProfileContent() {
               <div className="bg-gradient-to-br from-[#fff1f2] via-white to-[#fff9f9] rounded-[16px] p-6 sm:p-8 border-2 border-[#fecdd3] shadow-md space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#fecdd3] pb-4">
                   <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#e31837] bg-white px-2.5 py-0.5 rounded border border-[#fecdd3]">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#A30029] bg-white px-2.5 py-0.5 rounded border border-[#fecdd3]">
                       Đặc quyền mở khóa kế tiếp
                     </span>
                     <h3 className="text-xl font-bold text-[#181d26] mt-1.5">
@@ -555,7 +555,7 @@ function ProfileContent() {
                   </div>
                   <div className="text-left sm:text-right shrink-0">
                     <span className="text-[12px] text-[#41454d] block">Chỉ cần chi tiêu thêm:</span>
-                    <strong className="text-xl font-extrabold text-[#e31837]">
+                    <strong className="text-xl font-extrabold text-[#A30029]">
                       {formatVND(tier.amountNeeded)}
                     </strong>
                   </div>
@@ -564,7 +564,7 @@ function ProfileContent() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Số tiền được giảm khi lên hạng */}
                   <div className="bg-white p-4 rounded-[12px] border border-[#fecdd3] space-y-2">
-                    <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider block">
+                    <span className="text-[11px] font-bold text-[#A30029] uppercase tracking-wider block">
                       💰 Số tiền được giảm tự động:
                     </span>
                     <div className="text-[16px] font-bold text-[#181d26]">
@@ -579,12 +579,12 @@ function ProfileContent() {
 
                   {/* Mã giảm giá nhận được khi lên hạng */}
                   <div className="bg-white p-4 rounded-[12px] border border-[#fecdd3] space-y-2">
-                    <span className="text-[11px] font-bold text-[#e31837] uppercase tracking-wider block">
+                    <span className="text-[11px] font-bold text-[#A30029] uppercase tracking-wider block">
                       🎟️ Mã giảm giá mới được mở khóa:
                     </span>
                     {tier.nextTier === 'Silver' && (
                       <div>
-                        <div className="inline-block font-mono font-bold text-[#e31837] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[13px]">
+                        <div className="inline-block font-mono font-bold text-[#A30029] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[13px]">
                           SILVER10
                         </div>
                         <span className="ml-2 font-bold text-[14px] text-[#181d26]">Giảm ngay 10.000 ₫</span>
@@ -594,13 +594,13 @@ function ProfileContent() {
                     {tier.nextTier === 'Gold' && (
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-[#e31837] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[12px]">
+                          <span className="font-mono font-bold text-[#A30029] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[12px]">
                             GOLD25
                           </span>
                           <span className="font-bold text-[13px] text-[#181d26]">Giảm ngay 25.000 ₫</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-[#e31837] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[12px]">
+                          <span className="font-mono font-bold text-[#A30029] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[12px]">
                             GOLDVIP
                           </span>
                           <span className="font-bold text-[13px] text-[#181d26]">Giảm sâu 15% tổng tiền</span>
@@ -610,13 +610,13 @@ function ProfileContent() {
                     {tier.nextTier === 'Diamond' && (
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-[#e31837] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[12px]">
+                          <span className="font-mono font-bold text-[#A30029] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[12px]">
                             DIAMOND50
                           </span>
                           <span className="font-bold text-[13px] text-[#181d26]">Giảm ngay 50.000 ₫</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-[#e31837] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[12px]">
+                          <span className="font-mono font-bold text-[#A30029] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3] text-[12px]">
                             DIAMONDVIP
                           </span>
                           <span className="font-bold text-[13px] text-[#181d26]">Giảm cực lớn 20% đơn</span>
@@ -632,7 +632,7 @@ function ProfileContent() {
                   </span>
                   <Link
                     href="/menu"
-                    className="h-10 px-5 bg-[#e31837] hover:bg-[#be0e27] text-white font-semibold text-[13px] rounded-[8px] transition flex items-center gap-2 shadow-xs shrink-0"
+                    className="h-10 px-5 bg-[#A30029] hover:bg-[#850021] text-white font-semibold text-[13px] rounded-[8px] transition flex items-center gap-2 shadow-xs shrink-0"
                   >
                     <span>Đặt món tích lũy</span>
                     <ArrowRight className="w-4 h-4" />
@@ -655,7 +655,7 @@ function ProfileContent() {
                 <button
                   type="button"
                   onClick={() => setActiveTab('vouchers')}
-                  className="text-[13px] font-bold text-[#e31837] hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
+                  className="text-[13px] font-bold text-[#A30029] hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
                 >
                   <span>Mở toàn bộ Kho Voucher</span>
                   <ArrowRight className="w-4 h-4" />
@@ -670,7 +670,7 @@ function ProfileContent() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#e31837] bg-white px-2 py-0.5 rounded border border-[#fecdd3]">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#A30029] bg-white px-2 py-0.5 rounded border border-[#fecdd3]">
                           {v.badge || 'Đặc quyền'}
                         </span>
                         <h4 className="text-[15px] font-bold text-[#181d26] mt-2">
@@ -681,7 +681,7 @@ function ProfileContent() {
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="text-[16px] font-bold text-[#e31837]">
+                        <span className="text-[16px] font-bold text-[#A30029]">
                           {v.discountType === 'percentage'
                             ? `-${v.discountValue}%`
                             : `-${formatVND(v.discountValue)}`}
@@ -696,7 +696,7 @@ function ProfileContent() {
                       <button
                         type="button"
                         onClick={() => handleCopyCode(v.code)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#e31837] hover:bg-[#be0e27] text-white text-[12px] font-medium rounded-[6px] transition cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#A30029] hover:bg-[#850021] text-white text-[12px] font-medium rounded-[6px] transition cursor-pointer"
                       >
                         {copiedCode === v.code ? (
                           <>
@@ -724,7 +724,7 @@ function ProfileContent() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#dddddd] pb-4">
               <div>
                 <h2 className="text-xl font-bold text-[#181d26] flex items-center gap-2">
-                  <Ticket className="w-6 h-6 text-[#e31837]" />
+                  <Ticket className="w-6 h-6 text-[#A30029]" />
                   <span>Kho Mã Voucher & Ưu Đãi Của Bạn</span>
                 </h2>
                 <p className="text-[13px] text-[#41454d] mt-1">
@@ -734,7 +734,7 @@ function ProfileContent() {
 
               <Link
                 href="/menu"
-                className="h-9 px-4 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer shadow-xs"
+                className="h-9 px-4 bg-[#A30029] hover:bg-[#850021] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer shadow-xs"
               >
                 <span>Dùng mã đặt món</span>
                 <ArrowRight className="w-4 h-4" />
@@ -757,8 +757,8 @@ function ProfileContent() {
                   onClick={() => setVoucherFilter(tab.id)}
                   className={`px-3 py-1.5 rounded-[6px] text-[12px] font-semibold transition whitespace-nowrap cursor-pointer ${
                     voucherFilter === tab.id
-                      ? 'bg-[#e31837] text-white shadow-2xs'
-                      : 'bg-[#f8fafc] text-[#41454d] border border-[#dddddd] hover:bg-red-50 hover:text-[#e31837]'
+                      ? 'bg-[#A30029] text-white shadow-2xs'
+                      : 'bg-[#f8fafc] text-[#41454d] border border-[#dddddd] hover:bg-red-50 hover:text-[#A30029]'
                   }`}
                 >
                   {tab.label}
@@ -769,7 +769,7 @@ function ProfileContent() {
             {/* Coupons List */}
             {isLoadingCoupons ? (
               <div className="py-16 text-center text-gray-400 space-y-2">
-                <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#e31837]" />
+                <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#A30029]" />
                 <p className="text-[13px]">Đang tải kho mã ưu đãi...</p>
               </div>
             ) : (
@@ -809,7 +809,7 @@ function ProfileContent() {
                           <div className="space-y-2">
                             {/* Badges */}
                             <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#e31837] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3]">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#A30029] bg-red-50 px-2 py-0.5 rounded border border-[#fecdd3]">
                                 {c.badge || 'Ưu đãi'}
                               </span>
                               {c.isOneTimeUse && (
@@ -831,7 +831,7 @@ function ProfileContent() {
 
                             {/* Title & Description */}
                             <div>
-                              <h4 className="font-bold text-[14px] text-[#181d26] group-hover:text-[#e31837] transition">
+                              <h4 className="font-bold text-[14px] text-[#181d26] group-hover:text-[#A30029] transition">
                                 {c.name}
                               </h4>
                               <p className="text-[12px] text-[#41454d] line-clamp-2 mt-1 leading-relaxed">
@@ -841,7 +841,7 @@ function ProfileContent() {
 
                             {/* Discount Value */}
                             <div className="pt-1 flex items-baseline gap-2">
-                              <span className="text-xl font-extrabold text-[#e31837]">
+                              <span className="text-xl font-extrabold text-[#A30029]">
                                 {c.discountType === 'percentage'
                                   ? `-${c.discountValue}%`
                                   : `-${formatVND(c.discountValue)}`}
@@ -868,7 +868,7 @@ function ProfileContent() {
                                 </div>
                                 <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                   <div
-                                    className="h-full bg-[#e31837] rounded-full"
+                                    className="h-full bg-[#A30029] rounded-full"
                                     style={{ width: `${percent}%` }}
                                   />
                                 </div>
@@ -885,7 +885,7 @@ function ProfileContent() {
                               <button
                                 type="button"
                                 onClick={() => handleCopyCode(c.code)}
-                                className="p-1 text-gray-400 hover:text-[#e31837] rounded transition cursor-pointer"
+                                className="p-1 text-gray-400 hover:text-[#A30029] rounded transition cursor-pointer"
                                 title="Sao chép mã"
                               >
                                 {copiedCode === c.code ? (
@@ -899,7 +899,7 @@ function ProfileContent() {
                             <Link
                               href={`/menu?coupon=${c.code}`}
                               onClick={() => handleCopyCode(c.code)}
-                              className="px-3 py-1 bg-[#e31837] hover:bg-[#be0e27] text-white text-[11px] font-semibold rounded-[4px] transition cursor-pointer"
+                              className="px-3 py-1 bg-[#A30029] hover:bg-[#850021] text-white text-[11px] font-semibold rounded-[4px] transition cursor-pointer"
                             >
                               Dùng ngay
                             </Link>
@@ -928,7 +928,7 @@ function ProfileContent() {
               </div>
               <Link
                 href="/menu"
-                className="text-[13px] font-semibold text-[#e31837] hover:underline flex items-center gap-1"
+                className="text-[13px] font-semibold text-[#A30029] hover:underline flex items-center gap-1"
               >
                 <span>Xem thực đơn</span>
                 <ChevronRight className="w-4 h-4" />
@@ -937,12 +937,12 @@ function ProfileContent() {
 
             {isLoadingProducts ? (
               <div className="py-16 text-center space-y-3">
-                <Loader2 className="w-8 h-8 animate-spin text-[#e31837] mx-auto" />
+                <Loader2 className="w-8 h-8 animate-spin text-[#A30029] mx-auto" />
                 <p className="text-[13px] text-[#41454d]">Đang tải danh sách món yêu thích...</p>
               </div>
             ) : favoriteProductsList.length === 0 ? (
               <div className="py-16 text-center space-y-4 max-w-sm mx-auto">
-                <div className="w-14 h-14 rounded-full bg-[#fff1f2] text-[#e31837] flex items-center justify-center mx-auto border border-[#fecdd3]">
+                <div className="w-14 h-14 rounded-full bg-[#fff1f2] text-[#A30029] flex items-center justify-center mx-auto border border-[#fecdd3]">
                   <Heart className="w-7 h-7" />
                 </div>
                 <h3 className="text-lg font-medium text-[#181d26]">
@@ -953,7 +953,7 @@ function ProfileContent() {
                 </p>
                 <Link
                   href="/menu"
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#e31837] hover:bg-[#be0e27] text-white rounded-[8px] text-[13px] font-semibold transition"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#A30029] hover:bg-[#850021] text-white rounded-[8px] text-[13px] font-semibold transition"
                 >
                   Khám phá món ngon
                 </Link>
@@ -973,7 +973,7 @@ function ProfileContent() {
           <div className="bg-white rounded-[16px] p-6 sm:p-8 border border-[#dddddd] shadow-xs max-w-xl mx-auto space-y-6">
             <div className="border-b border-[#dddddd] pb-4">
               <h2 className="text-xl font-bold text-[#181d26] flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-[#e31837]" />
+                <KeyRound className="w-5 h-5 text-[#A30029]" />
                 <span>Đổi mật khẩu tài khoản</span>
               </h2>
               <p className="text-[13px] text-[#41454d] mt-1">
@@ -1006,7 +1006,7 @@ function ProfileContent() {
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder="Nhập mật khẩu bạn đang dùng"
-                    className="w-full h-11 px-3.5 bg-white border border-[#dddddd] rounded-[8px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                    className="w-full h-11 px-3.5 bg-white border border-[#dddddd] rounded-[8px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition"
                     required
                   />
                   <button
@@ -1028,7 +1028,7 @@ function ProfileContent() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Tối thiểu 6 ký tự"
-                  className="w-full h-11 px-3.5 bg-white border border-[#dddddd] rounded-[8px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                  className="w-full h-11 px-3.5 bg-white border border-[#dddddd] rounded-[8px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition"
                   required
                 />
               </div>
@@ -1042,7 +1042,7 @@ function ProfileContent() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Nhập lại mật khẩu mới"
-                  className="w-full h-11 px-3.5 bg-white border border-[#dddddd] rounded-[8px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                  className="w-full h-11 px-3.5 bg-white border border-[#dddddd] rounded-[8px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition"
                   required
                 />
               </div>
@@ -1050,7 +1050,7 @@ function ProfileContent() {
               <button
                 type="submit"
                 disabled={isChangingPass}
-                className="w-full h-11 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-semibold text-[14px] rounded-[8px] shadow-xs transition flex items-center justify-center gap-2 cursor-pointer mt-2"
+                className="w-full h-11 bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white font-semibold text-[14px] rounded-[8px] shadow-xs transition flex items-center justify-center gap-2 cursor-pointer mt-2"
               >
                 {isChangingPass ? (
                   <>
@@ -1070,7 +1070,7 @@ function ProfileContent() {
           <div className="bg-white rounded-[16px] p-6 sm:p-8 border border-[#dddddd] shadow-xs max-w-xl mx-auto space-y-6">
             <div className="border-b border-[#dddddd] pb-4">
               <h2 className="text-xl font-bold text-[#181d26] flex items-center gap-2">
-                <UserIcon className="w-5 h-5 text-[#e31837]" />
+                <UserIcon className="w-5 h-5 text-[#A30029]" />
                 <span>Thông tin cá nhân & Giao hàng</span>
               </h2>
               <p className="text-[13px] text-[#41454d] mt-1">
@@ -1115,7 +1115,7 @@ function ProfileContent() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Ví dụ: Nguyễn Văn An"
-                  className="w-full h-11 px-3.5 bg-white border border-[#dddddd] rounded-[8px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                  className="w-full h-11 px-3.5 bg-white border border-[#dddddd] rounded-[8px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition"
                   required
                 />
               </div>
@@ -1129,7 +1129,7 @@ function ProfileContent() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="Ví dụ: 0912345678"
-                  className="w-full h-11 px-3.5 bg-white border border-[#dddddd] rounded-[8px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                  className="w-full h-11 px-3.5 bg-white border border-[#dddddd] rounded-[8px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition"
                 />
               </div>
 
@@ -1147,7 +1147,7 @@ function ProfileContent() {
               <button
                 type="submit"
                 disabled={isSavingInfo}
-                className="w-full h-11 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-semibold text-[14px] rounded-[8px] shadow-xs transition flex items-center justify-center gap-2 cursor-pointer mt-2"
+                className="w-full h-11 bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white font-semibold text-[14px] rounded-[8px] shadow-xs transition flex items-center justify-center gap-2 cursor-pointer mt-2"
               >
                 {isSavingInfo ? (
                   <>
@@ -1171,7 +1171,7 @@ export default function ProfilePage() {
     <Suspense
       fallback={
         <div className="py-24 text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[#e31837] mx-auto" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#A30029] mx-auto" />
         </div>
       }
     >

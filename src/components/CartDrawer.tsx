@@ -40,14 +40,14 @@ export default function CartDrawer() {
           {/* Header */}
           <div className="h-14 sm:h-16 px-4 sm:px-6 border-b border-[#dddddd] flex items-center justify-between bg-white">
             <div className="flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-[#e31837]" />
+              <ShoppingBag className="w-5 h-5 text-[#A30029]" />
               <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
                 Giỏ hàng <span className="text-[13px] font-normal text-[#9297a0]">({totalItems} món)</span>
               </h2>
             </div>
             <button
               onClick={() => setIsCartOpen(false)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-[#fff1f2] text-[#41454d] hover:text-[#e31837] rounded-[6px] border border-gray-200 hover:border-red-200 transition cursor-pointer active:scale-95 text-[13px] font-medium"
+              className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-[#fff1f2] text-[#41454d] hover:text-[#A30029] rounded-[6px] border border-gray-200 hover:border-red-200 transition cursor-pointer active:scale-95 text-[13px] font-medium"
               aria-label="Đóng giỏ hàng"
             >
               <span>Đóng</span>
@@ -59,7 +59,7 @@ export default function CartDrawer() {
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 divide-y divide-[#dddddd]">
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-16">
-                <div className="w-14 h-14 rounded-[12px] bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] flex items-center justify-center mb-4">
+                <div className="w-14 h-14 rounded-[12px] bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] flex items-center justify-center mb-4">
                   <ShoppingBag className="w-7 h-7" />
                 </div>
                 <h3 className="text-[16px] font-medium text-[#181d26] mb-1">Giỏ hàng của bạn đang trống</h3>
@@ -69,7 +69,7 @@ export default function CartDrawer() {
                 <Link
                   href="/menu"
                   onClick={() => setIsCartOpen(false)}
-                  className="px-6 py-2.5 bg-[#e31837] hover:bg-[#be0e27] text-white rounded-[6px] text-[14px] font-medium transition inline-block text-center"
+                  className="px-6 py-2.5 bg-[#A30029] hover:bg-[#850021] text-white rounded-[6px] text-[14px] font-medium transition inline-block text-center"
                 >
                   Xem thực đơn
                 </Link>
@@ -95,7 +95,7 @@ export default function CartDrawer() {
                           {item.selectedToppings.map((t) => (
                             <span
                               key={t.id}
-                              className="px-1.5 py-0.5 rounded bg-[#fff1f2] text-[#e31837] border border-[#fecdd3]"
+                              className="px-1.5 py-0.5 rounded bg-[#fff1f2] text-[#A30029] border border-[#fecdd3]"
                             >
                               +{t.name} ({formatVND(t.price)})
                             </span>
@@ -110,7 +110,7 @@ export default function CartDrawer() {
                         </p>
                       )}
 
-                      <p className="text-[13px] font-bold text-[#e31837]">
+                      <p className="text-[13px] font-bold text-[#A30029]">
                         {formatVND(item.itemPrice || item.product.price)}
                       </p>
 
@@ -119,7 +119,7 @@ export default function CartDrawer() {
                         <div className="flex items-center border border-[#dddddd] rounded-[6px] bg-white h-7 px-1">
                           <button
                             onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}
-                            className="p-1 hover:text-[#e31837] text-[#41454d] transition cursor-pointer"
+                            className="p-1 hover:text-[#A30029] text-[#41454d] transition cursor-pointer"
                           >
                             <Minus className="w-3 h-3" />
                           </button>
@@ -128,14 +128,14 @@ export default function CartDrawer() {
                           </span>
                           <button
                             onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
-                            className="p-1 hover:text-[#e31837] text-[#41454d] transition cursor-pointer"
+                            className="p-1 hover:text-[#A30029] text-[#41454d] transition cursor-pointer"
                           >
                             <Plus className="w-3 h-3" />
                           </button>
                         </div>
                         <button
                           onClick={() => removeFromCart(item.cartItemId)}
-                          className="p-1 text-[#9297a0] hover:text-[#e31837] transition cursor-pointer"
+                          className="p-1 text-[#9297a0] hover:text-[#A30029] transition cursor-pointer"
                           title="Xóa món"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -163,7 +163,7 @@ export default function CartDrawer() {
                 </div>
                 <div className="flex justify-between text-[16px] font-bold text-[#181d26] pt-2 border-t border-[#dddddd]">
                   <span>Tổng thanh toán</span>
-                  <span className="text-[#e31837] text-lg">{formatVND(totalPrice)}</span>
+                  <span className="text-[#A30029] text-lg">{formatVND(totalPrice)}</span>
                 </div>
               </div>
 
@@ -171,14 +171,14 @@ export default function CartDrawer() {
                 <Link
                   href="/cart"
                   onClick={() => setIsCartOpen(false)}
-                  className="h-11 flex items-center justify-center border border-[#e31837] bg-white text-[#e31837] text-[14px] font-semibold rounded-[6px] hover:bg-[#fff1f2] transition"
+                  className="h-11 flex items-center justify-center border border-[#A30029] bg-white text-[#A30029] text-[14px] font-semibold rounded-[6px] hover:bg-[#fff1f2] transition"
                 >
                   Xem giỏ hàng
                 </Link>
                 <Link
                   href="/checkout"
                   onClick={() => setIsCartOpen(false)}
-                  className="h-11 flex items-center justify-center bg-[#e31837] hover:bg-[#be0e27] text-white text-[14px] font-semibold rounded-[6px] shadow-xs transition"
+                  className="h-11 flex items-center justify-center bg-[#A30029] hover:bg-[#850021] text-white text-[14px] font-semibold rounded-[6px] shadow-xs transition"
                 >
                   Thanh toán
                 </Link>
@@ -187,7 +187,7 @@ export default function CartDrawer() {
               <button
                 type="button"
                 onClick={() => setIsCartOpen(false)}
-                className="w-full py-2 text-center text-[13px] font-medium text-[#555a64] hover:text-[#e31837] transition cursor-pointer flex items-center justify-center gap-1"
+                className="w-full py-2 text-center text-[13px] font-medium text-[#555a64] hover:text-[#A30029] transition cursor-pointer flex items-center justify-center gap-1"
               >
                 <span>← Tiếp tục chọn món khác</span>
               </button>

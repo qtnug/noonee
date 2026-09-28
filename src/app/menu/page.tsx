@@ -192,17 +192,17 @@ function MenuPageContent() {
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             <Link
               href="/group"
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 hover:border-[#e31837] rounded-[6px] text-[13px] font-semibold text-[#e31837] shadow-xs transition hover:scale-[1.02]"
+              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 hover:border-[#A30029] rounded-[6px] text-[13px] font-semibold text-[#A30029] shadow-xs transition hover:scale-[1.02]"
             >
               <Users className="w-4 h-4" />
               <span>Đặt theo nhóm tiết kiệm</span>
-              <span className="px-1.5 py-0.5 bg-[#e31837] text-white text-[10px] font-extrabold rounded-full">
+              <span className="px-1.5 py-0.5 bg-[#A30029] text-white text-[10px] font-extrabold rounded-full">
                 -10%
               </span>
             </Link>
 
             <div className="px-4 py-2.5 bg-white rounded-[6px] border border-[#dddddd] text-[13px] text-[#41454d] shadow-2xs font-medium">
-              Đang hiển thị <strong className="text-[#e31837] font-bold">{filteredProducts.length}</strong> món ăn
+              Đang hiển thị <strong className="text-[#A30029] font-bold">{filteredProducts.length}</strong> món ăn
             </div>
           </div>
         </div>
@@ -213,13 +213,13 @@ function MenuPageContent() {
         {!user && showGuestPrompt && (
           <div className="bg-gradient-to-r from-red-50 via-rose-50 to-amber-50 border border-red-200 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm animate-in fade-in duration-300">
             <div className="flex items-start sm:items-center gap-3.5">
-              <div className="w-10 h-10 rounded-full bg-[#e31837] text-white flex items-center justify-center shrink-0 shadow-xs">
+              <div className="w-10 h-10 rounded-full bg-[#A30029] text-white flex items-center justify-center shrink-0 shadow-xs">
                 <Gift className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-bold text-[#181d26]">Chào bạn mới! Nhận ngay ưu đãi:</span>
-                  <span className="text-xs font-extrabold px-2 py-0.5 bg-[#e31837] text-white rounded-full">
+                  <span className="text-xs font-extrabold px-2 py-0.5 bg-[#A30029] text-white rounded-full">
                     Giảm 20.000đ
                   </span>
                 </div>
@@ -231,7 +231,7 @@ function MenuPageContent() {
             <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
               <Link
                 href="/login?redirect=/menu"
-                className="px-4 py-2 bg-[#e31837] hover:bg-[#be0e27] text-white text-xs sm:text-sm font-semibold rounded-lg shadow-xs transition hover:scale-105 active:scale-95 cursor-pointer"
+                className="px-4 py-2 bg-[#A30029] hover:bg-[#850021] text-white text-xs sm:text-sm font-semibold rounded-lg shadow-xs transition hover:scale-105 active:scale-95 cursor-pointer"
               >
                 Đăng nhập ngay
               </Link>
@@ -259,7 +259,7 @@ function MenuPageContent() {
                 placeholder="Tìm món ăn, cơm tấm, bún phở, trà..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-11 pl-10 pr-10 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                className="w-full h-11 pl-10 pr-10 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition"
               />
               {searchQuery && (
                 <button
@@ -280,8 +280,8 @@ function MenuPageContent() {
                 onClick={() => setOnlyDeals(!onlyDeals)}
                 className={`h-11 px-4 rounded-[6px] text-[13px] font-semibold transition flex items-center gap-1.5 border cursor-pointer ${
                   onlyDeals
-                    ? 'bg-[#e31837] text-white border-[#e31837] shadow-xs'
-                    : 'bg-white text-[#e31837] border-[#fecdd3] hover:bg-[#fff1f2]'
+                    ? 'bg-[#A30029] text-white border-[#A30029] shadow-xs'
+                    : 'bg-white text-[#A30029] border-[#fecdd3] hover:bg-[#fff1f2]'
                 }`}
               >
                 <Tag className="w-3.5 h-3.5" />
@@ -291,7 +291,7 @@ function MenuPageContent() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="h-11 text-[13px] bg-white border border-[#dddddd] rounded-[6px] px-3 text-[#181d26] font-medium focus:outline-none focus:border-[#e31837] cursor-pointer shadow-2xs"
+                className="h-11 text-[13px] bg-white border border-[#dddddd] rounded-[6px] px-3 text-[#181d26] font-medium focus:outline-none focus:border-[#A30029] cursor-pointer shadow-2xs"
               >
                 <option value="best-seller">🔥 Sắp xếp: Bán chạy & Đánh giá</option>
                 <option value="price-asc">💰 Giá: Thấp đến cao</option>
@@ -309,7 +309,7 @@ function MenuPageContent() {
               }}
               className={`h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition cursor-pointer ${
                 selectedCategory === null && !onlyDeals
-                  ? 'bg-[#e31837] text-white shadow-xs'
+                  ? 'bg-[#A30029] text-white shadow-xs'
                   : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
               }`}
             >
@@ -324,7 +324,7 @@ function MenuPageContent() {
                 }}
                 className={`h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition cursor-pointer ${
                   selectedCategory === cat.id && !onlyDeals
-                    ? 'bg-[#e31837] text-white shadow-xs'
+                    ? 'bg-[#A30029] text-white shadow-xs'
                     : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
                 }`}
               >
@@ -348,7 +348,7 @@ function MenuPageContent() {
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="bg-white rounded-[12px] border border-[#dddddd] p-12 text-center space-y-4 my-8">
-            <div className="w-12 h-12 rounded-[10px] bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-[10px] bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] flex items-center justify-center mx-auto">
               <UtensilsCrossed className="w-6 h-6" />
             </div>
             <h3 className="text-[18px] font-semibold text-[#181d26]">Không tìm thấy món ăn phù hợp</h3>
@@ -362,7 +362,7 @@ function MenuPageContent() {
                 setOnlyDeals(false);
                 setCurrentPage(1);
               }}
-              className="h-10 px-5 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-semibold rounded-[6px] transition"
+              className="h-10 px-5 bg-[#A30029] hover:bg-[#850021] text-white text-[13px] font-semibold rounded-[6px] transition"
             >
               Xem tất cả món
             </button>
@@ -372,10 +372,10 @@ function MenuPageContent() {
             {/* Status bar: displaying count and page */}
             <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#475569] px-1">
               <span>
-                Hiển thị trang <strong className="text-[#e31837] font-bold">{currentPage}</strong> / {totalPages} (Tổng {filteredProducts.length} món)
+                Hiển thị trang <strong className="text-[#A30029] font-bold">{currentPage}</strong> / {totalPages} (Tổng {filteredProducts.length} món)
               </span>
               {onlyDeals && (
-                <span className="text-[#e31837] font-semibold flex items-center gap-1">
+                <span className="text-[#A30029] font-semibold flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5" />
                   Đang lọc món nổi bật
                 </span>
@@ -439,7 +439,7 @@ function MenuPageContent() {
                         onClick={() => handlePageChange(pageNum)}
                         className={`min-w-9 h-9 px-2.5 rounded-[6px] text-[13px] font-semibold transition cursor-pointer shadow-2xs ${
                           isCurrent
-                            ? 'bg-[#e31837] text-white shadow-xs'
+                            ? 'bg-[#A30029] text-white shadow-xs'
                             : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
                         }`}
                       >
@@ -470,7 +470,7 @@ function MenuPageContent() {
         <button
           type="button"
           onClick={scrollToTop}
-          className="fixed bottom-20 sm:bottom-6 left-4 sm:left-6 z-40 p-3 rounded-full bg-[#181d26] text-white hover:bg-[#e31837] shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer animate-in fade-in"
+          className="fixed bottom-20 sm:bottom-6 left-4 sm:left-6 z-40 p-3 rounded-full bg-[#181d26] text-white hover:bg-[#A30029] shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer animate-in fade-in"
           aria-label="Cuộn lên đầu trang"
           title="Cuộn lên đầu trang"
         >

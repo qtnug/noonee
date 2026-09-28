@@ -66,7 +66,7 @@ export default function PromoBanner() {
         }}
       />
       {/* Red glow top-right */}
-      <div className="absolute -top-32 -right-32 w-[480px] h-[480px] bg-[#e31837]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-32 -right-32 w-[480px] h-[480px] bg-[#A30029]/10 rounded-full blur-3xl pointer-events-none" />
       {/* Warm amber glow bottom-left */}
       <div className="absolute -bottom-24 -left-24 w-[320px] h-[320px] bg-amber-600/8 rounded-full blur-3xl pointer-events-none" />
 
@@ -77,7 +77,7 @@ export default function PromoBanner() {
           <div className="flex-1 space-y-6">
             {/* Animated pill badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl animate-float">
-              <span className="w-2 h-2 rounded-full bg-[#e31837] animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-[#A30029] animate-pulse" />
               <span className="text-[12px] font-bold text-white/80 uppercase tracking-widest">
                 Ưu đãi người dùng mới
               </span>
@@ -90,7 +90,7 @@ export default function PromoBanner() {
               <span
                 className="inline-block"
                 style={{
-                  background: 'linear-gradient(135deg, #e31837 0%, #ff6b35 50%, #f59e0b 100%)',
+                  background: 'linear-gradient(135deg, #A30029 0%, #ff6b35 50%, #f59e0b 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -154,7 +154,7 @@ export default function PromoBanner() {
 
               <Link
                 href="/menu"
-                className="inline-flex items-center justify-center gap-2 bg-[#e31837] hover:bg-[#be0e27] text-white font-bold text-[14px] px-5 py-3 rounded-[12px] shadow-lg shadow-red-900/30 transition group"
+                className="inline-flex items-center justify-center gap-2 bg-[#A30029] hover:bg-[#850021] text-white font-bold text-[14px] px-5 py-3 rounded-[12px] shadow-lg shadow-red-900/30 transition group"
               >
                 <span>Đặt món ngay</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -174,12 +174,12 @@ export default function PromoBanner() {
                 }}
               />
               {/* Ambient red glow inside card */}
-              <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#e31837]/20 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#A30029]/20 rounded-full blur-2xl pointer-events-none" />
 
               {/* VIETQR label */}
               <div className="flex items-center justify-between mb-4 relative z-10">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-[#e31837] flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-[#A30029] flex items-center justify-center">
                     <span className="text-white text-[8px] font-black">VQ</span>
                   </div>
                   <span className="text-white font-black text-[13px] tracking-wider">VIETQR</span>
@@ -194,14 +194,14 @@ export default function PromoBanner() {
               <div className="relative z-10 bg-white/8 border border-white/10 rounded-[16px] p-4 flex items-center justify-center">
                 <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
                   {/* Top-left finder pattern */}
-                  <rect x="8" y="8" width="44" height="44" rx="6" fill="none" stroke="#e31837" strokeWidth="3.5" />
-                  <rect x="18" y="18" width="24" height="24" rx="3" fill="#e31837" />
+                  <rect x="8" y="8" width="44" height="44" rx="6" fill="none" stroke="#A30029" strokeWidth="3.5" />
+                  <rect x="18" y="18" width="24" height="24" rx="3" fill="#A30029" />
                   {/* Top-right finder pattern */}
-                  <rect x="108" y="8" width="44" height="44" rx="6" fill="none" stroke="#e31837" strokeWidth="3.5" />
-                  <rect x="118" y="18" width="24" height="24" rx="3" fill="#e31837" />
+                  <rect x="108" y="8" width="44" height="44" rx="6" fill="none" stroke="#A30029" strokeWidth="3.5" />
+                  <rect x="118" y="18" width="24" height="24" rx="3" fill="#A30029" />
                   {/* Bottom-left finder pattern */}
-                  <rect x="8" y="108" width="44" height="44" rx="6" fill="none" stroke="#e31837" strokeWidth="3.5" />
-                  <rect x="18" y="118" width="24" height="24" rx="3" fill="#e31837" />
+                  <rect x="8" y="108" width="44" height="44" rx="6" fill="none" stroke="#A30029" strokeWidth="3.5" />
+                  <rect x="18" y="118" width="24" height="24" rx="3" fill="#A30029" />
                   {/* Data modules grid (random dots pattern) */}
                   {[
                     [64, 8], [72, 8], [80, 8], [88, 8], [96, 8],

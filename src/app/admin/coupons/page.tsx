@@ -198,7 +198,7 @@ export default function AdminCouponsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-[#181d26] flex items-center gap-2.5">
-            <Ticket className="w-6 h-6 text-[#e31837]" />
+            <Ticket className="w-6 h-6 text-[#A30029]" />
             Quản lý Kho Voucher & Mã Khuyến Mãi
           </h1>
           <p className="text-[13px] text-[#41454d] mt-1">
@@ -222,7 +222,7 @@ export default function AdminCouponsPage() {
               handleGenerateRandomCode();
               setIsCreateModalOpen(true);
             }}
-            className="h-10 px-4 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-semibold rounded-[6px] flex items-center gap-2 transition cursor-pointer shadow-xs"
+            className="h-10 px-4 bg-[#A30029] hover:bg-[#850021] text-white text-[13px] font-semibold rounded-[6px] flex items-center gap-2 transition cursor-pointer shadow-xs"
           >
             <Plus className="w-4 h-4" />
             <span>Tạo Voucher Mới</span>
@@ -244,7 +244,7 @@ export default function AdminCouponsPage() {
           <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9297a0]">
             Mã Giảm Đồ Ăn
           </span>
-          <div className="text-xl font-bold text-[#e31837]">
+          <div className="text-xl font-bold text-[#A30029]">
             {coupons.filter((c) => c.couponType === 'food_discount' || !c.couponType).length}
           </div>
           <p className="text-[11px] text-[#555a64]">Giảm giá trực tiếp món ăn</p>
@@ -264,7 +264,7 @@ export default function AdminCouponsPage() {
           <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9297a0]">
             Mã Hạng Thành Viên
           </span>
-          <div className="text-xl font-bold text-[#e31837]">
+          <div className="text-xl font-bold text-[#A30029]">
             {coupons.filter((c) => Boolean(c.minTier)).length}
           </div>
           <p className="text-[11px] text-[#555a64]">Đặc quyền Bạc, Vàng, VIP</p>
@@ -280,7 +280,7 @@ export default function AdminCouponsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Tìm theo mã voucher (VD: COM_R9X4A), tên hoặc điều kiện..."
-            className="w-full h-9 pl-9 pr-3 text-[13px] bg-[#f8fafc] border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837]"
+            className="w-full h-9 pl-9 pr-3 text-[13px] bg-[#f8fafc] border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#A30029]"
           />
           <Search className="w-4 h-4 text-[#9297a0] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
@@ -309,7 +309,7 @@ export default function AdminCouponsPage() {
               {loading ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-gray-400">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#e31837] mb-2" />
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#A30029] mb-2" />
                     Đang tải danh sách voucher...
                   </td>
                 </tr>
@@ -333,14 +333,14 @@ export default function AdminCouponsPage() {
                           <span className={`font-mono font-bold text-[13px] px-2 py-0.5 rounded border ${
                             isFreeship
                               ? 'text-blue-700 bg-blue-50 border-blue-200'
-                              : 'text-[#e31837] bg-red-50 border-[#fecdd3]'
+                              : 'text-[#A30029] bg-red-50 border-[#fecdd3]'
                           }`}>
                             {c.code}
                           </span>
                           <button
                             type="button"
                             onClick={() => handleCopy(c.code)}
-                            className="p-1 text-gray-400 hover:text-[#e31837] transition cursor-pointer"
+                            className="p-1 text-gray-400 hover:text-[#A30029] transition cursor-pointer"
                             title="Sao chép mã"
                           >
                             {copiedCode === c.code ? (
@@ -356,7 +356,7 @@ export default function AdminCouponsPage() {
                               🚚 Freeship
                             </span>
                           ) : (
-                            <span className="inline-block text-[10px] font-semibold text-[#e31837] bg-red-50 px-1.5 py-0.5 rounded border border-[#fecdd3]">
+                            <span className="inline-block text-[10px] font-semibold text-[#A30029] bg-red-50 px-1.5 py-0.5 rounded border border-[#fecdd3]">
                               🍱 Giảm đồ ăn
                             </span>
                           )}
@@ -378,7 +378,7 @@ export default function AdminCouponsPage() {
                       </td>
 
                       <td className="py-3 px-4">
-                        <span className="font-bold text-[#e31837]">
+                        <span className="font-bold text-[#A30029]">
                           {c.discountType === 'percentage'
                             ? `-${c.discountValue}%`
                             : `-${formatVND(c.discountValue)}`}
@@ -430,7 +430,7 @@ export default function AdminCouponsPage() {
                           </div>
                           <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-[#e31837] rounded-full"
+                              className="h-full bg-[#A30029] rounded-full"
                               style={{ width: `${percentUsed}%` }}
                             />
                           </div>
@@ -445,7 +445,7 @@ export default function AdminCouponsPage() {
                         <button
                           type="button"
                           onClick={() => handleDeleteCoupon(c.code)}
-                          className="p-1.5 text-gray-400 hover:text-[#e31837] hover:bg-red-50 rounded-[4px] transition cursor-pointer"
+                          className="p-1.5 text-gray-400 hover:text-[#A30029] hover:bg-red-50 rounded-[4px] transition cursor-pointer"
                           title="Xóa voucher này"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -467,7 +467,7 @@ export default function AdminCouponsPage() {
             {/* Modal Header */}
             <div className="p-4 bg-gradient-to-r from-[#181d26] to-[#2b3340] text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Ticket className="w-5 h-5 text-[#e31837]" />
+                <Ticket className="w-5 h-5 text-[#A30029]" />
                 <h3 className="font-bold text-[16px] text-white">Tạo Mã Giảm Giá Mới</h3>
               </div>
               <button
@@ -482,7 +482,7 @@ export default function AdminCouponsPage() {
             {/* Modal Form */}
             <form onSubmit={handleCreateCoupon} className="p-5 overflow-y-auto space-y-4 text-[13px]">
               {formError && (
-                <div className="p-3 bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] rounded-[6px] text-[12px] flex items-center gap-2">
+                <div className="p-3 bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] rounded-[6px] text-[12px] flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{formError}</span>
                 </div>
@@ -497,8 +497,8 @@ export default function AdminCouponsPage() {
                     onClick={() => setCouponType('food_discount')}
                     className={`h-10 px-3 rounded-[6px] border text-[12px] font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
                       couponType === 'food_discount'
-                        ? 'bg-[#fff1f2] border-[#e31837] text-[#e31837]'
-                        : 'bg-white border-[#dddddd] text-[#555a64] hover:border-[#e31837]'
+                        ? 'bg-[#fff1f2] border-[#A30029] text-[#A30029]'
+                        : 'bg-white border-[#dddddd] text-[#555a64] hover:border-[#A30029]'
                     }`}
                   >
                     🍱 Giảm đồ ăn
@@ -524,7 +524,7 @@ export default function AdminCouponsPage() {
                   <button
                     type="button"
                     onClick={handleGenerateRandomCode}
-                    className="text-[11px] text-[#e31837] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                    className="text-[11px] text-[#A30029] hover:underline font-bold flex items-center gap-1 cursor-pointer"
                   >
                     <Shuffle className="w-3.5 h-3.5" />
                     <span>Tạo mã ngẫu nhiên khó đoán</span>
@@ -536,7 +536,7 @@ export default function AdminCouponsPage() {
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
                   placeholder="Ví dụ: COM_R9X4A hoặc DISC20"
-                  className="w-full h-10 px-3 font-mono font-bold bg-[#f8fafc] border border-[#dddddd] rounded-[6px] text-[#e31837] focus:outline-none focus:border-[#e31837]"
+                  className="w-full h-10 px-3 font-mono font-bold bg-[#f8fafc] border border-[#dddddd] rounded-[6px] text-[#A30029] focus:outline-none focus:border-[#A30029]"
                 />
               </div>
 
@@ -549,7 +549,7 @@ export default function AdminCouponsPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Ví dụ: Độc quyền Cơm trưa NooNee - Giảm 20k"
-                  className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                  className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                 />
               </div>
 
@@ -561,7 +561,7 @@ export default function AdminCouponsPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Ví dụ: Áp dụng cho các món Cơm & Món chính đạt từ 70.000 ₫"
-                  className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                  className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                 />
               </div>
 
@@ -572,7 +572,7 @@ export default function AdminCouponsPage() {
                   <select
                     value={discountType}
                     onChange={(e) => setDiscountType(e.target.value as any)}
-                    className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
+                    className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#A30029] cursor-pointer"
                   >
                     <option value="fixed">Số tiền cố định (VNĐ)</option>
                     <option value="percentage">Phần trăm (%)</option>
@@ -590,7 +590,7 @@ export default function AdminCouponsPage() {
                     value={discountValue}
                     onChange={(e) => setDiscountValue(Number(e.target.value))}
                     placeholder={discountType === 'percentage' ? '20' : '20000'}
-                    className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                    className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                   />
                 </div>
               </div>
@@ -604,7 +604,7 @@ export default function AdminCouponsPage() {
                     min={0}
                     value={minOrderAmount}
                     onChange={(e) => setMinOrderAmount(Number(e.target.value))}
-                    className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                    className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                   />
                 </div>
 
@@ -617,7 +617,7 @@ export default function AdminCouponsPage() {
                       value={maxDiscountAmount}
                       onChange={(e) => setMaxDiscountAmount(Number(e.target.value))}
                       placeholder="50000"
-                      className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                      className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                     />
                   </div>
                 )}
@@ -629,7 +629,7 @@ export default function AdminCouponsPage() {
                 <select
                   value={categoryExclusive}
                   onChange={(e) => setCategoryExclusive(e.target.value as any)}
-                  className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
+                  className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#A30029] cursor-pointer"
                 >
                   <option value="all">Toàn bộ món trong thực đơn</option>
                   <option value="rice">Độc quyền Cơm & Món chính</option>
@@ -647,7 +647,7 @@ export default function AdminCouponsPage() {
                     required
                     value={expiryDate}
                     onChange={(e) => setExpiryDate(e.target.value)}
-                    className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                    className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                   />
                 </div>
 
@@ -659,7 +659,7 @@ export default function AdminCouponsPage() {
                     min={1}
                     value={usageLimit}
                     onChange={(e) => setUsageLimit(Number(e.target.value))}
-                    className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                    className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                   />
                 </div>
               </div>
@@ -671,7 +671,7 @@ export default function AdminCouponsPage() {
                     type="checkbox"
                     checked={isOneTimeUse}
                     onChange={(e) => setIsOneTimeUse(e.target.checked)}
-                    className="accent-[#e31837] rounded"
+                    className="accent-[#A30029] rounded"
                   />
                   <span>Mỗi khách hàng chỉ được sử dụng 1 lần duy nhất</span>
                 </label>
@@ -689,7 +689,7 @@ export default function AdminCouponsPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 bg-[#e31837] hover:bg-[#be0e27] text-white font-semibold rounded-[6px] transition flex items-center gap-2 disabled:opacity-50 cursor-pointer shadow-xs"
+                  className="px-5 py-2 bg-[#A30029] hover:bg-[#850021] text-white font-semibold rounded-[6px] transition flex items-center gap-2 disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   {isSubmitting ? (
                     <>

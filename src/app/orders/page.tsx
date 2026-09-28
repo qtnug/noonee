@@ -90,11 +90,11 @@ export default function OrdersLookupPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Pending':
-        return <span className="px-2.5 py-1 rounded-[4px] text-[12px] font-semibold bg-[#fff1f2] text-[#e31837] border border-[#fecdd3]">Chờ tiếp nhận</span>;
+        return <span className="px-2.5 py-1 rounded-[4px] text-[12px] font-semibold bg-[#fff1f2] text-[#A30029] border border-[#fecdd3]">Chờ tiếp nhận</span>;
       case 'Processing':
         return <span className="px-2.5 py-1 rounded-[4px] text-[12px] font-semibold bg-[#f8fafc] text-[#254fad] border border-[#458fff]">Đang nấu</span>;
       case 'Delivering':
-        return <span className="px-2.5 py-1 rounded-[4px] text-[12px] font-semibold bg-[#fff1f2] text-[#e31837] border border-[#fecdd3]">Đang giao</span>;
+        return <span className="px-2.5 py-1 rounded-[4px] text-[12px] font-semibold bg-[#fff1f2] text-[#A30029] border border-[#fecdd3]">Đang giao</span>;
       case 'Completed':
         return <span className="px-2.5 py-1 rounded-[4px] text-[12px] font-semibold bg-[#f8fafc] text-[#006400] border border-[#39bf45]">Hoàn thành</span>;
       case 'Cancelled':
@@ -130,12 +130,12 @@ export default function OrdersLookupPage() {
                       setSearchQuery(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="w-full h-11 pl-11 pr-4 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition font-mono"
+                    className="w-full h-11 pl-11 pr-4 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition font-mono"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="h-11 px-5 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-medium rounded-[6px] transition cursor-pointer"
+                  className="h-11 px-5 bg-[#A30029] hover:bg-[#850021] text-white text-[13px] font-medium rounded-[6px] transition cursor-pointer"
                 >
                   Tìm kiếm
                 </button>
@@ -147,7 +147,7 @@ export default function OrdersLookupPage() {
         {/* Not Logged In Banner with Guest Order Lookup */}
         {!user && (
           <div className="p-8 bg-white border border-[#dddddd] rounded-[12px] text-center space-y-5 max-w-lg mx-auto shadow-xs">
-            <div className="w-14 h-14 rounded-full bg-[#fff1f2] text-[#e31837] flex items-center justify-center mx-auto border border-[#fecdd3]">
+            <div className="w-14 h-14 rounded-full bg-[#fff1f2] text-[#A30029] flex items-center justify-center mx-auto border border-[#fecdd3]">
               <UserIcon className="w-7 h-7" />
             </div>
             <div className="space-y-1">
@@ -159,7 +159,7 @@ export default function OrdersLookupPage() {
             <div>
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-medium text-[13px] rounded-[8px] transition shadow-xs"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#A30029] hover:bg-[#850021] text-white font-medium text-[13px] rounded-[8px] transition shadow-xs"
               >
                 Đăng nhập ngay
               </Link>
@@ -173,7 +173,7 @@ export default function OrdersLookupPage() {
                   placeholder="Nhập mã đơn (VD: NOONEE12345678...)"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 h-10 px-3 text-[13px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] font-mono"
+                  className="flex-1 h-10 px-3 text-[13px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#A30029] font-mono"
                 />
                 <button
                   type="submit"
@@ -199,7 +199,7 @@ export default function OrdersLookupPage() {
             <div className="pt-2">
               <Link
                 href="/menu"
-                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#e31837] hover:underline"
+                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#A30029] hover:underline"
               >
                 <span>Xem thực đơn đặt món ngay</span>
                 <ArrowRight className="w-4 h-4" />
@@ -218,7 +218,7 @@ export default function OrdersLookupPage() {
                 .map((order) => (
                   <div
                     key={order.id}
-                    className="bg-white border border-[#dddddd] rounded-[10px] p-4 sm:p-6 hover:border-[#e31837] hover:shadow-xs transition space-y-3 sm:space-y-4"
+                    className="bg-white border border-[#dddddd] rounded-[10px] p-4 sm:p-6 hover:border-[#A30029] hover:shadow-xs transition space-y-3 sm:space-y-4"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#dddddd]">
                       <div className="flex items-center gap-3">
@@ -245,14 +245,14 @@ export default function OrdersLookupPage() {
                       <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#dddddd]">
                         <div className="text-right">
                           <span className="text-[11px] text-[#9297a0] block">Tổng thanh toán</span>
-                          <span className="text-[16px] sm:text-[17px] font-bold text-[#e31837]">
+                          <span className="text-[16px] sm:text-[17px] font-bold text-[#A30029]">
                             {formatVND(order.totalAmount)}
                           </span>
                         </div>
 
                         <Link
                           href={`/orders/${order.orderCode}`}
-                          className="inline-flex items-center gap-1 text-[12px] sm:text-[13px] font-semibold text-white bg-[#e31837] hover:bg-[#be0e27] px-3.5 sm:px-4 py-2 rounded-[6px] transition cursor-pointer"
+                          className="inline-flex items-center gap-1 text-[12px] sm:text-[13px] font-semibold text-white bg-[#A30029] hover:bg-[#850021] px-3.5 sm:px-4 py-2 rounded-[6px] transition cursor-pointer"
                         >
                           <span>Chi tiết & Đánh giá</span>
                           <ArrowRight className="w-3.5 h-3.5" />
@@ -285,7 +285,7 @@ export default function OrdersLookupPage() {
                       onClick={() => setCurrentPage(pageNum)}
                       className={`min-w-9 h-9 px-2.5 rounded-[6px] text-[13px] font-semibold transition cursor-pointer ${
                         pageNum === currentPage
-                          ? 'bg-[#e31837] text-white shadow-xs'
+                          ? 'bg-[#A30029] text-white shadow-xs'
                           : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
                       }`}
                     >

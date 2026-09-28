@@ -70,7 +70,7 @@ function getDetailScale(time: number): number {
 
 export default function HypotrochoidLoader({
   size = 120,
-  color = '#e31837',
+  color = '#A30029',
   label,
   className = '',
   fullScreen = false,

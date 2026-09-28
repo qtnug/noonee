@@ -121,7 +121,7 @@ export default function NavbarPromoMarquee() {
 
   return (
     <div
-      className="w-full bg-gradient-to-r from-[#b91c1c] via-[#e31837] to-[#b91c1c] text-white overflow-hidden select-none border-b border-red-900/30 relative z-30 shadow-xs h-[28px] sm:h-[30px] flex items-center"
+      className="w-full bg-gradient-to-r from-[#7a001e] via-[#A30029] to-[#7a001e] text-white overflow-hidden select-none border-b border-[#5c0017]/40 relative z-30 shadow-xs h-[28px] sm:h-[30px] flex items-center"
       title="Rê chuột để tạm dừng"
     >
       <div

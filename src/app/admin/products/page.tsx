@@ -462,7 +462,7 @@ export default function AdminProductsPage() {
           {/* Add Product Button */}
           <button
             onClick={openAddModal}
-            className="h-9 sm:h-10 px-3.5 sm:px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white font-medium text-[12px] sm:text-[13px] rounded-[6px] flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+            className="h-9 sm:h-10 px-3.5 sm:px-4 bg-[#A30029] hover:bg-[#850021] active:bg-[#a60b20] text-white font-medium text-[12px] sm:text-[13px] rounded-[6px] flex items-center gap-1.5 transition shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Thêm món mới</span>
@@ -484,7 +484,7 @@ export default function AdminProductsPage() {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 pl-10 pr-9 text-[13px] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] text-[#181d26]"
+              className="w-full h-10 pl-10 pr-9 text-[13px] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#A30029] text-[#181d26]"
             />
             {searchQuery && (
               <button
@@ -509,7 +509,7 @@ export default function AdminProductsPage() {
                 setSelectedCategoryFilter(e.target.value === 'all' ? 'all' : Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="w-full h-10 px-3 text-[13px] bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
+              className="w-full h-10 px-3 text-[13px] bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#A30029] cursor-pointer"
             >
               <option value="all">Tất cả danh mục ({products.length})</option>
               {categories.map((c) => (
@@ -528,7 +528,7 @@ export default function AdminProductsPage() {
                 setStatusFilter(e.target.value as any);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 px-3 text-[13px] bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
+              className="w-full h-10 px-3 text-[13px] bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#A30029] cursor-pointer"
             >
               <option value="all">Tất cả trạng thái</option>
               <option value="available">Đang phục vụ</option>
@@ -545,7 +545,7 @@ export default function AdminProductsPage() {
                 setSortOrder(e.target.value as any);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 px-3 text-[13px] bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#e31837] cursor-pointer"
+              className="w-full h-10 px-3 text-[13px] bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#A30029] cursor-pointer"
             >
               <option value="default">Sắp xếp: Mặc định</option>
               <option value="price_asc">Giá: Thấp đến cao</option>
@@ -559,7 +559,7 @@ export default function AdminProductsPage() {
         {(searchQuery || selectedCategoryFilter !== 'all' || statusFilter !== 'all' || sortOrder !== 'default') && (
           <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-[12px] text-gray-500">
             <span>
-              Tìm thấy <strong className="text-[#e31837] font-bold">{filtered.length}</strong> món phù hợp với bộ lọc
+              Tìm thấy <strong className="text-[#A30029] font-bold">{filtered.length}</strong> món phù hợp với bộ lọc
             </span>
             <button
               type="button"
@@ -570,7 +570,7 @@ export default function AdminProductsPage() {
                 setSortOrder('default');
                 setCurrentPage(1);
               }}
-              className="inline-flex items-center gap-1 text-[#e31837] hover:underline font-semibold cursor-pointer"
+              className="inline-flex items-center gap-1 text-[#A30029] hover:underline font-semibold cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Đặt lại bộ lọc</span>
@@ -583,7 +583,7 @@ export default function AdminProductsPage() {
       <div className="bg-white rounded-[10px] border border-[#dddddd] overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-[13px] text-[#41454d] flex items-center justify-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin text-[#e31837]" />
+            <Loader2 className="w-4 h-4 animate-spin text-[#A30029]" />
             <span>Đang tải danh sách món ăn...</span>
           </div>
         ) : filtered.length === 0 ? (
@@ -625,7 +625,7 @@ export default function AdminProductsPage() {
                         {p.categoryName || 'Món chính'}
                       </span>
                       <div className="text-[11px] text-[#9297a0] flex items-center gap-1 mt-1">
-                        <Clock className="w-3 h-3 text-[#e31837]" />
+                        <Clock className="w-3 h-3 text-[#A30029]" />
                         <span>{p.prepTime || 15} phút</span>
                       </div>
                     </td>
@@ -634,7 +634,7 @@ export default function AdminProductsPage() {
                     </td>
                     <td className="py-3.5 px-4">
                       {p.isFeatured ? (
-                        <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-medium bg-[#fff1f2] text-[#e31837] border border-[#fecdd3]">
+                        <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-medium bg-[#fff1f2] text-[#A30029] border border-[#fecdd3]">
                           Nổi bật
                         </span>
                       ) : (
@@ -647,7 +647,7 @@ export default function AdminProductsPage() {
                         className={`h-7 px-2.5 rounded-[4px] text-[11px] font-medium transition border ${
                           p.isAvailable
                             ? 'bg-white text-[#006400] border-[#39bf45] hover:bg-[#f8fafc]'
-                            : 'bg-[#fff1f2] text-[#e31837] border-[#fecdd3] hover:bg-[#ffe4e6]'
+                            : 'bg-[#fff1f2] text-[#A30029] border-[#fecdd3] hover:bg-[#ffe4e6]'
                         }`}
                       >
                         {p.isAvailable ? 'Đang phục vụ' : 'Tạm hết'}
@@ -663,7 +663,7 @@ export default function AdminProductsPage() {
                       </button>
                       <button
                         onClick={() => handleDelete(p.id)}
-                        className="p-1.5 text-[#e31837] hover:bg-[#fff1f2] rounded-[4px] transition border border-[#dddddd]"
+                        className="p-1.5 text-[#A30029] hover:bg-[#fff1f2] rounded-[4px] transition border border-[#dddddd]"
                         title="Xóa món"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -699,7 +699,7 @@ export default function AdminProductsPage() {
                             onClick={() => setCurrentPage(page)}
                             className={`w-8 h-8 rounded-lg text-xs font-semibold transition cursor-pointer ${
                               currentPage === page
-                                ? 'bg-[#e31837] text-white'
+                                ? 'bg-[#A30029] text-white'
                                 : 'bg-white border border-[#dddddd] text-[#181d26] hover:bg-gray-50'
                             }`}
                           >
@@ -747,7 +747,7 @@ export default function AdminProductsPage() {
                   placeholder="Ví dụ: Phở Bò Tái Nạm"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                  className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                 />
               </div>
 
@@ -757,7 +757,7 @@ export default function AdminProductsPage() {
                   <select
                     value={formCategoryId}
                     onChange={(e) => setFormCategoryId(Number(e.target.value))}
-                    className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                    className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                   >
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -776,7 +776,7 @@ export default function AdminProductsPage() {
                     step={1000}
                     value={formPrice}
                     onChange={(e) => setFormPrice(Number(e.target.value))}
-                    className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                    className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                   />
                 </div>
 
@@ -790,7 +790,7 @@ export default function AdminProductsPage() {
                     placeholder="15"
                     value={formPrepTime}
                     onChange={(e) => setFormPrepTime(Number(e.target.value))}
-                    className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                    className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                   />
                 </div>
               </div>
@@ -804,15 +804,15 @@ export default function AdminProductsPage() {
 
                 {/* Upload Button Box */}
                 <div className="flex flex-wrap gap-2.5 items-center">
-                  <label className="cursor-pointer inline-flex items-center gap-2 px-3.5 py-2 bg-[#f8fafc] hover:bg-[#fff1f2] border border-[#dddddd] hover:border-[#e31837] text-[#181d26] rounded-[6px] text-[12px] font-medium transition shadow-xs">
+                  <label className="cursor-pointer inline-flex items-center gap-2 px-3.5 py-2 bg-[#f8fafc] hover:bg-[#fff1f2] border border-[#dddddd] hover:border-[#A30029] text-[#181d26] rounded-[6px] text-[12px] font-medium transition shadow-xs">
                     {isUploading ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin text-[#e31837]" />
+                        <Loader2 className="w-4 h-4 animate-spin text-[#A30029]" />
                         <span>Đang tải lên Cloudinary...</span>
                       </>
                     ) : (
                       <>
-                        <UploadCloud className="w-4 h-4 text-[#e31837]" />
+                        <UploadCloud className="w-4 h-4 text-[#A30029]" />
                         <span>Tải ảnh từ máy tính</span>
                       </>
                     )}
@@ -826,7 +826,7 @@ export default function AdminProductsPage() {
                   </label>
 
                   {uploadError && (
-                    <span className="text-[12px] text-[#e31837] flex items-center gap-1">
+                    <span className="text-[12px] text-[#A30029] flex items-center gap-1">
                       <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                       {uploadError}
                     </span>
@@ -848,7 +848,7 @@ export default function AdminProductsPage() {
                     placeholder="https://res.cloudinary.com/... hoặc link ảnh bất kỳ"
                     value={formImage}
                     onChange={(e) => setFormImage(e.target.value)}
-                    className="flex-1 h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                    className="flex-1 h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                   />
                   {formImage && (
                     <div className="w-10 h-10 aspect-square rounded-[6px] border border-[#dddddd] overflow-hidden shrink-0 bg-[#f8fafc]">
@@ -873,7 +873,7 @@ export default function AdminProductsPage() {
                   placeholder="Nguyên liệu, hương vị, khẩu phần..."
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
-                  className="w-full p-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                  className="w-full p-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                 />
               </div>
 
@@ -897,13 +897,13 @@ export default function AdminProductsPage() {
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-white border border-[#dddddd] text-[12px] font-medium text-[#181d26] shadow-xs"
                       >
                         <span>{top.name}</span>
-                        <span className="text-[#e31837] font-semibold">
+                        <span className="text-[#A30029] font-semibold">
                           +{formatVND(top.price)}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleRemoveTopping(top.id)}
-                          className="text-[#9297a0] hover:text-[#e31837] ml-0.5 cursor-pointer"
+                          className="text-[#9297a0] hover:text-[#A30029] ml-0.5 cursor-pointer"
                           title="Xóa topping này"
                         >
                           <X className="w-3.5 h-3.5" />
@@ -920,7 +920,7 @@ export default function AdminProductsPage() {
                     placeholder="Tên topping (ví dụ: Trứng ốp la, Thêm sườn...)"
                     value={newTopName}
                     onChange={(e) => setNewTopName(e.target.value)}
-                    className="flex-1 h-9 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[12px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                    className="flex-1 h-9 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[12px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                   />
                   <input
                     type="number"
@@ -929,12 +929,12 @@ export default function AdminProductsPage() {
                     placeholder="Giá thêm (VNĐ)"
                     value={newTopPrice}
                     onChange={(e) => setNewTopPrice(Number(e.target.value))}
-                    className="w-28 h-9 px-2.5 bg-white border border-[#dddddd] rounded-[6px] text-[12px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                    className="w-28 h-9 px-2.5 bg-white border border-[#dddddd] rounded-[6px] text-[12px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                   />
                   <button
                     type="button"
                     onClick={handleAddCustomTopping}
-                    className="h-9 px-3 bg-[#f8fafc] hover:bg-[#fff1f2] border border-[#dddddd] hover:border-[#e31837] text-[#e31837] text-[12px] font-semibold rounded-[6px] transition cursor-pointer shrink-0"
+                    className="h-9 px-3 bg-[#f8fafc] hover:bg-[#fff1f2] border border-[#dddddd] hover:border-[#A30029] text-[#A30029] text-[12px] font-semibold rounded-[6px] transition cursor-pointer shrink-0"
                   >
                     + Thêm
                   </button>
@@ -947,7 +947,7 @@ export default function AdminProductsPage() {
                     type="checkbox"
                     checked={formAvailable}
                     onChange={(e) => setFormAvailable(e.target.checked)}
-                    className="accent-[#e31837]"
+                    className="accent-[#A30029]"
                   />
                   <span className="font-medium text-[#333840]">Đang phục vụ</span>
                 </label>
@@ -957,7 +957,7 @@ export default function AdminProductsPage() {
                     type="checkbox"
                     checked={formFeatured}
                     onChange={(e) => setFormFeatured(e.target.checked)}
-                    className="accent-[#e31837]"
+                    className="accent-[#A30029]"
                   />
                   <span className="font-medium text-[#333840]">Món ăn nổi bật (Trang chủ)</span>
                 </label>
@@ -974,7 +974,7 @@ export default function AdminProductsPage() {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="h-10 px-5 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white font-medium rounded-[6px] transition shadow-xs cursor-pointer"
+                  className="h-10 px-5 bg-[#A30029] hover:bg-[#850021] active:bg-[#a60b20] text-white font-medium rounded-[6px] transition shadow-xs cursor-pointer"
                 >
                   {isSaving ? 'Đang lưu...' : 'Lưu món ăn'}
                 </button>
@@ -1027,7 +1027,7 @@ export default function AdminProductsPage() {
             </div>
 
             {/* Upload Box */}
-            <div className="border-2 border-dashed border-gray-300 hover:border-[#e31837] rounded-[10px] p-6 text-center transition bg-gray-50/50 relative">
+            <div className="border-2 border-dashed border-gray-300 hover:border-[#A30029] rounded-[10px] p-6 text-center transition bg-gray-50/50 relative">
               <input
                 type="file"
                 accept=".xlsx, .xls, .csv"
@@ -1035,7 +1035,7 @@ export default function AdminProductsPage() {
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
               <div className="flex flex-col items-center justify-center space-y-2">
-                <div className="w-12 h-12 rounded-full bg-red-50 text-[#e31837] flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-red-50 text-[#A30029] flex items-center justify-center">
                   <FileUp className="w-6 h-6" />
                 </div>
                 <div className="text-[14px] font-medium text-[#181d26]">
@@ -1097,7 +1097,7 @@ export default function AdminProductsPage() {
                           <td className="p-2 text-gray-600">
                             {row['Danh mục'] || row['Tên danh mục'] || row.categoryName || '---'}
                           </td>
-                          <td className="p-2 font-bold text-[#e31837]">
+                          <td className="p-2 font-bold text-[#A30029]">
                             {formatVND(Number(row['Giá bán'] || row['Đơn giá'] || row.price || 0))}
                           </td>
                           <td className="p-2 text-gray-500 truncate max-w-xs">

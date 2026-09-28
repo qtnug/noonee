@@ -24,7 +24,7 @@ export default function ProductCard({
       {/* Red Highlight Badge */}
       {product.isFeatured && (
         <div className="absolute top-3 left-3 z-10 pointer-events-none">
-          <span className="bg-[#e31837] text-white text-[11px] font-bold px-2 py-0.5 rounded-[4px] shadow-xs">
+          <span className="bg-[#A30029] text-white text-[11px] font-bold px-2 py-0.5 rounded-[4px] shadow-xs">
             {badgeText}
           </span>
         </div>
@@ -40,13 +40,13 @@ export default function ProductCard({
         }}
         className={`absolute top-3 right-3 z-10 p-1 rounded-full border shadow-xs transition cursor-pointer ${
           favorited
-            ? 'bg-white text-[#e31837] border-[#fecdd3]'
-            : 'bg-white/90 hover:bg-white text-[#9297a0] hover:text-[#e31837] border-[#dddddd]'
+            ? 'bg-white text-[#A30029] border-[#fecdd3]'
+            : 'bg-white/90 hover:bg-white text-[#9297a0] hover:text-[#A30029] border-[#dddddd]'
         }`}
         aria-label={favorited ? 'Bỏ thích món' : 'Yêu thích món'}
         title={favorited ? 'Đã yêu thích' : 'Thêm vào yêu thích'}
       >
-        <CiHeart className={`w-4 h-4 stroke-1 ${favorited ? 'text-[#e31837] fill-[#e31837]' : ''}`} />
+        <CiHeart className={`w-4 h-4 stroke-1 ${favorited ? 'text-[#A30029] fill-[#A30029]' : ''}`} />
       </button>
 
       {/* Product Image Container (1:1 Square) */}
@@ -69,7 +69,7 @@ export default function ProductCard({
           {/* Title & Rating */}
           <div className="flex items-start justify-between gap-1.5 mb-1">
             <Link href={`/product/${product.slug}`} className="flex-1 min-w-0">
-              <h3 className="font-bold text-[#0f172a] text-[14px] sm:text-[15px] leading-snug line-clamp-1 hover:text-[#e31837] transition-colors">
+              <h3 className="font-bold text-[#0f172a] text-[14px] sm:text-[15px] leading-snug line-clamp-1 hover:text-[#A30029] transition-colors">
                 {product.name}
               </h3>
             </Link>
@@ -88,7 +88,7 @@ export default function ProductCard({
         {/* Price & Action Button (Red Button) */}
         <div className="pt-2 sm:pt-3 border-t border-[#dddddd] flex items-center justify-between gap-1 sm:gap-2">
           <div className="min-w-0">
-            <span className="text-[14px] sm:text-[16px] font-extrabold text-[#e31837] block leading-tight truncate">
+            <span className="text-[14px] sm:text-[16px] font-extrabold text-[#A30029] block leading-tight truncate">
               {formatVND(product.price)}
             </span>
           </div>
@@ -104,7 +104,7 @@ export default function ProductCard({
             className={`h-7 sm:h-8 px-2 sm:px-3 rounded-[6px] text-[11px] sm:text-[12px] font-semibold transition flex items-center gap-1 shrink-0 ${
               !product.isAvailable
                 ? 'bg-[#f8fafc] text-[#9297a0] border border-[#dddddd] cursor-not-allowed'
-                : 'bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white shadow-xs cursor-pointer'
+                : 'bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white shadow-xs cursor-pointer'
             }`}
             title={product.isAvailable ? 'Chọn món & Tùy chọn khẩu vị' : 'Tạm hết hàng'}
           >

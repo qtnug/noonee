@@ -379,7 +379,7 @@ export default function GroupOrderRoomPage({
   if (loading) {
     return (
       <div className="min-h-screen bg-[#fcfbf9] flex flex-col items-center justify-center space-y-4 px-4">
-        <div className="w-12 h-12 rounded-full border-4 border-[#e31837] border-t-transparent animate-spin" />
+        <div className="w-12 h-12 rounded-full border-4 border-[#A30029] border-t-transparent animate-spin" />
         <p className="text-[15px] font-medium text-[#41454d]">Đang kết nối vào phòng nhóm...</p>
       </div>
     );
@@ -388,7 +388,7 @@ export default function GroupOrderRoomPage({
   if (errorMsg || !group) {
     return (
       <div className="min-h-screen bg-[#fcfbf9] flex flex-col items-center justify-center space-y-5 px-4 text-center">
-        <div className="w-16 h-16 rounded-full bg-[#fff1f2] text-[#e31837] flex items-center justify-center mx-auto border border-[#fecdd3]">
+        <div className="w-16 h-16 rounded-full bg-[#fff1f2] text-[#A30029] flex items-center justify-center mx-auto border border-[#fecdd3]">
           <AlertCircle className="w-8 h-8" />
         </div>
         <h1 className="text-2xl font-bold text-[#181d26]">Không tìm thấy phòng nhóm</h1>
@@ -397,7 +397,7 @@ export default function GroupOrderRoomPage({
         </p>
         <Link
           href="/group"
-          className="px-6 py-3 bg-[#e31837] text-white font-medium rounded-[6px] hover:bg-[#be0e27] transition"
+          className="px-6 py-3 bg-[#A30029] text-white font-medium rounded-[6px] hover:bg-[#850021] transition"
         >
           Quay lại trang Đơn nhóm
         </Link>
@@ -443,7 +443,7 @@ export default function GroupOrderRoomPage({
         <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#e5e7eb] shadow-sm space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#f3f4f6]">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fee2e2] text-[#e31837] text-xs font-bold uppercase tracking-wider mb-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fee2e2] text-[#A30029] text-xs font-bold uppercase tracking-wider mb-2">
                 <Users className="w-3.5 h-3.5" /> Đặt Đơn Nhóm
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[#181d26]">
@@ -462,7 +462,7 @@ export default function GroupOrderRoomPage({
                 <button
                   onClick={handleCopyCode}
                   title="Sao chép mã nhóm"
-                  className="ml-2 p-1.5 hover:bg-white rounded-lg text-[#555a64] hover:text-[#e31837] transition"
+                  className="ml-2 p-1.5 hover:bg-white rounded-lg text-[#555a64] hover:text-[#A30029] transition"
                 >
                   {copiedCode ? <Check className="w-4 h-4 text-[#059669]" /> : <Copy className="w-4 h-4" />}
                 </button>
@@ -470,7 +470,7 @@ export default function GroupOrderRoomPage({
 
               <button
                 onClick={handleCopyLink}
-                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#e5e7eb] rounded-2xl text-[13px] font-medium text-[#41454d] hover:text-[#e31837] hover:border-[#fecdd3] transition"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#e5e7eb] rounded-2xl text-[13px] font-medium text-[#41454d] hover:text-[#A30029] hover:border-[#fecdd3] transition"
               >
                 {copiedLink ? <Check className="w-4 h-4 text-[#059669]" /> : <Share2 className="w-4 h-4" />}
                 {copiedLink ? 'Đã sao chép link' : 'Chia sẻ link'}
@@ -478,16 +478,16 @@ export default function GroupOrderRoomPage({
 
               <button
                 onClick={() => setShowQrModal(true)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#e5e7eb] rounded-2xl text-[13px] font-medium text-[#41454d] hover:text-[#e31837] hover:border-[#fecdd3] transition"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#e5e7eb] rounded-2xl text-[13px] font-medium text-[#41454d] hover:text-[#A30029] hover:border-[#fecdd3] transition"
               >
-                <QrIcon className="w-4 h-4 text-[#e31837]" />
+                <QrIcon className="w-4 h-4 text-[#A30029]" />
                 Mã QR
               </button>
 
               <button
                 onClick={() => fetchGroupData()}
                 title="Làm mới dữ liệu giỏ nhóm ngay lập tức"
-                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#e5e7eb] rounded-2xl text-[13px] font-medium text-[#41454d] hover:text-[#e31837] hover:border-[#fecdd3] transition"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#e5e7eb] rounded-2xl text-[13px] font-medium text-[#41454d] hover:text-[#A30029] hover:border-[#fecdd3] transition"
               >
                 <RefreshCw className="w-4 h-4 text-[#717680]" />
                 Làm mới
@@ -498,15 +498,15 @@ export default function GroupOrderRoomPage({
           {/* Compact Group Discount Status Bar (Requirement 3) */}
           <div className="bg-[#fff1f2] border border-[#fecdd3] rounded-2xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-[13px]">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#e31837] shrink-0" />
+              <Sparkles className="w-4 h-4 text-[#A30029] shrink-0" />
               <span className="font-bold text-[#181d26]">
-                Ưu đãi nhóm: <span className="text-[#e31837]">Giảm {group.discountPercentage || 0}%</span>
+                Ưu đãi nhóm: <span className="text-[#A30029]">Giảm {group.discountPercentage || 0}%</span>
               </span>
               <span className="text-[12px] text-[#555a64]">
                 ({group.members?.length || 0}/10 người)
               </span>
               {discountInfo.nextTier && (
-                <span className="text-[12px] text-[#e31837] font-semibold hidden md:inline">
+                <span className="text-[12px] text-[#A30029] font-semibold hidden md:inline">
                   • Thêm {discountInfo.nextTier.peopleNeeded} người nữa để -{discountInfo.nextTier.percentage}%!
                 </span>
               )}
@@ -526,7 +526,7 @@ export default function GroupOrderRoomPage({
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-bold text-[#181d26] flex items-center gap-2">
-              <UtensilsCrossed className="w-5 h-5 text-[#e31837]" />
+              <UtensilsCrossed className="w-5 h-5 text-[#A30029]" />
               Danh sách món từng thành viên ({group.members?.length || 0})
             </h2>
 
@@ -534,7 +534,7 @@ export default function GroupOrderRoomPage({
             {group.status === 'active' && myMemberId && (
               <button
                 onClick={() => setShowFoodPicker(true)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#e31837] to-[#f43f5e] hover:from-[#be0e27] hover:to-[#e11d48] text-white font-extrabold text-[13px] sm:text-[14px] rounded-[6px] shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-[#e31837]/30"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#A30029] to-[#f43f5e] hover:from-[#850021] hover:to-[#e11d48] text-white font-extrabold text-[13px] sm:text-[14px] rounded-[6px] shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-[#A30029]/30"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
                 <span>+ THÊM MÓN CHO TÔI</span>
@@ -552,7 +552,7 @@ export default function GroupOrderRoomPage({
                   key={member.id}
                   className={`bg-white rounded-xl p-3.5 sm:p-4 border transition ${
                     isMe
-                      ? 'border-[#e31837] ring-1 ring-[#e31837]/20 shadow-xs'
+                      ? 'border-[#A30029] ring-1 ring-[#A30029]/20 shadow-xs'
                       : 'border-[#e5e7eb] shadow-2xs'
                   }`}
                 >
@@ -571,7 +571,7 @@ export default function GroupOrderRoomPage({
                             </span>
                           )}
                           {isMe && (
-                            <span className="px-1.5 py-0.2 rounded-full bg-[#fee2e2] text-[#e31837] text-[10px] font-bold">
+                            <span className="px-1.5 py-0.2 rounded-full bg-[#fee2e2] text-[#A30029] text-[10px] font-bold">
                               Bạn
                             </span>
                           )}
@@ -579,7 +579,7 @@ export default function GroupOrderRoomPage({
                             <button
                               onClick={() => handleRemoveMember(member.id, member.name)}
                               title="Xóa thành viên khỏi nhóm"
-                              className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full bg-[#fee2e2] hover:bg-[#fca5a5] text-[#b91c1c] text-[10px] font-medium transition cursor-pointer"
+                              className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full bg-[#fee2e2] hover:bg-[#fca5a5] text-[#7a001e] text-[10px] font-medium transition cursor-pointer"
                             >
                               <UserMinus className="w-2.5 h-2.5" /> Mời ra
                             </button>
@@ -609,7 +609,7 @@ export default function GroupOrderRoomPage({
                         {isMe && group.status === 'active' && (
                           <button
                             onClick={() => setShowFoodPicker(true)}
-                            className="text-[11px] font-bold text-[#e31837] hover:underline cursor-pointer"
+                            className="text-[11px] font-bold text-[#A30029] hover:underline cursor-pointer"
                           >
                             + Chọn món ngay
                           </button>
@@ -649,20 +649,20 @@ export default function GroupOrderRoomPage({
                                     <>
                                       <button
                                         onClick={() => handleUpdateItem('update_qty', it.id, it.quantity - 1)}
-                                        className="w-5 h-5 rounded bg-white border border-[#dddddd] flex items-center justify-center text-[10px] font-bold hover:bg-[#fee2e2] hover:text-[#e31837] transition cursor-pointer"
+                                        className="w-5 h-5 rounded bg-white border border-[#dddddd] flex items-center justify-center text-[10px] font-bold hover:bg-[#fee2e2] hover:text-[#A30029] transition cursor-pointer"
                                       >
                                         -
                                       </button>
                                       <span className="text-[11px] font-bold w-3 text-center">{it.quantity}</span>
                                       <button
                                         onClick={() => handleUpdateItem('update_qty', it.id, it.quantity + 1)}
-                                        className="w-5 h-5 rounded bg-white border border-[#dddddd] flex items-center justify-center text-[10px] font-bold hover:bg-[#fee2e2] hover:text-[#e31837] transition cursor-pointer"
+                                        className="w-5 h-5 rounded bg-white border border-[#dddddd] flex items-center justify-center text-[10px] font-bold hover:bg-[#fee2e2] hover:text-[#A30029] transition cursor-pointer"
                                       >
                                         +
                                       </button>
                                       <button
                                         onClick={() => handleUpdateItem('remove', it.id)}
-                                        className="p-0.5 text-[#717680] hover:text-[#e31837] transition ml-0.5 cursor-pointer"
+                                        className="p-0.5 text-[#717680] hover:text-[#A30029] transition ml-0.5 cursor-pointer"
                                         title="Xóa món"
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
@@ -671,7 +671,7 @@ export default function GroupOrderRoomPage({
                                   ) : isHost ? (
                                     <button
                                       onClick={() => handleUpdateItem('remove', it.id, undefined, member.id)}
-                                      className="p-0.5 text-[#717680] hover:text-[#e31837] transition ml-0.5 cursor-pointer"
+                                      className="p-0.5 text-[#717680] hover:text-[#A30029] transition ml-0.5 cursor-pointer"
                                       title="Trưởng nhóm xóa món của thành viên này"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
@@ -715,7 +715,7 @@ export default function GroupOrderRoomPage({
                   (Trưởng nhóm sẽ đứng ra thanh toán toàn bộ)
                 </span>
               </div>
-              <span className="text-2xl font-black text-[#e31837]">
+              <span className="text-2xl font-black text-[#A30029]">
                 {formatVND(group.finalTotal || 0)}
               </span>
             </div>
@@ -746,7 +746,7 @@ export default function GroupOrderRoomPage({
                     </button>
                     <button
                       onClick={handleProceedToCheckout}
-                      className="flex-1 py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-bold text-[15px] rounded-[6px] shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 cursor-pointer"
+                      className="flex-1 py-3.5 bg-[#A30029] hover:bg-[#850021] text-white font-bold text-[15px] rounded-[6px] shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <CreditCard className="w-5 h-5" />
                       Thanh toán đơn nhóm ({formatVND(group.finalTotal || 0)})
@@ -801,7 +801,7 @@ export default function GroupOrderRoomPage({
 
             <div className="flex items-center justify-center gap-2">
               <span className="text-[13px] text-[#717680]">Mã nhóm:</span>
-              <span className="font-mono font-bold text-lg text-[#e31837] tracking-wider">{group.code}</span>
+              <span className="font-mono font-bold text-lg text-[#A30029] tracking-wider">{group.code}</span>
             </div>
 
             <button
@@ -820,7 +820,7 @@ export default function GroupOrderRoomPage({
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-5 shadow-2xl animate-in fade-in zoom-in duration-200">
             {!user ? (
               <div className="text-center space-y-4">
-                <div className="w-14 h-14 rounded-full bg-[#fee2e2] text-[#e31837] flex items-center justify-center mx-auto shadow-xs">
+                <div className="w-14 h-14 rounded-full bg-[#fee2e2] text-[#A30029] flex items-center justify-center mx-auto shadow-xs">
                   <Users className="w-7 h-7" />
                 </div>
                 <div className="space-y-2">
@@ -830,14 +830,14 @@ export default function GroupOrderRoomPage({
                   <p className="text-[13px] text-[#555a64] leading-relaxed">
                     Bạn cần đăng nhập tài khoản NooNee để tham gia nhóm của <strong>{group.hostName}</strong>.
                     <br />
-                    Món ăn bạn đặt sẽ được <strong className="text-[#e31837]">tích lũy thăng hạng thành viên</strong> và ghi nhận là <strong>1 đơn của bản thân</strong>!
+                    Món ăn bạn đặt sẽ được <strong className="text-[#A30029]">tích lũy thăng hạng thành viên</strong> và ghi nhận là <strong>1 đơn của bản thân</strong>!
                   </p>
                 </div>
 
                 <div className="pt-2 space-y-2.5">
                   <Link
                     href={`/login?returnUrl=/group/${code}`}
-                    className="w-full py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-bold text-[14px] rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3.5 bg-[#A30029] hover:bg-[#850021] text-white font-bold text-[14px] rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
                   >
                     Đăng nhập tài khoản NooNee
                   </Link>
@@ -851,7 +851,7 @@ export default function GroupOrderRoomPage({
               </div>
             ) : (
               <div className="text-center space-y-4">
-                <div className="w-14 h-14 rounded-full bg-[#fee2e2] text-[#e31837] flex items-center justify-center mx-auto">
+                <div className="w-14 h-14 rounded-full bg-[#fee2e2] text-[#A30029] flex items-center justify-center mx-auto">
                   <Users className="w-6 h-6" />
                 </div>
                 <div className="space-y-1.5">
@@ -869,7 +869,7 @@ export default function GroupOrderRoomPage({
                 <button
                   onClick={() => handleJoin()}
                   disabled={isJoining}
-                  className="w-full py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-bold text-[14px] rounded-xl shadow-md transition disabled:opacity-50 cursor-pointer"
+                  className="w-full py-3.5 bg-[#A30029] hover:bg-[#850021] text-white font-bold text-[14px] rounded-xl shadow-md transition disabled:opacity-50 cursor-pointer"
                 >
                   {isJoining ? 'Đang vào nhóm...' : 'Vào nhóm chọn món ngay'}
                 </button>
@@ -916,7 +916,7 @@ export default function GroupOrderRoomPage({
                       value={productSearch}
                       onChange={(e) => setProductSearch(e.target.value)}
                       placeholder="Tìm món ăn, đồ uống..."
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#dddddd] text-[14px] focus:outline-none focus:border-[#e31837] transition"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#dddddd] text-[14px] focus:outline-none focus:border-[#A30029] transition"
                     />
                   </div>
 
@@ -934,7 +934,7 @@ export default function GroupOrderRoomPage({
                             setSelectedToppings([]);
                             setItemQuantity(1);
                           }}
-                          className="flex items-center gap-3 p-3 rounded-2xl border border-[#e5e7eb] hover:border-[#e31837] hover:bg-[#fff1f2]/20 transition cursor-pointer"
+                          className="flex items-center gap-3 p-3 rounded-2xl border border-[#e5e7eb] hover:border-[#A30029] hover:bg-[#fff1f2]/20 transition cursor-pointer"
                         >
                           <img
                             src={p.image}
@@ -944,11 +944,11 @@ export default function GroupOrderRoomPage({
                           <div className="flex-1 min-w-0">
                             <h4 className="font-bold text-[14px] text-[#181d26] truncate">{p.name}</h4>
                             <p className="text-[12px] text-[#717680] line-clamp-1">{p.description}</p>
-                            <span className="font-bold text-[14px] text-[#e31837] mt-1 block">
+                            <span className="font-bold text-[14px] text-[#A30029] mt-1 block">
                               {formatVND(p.price)}
                             </span>
                           </div>
-                          <button className="px-3 py-1.5 bg-[#e31837] text-white text-[12px] font-semibold rounded-lg">
+                          <button className="px-3 py-1.5 bg-[#A30029] text-white text-[12px] font-semibold rounded-lg">
                             Chọn
                           </button>
                         </div>
@@ -966,7 +966,7 @@ export default function GroupOrderRoomPage({
                     />
                     <div>
                       <h4 className="font-bold text-lg text-[#181d26]">{selectedProduct.name}</h4>
-                      <span className="text-base font-bold text-[#e31837]">
+                      <span className="text-base font-bold text-[#A30029]">
                         {formatVND(selectedProduct.price)}
                       </span>
                     </div>
@@ -986,7 +986,7 @@ export default function GroupOrderRoomPage({
                               key={top.id}
                               className={`flex items-center justify-between p-3 rounded-xl border transition cursor-pointer ${
                                 isChecked
-                                  ? 'border-[#e31837] bg-[#fff1f2]/30'
+                                  ? 'border-[#A30029] bg-[#fff1f2]/30'
                                   : 'border-[#e5e7eb] hover:border-[#dddddd]'
                               }`}
                             >
@@ -1001,7 +1001,7 @@ export default function GroupOrderRoomPage({
                                       setSelectedToppings(selectedToppings.filter((t) => t.id !== top.id));
                                     }
                                   }}
-                                  className="accent-[#e31837] w-4 h-4 rounded"
+                                  className="accent-[#A30029] w-4 h-4 rounded"
                                 />
                                 <span className="font-medium text-[#181d26]">{top.name}</span>
                               </div>
@@ -1050,7 +1050,7 @@ export default function GroupOrderRoomPage({
                 <button
                   onClick={handleAddItemToPortion}
                   disabled={isAddingItem}
-                  className="flex-1 py-3 bg-[#e31837] hover:bg-[#be0e27] text-white font-bold text-[14px] rounded-xl shadow-md transition disabled:opacity-50 cursor-pointer"
+                  className="flex-1 py-3 bg-[#A30029] hover:bg-[#850021] text-white font-bold text-[14px] rounded-xl shadow-md transition disabled:opacity-50 cursor-pointer"
                 >
                   {isAddingItem ? 'Đang thêm...' : 'Thêm vào phần của tôi'}
                 </button>

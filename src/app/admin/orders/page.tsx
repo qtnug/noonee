@@ -172,7 +172,7 @@ export default function AdminOrdersPage() {
             placeholder="Tìm theo mã đơn, khách, SĐT..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-10 pl-10 pr-4 text-[13px] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] text-[#181d26]"
+            className="w-full h-10 pl-10 pr-4 text-[13px] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#A30029] text-[#181d26]"
           />
         </div>
 
@@ -191,7 +191,7 @@ export default function AdminOrdersPage() {
               onClick={() => setStatusFilter(tab.key)}
               className={`h-8 px-3 rounded-[6px] text-[12px] font-medium shrink-0 transition border cursor-pointer ${
                 statusFilter === tab.key
-                  ? 'bg-[#e31837] text-white border-[#e31837] shadow-xs'
+                  ? 'bg-[#A30029] text-white border-[#A30029] shadow-xs'
                   : 'bg-white text-[#333840] border-[#dddddd] hover:bg-[#f8fafc]'
               }`}
             >
@@ -232,7 +232,7 @@ export default function AdminOrdersPage() {
                         #{order.orderCode}
                       </Link>
                       {order.groupCode && (
-                        <span className="inline-block mt-0.5 text-[10px] font-semibold px-1.5 py-0.2 rounded bg-[#fee2e2] text-[#e31837] border border-[#fecdd3]">
+                        <span className="inline-block mt-0.5 text-[10px] font-semibold px-1.5 py-0.2 rounded bg-[#fee2e2] text-[#A30029] border border-[#fecdd3]">
                           Đơn nhóm #{order.groupCode}
                         </span>
                       )}
@@ -245,13 +245,13 @@ export default function AdminOrdersPage() {
                       <div className="text-[#9297a0] text-[12px]">{order.customerPhone}</div>
                       <div className="text-[#41454d] text-[12px] truncate">{order.deliveryAddress}</div>
                       {order.notes && (
-                        <div className="text-[11px] text-[#e31837] italic truncate">Ghi chú: {order.notes}</div>
+                        <div className="text-[11px] text-[#A30029] italic truncate">Ghi chú: {order.notes}</div>
                       )}
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-[#181d26]">
                       <div>{formatVND(order.totalAmount)}</div>
                       {order.discountAmount && order.discountAmount > 0 ? (
-                        <div className="text-[11px] text-[#e31837] font-normal">
+                        <div className="text-[11px] text-[#A30029] font-normal">
                           Giảm: -{formatVND(order.discountAmount)} ({order.couponCode || 'Mã'})
                         </div>
                       ) : null}
@@ -277,7 +277,7 @@ export default function AdminOrdersPage() {
                         className={`h-8 px-2 rounded-[6px] text-[12px] font-medium border ${
                           order.paymentStatus === 'Paid'
                             ? 'bg-white text-[#006400] border-[#39bf45]'
-                            : 'bg-[#fff1f2] text-[#e31837] border-[#fecdd3]'
+                            : 'bg-[#fff1f2] text-[#A30029] border-[#fecdd3]'
                         }`}
                       >
                         <option value="Unpaid">Chưa thu tiền</option>
@@ -288,7 +288,7 @@ export default function AdminOrdersPage() {
                       <div className="flex items-center gap-1.5">
                         {(() => {
                           const badges: Record<string, { label: string; cls: string }> = {
-                            Pending: { label: 'Chờ tiếp nhận', cls: 'bg-[#fff1f2] text-[#e31837] border-[#fecdd3]' },
+                            Pending: { label: 'Chờ tiếp nhận', cls: 'bg-[#fff1f2] text-[#A30029] border-[#fecdd3]' },
                             Processing: { label: 'Đang nấu', cls: 'bg-[#eff6ff] text-[#2563eb] border-[#bfdbfe]' },
                             Delivering: { label: 'Đang giao', cls: 'bg-[#faf5ff] text-[#7c3aed] border-[#e9d5ff]' },
                             Completed: { label: 'Hoàn thành', cls: 'bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]' },
@@ -304,7 +304,7 @@ export default function AdminOrdersPage() {
 
                         {updatingCode === order.orderCode ? (
                           <span className="h-8 px-2 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[11px] text-[#9297a0] flex items-center gap-1">
-                            <Loader2 className="w-3 h-3 animate-spin text-[#e31837]" />
+                            <Loader2 className="w-3 h-3 animate-spin text-[#A30029]" />
                           </span>
                         ) : order.status === 'Cancelled' ? (
                           <div className="space-y-1">
@@ -312,7 +312,7 @@ export default function AdminOrdersPage() {
                               Đã hủy
                             </span>
                             {order.cancelReason && (
-                              <p className="text-[11px] text-[#e31837] max-w-[180px] truncate" title={order.cancelReason}>
+                              <p className="text-[11px] text-[#A30029] max-w-[180px] truncate" title={order.cancelReason}>
                                 Lý do: {order.cancelReason}
                               </p>
                             )}
@@ -328,7 +328,7 @@ export default function AdminOrdersPage() {
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => handleStatusChange(order.orderCode, 'Processing')}
-                                  className="h-7 px-2.5 bg-[#e31837] hover:bg-[#be0e27] text-white text-[11px] font-semibold rounded-[4px] flex items-center gap-1 transition cursor-pointer shadow-xs"
+                                  className="h-7 px-2.5 bg-[#A30029] hover:bg-[#850021] text-white text-[11px] font-semibold rounded-[4px] flex items-center gap-1 transition cursor-pointer shadow-xs"
                                   title="Admin xác nhận đơn và đưa vào bếp nấu"
                                 >
                                   <CookingPot className="w-3.5 h-3.5" />
@@ -340,7 +340,7 @@ export default function AdminOrdersPage() {
                                     setCancelReasonInput('');
                                     setCancelError('');
                                   }}
-                                  className="h-7 px-2 bg-white hover:bg-[#fff1f2] text-[#e31837] border border-[#fecdd3] text-[11px] font-medium rounded-[4px] flex items-center gap-1 transition cursor-pointer"
+                                  className="h-7 px-2 bg-white hover:bg-[#fff1f2] text-[#A30029] border border-[#fecdd3] text-[11px] font-medium rounded-[4px] flex items-center gap-1 transition cursor-pointer"
                                   title="Hủy đơn hàng này (hoàn tiền vào ví nếu đã thanh toán)"
                                 >
                                   <XCircle className="w-3.5 h-3.5" />
@@ -364,7 +364,7 @@ export default function AdminOrdersPage() {
                                     setCancelReasonInput('');
                                     setCancelError('');
                                   }}
-                                  className="h-7 px-2 bg-white hover:bg-[#fff1f2] text-[#e31837] border border-[#fecdd3] text-[11px] font-medium rounded-[4px] flex items-center gap-1 transition cursor-pointer"
+                                  className="h-7 px-2 bg-white hover:bg-[#fff1f2] text-[#A30029] border border-[#fecdd3] text-[11px] font-medium rounded-[4px] flex items-center gap-1 transition cursor-pointer"
                                   title="Bếp hủy đơn (Hết nguyên liệu, quá tải...)"
                                 >
                                   <XCircle className="w-3.5 h-3.5" />
@@ -437,7 +437,7 @@ export default function AdminOrdersPage() {
                             onClick={() => setCurrentPage(page)}
                             className={`w-8 h-8 rounded-lg text-xs font-semibold transition cursor-pointer ${
                               currentPage === page
-                                ? 'bg-[#e31837] text-white'
+                                ? 'bg-[#A30029] text-white'
                                 : 'bg-white border border-[#dddddd] text-[#181d26] hover:bg-gray-50'
                             }`}
                           >
@@ -475,7 +475,7 @@ export default function AdminOrdersPage() {
             <div className="flex items-start justify-between pb-3 border-b border-[#dddddd]">
               <div>
                 <h3 className="text-lg font-bold text-[#181d26] flex items-center gap-2">
-                  <XCircle className="w-5 h-5 text-[#e31837]" />
+                  <XCircle className="w-5 h-5 text-[#A30029]" />
                   <span>Hủy đơn hàng #{cancelModalOrder.orderCode}</span>
                 </h3>
                 <p className="text-[13px] text-[#41454d] mt-0.5">
@@ -510,7 +510,7 @@ export default function AdminOrdersPage() {
             {/* Reason input */}
             <div className="space-y-2">
               <label className="text-[13px] font-semibold text-[#181d26] block">
-                Lí do hủy đơn <span className="text-[#e31837]">*</span>
+                Lí do hủy đơn <span className="text-[#A30029]">*</span>
                 <span className="text-[11px] font-normal text-[#9297a0] ml-1.5">(Lí do sẽ hiển thị trên trang theo dõi của khách)</span>
               </label>
               <textarea
@@ -521,7 +521,7 @@ export default function AdminOrdersPage() {
                   setCancelReasonInput(e.target.value);
                   setCancelError('');
                 }}
-                className="w-full p-3 text-[13px] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] text-[#181d26]"
+                className="w-full p-3 text-[13px] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] text-[#181d26]"
               />
 
               {/* Quick tags */}
@@ -542,7 +542,7 @@ export default function AdminOrdersPage() {
                         setCancelReasonInput(preset);
                         setCancelError('');
                       }}
-                      className="px-2.5 py-1 text-[11px] bg-[#f8fafc] hover:bg-[#fff1f2] hover:text-[#e31837] hover:border-[#fecdd3] text-[#41454d] border border-[#dddddd] rounded-[4px] transition cursor-pointer"
+                      className="px-2.5 py-1 text-[11px] bg-[#f8fafc] hover:bg-[#fff1f2] hover:text-[#A30029] hover:border-[#fecdd3] text-[#41454d] border border-[#dddddd] rounded-[4px] transition cursor-pointer"
                     >
                       {preset}
                     </button>
@@ -552,7 +552,7 @@ export default function AdminOrdersPage() {
             </div>
 
             {cancelError && (
-              <div className="p-2.5 bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] text-[12px] rounded-[6px] font-medium">
+              <div className="p-2.5 bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] text-[12px] rounded-[6px] font-medium">
                 {cancelError}
               </div>
             )}
@@ -571,7 +571,7 @@ export default function AdminOrdersPage() {
                 type="button"
                 disabled={isCancelling}
                 onClick={handleConfirmCancel}
-                className="px-4 py-2 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center gap-1.5 disabled:opacity-50"
+                className="px-4 py-2 bg-[#A30029] hover:bg-[#850021] text-white text-[13px] font-semibold rounded-[6px] transition flex items-center gap-1.5 disabled:opacity-50"
               >
                 {isCancelling ? (
                   <>

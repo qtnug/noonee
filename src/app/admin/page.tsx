@@ -137,7 +137,7 @@ export default function AdminOverviewPage() {
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Link
             href="/admin/products"
-            className="h-9 sm:h-10 px-3 sm:px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white text-[12px] sm:text-[13px] font-medium rounded-[6px] flex items-center gap-1.5 transition shadow-xs"
+            className="h-9 sm:h-10 px-3 sm:px-4 bg-[#A30029] hover:bg-[#850021] active:bg-[#a60b20] text-white text-[12px] sm:text-[13px] font-medium rounded-[6px] flex items-center gap-1.5 transition shadow-xs"
           >
             <UtensilsCrossed className="w-4 h-4" />
             <span>Thêm món mới</span>
@@ -163,9 +163,9 @@ export default function AdminOverviewPage() {
       {/* Time Period Filter Bar (Tuần / Tháng / Quý / Hôm nay / Tất cả) */}
       <div className="bg-white p-3 sm:p-4 rounded-[10px] border border-[#dddddd] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-[13px] font-semibold text-[#181d26]">
-          <Calendar className="w-4 h-4 text-[#e31837]" />
+          <Calendar className="w-4 h-4 text-[#A30029]" />
           <span>Kỳ báo cáo doanh thu:</span>
-          <span className="text-[#e31837] font-bold">({periodLabels[period]})</span>
+          <span className="text-[#A30029] font-bold">({periodLabels[period]})</span>
         </div>
 
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
@@ -176,7 +176,7 @@ export default function AdminOverviewPage() {
               onClick={() => setPeriod(p)}
               className={`px-3 py-1.5 text-[12px] rounded-lg transition whitespace-nowrap cursor-pointer ${
                 period === p
-                  ? 'bg-[#e31837] text-white shadow-xs font-bold'
+                  ? 'bg-[#A30029] text-white shadow-xs font-bold'
                   : 'bg-gray-100 hover:bg-gray-200 text-[#475569] font-medium'
               }`}
             >
@@ -245,14 +245,14 @@ export default function AdminOverviewPage() {
         <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-1.5 sm:space-y-2">
           <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
             <span>Đang xử lý / Giao</span>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] flex items-center justify-center">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] flex items-center justify-center">
               <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="text-lg sm:text-2xl font-semibold text-[#e31837]">
+          <div className="text-lg sm:text-2xl font-semibold text-[#A30029]">
             {stats ? (stats.pendingOrders || 0) + (stats.deliveringOrders || 0) : '...'}
           </div>
-          <span className="text-[11px] sm:text-[12px] text-[#e31837] truncate block">
+          <span className="text-[11px] sm:text-[12px] text-[#A30029] truncate block">
             {stats?.pendingOrders || 0} chờ nấu • {stats?.deliveringOrders || 0} đang giao
           </span>
         </div>
@@ -264,7 +264,7 @@ export default function AdminOverviewPage() {
         {/* Pie Chart: Trạng thái đơn hàng */}
         <div className="lg:col-span-5 bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6 space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-[#dddddd]">
-            <Activity className="w-4 h-4 text-[#e31837]" />
+            <Activity className="w-4 h-4 text-[#A30029]" />
             <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
               Phân bổ trạng thái đơn ({periodLabels[period]})
             </h2>
@@ -275,7 +275,7 @@ export default function AdminOverviewPage() {
               { name: 'Hoàn thành', value: stats.completedOrders || 0, color: '#16a34a' },
               { name: 'Đang giao', value: stats.deliveringOrders || 0, color: '#2563eb' },
               { name: 'Chờ nấu', value: stats.pendingOrders || 0, color: '#f59e0b' },
-              { name: 'Đã hủy', value: stats.cancelledOrders || 0, color: '#e31837' },
+              { name: 'Đã hủy', value: stats.cancelledOrders || 0, color: '#A30029' },
             ].filter(d => d.value > 0);
 
             if (pieData.length === 0) {
@@ -322,7 +322,7 @@ export default function AdminOverviewPage() {
             );
           })() : (
             <div className="py-10 flex items-center justify-center">
-              <Loader2 className="w-6 h-6 animate-spin text-[#e31837]" />
+              <Loader2 className="w-6 h-6 animate-spin text-[#A30029]" />
             </div>
           )}
         </div>
@@ -331,12 +331,12 @@ export default function AdminOverviewPage() {
         <div className="lg:col-span-7 bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
             <div className="flex items-center gap-2">
-              <Flame className="w-4 h-4 text-[#e31837]" />
+              <Flame className="w-4 h-4 text-[#A30029]" />
               <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
                 Top 5 món bán chạy ({periodLabels[period]})
               </h2>
             </div>
-            <Link href="/admin/products" className="text-[12px] sm:text-[13px] font-medium text-[#e31837] hover:underline">
+            <Link href="/admin/products" className="text-[12px] sm:text-[13px] font-medium text-[#A30029] hover:underline">
               Quản lý thực đơn
             </Link>
           </div>
@@ -357,7 +357,7 @@ export default function AdminOverviewPage() {
                   ]}
                   contentStyle={{ borderRadius: '8px', border: '1px solid #ddd', fontSize: '12px' }}
                 />
-                <Bar dataKey="Số phần" fill="#e31837" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="Số phần" fill="#A30029" radius={[4, 4, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -380,7 +380,7 @@ export default function AdminOverviewPage() {
                     <span className="text-[#0f172a] truncate font-medium">{prod.name}</span>
                   </div>
                   <div className="text-right shrink-0 ml-2">
-                    <span className="font-bold text-[#e31837]">{prod.quantity} phần</span>
+                    <span className="font-bold text-[#A30029]">{prod.quantity} phần</span>
                     <span className="text-[10px] text-gray-400 ml-1">• {formatVND(prod.revenue)}</span>
                   </div>
                 </div>
@@ -445,7 +445,7 @@ export default function AdminOverviewPage() {
           <h2 className="text-[15px] sm:text-[16px] font-medium text-[#181d26]">Đơn hàng mới nhất</h2>
           <Link
             href="/admin/orders"
-            className="text-[12px] sm:text-[13px] font-medium text-[#181d26] hover:text-[#e31837] flex items-center gap-1 transition"
+            className="text-[12px] sm:text-[13px] font-medium text-[#181d26] hover:text-[#A30029] flex items-center gap-1 transition"
           >
             <span>Xem tất cả</span>
             <ArrowRight className="w-4 h-4" />
@@ -500,7 +500,7 @@ export default function AdminOverviewPage() {
                       className={`px-2 py-0.5 rounded-[4px] text-[11px] font-medium border whitespace-nowrap ${
                         order.paymentStatus === 'Paid'
                           ? 'bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]'
-                          : 'bg-[#fff1f2] text-[#e31837] border-[#fecdd3]'
+                          : 'bg-[#fff1f2] text-[#A30029] border-[#fecdd3]'
                       }`}
                     >
                       {order.paymentStatus === 'Paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
@@ -509,7 +509,7 @@ export default function AdminOverviewPage() {
                   <td className="py-3.5">
                     {(() => {
                       const badges: Record<string, { label: string; cls: string }> = {
-                        Pending: { label: 'Chờ tiếp nhận', cls: 'bg-[#fff1f2] text-[#e31837] border-[#fecdd3]' },
+                        Pending: { label: 'Chờ tiếp nhận', cls: 'bg-[#fff1f2] text-[#A30029] border-[#fecdd3]' },
                         Processing: { label: 'Đang nấu', cls: 'bg-[#eff6ff] text-[#2563eb] border-[#bfdbfe]' },
                         Delivering: { label: 'Đang giao', cls: 'bg-[#faf5ff] text-[#7c3aed] border-[#e9d5ff]' },
                         Completed: { label: 'Hoàn thành', cls: 'bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]' },
@@ -527,7 +527,7 @@ export default function AdminOverviewPage() {
                     <div className="flex items-center justify-end gap-1.5">
                       {updatingCode === order.orderCode ? (
                         <span className="h-8 px-2.5 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[11px] text-[#9297a0] flex items-center gap-1">
-                          <Loader2 className="w-3 h-3 animate-spin text-[#e31837]" />
+                          <Loader2 className="w-3 h-3 animate-spin text-[#A30029]" />
                           Lưu...
                         </span>
                       ) : (
@@ -536,7 +536,7 @@ export default function AdminOverviewPage() {
                             <>
                               <button
                                 onClick={() => handleUpdateStatus(order.orderCode, 'Processing')}
-                                className="h-8 px-2.5 bg-[#e31837] hover:bg-[#be0e27] text-white text-[12px] font-medium rounded-[6px] flex items-center gap-1 transition shadow-xs cursor-pointer"
+                                className="h-8 px-2.5 bg-[#A30029] hover:bg-[#850021] text-white text-[12px] font-medium rounded-[6px] flex items-center gap-1 transition shadow-xs cursor-pointer"
                                 title="Tiếp nhận và bắt đầu nấu"
                               >
                                 <CookingPot className="w-3.5 h-3.5" />
@@ -544,7 +544,7 @@ export default function AdminOverviewPage() {
                               </button>
                               <button
                                 onClick={() => handleUpdateStatus(order.orderCode, 'Cancelled')}
-                                className="h-8 px-2 bg-white border border-[#dddddd] text-[#9297a0] hover:text-[#e31837] hover:border-[#fecdd3] text-[12px] rounded-[6px] transition cursor-pointer"
+                                className="h-8 px-2 bg-white border border-[#dddddd] text-[#9297a0] hover:text-[#A30029] hover:border-[#fecdd3] text-[12px] rounded-[6px] transition cursor-pointer"
                                 title="Hủy đơn này"
                               >
                                 <XCircle className="w-3.5 h-3.5" />

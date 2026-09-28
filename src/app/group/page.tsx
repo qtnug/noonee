@@ -109,7 +109,7 @@ export default function GroupOrderLandingPage() {
         {/* Hero Section */}
         <div className="text-center space-y-4 pt-4">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#181d26] tracking-tight">
-            Cùng Nhau Chọn Món, <span className="text-[#e31837]">Giảm Đến 10%</span>
+            Cùng Nhau Chọn Món, <span className="text-[#A30029]">Giảm Đến 10%</span>
           </h1>
           <p className="text-[15px] sm:text-[16px] text-[#41454d] max-w-2xl mx-auto">
             Không còn phải chuyền tay nhau điện thoại hay chụp màn hình hỏi từng người. Mọi người vào nhóm cùng chọn món, trưởng nhóm thanh toán 1 lần duy nhất với ưu đãi giảm trực tiếp!
@@ -121,7 +121,7 @@ export default function GroupOrderLandingPage() {
           <div className="bg-white rounded-2xl p-5 border border-[#e5e7eb] shadow-sm relative overflow-hidden flex flex-col justify-between">
             <div className="space-y-2">
               <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#41454d] bg-[#f3f4f6] px-2.5 py-1 rounded-full">
-                <Users className="w-3.5 h-3.5 text-[#e31837]" />
+                <Users className="w-3.5 h-3.5 text-[#A30029]" />
                 Từ 3 - 4 người
               </div>
               <div className="text-3xl font-extrabold text-[#181d26]">
@@ -136,23 +136,23 @@ export default function GroupOrderLandingPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-[#fff1f2] to-white rounded-2xl p-5 border-2 border-[#e31837]/30 shadow-md relative overflow-hidden flex flex-col justify-between">
-            <div className="absolute top-0 right-0 bg-[#e31837] text-white text-[11px] font-bold px-3 py-0.5 rounded-bl-lg uppercase tracking-wider">
+          <div className="bg-gradient-to-br from-[#fff1f2] to-white rounded-2xl p-5 border-2 border-[#A30029]/30 shadow-md relative overflow-hidden flex flex-col justify-between">
+            <div className="absolute top-0 right-0 bg-[#A30029] text-white text-[11px] font-bold px-3 py-0.5 rounded-bl-lg uppercase tracking-wider">
               Phổ biến nhất
             </div>
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#e31837] bg-[#fee2e2] px-2.5 py-1 rounded-full">
-                <Users className="w-3.5 h-3.5 text-[#e31837]" />
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#A30029] bg-[#fee2e2] px-2.5 py-1 rounded-full">
+                <Users className="w-3.5 h-3.5 text-[#A30029]" />
                 Từ 5 - 9 người
               </div>
-              <div className="text-3xl font-extrabold text-[#e31837]">
+              <div className="text-3xl font-extrabold text-[#A30029]">
                 Giảm 5%
               </div>
               <p className="text-[13px] text-[#555a64]">
                 Ưu đãi hoàn hảo cho phòng ban, team công sở đặt cơm trưa.
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-dashed border-[#fecdd3] text-[12px] text-[#e31837] font-medium flex items-center gap-1">
+            <div className="mt-4 pt-3 border-t border-dashed border-[#fecdd3] text-[12px] text-[#A30029] font-medium flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5" /> Tiết kiệm đáng kể cho cả nhóm
             </div>
           </div>
@@ -192,7 +192,7 @@ export default function GroupOrderLandingPage() {
                   : 'text-[#555a64] hover:text-[#181d26]'
               }`}
             >
-              <PlusCircle className="w-4 h-4 text-[#e31837]" />
+              <PlusCircle className="w-4 h-4 text-[#A30029]" />
               Tạo phòng nhóm mới
             </button>
             <button
@@ -207,13 +207,13 @@ export default function GroupOrderLandingPage() {
                   : 'text-[#555a64] hover:text-[#181d26]'
               }`}
             >
-              <LogIn className="w-4 h-4 text-[#e31837]" />
+              <LogIn className="w-4 h-4 text-[#A30029]" />
               Tham gia bằng mã
             </button>
           </div>
 
           {errorMsg && (
-            <div className="mb-5 p-3.5 rounded-xl bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] text-[13px] font-medium">
+            <div className="mb-5 p-3.5 rounded-xl bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] text-[13px] font-medium">
               {errorMsg}
             </div>
           )}
@@ -230,7 +230,7 @@ export default function GroupOrderLandingPage() {
                   value={hostName}
                   onChange={(e) => setHostName(e.target.value)}
                   placeholder="Ví dụ: Hoàng Anh (Trưởng phòng), Lan Hương..."
-                  className="w-full px-4 py-3 rounded-xl border border-[#dddddd] text-[14px] focus:outline-none focus:border-[#e31837] transition"
+                  className="w-full px-4 py-3 rounded-xl border border-[#dddddd] text-[14px] focus:outline-none focus:border-[#A30029] transition"
                   required
                 />
                 <p className="text-[12px] text-[#717680] mt-1.5">
@@ -252,7 +252,7 @@ export default function GroupOrderLandingPage() {
               <button
                 type="submit"
                 disabled={isCreating}
-                className="w-full py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-semibold text-[15px] rounded-[6px] shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full py-3.5 bg-[#A30029] hover:bg-[#850021] text-white font-semibold text-[15px] rounded-[6px] shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isCreating ? (
                   <>
@@ -281,7 +281,7 @@ export default function GroupOrderLandingPage() {
                   value={groupCode}
                   onChange={(e) => setGroupCode(e.target.value.toUpperCase())}
                   placeholder="Ví dụ: NN-8392"
-                  className="w-full px-4 py-3 rounded-xl border border-[#dddddd] text-[15px] font-mono uppercase tracking-wider focus:outline-none focus:border-[#e31837] transition"
+                  className="w-full px-4 py-3 rounded-xl border border-[#dddddd] text-[15px] font-mono uppercase tracking-wider focus:outline-none focus:border-[#A30029] transition"
                   required
                 />
                 <p className="text-[12px] text-[#717680] mt-1.5">
@@ -298,7 +298,7 @@ export default function GroupOrderLandingPage() {
                   value={joinName}
                   onChange={(e) => setJoinName(e.target.value)}
                   placeholder="Ví dụ: Tuấn Anh, Mai Chi..."
-                  className="w-full px-4 py-3 rounded-xl border border-[#dddddd] text-[14px] focus:outline-none focus:border-[#e31837] transition"
+                  className="w-full px-4 py-3 rounded-xl border border-[#dddddd] text-[14px] focus:outline-none focus:border-[#A30029] transition"
                   required
                 />
                 <p className="text-[12px] text-[#717680] mt-1.5">
@@ -309,7 +309,7 @@ export default function GroupOrderLandingPage() {
               <button
                 type="submit"
                 disabled={isJoining}
-                className="w-full py-3.5 bg-[#e31837] hover:bg-[#be0e27] text-white font-semibold text-[15px] rounded-[6px] shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full py-3.5 bg-[#A30029] hover:bg-[#850021] text-white font-semibold text-[15px] rounded-[6px] shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isJoining ? (
                   <>
@@ -334,7 +334,7 @@ export default function GroupOrderLandingPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-5 rounded-2xl border border-[#e5e7eb] space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[#fee2e2] text-[#e31837] font-bold flex items-center justify-center text-base">
+              <div className="w-10 h-10 rounded-xl bg-[#fee2e2] text-[#A30029] font-bold flex items-center justify-center text-base">
                 1
               </div>
               <h3 className="font-bold text-[#181d26] text-[15px]">Tạo phòng & Mời bạn</h3>
@@ -344,7 +344,7 @@ export default function GroupOrderLandingPage() {
             </div>
 
             <div className="bg-white p-5 rounded-2xl border border-[#e5e7eb] space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[#fee2e2] text-[#e31837] font-bold flex items-center justify-center text-base">
+              <div className="w-10 h-10 rounded-xl bg-[#fee2e2] text-[#A30029] font-bold flex items-center justify-center text-base">
                 2
               </div>
               <h3 className="font-bold text-[#181d26] text-[15px]">Tự do chọn món</h3>
@@ -354,7 +354,7 @@ export default function GroupOrderLandingPage() {
             </div>
 
             <div className="bg-white p-5 rounded-2xl border border-[#e5e7eb] space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[#fee2e2] text-[#e31837] font-bold flex items-center justify-center text-base">
+              <div className="w-10 h-10 rounded-xl bg-[#fee2e2] text-[#A30029] font-bold flex items-center justify-center text-base">
                 3
               </div>
               <h3 className="font-bold text-[#181d26] text-[15px]">Chốt đơn & Giảm giá</h3>

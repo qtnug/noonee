@@ -8,6 +8,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        primary: {
+          DEFAULT: "#A30029",
+          hover: "#850021",
+          active: "#6e001b",
+        },
         airtable: {
           primary: "#181d26",
           primaryActive: "#0d1218",

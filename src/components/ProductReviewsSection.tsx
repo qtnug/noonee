@@ -76,7 +76,7 @@ export default function ProductReviewsSection({
 
         {/* Rating Score Badge */}
         <div className="flex items-center gap-3.5 bg-[#fff1f2] border border-[#fecdd3] px-5 py-3 rounded-[8px] self-start sm:self-auto shadow-xs">
-          <div className="text-3xl font-bold text-[#e31837]">
+          <div className="text-3xl font-bold text-[#A30029]">
             {averageRating.toFixed(1)}
           </div>
           <div className="space-y-0.5">
@@ -102,13 +102,13 @@ export default function ProductReviewsSection({
       {/* Loading state */}
       {loading ? (
         <div className="py-12 text-center text-[#9297a0] text-[13px] flex items-center justify-center gap-2">
-          <Loader2 className="w-5 h-5 animate-spin text-[#e31837]" />
+          <Loader2 className="w-5 h-5 animate-spin text-[#A30029]" />
           <span>Đang tải đánh giá từ hệ thống...</span>
         </div>
       ) : total === 0 ? (
         /* Empty State */
         <div className="p-10 text-center bg-[#f8fafc] rounded-[10px] border border-[#dddddd] text-[#9297a0] text-[13px] space-y-2">
-          <div className="w-12 h-12 rounded-full bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] flex items-center justify-center mx-auto mb-2">
+          <div className="w-12 h-12 rounded-full bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] flex items-center justify-center mx-auto mb-2">
             <MessageSquare className="w-6 h-6" />
           </div>
           <h3 className="font-semibold text-[15px] text-[#181d26]">Chưa có đánh giá nào cho món này</h3>
@@ -144,12 +144,12 @@ export default function ProductReviewsSection({
             {reviews.map((rev) => (
               <div
                 key={rev.id}
-                className="bg-white rounded-[10px] border border-[#dddddd] p-5 space-y-3 hover:border-[#e31837] transition-colors shadow-xs"
+                className="bg-white rounded-[10px] border border-[#dddddd] p-5 space-y-3 hover:border-[#A30029] transition-colors shadow-xs"
               >
                 {/* Reviewer info */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] text-[13px] font-bold flex items-center justify-center uppercase">
+                    <div className="w-8 h-8 rounded-full bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] text-[13px] font-bold flex items-center justify-center uppercase">
                       {rev.customerName ? rev.customerName.charAt(0) : 'K'}
                     </div>
                     <div>
@@ -193,7 +193,7 @@ export default function ProductReviewsSection({
 
           {/* Footer note */}
           <div className="flex items-center justify-center gap-2 pt-4 text-[12px] text-[#9297a0]">
-            <Award className="w-4 h-4 text-[#e31837]" />
+            <Award className="w-4 h-4 text-[#A30029]" />
             <span>Mỗi khách hàng chỉ gửi 1 đánh giá sau khi hoàn thành đơn hàng.</span>
           </div>
         </div>

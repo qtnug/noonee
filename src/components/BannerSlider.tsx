@@ -233,14 +233,14 @@ export default function BannerSlider({ bestSellers }: BannerSliderProps) {
                     {/* Price & Order CTA */}
                     <div className="pt-2.5 mt-2 border-t border-zinc-800/80 flex items-center justify-between gap-2">
                       <div>
-                        <span className="text-[15px] sm:text-[16px] font-black text-[#e31837] block leading-tight">
+                        <span className="text-[15px] sm:text-[16px] font-black text-[#A30029] block leading-tight">
                           {formattedPrice}
                         </span>
                       </div>
 
                       <Link
                         href={targetUrl}
-                        className="px-3 py-1.5 rounded-lg bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white text-[12px] font-bold transition flex items-center gap-1 shadow-xs shrink-0"
+                        className="px-3 py-1.5 rounded-lg bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white text-[12px] font-bold transition flex items-center gap-1 shadow-xs shrink-0"
                       >
                         <CiCirclePlus className="w-4 h-4 stroke-1" />
                         <span>Đặt món</span>

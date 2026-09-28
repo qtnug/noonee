@@ -233,7 +233,7 @@ export default function AdminCategoriesPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 text-[12px] sm:text-[13px] text-[#41454d] bg-white px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-[8px] border border-[#dddddd] self-start sm:self-auto">
-          <Layers className="w-4 h-4 text-[#e31837]" />
+          <Layers className="w-4 h-4 text-[#A30029]" />
           <span>Tổng số: <strong>{categories.length} danh mục</strong></span>
         </div>
       </div>
@@ -243,7 +243,7 @@ export default function AdminCategoriesPage() {
           className={`p-3.5 rounded-[8px] border text-[13px] font-medium flex items-center justify-between ${
             message.type === 'success'
               ? 'bg-[#f0fdf4] border-[#bbf7d0] text-[#15803d]'
-              : 'bg-[#fff1f2] border-[#fecdd3] text-[#e31837]'
+              : 'bg-[#fff1f2] border-[#fecdd3] text-[#A30029]'
           }`}
         >
           <div className="flex items-center gap-2">
@@ -267,7 +267,7 @@ export default function AdminCategoriesPage() {
               {editingCategory ? (
                 <Pencil className="w-5 h-5 text-amber-600" />
               ) : (
-                <FolderPlus className="w-5 h-5 text-[#e31837]" />
+                <FolderPlus className="w-5 h-5 text-[#A30029]" />
               )}
               <h2 className="text-[15px] font-semibold text-[#181d26]">
                 {editingCategory ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới'}
@@ -277,7 +277,7 @@ export default function AdminCategoriesPage() {
               <button
                 type="button"
                 onClick={handleCancelEdit}
-                className="text-[12px] text-gray-500 hover:text-[#e31837] font-medium transition"
+                className="text-[12px] text-gray-500 hover:text-[#A30029] font-medium transition"
               >
                 Hủy sửa
               </button>
@@ -287,7 +287,7 @@ export default function AdminCategoriesPage() {
           <form onSubmit={handleSubmit} className="space-y-4 text-[13px]">
             <div className="space-y-1.5">
               <label className="font-medium text-[#181d26]">
-                Tên danh mục <span className="text-[#e31837]">*</span>
+                Tên danh mục <span className="text-[#A30029]">*</span>
               </label>
               <input
                 type="text"
@@ -295,13 +295,13 @@ export default function AdminCategoriesPage() {
                 placeholder="Ví dụ: Cơm & Bún Phở, Món Đặc Biệt..."
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
-                className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition"
               />
             </div>
 
             <div className="space-y-1.5">
               <label className="font-medium text-[#181d26]">
-                Đường dẫn URL (Slug) <span className="text-[#e31837]">*</span>
+                Đường dẫn URL (Slug) <span className="text-[#A30029]">*</span>
               </label>
               <input
                 type="text"
@@ -309,7 +309,7 @@ export default function AdminCategoriesPage() {
                 placeholder="com-bun-pho"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
-                className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] font-mono text-[#181d26] focus:outline-none focus:border-[#e31837] transition"
+                className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] font-mono text-[#181d26] focus:outline-none focus:border-[#A30029] transition"
               />
               <span className="text-[11px] text-[#9297a0]">
                 Được tạo tự động theo tên hoặc có thể chỉnh tay
@@ -326,7 +326,7 @@ export default function AdminCategoriesPage() {
                     onClick={() => setIcon(it.id)}
                     className={`px-2.5 py-1.5 rounded-[6px] border text-[11px] text-left transition flex items-center gap-1.5 ${
                       icon === it.id
-                        ? 'border-[#e31837] bg-[#fff1f2] text-[#e31837] font-semibold'
+                        ? 'border-[#A30029] bg-[#fff1f2] text-[#A30029] font-semibold'
                         : 'border-[#dddddd] hover:bg-gray-50 text-[#41454d]'
                     }`}
                   >
@@ -343,7 +343,7 @@ export default function AdminCategoriesPage() {
                 placeholder="Mô tả các món ăn trong nhóm này..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-3 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#e31837] transition"
+                className="w-full p-3 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029] transition"
               />
             </div>
 
@@ -351,7 +351,7 @@ export default function AdminCategoriesPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 h-10 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white font-medium rounded-[6px] transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
+                className="flex-1 h-10 bg-[#A30029] hover:bg-[#850021] active:bg-[#a60b20] text-white font-medium rounded-[6px] transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
@@ -399,7 +399,7 @@ export default function AdminCategoriesPage() {
                 placeholder="Tìm danh mục..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-9 pl-9 pr-3 text-[12px] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837]"
+                className="w-full h-9 pl-9 pr-3 text-[12px] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#A30029]"
               />
               {searchTerm && (
                 <button
@@ -414,7 +414,7 @@ export default function AdminCategoriesPage() {
 
           {loading ? (
             <div className="p-12 text-center text-[13px] text-[#9297a0] flex flex-col items-center justify-center gap-2">
-              <Loader2 className="w-6 h-6 animate-spin text-[#e31837]" />
+              <Loader2 className="w-6 h-6 animate-spin text-[#A30029]" />
               <span>Đang tải danh sách danh mục...</span>
             </div>
           ) : filteredCategories.length === 0 ? (
@@ -448,7 +448,7 @@ export default function AdminCategoriesPage() {
                           <div className="font-semibold text-[#181d26] flex items-center gap-2">
                             <span>{c.name}</span>
                             {isSelected && (
-                              <span className="text-[10px] bg-[#e31837] text-white px-1.5 py-0.5 rounded font-normal">
+                              <span className="text-[10px] bg-[#A30029] text-white px-1.5 py-0.5 rounded font-normal">
                                 Đang sửa
                               </span>
                             )}
@@ -487,7 +487,7 @@ export default function AdminCategoriesPage() {
                               type="button"
                               onClick={() => setDeletingCategory(c)}
                               title="Xóa danh mục"
-                              className="p-1.5 rounded-[6px] text-gray-500 hover:text-[#e31837] hover:bg-[#fff1f2] border border-transparent hover:border-[#fecdd3] transition"
+                              className="p-1.5 rounded-[6px] text-gray-500 hover:text-[#A30029] hover:bg-[#fff1f2] border border-transparent hover:border-[#fecdd3] transition"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -507,7 +507,7 @@ export default function AdminCategoriesPage() {
       {deletingCategory && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-[12px] max-w-md w-full p-6 space-y-4 border border-[#dddddd] shadow-xl">
-            <div className="flex items-center gap-3 text-[#e31837]">
+            <div className="flex items-center gap-3 text-[#A30029]">
               <div className="p-2 bg-[#fff1f2] rounded-full border border-[#fecdd3]">
                 <AlertCircle className="w-5 h-5" />
               </div>
@@ -540,7 +540,7 @@ export default function AdminCategoriesPage() {
                 type="button"
                 disabled={isDeleting}
                 onClick={handleDeleteConfirm}
-                className="px-4 py-2 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-medium rounded-[6px] transition flex items-center gap-1.5 disabled:opacity-50 shadow-xs"
+                className="px-4 py-2 bg-[#A30029] hover:bg-[#850021] text-white text-[13px] font-medium rounded-[6px] transition flex items-center gap-1.5 disabled:opacity-50 shadow-xs"
               >
                 {isDeleting ? (
                   <>

@@ -132,7 +132,7 @@ function LoginContent() {
   if (user) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#e31837]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#A30029]" />
         <p className="text-[14px] text-gray-600 font-medium">Bạn đã đăng nhập. Đang chuyển hướng...</p>
       </div>
     );
@@ -145,7 +145,7 @@ function LoginContent() {
         <div className="text-center space-y-2">
           <Link href="/" className="inline-block">
             <span className="font-friem text-3xl tracking-wide text-[#181d26]">
-              NooNee<span className="text-[#e31837]">.</span>
+              NooNee<span className="text-[#A30029]">.</span>
             </span>
           </Link>
           <h1 className="text-2xl font-normal text-[#181d26]">
@@ -167,7 +167,7 @@ function LoginContent() {
               setErrorMsg('');
             }}
             className={`flex-1 py-2 rounded-[4px] transition cursor-pointer ${
-              mode === 'login' ? 'bg-[#e31837] text-white shadow-xs font-semibold' : 'text-[#41454d] hover:text-[#181d26]'
+              mode === 'login' ? 'bg-[#A30029] text-white shadow-xs font-semibold' : 'text-[#41454d] hover:text-[#181d26]'
             }`}
           >
             Đăng nhập
@@ -179,7 +179,7 @@ function LoginContent() {
               setErrorMsg('');
             }}
             className={`flex-1 py-2 rounded-[4px] transition cursor-pointer ${
-              mode === 'register' ? 'bg-[#e31837] text-white shadow-xs font-semibold' : 'text-[#41454d] hover:text-[#181d26]'
+              mode === 'register' ? 'bg-[#A30029] text-white shadow-xs font-semibold' : 'text-[#41454d] hover:text-[#181d26]'
             }`}
           >
             Đăng ký mới
@@ -187,7 +187,7 @@ function LoginContent() {
         </div>
 
         {errorMsg && (
-          <div className="p-3 bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] text-[13px] rounded-[6px] font-medium flex items-center gap-2">
+          <div className="p-3 bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] text-[13px] rounded-[6px] font-medium flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -217,7 +217,7 @@ function LoginContent() {
                   placeholder="Nhập tên đăng nhập của bạn"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full h-11 pl-10 pr-4 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#e31837] transition"
+                  className="w-full h-11 pl-10 pr-4 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#A30029] transition"
                 />
               </div>
             </div>
@@ -232,7 +232,7 @@ function LoginContent() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-11 pl-10 pr-10 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#e31837] transition"
+                  className="w-full h-11 pl-10 pr-10 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#A30029] transition"
                 />
                 <button
                   type="button"
@@ -247,7 +247,7 @@ function LoginContent() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-11 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white font-medium rounded-[6px] transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-60"
+              className="w-full h-11 bg-[#A30029] hover:bg-[#850021] active:bg-[#a60b20] text-white font-medium rounded-[6px] transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-60"
             >
               <span>{isSubmitting ? 'Đang xác thực...' : 'Đăng nhập'}</span>
               <ArrowRight className="w-4 h-4" />
@@ -275,7 +275,7 @@ function LoginContent() {
                 placeholder="Ví dụ: Trần Văn Nam"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#e31837] transition"
+                className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#A30029] transition"
               />
             </div>
 
@@ -292,7 +292,7 @@ function LoginContent() {
                 placeholder="Ví dụ: namtran_99"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#e31837] transition font-mono"
+                className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#A30029] transition font-mono"
               />
             </div>
 
@@ -305,7 +305,7 @@ function LoginContent() {
                   placeholder="Tối thiểu 8 ký tự, có hoa, thường, số, ký tự đặc biệt"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-10 pl-3.5 pr-10 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#e31837] transition"
+                  className="w-full h-10 pl-3.5 pr-10 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#A30029] transition"
                 />
                 <button
                   type="button"
@@ -352,7 +352,7 @@ function LoginContent() {
               <div className="flex justify-between items-center">
                 <label className="font-medium text-[#181d26]">Nhập lại mật khẩu *</label>
                 {confirmPassword && (
-                  <span className={`text-[11px] font-medium ${passwordsMatch ? 'text-[#006400]' : 'text-[#e31837]'}`}>
+                  <span className={`text-[11px] font-medium ${passwordsMatch ? 'text-[#006400]' : 'text-[#A30029]'}`}>
                     {passwordsMatch ? '✓ Khớp mật khẩu' : '✗ Chưa khớp'}
                   </span>
                 )}
@@ -364,7 +364,7 @@ function LoginContent() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={`w-full h-10 px-3.5 bg-white border rounded-[6px] text-[14px] text-[#181d26] focus:outline-none transition ${
-                  confirmPassword && !passwordsMatch ? 'border-[#e31837] focus:border-[#e31837]' : 'border-[#dddddd] focus:border-[#e31837]'
+                  confirmPassword && !passwordsMatch ? 'border-[#A30029] focus:border-[#A30029]' : 'border-[#dddddd] focus:border-[#A30029]'
                 }`}
               />
             </div>
@@ -376,7 +376,7 @@ function LoginContent() {
                 placeholder="0912345678 (10 số di động VN)"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#e31837] transition"
+                className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#A30029] transition"
               />
             </div>
 
@@ -392,7 +392,7 @@ function LoginContent() {
             <button
               type="submit"
               disabled={isSubmitting || !passwordsMatch || strengthScore < 5}
-              className="w-full h-11 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a60b20] text-white font-medium rounded-[6px] transition flex items-center justify-center gap-2 mt-2 shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-11 bg-[#A30029] hover:bg-[#850021] active:bg-[#a60b20] text-white font-medium rounded-[6px] transition flex items-center justify-center gap-2 mt-2 shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>{isSubmitting ? 'Đang tạo tài khoản...' : 'Hoàn tất đăng ký'}</span>
               <ArrowRight className="w-4 h-4" />
@@ -409,7 +409,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <div className="min-h-[85vh] flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[#e31837]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#A30029]" />
         </div>
       }
     >

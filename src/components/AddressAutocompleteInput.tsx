@@ -271,7 +271,7 @@ export default function AddressAutocompleteInput({
     <div ref={containerRef} className="relative w-full space-y-2">
       {/* Input wrapper */}
       <div className="relative flex items-center">
-        <div className="absolute left-3.5 text-[#e31837] pointer-events-none">
+        <div className="absolute left-3.5 text-[#A30029] pointer-events-none">
           <MapPin className="w-5 h-5" />
         </div>
 
@@ -291,11 +291,11 @@ export default function AddressAutocompleteInput({
           aria-autocomplete="list"
           aria-expanded={isOpen}
           aria-controls="address-predictions-list"
-          className="w-full h-11 pl-11 pr-10 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition placeholder:text-gray-400"
+          className="w-full h-11 pl-11 pr-10 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition placeholder:text-gray-400"
         />
 
         <div className="absolute right-3 flex items-center gap-1.5">
-          {isSearching && <Loader2 className="w-4 h-4 text-[#e31837] animate-spin" />}
+          {isSearching && <Loader2 className="w-4 h-4 text-[#A30029] animate-spin" />}
 
           {inputValue && !disabled && (
             <button
@@ -331,12 +331,12 @@ export default function AddressAutocompleteInput({
                 }}
                 onMouseEnter={() => setSelectedIndex(idx)}
                 className={`px-3.5 py-2.5 cursor-pointer flex items-start gap-2.5 text-left transition ${
-                  isSelected ? 'bg-[#fff1f2] text-[#e31837]' : 'hover:bg-gray-50 text-[#181d26]'
+                  isSelected ? 'bg-[#fff1f2] text-[#A30029]' : 'hover:bg-gray-50 text-[#181d26]'
                 }`}
               >
                 <div
                   className={`mt-0.5 p-1 rounded-full shrink-0 ${
-                    isSelected ? 'bg-[#e31837] text-white' : 'bg-gray-100 text-gray-500'
+                    isSelected ? 'bg-[#A30029] text-white' : 'bg-gray-100 text-gray-500'
                   }`}
                 >
                   <MapPin className="w-3.5 h-3.5" />
@@ -360,7 +360,7 @@ export default function AddressAutocompleteInput({
       {/* Calculating Indicator: compact */}
       {isCalculating && (
         <div className="flex items-center gap-2 text-[12px] text-gray-500 py-0.5">
-          <Loader2 className="w-3.5 h-3.5 text-[#e31837] animate-spin" />
+          <Loader2 className="w-3.5 h-3.5 text-[#A30029] animate-spin" />
           <span>Đang tính khoảng cách & phí giao hàng...</span>
         </div>
       )}
@@ -370,29 +370,29 @@ export default function AddressAutocompleteInput({
         <div
           className={`flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-3 py-2 rounded-[6px] text-[12px] border transition ${
             distanceInfo.isOutOfRange || distanceInfo.distanceKm > 15
-              ? 'bg-[#fff1f2] border-[#fecdd3] text-[#e31837]'
+              ? 'bg-[#fff1f2] border-[#fecdd3] text-[#A30029]'
               : 'bg-gray-50 border-gray-200 text-gray-600'
           }`}
         >
           <div className="flex items-center gap-1.5">
-            <Navigation className="w-3.5 h-3.5 text-[#e31837] shrink-0" />
+            <Navigation className="w-3.5 h-3.5 text-[#A30029] shrink-0" />
             <span>
               Khoảng cách:{' '}
-              <strong className={distanceInfo.isOutOfRange || distanceInfo.distanceKm > 15 ? 'text-[#e31837]' : 'text-[#181d26]'}>
+              <strong className={distanceInfo.isOutOfRange || distanceInfo.distanceKm > 15 ? 'text-[#A30029]' : 'text-[#181d26]'}>
                 {distanceInfo.distanceText}
               </strong>
               {(distanceInfo.isOutOfRange || distanceInfo.distanceKm > 15) && (
-                <span className="font-medium ml-1.5 text-[#e31837]">(Vượt quá bán kính 15km của quán)</span>
+                <span className="font-medium ml-1.5 text-[#A30029]">(Vượt quá bán kính 15km của quán)</span>
               )}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             {distanceInfo.isOutOfRange || distanceInfo.distanceKm > 15 ? (
-              <span className="font-semibold text-[#e31837]">Chưa hỗ trợ giao</span>
+              <span className="font-semibold text-[#A30029]">Chưa hỗ trợ giao</span>
             ) : (
               <>
                 <span className="text-gray-500">Phí ship:</span>
-                <span className="font-bold text-[#e31837]">{formatVND(distanceInfo.shippingFee)}</span>
+                <span className="font-bold text-[#A30029]">{formatVND(distanceInfo.shippingFee)}</span>
               </>
             )}
           </div>

@@ -132,8 +132,8 @@ export default function Navbar() {
         {/* Left: Brand Wordmark */}
         <div className="flex items-center gap-6 shrink-0">
           <Link href="/" className="flex items-center gap-1 group py-1">
-            <span className="font-friem text-3xl tracking-wide text-[#0f172a] group-hover:text-[#e31837] transition-colors">
-              NooNee<span className="text-[#e31837]">.</span>
+            <span className="font-friem text-3xl tracking-wide text-[#0f172a] group-hover:text-[#A30029] transition-colors">
+              NooNee<span className="text-[#A30029]">.</span>
             </span>
           </Link>
 
@@ -151,14 +151,14 @@ export default function Navbar() {
                 onClick={() => setMenuDropdownOpen(false)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all cursor-pointer ${
                   pathname.startsWith('/menu') && !pathname.includes('deal=true')
-                    ? 'bg-red-50 text-[#e31837] font-bold'
-                    : 'text-[#1e293b] hover:text-[#e31837] hover:bg-red-50/70 font-semibold'
+                    ? 'bg-red-50 text-[#A30029] font-bold'
+                    : 'text-[#1e293b] hover:text-[#A30029] hover:bg-red-50/70 font-semibold'
                 }`}
               >
                 <span>Thực đơn</span>
                 <CiCircleChevDown
                   className={`w-4 h-4 transition-transform duration-200 stroke-1 ${
-                    menuDropdownOpen ? 'rotate-180 text-[#e31837]' : 'text-[#64748b]'
+                    menuDropdownOpen ? 'rotate-180 text-[#A30029]' : 'text-[#64748b]'
                   }`}
                 />
               </Link>
@@ -177,11 +177,11 @@ export default function Navbar() {
                             onClick={() => setMenuDropdownOpen(false)}
                             className="flex items-start gap-3 p-2 rounded-lg hover:bg-[#fff1f2] transition group text-left"
                           >
-                            <div className="w-8 h-8 rounded-md bg-red-50 text-[#e31837] flex items-center justify-center shrink-0 group-hover:bg-[#e31837] group-hover:text-white transition">
+                            <div className="w-8 h-8 rounded-md bg-red-50 text-[#A30029] flex items-center justify-center shrink-0 group-hover:bg-[#A30029] group-hover:text-white transition">
                               <Icon className="w-5 h-5 stroke-1" />
                             </div>
                             <div>
-                              <p className="text-[13px] font-bold text-[#0f172a] group-hover:text-[#e31837]">
+                              <p className="text-[13px] font-bold text-[#0f172a] group-hover:text-[#A30029]">
                                 {cat.name}
                               </p>
                               <p className="text-[11px] text-[#64748b] line-clamp-1">
@@ -202,8 +202,8 @@ export default function Navbar() {
               href="/best-seller"
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all ${
                 pathname === '/best-seller'
-                  ? 'bg-red-50 text-[#e31837] font-bold'
-                  : 'text-[#1e293b] hover:text-[#e31837] hover:bg-red-50/70 font-semibold'
+                  ? 'bg-red-50 text-[#A30029] font-bold'
+                  : 'text-[#1e293b] hover:text-[#A30029] hover:bg-red-50/70 font-semibold'
               }`}
             >
               <CiBowlNoodles className="w-5 h-5 text-amber-500 stroke-1" />
@@ -215,13 +215,13 @@ export default function Navbar() {
               href="/group"
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all ${
                 pathname.startsWith('/group')
-                  ? 'bg-red-50 text-[#e31837] font-bold'
-                  : 'text-[#1e293b] hover:text-[#e31837] hover:bg-red-50/70 font-semibold'
+                  ? 'bg-red-50 text-[#A30029] font-bold'
+                  : 'text-[#1e293b] hover:text-[#A30029] hover:bg-red-50/70 font-semibold'
               }`}
             >
-              <CiUser className="w-5 h-5 text-[#e31837] stroke-1" />
+              <CiUser className="w-5 h-5 text-[#A30029] stroke-1" />
               <span>Đơn nhóm</span>
-              <span className="text-[10px] font-extrabold px-1.5 py-0.5 bg-gradient-to-r from-[#e31837] to-pink-500 text-white rounded-full shadow-xs animate-pulse">
+              <span className="text-[10px] font-extrabold px-1.5 py-0.5 bg-gradient-to-r from-[#A30029] to-pink-500 text-white rounded-full shadow-xs animate-pulse">
                 -10%
               </span>
             </Link>
@@ -231,8 +231,8 @@ export default function Navbar() {
               href="/orders"
               className={`flex items-center gap-1 px-3 py-2 rounded-lg font-medium transition-all ${
                 pathname.startsWith('/orders')
-                  ? 'bg-red-50 text-[#e31837] font-bold'
-                  : 'text-[#1e293b] hover:text-[#e31837] hover:bg-red-50/70 font-semibold'
+                  ? 'bg-red-50 text-[#A30029] font-bold'
+                  : 'text-[#1e293b] hover:text-[#A30029] hover:bg-red-50/70 font-semibold'
               }`}
             >
               <span>Đơn hàng</span>
@@ -243,13 +243,13 @@ export default function Navbar() {
               href="/contact"
               className={`relative flex items-center gap-1 px-3 py-2 rounded-lg font-medium transition-all ${
                 pathname === '/contact'
-                  ? 'bg-red-50 text-[#e31837] font-bold'
-                  : 'text-[#1e293b] hover:text-[#e31837] hover:bg-red-50/70 font-semibold'
+                  ? 'bg-red-50 text-[#A30029] font-bold'
+                  : 'text-[#1e293b] hover:text-[#A30029] hover:bg-red-50/70 font-semibold'
               }`}
             >
               <span>Liên hệ</span>
               {hasUnreadSupport && (
-                <span className="w-2.5 h-2.5 rounded-full bg-[#e31837] animate-pulse ring-2 ring-white absolute top-1 right-1" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#A30029] animate-pulse ring-2 ring-white absolute top-1 right-1" />
               )}
             </Link>
           </nav>
@@ -266,15 +266,15 @@ export default function Navbar() {
             onClick={() => setIsCartOpen(true)}
             className={`flex items-center gap-1.5 sm:gap-2 h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-lg border transition shadow-2xs cursor-pointer ${
               isCartBumping
-                ? 'border-[#e31837] bg-rose-50 text-[#e31837] scale-105 shadow-md shadow-red-500/15'
-                : 'border-[#dddddd] hover:border-[#e31837] bg-white text-[#181d26] hover:text-[#e31837] hover:bg-red-50/30'
+                ? 'border-[#A30029] bg-rose-50 text-[#A30029] scale-105 shadow-md shadow-red-500/15'
+                : 'border-[#dddddd] hover:border-[#A30029] bg-white text-[#181d26] hover:text-[#A30029] hover:bg-red-50/30'
             } text-[13px] font-medium duration-200`}
             aria-label="Giỏ hàng"
           >
             <CiShoppingBasket className={`w-5 h-5 text-inherit stroke-1 ${isCartBumping ? 'animate-bounce' : ''}`} />
             <span className="hidden sm:inline">Giỏ hàng</span>
             {totalItems > 0 && (
-              <span className={`inline-flex items-center justify-center min-w-[18px] h-4.5 sm:min-w-[20px] sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-[11px] font-bold bg-[#e31837] text-white rounded-full transition-transform ${isCartBumping ? 'scale-125' : ''}`}>
+              <span className={`inline-flex items-center justify-center min-w-[18px] h-4.5 sm:min-w-[20px] sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-[11px] font-bold bg-[#A30029] text-white rounded-full transition-transform ${isCartBumping ? 'scale-125' : ''}`}>
                 {totalItems}
               </span>
             )}
@@ -286,11 +286,11 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="h-9 sm:h-10 px-2 sm:px-2.5 rounded-lg border border-[#dddddd] hover:border-[#e31837] flex items-center gap-1.5 sm:gap-2 bg-white hover:bg-red-50/40 transition shadow-2xs cursor-pointer"
+                className="h-9 sm:h-10 px-2 sm:px-2.5 rounded-lg border border-[#dddddd] hover:border-[#A30029] flex items-center gap-1.5 sm:gap-2 bg-white hover:bg-red-50/40 transition shadow-2xs cursor-pointer"
                 aria-label="Hồ sơ tài khoản"
                 title={`Tài khoản: ${user.fullName || user.username}`}
               >
-                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#e31837] text-white flex items-center justify-center text-[11px] sm:text-[12px] font-bold shadow-xs">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#A30029] text-white flex items-center justify-center text-[11px] sm:text-[12px] font-bold shadow-xs">
                   {user.fullName ? user.fullName.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
                 </div>
                 <span className="hidden md:inline text-[13px] font-semibold text-[#181d26] max-w-[100px] truncate">
@@ -308,10 +308,10 @@ export default function Navbar() {
 
                     <div className="mt-2.5 pt-2 border-t border-red-100 flex items-center justify-between">
                       <span className="text-[12px] text-[#555a64] flex items-center gap-1 font-medium">
-                        <CiWallet className="w-4 h-4 text-[#e31837] stroke-1" />
+                        <CiWallet className="w-4 h-4 text-[#A30029] stroke-1" />
                         Số dư ví:
                       </span>
-                      <span className="text-[13px] font-bold text-[#e31837]">
+                      <span className="text-[13px] font-bold text-[#A30029]">
                         {formatVND(walletBalance)}
                       </span>
                     </div>
@@ -321,9 +321,9 @@ export default function Navbar() {
                     <Link
                       href="/profile"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#e31837] transition font-medium"
+                      className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#A30029] transition font-medium"
                     >
-                      <CiUser className="w-4 h-4 text-[#e31837] stroke-1" />
+                      <CiUser className="w-4 h-4 text-[#A30029] stroke-1" />
                       <span>Hồ sơ & Hạng thành viên</span>
                     </Link>
 
@@ -331,12 +331,12 @@ export default function Navbar() {
                     <Link
                       href="/profile?tab=vouchers"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#e31837] transition font-medium"
+                      className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#A30029] transition font-medium"
                     >
-                      <CiDiscount1 className="w-4 h-4 text-[#e31837] stroke-1" />
+                      <CiDiscount1 className="w-4 h-4 text-[#A30029] stroke-1" />
                       <div className="flex items-center justify-between w-full">
                         <span>Kho Voucher của tôi</span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.2 bg-red-100 text-[#e31837] rounded-full">
+                        <span className="text-[10px] font-bold px-1.5 py-0.2 bg-red-100 text-[#A30029] rounded-full">
                           Hot
                         </span>
                       </div>
@@ -345,27 +345,27 @@ export default function Navbar() {
                     <Link
                       href="/profile?tab=favorites"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#e31837] transition font-medium"
+                      className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#A30029] transition font-medium"
                     >
-                      <CiHeart className="w-4 h-4 text-[#e31837] stroke-1" />
+                      <CiHeart className="w-4 h-4 text-[#A30029] stroke-1" />
                       <span>Món ăn yêu thích</span>
                     </Link>
 
                     <Link
                       href="/profile?tab=password"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#e31837] transition font-medium"
+                      className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#A30029] transition font-medium"
                     >
-                      <CiLock className="w-4 h-4 text-[#e31837] stroke-1" />
+                      <CiLock className="w-4 h-4 text-[#A30029] stroke-1" />
                       <span>Đổi mật khẩu</span>
                     </Link>
 
                     <Link
                       href="/orders"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#e31837] transition font-medium"
+                      className="flex items-center gap-2.5 px-4 py-2 text-[#333840] hover:bg-[#fff1f2] hover:text-[#A30029] transition font-medium"
                     >
-                      <CiShoppingBasket className="w-4 h-4 text-[#e31837] stroke-1" />
+                      <CiShoppingBasket className="w-4 h-4 text-[#A30029] stroke-1" />
                       <span>Đơn hàng của tôi</span>
                     </Link>
 
@@ -373,9 +373,9 @@ export default function Navbar() {
                       <Link
                         href="/admin"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-[#e31837] hover:bg-[#fff1f2] transition font-semibold border-t border-[#f1f5f9] mt-1 pt-2"
+                        className="flex items-center gap-2.5 px-4 py-2 text-[#A30029] hover:bg-[#fff1f2] transition font-semibold border-t border-[#f1f5f9] mt-1 pt-2"
                       >
-                        <CiCircleCheck className="w-4 h-4 text-[#e31837] stroke-1" />
+                        <CiCircleCheck className="w-4 h-4 text-[#A30029] stroke-1" />
                         <span>Trang quản trị (Admin)</span>
                       </Link>
                     )}
@@ -388,7 +388,7 @@ export default function Navbar() {
                         setUserMenuOpen(false);
                         logout();
                       }}
-                      className="w-full text-left flex items-center gap-2.5 px-4 py-2 text-[#e31837] hover:bg-[#fff1f2] font-medium transition cursor-pointer"
+                      className="w-full text-left flex items-center gap-2.5 px-4 py-2 text-[#A30029] hover:bg-[#fff1f2] font-medium transition cursor-pointer"
                     >
                       <CiLogout className="w-4 h-4 stroke-1" />
                       <span>Đăng xuất</span>
@@ -400,7 +400,7 @@ export default function Navbar() {
           ) : (
             <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-lg text-[13px] text-[#333840] hover:text-[#e31837] hover:bg-red-50/60 font-medium transition"
+              className="inline-flex items-center gap-1.5 h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-lg text-[13px] text-[#333840] hover:text-[#A30029] hover:bg-red-50/60 font-medium transition"
             >
               <CiUser className="w-4 h-4 stroke-1" />
               <span className="hidden sm:inline">Đăng nhập</span>
@@ -410,7 +410,7 @@ export default function Navbar() {
           {/* Primary CTA - Red Button */}
           <Link
             href="/menu"
-            className="hidden sm:inline-flex items-center justify-center h-10 px-4 rounded-lg bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-semibold shadow-xs transition hover:scale-[1.02] active:scale-95"
+            className="hidden sm:inline-flex items-center justify-center h-10 px-4 rounded-lg bg-[#A30029] hover:bg-[#850021] text-white text-[13px] font-semibold shadow-xs transition hover:scale-[1.02] active:scale-95"
           >
             Đặt món ngay
           </Link>
@@ -418,12 +418,12 @@ export default function Navbar() {
           {/* Mobile menu toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-1.5 sm:p-2 text-[#0f172a] hover:text-[#e31837] rounded-lg hover:bg-gray-100 transition relative"
+            className="lg:hidden p-1.5 sm:p-2 text-[#0f172a] hover:text-[#A30029] rounded-lg hover:bg-gray-100 transition relative"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <CiCircleRemove className="w-6 h-6 stroke-1" /> : <CiMenuBurger className="w-5 h-5 stroke-1" />}
             {hasUnreadSupport && (
-              <span className="w-2 h-2 rounded-full bg-[#e31837] ring-2 ring-white absolute top-1 right-1 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-[#A30029] ring-2 ring-white absolute top-1 right-1 animate-pulse" />
             )}
           </button>
         </div>
@@ -436,10 +436,10 @@ export default function Navbar() {
             <Link
               href="/menu"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#e31837] transition"
+              className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#A30029] transition"
             >
               <span className="flex items-center gap-2">
-                <CiForkAndKnife className="w-5 h-5 text-[#e31837] stroke-1" />
+                <CiForkAndKnife className="w-5 h-5 text-[#A30029] stroke-1" />
                 Tất cả thực đơn
               </span>
             </Link>
@@ -448,35 +448,35 @@ export default function Navbar() {
               <Link
                 href="/menu?categoryId=1"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block py-1.5 text-xs text-[#334155] font-medium hover:text-[#e31837]"
+                className="block py-1.5 text-xs text-[#334155] font-medium hover:text-[#A30029]"
               >
                 • Cơm
               </Link>
               <Link
                 href="/menu?categoryId=4"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block py-1.5 text-xs text-[#334155] font-medium hover:text-[#e31837]"
+                className="block py-1.5 text-xs text-[#334155] font-medium hover:text-[#A30029]"
               >
                 • Bún mì
               </Link>
               <Link
                 href="/menu?categoryId=5"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block py-1.5 text-xs text-[#334155] font-medium hover:text-[#e31837]"
+                className="block py-1.5 text-xs text-[#334155] font-medium hover:text-[#A30029]"
               >
                 • Phở
               </Link>
               <Link
                 href="/menu?categoryId=2"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block py-1.5 text-xs text-[#334155] font-medium hover:text-[#e31837]"
+                className="block py-1.5 text-xs text-[#334155] font-medium hover:text-[#A30029]"
               >
                 • Đồ ăn vặt
               </Link>
               <Link
                 href="/menu?categoryId=3"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block py-1.5 text-xs text-[#334155] font-medium hover:text-[#e31837]"
+                className="block py-1.5 text-xs text-[#334155] font-medium hover:text-[#A30029]"
               >
                 • Đồ uống & Tráng miệng
               </Link>
@@ -486,7 +486,7 @@ export default function Navbar() {
             <Link
               href="/best-seller"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#e31837] transition"
+              className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#A30029] transition"
             >
               <span className="flex items-center gap-2">
                 <CiBowlNoodles className="w-5 h-5 text-amber-500 stroke-1" />
@@ -500,13 +500,13 @@ export default function Navbar() {
             <Link
               href="/group"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#e31837] transition"
+              className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#A30029] transition"
             >
               <span className="flex items-center gap-2">
-                <CiUser className="w-5 h-5 text-[#e31837] stroke-1" />
+                <CiUser className="w-5 h-5 text-[#A30029] stroke-1" />
                 Đặt đơn nhóm
               </span>
-              <span className="text-[10px] font-extrabold px-2 py-0.5 bg-[#e31837] text-white rounded-full">
+              <span className="text-[10px] font-extrabold px-2 py-0.5 bg-[#A30029] text-white rounded-full">
                 -10%
               </span>
             </Link>
@@ -514,10 +514,10 @@ export default function Navbar() {
             <Link
               href="/orders"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#e31837] transition"
+              className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#A30029] transition"
             >
               <span className="flex items-center gap-2">
-                <CiShoppingBasket className="w-5 h-5 text-[#e31837] stroke-1" />
+                <CiShoppingBasket className="w-5 h-5 text-[#A30029] stroke-1" />
                 Tra cứu đơn hàng
               </span>
             </Link>
@@ -526,14 +526,14 @@ export default function Navbar() {
             <Link
               href="/contact"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#e31837] transition"
+              className="flex items-center justify-between py-2.5 px-3 rounded-lg text-[#0f172a] font-semibold hover:bg-red-50 hover:text-[#A30029] transition"
             >
               <span className="flex items-center gap-2">
-                <CiPhone className="w-5 h-5 text-[#e31837] stroke-1" />
+                <CiPhone className="w-5 h-5 text-[#A30029] stroke-1" />
                 Liên hệ & CSKH
               </span>
               {hasUnreadSupport && (
-                <span className="w-2.5 h-2.5 rounded-full bg-[#e31837] animate-pulse" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#A30029] animate-pulse" />
               )}
             </Link>
           </div>
@@ -543,10 +543,10 @@ export default function Navbar() {
             <div className="pt-3 border-t border-[#dddddd] space-y-2">
               <div className="px-2 py-2 bg-red-50/70 rounded-[8px] flex items-center justify-between text-[13px]">
                 <span className="text-[#555a64] flex items-center gap-1.5">
-                  <CiWallet className="w-4 h-4 text-[#e31837] stroke-1" />
+                  <CiWallet className="w-4 h-4 text-[#A30029] stroke-1" />
                   Số dư ví:
                 </span>
-                <strong className="text-[#e31837] font-bold">{formatVND(walletBalance)}</strong>
+                <strong className="text-[#A30029] font-bold">{formatVND(walletBalance)}</strong>
               </div>
 
               <Link
@@ -554,14 +554,14 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-2 py-2 px-2.5 rounded-lg text-[13px] font-medium text-[#181d26] hover:bg-red-50"
               >
-                <CiUser className="w-4 h-4 text-[#e31837] stroke-1" />
+                <CiUser className="w-4 h-4 text-[#A30029] stroke-1" />
                 <span>Hồ sơ & Hạng thành viên</span>
               </Link>
 
               <Link
                 href="/profile?tab=vouchers"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 py-2 px-2.5 rounded-lg text-[13px] font-medium text-[#e31837] hover:bg-red-50"
+                className="flex items-center gap-2 py-2 px-2.5 rounded-lg text-[13px] font-medium text-[#A30029] hover:bg-red-50"
               >
                 <CiDiscount1 className="w-4 h-4 stroke-1" />
                 <span>Kho Voucher ưu đãi</span>
@@ -573,7 +573,7 @@ export default function Navbar() {
                   setMobileMenuOpen(false);
                   logout();
                 }}
-                className="w-full text-left flex items-center gap-2 py-2 px-2.5 rounded-lg text-[13px] text-[#e31837] font-medium hover:bg-red-50 cursor-pointer"
+                className="w-full text-left flex items-center gap-2 py-2 px-2.5 rounded-lg text-[13px] text-[#A30029] font-medium hover:bg-red-50 cursor-pointer"
               >
                 <CiLogout className="w-4 h-4 stroke-1" />
                 <span>Đăng xuất ({user.fullName})</span>
@@ -584,7 +584,7 @@ export default function Navbar() {
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#e31837] text-white rounded-lg text-sm font-semibold"
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#A30029] text-white rounded-lg text-sm font-semibold"
               >
                 <CiUser className="w-5 h-5 stroke-1" />
                 <span>Đăng nhập tài khoản</span>

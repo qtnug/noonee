@@ -38,15 +38,15 @@ export default function FavoriteButton({
       }}
       className={`inline-flex items-center gap-1.5 transition cursor-pointer ${
         favorited
-          ? 'text-[#e31837] bg-white border-[#fecdd3] shadow-xs'
-          : 'text-[#9297a0] hover:text-[#e31837] bg-white/90 hover:bg-white border-[#dddddd]'
+          ? 'text-[#A30029] bg-white border-[#fecdd3] shadow-xs'
+          : 'text-[#9297a0] hover:text-[#A30029] bg-white/90 hover:bg-white border-[#dddddd]'
       } ${className}`}
       aria-label={favorited ? 'Bỏ thích món' : 'Thêm vào yêu thích'}
       title={favorited ? 'Đã yêu thích món ăn này' : 'Yêu thích món ăn này'}
     >
       <Heart
         className={`${iconSizes[size]} transition-transform active:scale-125 ${
-          favorited ? 'fill-[#e31837] text-[#e31837]' : ''
+          favorited ? 'fill-[#A30029] text-[#A30029]' : ''
         }`}
       />
       {showText && (

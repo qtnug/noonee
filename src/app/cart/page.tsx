@@ -19,7 +19,7 @@ export default function CartPage() {
   if (cart.length === 0) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-24 text-center space-y-4">
-        <div className="w-16 h-16 bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] rounded-[12px] flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] rounded-[12px] flex items-center justify-center mx-auto">
           <ShoppingBag className="w-8 h-8" />
         </div>
         <h1 className="text-2xl font-normal text-[#181d26]">Giỏ hàng của bạn đang trống</h1>
@@ -29,7 +29,7 @@ export default function CartPage() {
         <div className="pt-3">
           <Link
             href="/menu"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#e31837] hover:bg-[#be0e27] text-white font-medium text-[14px] rounded-[6px] shadow-xs transition"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#A30029] hover:bg-[#850021] text-white font-medium text-[14px] rounded-[6px] shadow-xs transition"
           >
             <span>Khám phá thực đơn</span>
             <ArrowRight className="w-4 h-4" />
@@ -47,12 +47,12 @@ export default function CartPage() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a]">Giỏ hàng của bạn</h1>
             <p className="text-[13px] sm:text-[14px] text-[#41454d] mt-1">
-              Đang có <strong className="text-[#e31837]">{totalItems}</strong> món ăn sẵn sàng thanh toán
+              Đang có <strong className="text-[#A30029]">{totalItems}</strong> món ăn sẵn sàng thanh toán
             </p>
           </div>
           <button
             onClick={clearCart}
-            className="text-[12px] sm:text-[13px] text-[#e31837] font-semibold hover:underline cursor-pointer"
+            className="text-[12px] sm:text-[13px] text-[#A30029] font-semibold hover:underline cursor-pointer"
           >
             Xóa tất cả
           </button>
@@ -82,7 +82,7 @@ export default function CartPage() {
                           {item.selectedToppings.map((t) => (
                             <span
                               key={t.id}
-                              className="px-1.5 sm:px-2 py-0.5 rounded bg-[#fff1f2] text-[#e31837] border border-[#fecdd3]"
+                              className="px-1.5 sm:px-2 py-0.5 rounded bg-[#fff1f2] text-[#A30029] border border-[#fecdd3]"
                             >
                               +{t.name} ({formatVND(t.price)})
                             </span>
@@ -97,7 +97,7 @@ export default function CartPage() {
                         </p>
                       )}
 
-                      <p className="text-[13px] sm:text-[14px] font-bold text-[#e31837]">
+                      <p className="text-[13px] sm:text-[14px] font-bold text-[#A30029]">
                         {formatVND(item.itemPrice || item.product.price)}
                       </p>
                     </div>
@@ -108,7 +108,7 @@ export default function CartPage() {
                     <div className="flex items-center border border-[#dddddd] rounded-[6px] bg-white h-8 px-1">
                       <button
                         onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}
-                        className="p-1 hover:text-[#e31837] text-[#41454d] transition cursor-pointer"
+                        className="p-1 hover:text-[#A30029] text-[#41454d] transition cursor-pointer"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
@@ -117,7 +117,7 @@ export default function CartPage() {
                       </span>
                       <button
                         onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
-                        className="p-1 hover:text-[#e31837] text-[#41454d] transition cursor-pointer"
+                        className="p-1 hover:text-[#A30029] text-[#41454d] transition cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -125,7 +125,7 @@ export default function CartPage() {
 
                     <button
                       onClick={() => removeFromCart(item.cartItemId)}
-                      className="p-1.5 text-[#9297a0] hover:text-[#e31837] rounded transition cursor-pointer"
+                      className="p-1.5 text-[#9297a0] hover:text-[#A30029] rounded transition cursor-pointer"
                       title="Xóa món khỏi giỏ"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -144,7 +144,7 @@ export default function CartPage() {
             <div className="pt-4 border-t border-[#dddddd]">
               <Link
                 href="/menu"
-                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#e31837] hover:underline"
+                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#A30029] hover:underline"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Tiếp tục chọn thêm món khác</span>
@@ -169,13 +169,13 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between text-[15px] sm:text-[16px] font-bold text-[#181d26] pt-3 border-t border-[#fecdd3]">
                 <span>Tổng thanh toán</span>
-                <span className="text-[#e31837] text-lg">{formatVND(totalPrice)}</span>
+                <span className="text-[#A30029] text-lg">{formatVND(totalPrice)}</span>
               </div>
             </div>
 
             <Link
               href="/checkout"
-              className="w-full h-11 sm:h-12 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-semibold text-[14px] rounded-[6px] flex items-center justify-center gap-2 transition shadow-xs"
+              className="w-full h-11 sm:h-12 bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white font-semibold text-[14px] rounded-[6px] flex items-center justify-center gap-2 transition shadow-xs"
             >
               <span>Tiến hành đặt hàng</span>
               <ArrowRight className="w-4 h-4" />
@@ -187,11 +187,11 @@ export default function CartPage() {
         <div className="fixed bottom-14 left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-[#dddddd] shadow-lg flex items-center justify-between gap-3 z-20 md:hidden">
           <div>
             <span className="text-[11px] text-[#9297a0] block">Tổng ({totalItems} món):</span>
-            <span className="text-[15px] font-bold text-[#e31837]">{formatVND(totalPrice)}</span>
+            <span className="text-[15px] font-bold text-[#A30029]">{formatVND(totalPrice)}</span>
           </div>
           <Link
             href="/checkout"
-            className="h-9 px-4 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-semibold text-[13px] rounded-lg flex items-center gap-1.5 shadow-xs transition"
+            className="h-9 px-4 bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white font-semibold text-[13px] rounded-lg flex items-center gap-1.5 shadow-xs transition"
           >
             <span>Đặt hàng</span>
             <ArrowRight className="w-3.5 h-3.5" />

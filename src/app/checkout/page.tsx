@@ -297,7 +297,7 @@ function CheckoutContent() {
   if (isLoading || isLoadingGroup) {
     return (
       <div className="max-w-md mx-auto px-4 py-24 text-center">
-        <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#e31837]" />
+        <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#A30029]" />
         <p className="text-[14px] text-[#41454d] mt-3">Đang tải thông tin đơn hàng...</p>
       </div>
     );
@@ -306,7 +306,7 @@ function CheckoutContent() {
   if (!user) {
     return (
       <div className="max-w-md mx-auto px-4 py-24 text-center space-y-4">
-        <div className="w-14 h-14 rounded-full bg-[#fff1f2] text-[#e31837] flex items-center justify-center mx-auto border border-[#fecdd3]">
+        <div className="w-14 h-14 rounded-full bg-[#fff1f2] text-[#A30029] flex items-center justify-center mx-auto border border-[#fecdd3]">
           <ShieldCheck className="w-7 h-7" />
         </div>
         <h1 className="text-2xl font-normal text-[#181d26]">Vui lòng đăng nhập để đặt hàng</h1>
@@ -316,7 +316,7 @@ function CheckoutContent() {
         <div className="pt-3 flex gap-3 justify-center">
           <Link
             href="/login"
-            className="px-6 py-3 bg-[#e31837] hover:bg-[#be0e27] text-white font-medium text-[14px] rounded-[6px] shadow-xs transition"
+            className="px-6 py-3 bg-[#A30029] hover:bg-[#850021] text-white font-medium text-[14px] rounded-[6px] shadow-xs transition"
           >
             Đăng nhập tài khoản
           </Link>
@@ -338,7 +338,7 @@ function CheckoutContent() {
         <p className="text-[14px] text-[#41454d]">Vui lòng chọn món trước khi tiến hành đặt hàng.</p>
         <Link
           href="/menu"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-[#e31837] text-white font-medium text-[14px] rounded-[6px] hover:bg-[#be0e27] transition"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-[#A30029] text-white font-medium text-[14px] rounded-[6px] hover:bg-[#850021] transition"
         >
           Quay lại thực đơn
         </Link>
@@ -517,7 +517,7 @@ function CheckoutContent() {
         <div className="flex items-center gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-[#dddddd]">
           <Link
             href={groupOrder ? `/group/${groupOrder.code}` : '/cart'}
-            className="p-2 text-[#41454d] hover:text-[#e31837] bg-white border border-[#dddddd] rounded-[6px] transition shrink-0"
+            className="p-2 text-[#41454d] hover:text-[#A30029] bg-white border border-[#dddddd] rounded-[6px] transition shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
@@ -534,7 +534,7 @@ function CheckoutContent() {
         </div>
 
         {errorMsg && (
-          <div className="p-3.5 sm:p-4 bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] rounded-[6px] text-[13px] font-medium">
+          <div className="p-3.5 sm:p-4 bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] rounded-[6px] text-[13px] font-medium">
             {errorMsg}
           </div>
         )}
@@ -563,7 +563,7 @@ function CheckoutContent() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[13px] font-medium text-[#181d26]">
-                      Họ và tên <span className="text-[#e31837]">*</span>
+                      Họ và tên <span className="text-[#A30029]">*</span>
                     </label>
                     <input
                       type="text"
@@ -571,13 +571,13 @@ function CheckoutContent() {
                       placeholder="Nguyễn Văn A"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full h-11 px-3.5 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                      className="w-full h-11 px-3.5 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition"
                     />
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-[13px] font-medium text-[#181d26]">
-                      Số điện thoại <span className="text-[#e31837]">*</span>
+                      Số điện thoại <span className="text-[#A30029]">*</span>
                     </label>
                     <input
                       type="tel"
@@ -585,14 +585,14 @@ function CheckoutContent() {
                       placeholder="0912345678"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
-                      className="w-full h-11 px-3.5 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                      className="w-full h-11 px-3.5 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-[13px] font-medium text-[#181d26]">
-                    Địa chỉ nhận món <span className="text-[#e31837]">*</span>
+                    Địa chỉ nhận món <span className="text-[#A30029]">*</span>
                   </label>
                   <AddressAutocompleteInput
                     value={deliveryAddress}
@@ -625,7 +625,7 @@ function CheckoutContent() {
                     placeholder="Ví dụ: Gọi trước khi đến 5 phút, gửi lễ tân / bảo vệ tòa nhà..."
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    className="w-full p-3.5 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+                    className="w-full p-3.5 text-[14px] text-[#181d26] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition"
                   />
                 </div>
               </div>
@@ -689,7 +689,7 @@ function CheckoutContent() {
                             <span>Đơn hàng đã được thanh toán 100% bằng số dư ví! Bạn không cần thanh toán thêm.</span>
                           </div>
                         ) : (
-                          <div className="flex items-center justify-between text-[#e31837] font-semibold pt-1">
+                          <div className="flex items-center justify-between text-[#A30029] font-semibold pt-1">
                             <span>Số tiền còn lại cần thanh toán:</span>
                             <span>{formatVND(finalTotal)}</span>
                           </div>
@@ -717,11 +717,11 @@ function CheckoutContent() {
                     onClick={() => handlePaymentMethodChange('Sepay')}
                     className={`flex items-start gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-[10px] border cursor-pointer transition ${
                       paymentMethod === 'Sepay'
-                        ? 'border-[#e31837] bg-[#fff1f2]/30 shadow-xs'
+                        ? 'border-[#A30029] bg-[#fff1f2]/30 shadow-xs'
                         : 'border-[#dddddd] hover:border-[#9297a0] bg-white'
                     }`}
                   >
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[6px] bg-[#e31837] text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[6px] bg-[#A30029] text-white flex items-center justify-center shrink-0 mt-0.5">
                       <QrCode className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -733,7 +733,7 @@ function CheckoutContent() {
                           Tự động
                         </span>
                         {isNewUser && (
-                          <span className="bg-[#e31837] text-white text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-[4px] animate-pulse">
+                          <span className="bg-[#A30029] text-white text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-[4px] animate-pulse">
                             Giảm 20%
                           </span>
                         )}
@@ -747,7 +747,7 @@ function CheckoutContent() {
                       name="payment"
                       checked={paymentMethod === 'Sepay'}
                       onChange={() => handlePaymentMethodChange('Sepay')}
-                      className="mt-1 accent-[#e31837] shrink-0"
+                      className="mt-1 accent-[#A30029] shrink-0"
                     />
                   </label>
 
@@ -756,7 +756,7 @@ function CheckoutContent() {
                     onClick={() => handlePaymentMethodChange('COD')}
                     className={`flex items-start gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-[10px] border cursor-pointer transition ${
                       paymentMethod === 'COD'
-                        ? 'border-[#e31837] bg-[#fff1f2]/30 shadow-xs'
+                        ? 'border-[#A30029] bg-[#fff1f2]/30 shadow-xs'
                         : 'border-[#dddddd] hover:border-[#9297a0] bg-white'
                     }`}
                   >
@@ -776,7 +776,7 @@ function CheckoutContent() {
                       name="payment"
                       checked={paymentMethod === 'COD'}
                       onChange={() => handlePaymentMethodChange('COD')}
-                      className="mt-1 accent-[#e31837] shrink-0"
+                      className="mt-1 accent-[#A30029] shrink-0"
                     />
                   </label>
                   </>
@@ -799,10 +799,10 @@ function CheckoutContent() {
                   {/* Group Info Banner */}
                   <div className="p-3 bg-[#fff1f2] border border-[#fecdd3] rounded-xl space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#e31837] uppercase tracking-wider flex items-center gap-1">
+                      <span className="text-xs font-bold text-[#A30029] uppercase tracking-wider flex items-center gap-1">
                         <Users className="w-3.5 h-3.5" /> Đơn Đặt Nhóm #{groupOrder.code}
                       </span>
-                      <span className="text-xs font-bold bg-[#e31837] text-white px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-bold bg-[#A30029] text-white px-2 py-0.5 rounded-full">
                         Giảm {groupOrder.discountPercentage}%
                       </span>
                     </div>
@@ -818,7 +818,7 @@ function CheckoutContent() {
                       <div key={m.id} className="bg-white p-3 rounded-xl border border-[#e5e7eb] space-y-2">
                         <div className="font-bold text-[13px] text-[#181d26] flex items-center justify-between pb-1 border-b border-[#f3f4f6]">
                           <span>{m.name} {m.isHost && '(Trưởng nhóm)'}</span>
-                          <span className="text-[#e31837]">{formatVND(mTotal)}</span>
+                          <span className="text-[#A30029]">{formatVND(mTotal)}</span>
                         </div>
                         <div className="space-y-1.5 pl-1">
                           {m.items.map((it) => (
@@ -850,7 +850,7 @@ function CheckoutContent() {
                           <div className="font-semibold text-[#181d26] truncate">{item.product.name}</div>
 
                           {item.selectedToppings && item.selectedToppings.length > 0 && (
-                            <div className="text-[11px] text-[#e31837] line-clamp-1">
+                            <div className="text-[11px] text-[#A30029] line-clamp-1">
                               +{item.selectedToppings.map((t) => t.name).join(', ')}
                             </div>
                           )}
@@ -866,7 +866,7 @@ function CheckoutContent() {
                           </div>
                         </div>
                       </div>
-                      <div className="font-bold text-[#e31837] shrink-0 text-right">
+                      <div className="font-bold text-[#A30029] shrink-0 text-right">
                         {formatVND((item.itemPrice || item.product.price) * item.quantity)}
                       </div>
                     </div>
@@ -878,7 +878,7 @@ function CheckoutContent() {
               <div className="pt-4 border-t border-[#fecdd3] space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] font-semibold text-[#181d26] flex items-center gap-1.5">
-                    <Tag className="w-4 h-4 text-[#e31837]" />
+                    <Tag className="w-4 h-4 text-[#A30029]" />
                     <span>Mã ưu đãi</span>
                   </span>
                   <span className="text-[11px] text-[#9297a0]">Tối đa 2 mã / đơn</span>
@@ -886,7 +886,7 @@ function CheckoutContent() {
 
                 {/* Slot 1: Giảm đồ ăn */}
                 <div>
-                  <p className="text-[11px] font-bold text-[#e31837] uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                  <p className="text-[11px] font-bold text-[#A30029] uppercase tracking-wide mb-1.5 flex items-center gap-1">
                     <Tag className="w-3 h-3" /> Mã giảm đồ ăn
                   </p>
                   {appliedFoodCoupon ? (
@@ -910,10 +910,10 @@ function CheckoutContent() {
                       {bestFoodCoupon && (
                         <div className="p-2.5 bg-red-50/80 border border-[#fecdd3] rounded-[8px] flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
-                            <Sparkles className="w-3.5 h-3.5 text-[#e31837] shrink-0" />
+                            <Sparkles className="w-3.5 h-3.5 text-[#A30029] shrink-0" />
                             <div className="min-w-0">
                               <div className="flex items-center gap-1 flex-wrap">
-                                <span className="text-[9px] font-extrabold uppercase bg-[#e31837] text-white px-1 py-0.5 rounded">Gợi ý</span>
+                                <span className="text-[9px] font-extrabold uppercase bg-[#A30029] text-white px-1 py-0.5 rounded">Gợi ý</span>
                                 <span className="font-mono font-bold text-[#181d26] text-[12px]">{bestFoodCoupon.coupon.code}</span>
                               </div>
                               <span className="text-[10px] text-[#006400] font-bold">Tiết kiệm {formatVND(bestFoodCoupon.discountAmount)}</span>
@@ -922,17 +922,17 @@ function CheckoutContent() {
                           <button
                             type="button"
                             onClick={() => handleApplyCoupon(bestFoodCoupon.coupon.code)}
-                            className="px-2.5 py-1 bg-[#e31837] hover:bg-[#be0e27] text-white text-[11px] font-bold rounded-[4px] shrink-0 cursor-pointer"
+                            className="px-2.5 py-1 bg-[#A30029] hover:bg-[#850021] text-white text-[11px] font-bold rounded-[4px] shrink-0 cursor-pointer"
                           >Áp dụng</button>
                         </div>
                       )}
                       <button
                         type="button"
                         onClick={() => { setCouponSlot('food'); setShowCouponsList(true); }}
-                        className="w-full p-2.5 bg-white hover:bg-red-50/40 border border-dashed border-[#e31837] rounded-[8px] flex items-center justify-between transition cursor-pointer"
+                        className="w-full p-2.5 bg-white hover:bg-red-50/40 border border-dashed border-[#A30029] rounded-[8px] flex items-center justify-between transition cursor-pointer"
                       >
-                        <span className="text-[12px] font-semibold text-[#e31837]">Chọn mã giảm đồ ăn</span>
-                        <ArrowRight className="w-3.5 h-3.5 text-[#e31837]" />
+                        <span className="text-[12px] font-semibold text-[#A30029]">Chọn mã giảm đồ ăn</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-[#A30029]" />
                       </button>
                     </div>
                   )}
@@ -993,7 +993,7 @@ function CheckoutContent() {
                 </div>
 
                 {/* Error / Success messages */}
-                {couponError && <p className="text-[12px] text-[#e31837] font-medium">{couponError}</p>}
+                {couponError && <p className="text-[12px] text-[#A30029] font-medium">{couponError}</p>}
                 {couponSuccess && !couponError && <p className="text-[12px] text-[#006400] font-medium">{couponSuccess}</p>}
 
                 {/* Voucher Modal / Dialog */}
@@ -1003,7 +1003,7 @@ function CheckoutContent() {
                       {/* Modal Header */}
                       <div className={`p-4 text-white flex items-center justify-between ${couponSlot === 'freeship' ? 'bg-gradient-to-r from-blue-700 to-blue-500' : 'bg-gradient-to-r from-[#181d26] to-[#2c3440]'}`}>
                         <div className="flex items-center gap-2">
-                          {couponSlot === 'freeship' ? <Truck className="w-4 h-4 text-blue-200" /> : <Tag className="w-4 h-4 text-[#e31837]" />}
+                          {couponSlot === 'freeship' ? <Truck className="w-4 h-4 text-blue-200" /> : <Tag className="w-4 h-4 text-[#A30029]" />}
                           <h3 className="font-bold text-[15px] text-white">
                             {couponSlot === 'freeship' ? 'Chọn mã Freeship' : 'Chọn mã giảm đồ ăn'}
                           </h3>
@@ -1032,18 +1032,18 @@ function CheckoutContent() {
                                 }
                               }}
                               placeholder={couponSlot === 'freeship' ? 'VD: FREESHIP, SHIP15K...' : 'VD: GIAM20K, VIETQR20...'}
-                              className={`flex-1 h-9 px-3 text-[12px] uppercase font-mono font-bold bg-[#f8fafc] border rounded-[6px] focus:outline-none ${couponSlot === 'freeship' ? 'border-blue-200 focus:border-blue-500' : 'border-[#dddddd] focus:border-[#e31837]'}`}
+                              className={`flex-1 h-9 px-3 text-[12px] uppercase font-mono font-bold bg-[#f8fafc] border rounded-[6px] focus:outline-none ${couponSlot === 'freeship' ? 'border-blue-200 focus:border-blue-500' : 'border-[#dddddd] focus:border-[#A30029]'}`}
                             />
                             <button
                               type="button"
                               onClick={() => handleApplyCoupon()}
                               disabled={!couponInput.trim()}
-                              className={`h-9 px-4 text-white text-[12px] font-semibold rounded-[6px] transition cursor-pointer disabled:opacity-50 shrink-0 ${couponSlot === 'freeship' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-[#e31837] hover:bg-[#be0e27]'}`}
+                              className={`h-9 px-4 text-white text-[12px] font-semibold rounded-[6px] transition cursor-pointer disabled:opacity-50 shrink-0 ${couponSlot === 'freeship' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-[#A30029] hover:bg-[#850021]'}`}
                             >
                               Áp dụng
                             </button>
                           </div>
-                          {couponError && <p className="text-[12px] text-[#e31837] font-medium mt-1.5">{couponError}</p>}
+                          {couponError && <p className="text-[12px] text-[#A30029] font-medium mt-1.5">{couponError}</p>}
                           {couponSuccess && !couponError && <p className="text-[12px] text-[#006400] font-medium mt-1.5">{couponSuccess}</p>}
                         </div>
 
@@ -1067,20 +1067,20 @@ function CheckoutContent() {
                                   isApplied
                                     ? (isFreeship ? 'border-blue-400 bg-blue-50/70' : 'border-[#006400] bg-emerald-50/70')
                                     : isBestFood
-                                    ? 'border-[#e31837] bg-[#fff1f2]/30 shadow-xs'
+                                    ? 'border-[#A30029] bg-[#fff1f2]/30 shadow-xs'
                                     : isEligible
-                                    ? (isFreeship ? 'border-blue-200 bg-white hover:border-blue-400' : 'border-red-200 bg-white hover:border-[#e31837]')
+                                    ? (isFreeship ? 'border-blue-200 bg-white hover:border-blue-400' : 'border-red-200 bg-white hover:border-[#A30029]')
                                     : 'border-[#dddddd] bg-[#f8fafc] opacity-75'
                                 }`}
                               >
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className={`font-mono font-bold text-[13px] ${isFreeship ? 'text-blue-700' : 'text-[#e31837]'}`}>{c.code}</span>
+                                    <span className={`font-mono font-bold text-[13px] ${isFreeship ? 'text-blue-700' : 'text-[#A30029]'}`}>{c.code}</span>
                                     {isBestFood && (
-                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#e31837] text-white font-extrabold">Tốt nhất</span>
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#A30029] text-white font-extrabold">Tốt nhất</span>
                                     )}
                                     {c.badge && (
-                                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold border ${isFreeship ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-[#fff1f2] text-[#e31837] border-[#fecdd3]'}`}>
+                                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold border ${isFreeship ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-[#fff1f2] text-[#A30029] border-[#fecdd3]'}`}>
                                         {c.badge}
                                       </span>
                                     )}
@@ -1099,7 +1099,7 @@ function CheckoutContent() {
                                       }}
                                       className={`px-3 py-1.5 rounded-[4px] text-[12px] font-bold transition shrink-0 cursor-pointer ${
                                         isEligible
-                                          ? (isFreeship ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-[#e31837] text-white hover:bg-[#be0e27]')
+                                          ? (isFreeship ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-[#A30029] text-white hover:bg-[#850021]')
                                           : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                       }`}
                                     >
@@ -1158,7 +1158,7 @@ function CheckoutContent() {
                   <div>
                     <span>Phí giao hàng:</span>
                     {isCalculatingDistance ? (
-                      <span className="text-[10px] text-[#e31837] flex items-center gap-1 font-normal block font-sans">
+                      <span className="text-[10px] text-[#A30029] flex items-center gap-1 font-normal block font-sans">
                         <Loader2 className="w-3 h-3 animate-spin" /> Đang tính khoảng cách...
                       </span>
                     ) : distanceData ? (
@@ -1190,7 +1190,7 @@ function CheckoutContent() {
 
                 {/* 4. Mã giảm đồ ăn nếu có */}
                 {appliedFoodCoupon && foodDiscountAmount > 0 && (
-                  <div className="flex justify-between text-[#e31837] font-semibold">
+                  <div className="flex justify-between text-[#A30029] font-semibold">
                     <span>Mã giảm giá ({appliedFoodCoupon.code}):</span>
                     <span>-{formatVND(foodDiscountAmount)}</span>
                   </div>
@@ -1221,7 +1221,7 @@ function CheckoutContent() {
                 {/* 7. Tổng thanh toán */}
                 <div className="flex justify-between text-[15px] sm:text-[16px] font-extrabold text-[#181d26] pt-3 border-t border-dashed border-[#dddddd]">
                   <span>TỔNG TIỀN:</span>
-                  <span className="text-[#e31837] text-lg">
+                  <span className="text-[#A30029] text-lg">
                     {isCalculatingDistance ? 'Đang tính...' : formatVND(finalTotal)}
                   </span>
                 </div>
@@ -1229,7 +1229,7 @@ function CheckoutContent() {
 
 
               {isOutOfRange && (
-                <div className="p-3 bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] rounded-[8px] text-[12px] font-medium flex items-center gap-2">
+                <div className="p-3 bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] rounded-[8px] text-[12px] font-medium flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>
                     Địa chỉ giao hàng ({distanceData?.distanceText}) vượt quá bán kính phục vụ 15km của quán. Vui lòng đổi địa chỉ gần hơn để đặt món.
@@ -1240,7 +1240,7 @@ function CheckoutContent() {
               <button
                 type="submit"
                 disabled={isSubmitting || isOutOfRange || isCalculatingDistance}
-                className="w-full h-12 bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white font-semibold text-[14px] rounded-[6px] flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-xs cursor-pointer"
+                className="w-full h-12 bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white font-semibold text-[14px] rounded-[6px] flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-xs cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
@@ -1278,7 +1278,7 @@ export default function CheckoutPage() {
     <Suspense
       fallback={
         <div className="max-w-md mx-auto px-4 py-24 text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#e31837]" />
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#A30029]" />
           <p className="text-[14px] text-[#41454d] mt-3">Đang tải thông tin đơn hàng...</p>
         </div>
       }

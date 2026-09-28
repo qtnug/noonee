@@ -153,7 +153,7 @@ function MarkdownText({ content }: { content: string }) {
           const bulletText = trimmed.replace(/^[•\-\*]\s*/, '');
           return (
             <div key={idx} className="flex items-start gap-1.5 pl-0.5">
-              <span className="text-[#e31837] text-xs mt-0.5 shrink-0">•</span>
+              <span className="text-[#A30029] text-xs mt-0.5 shrink-0">•</span>
               <span className="flex-1">{renderFormattedInline(bulletText)}</span>
             </div>
           );
@@ -180,7 +180,7 @@ function renderFormattedInline(text: string) {
       return (
         <code
           key={index}
-          className="bg-gray-100 text-[#e31837] px-1 py-0.5 rounded text-xs font-mono font-medium"
+          className="bg-gray-100 text-[#A30029] px-1 py-0.5 rounded text-xs font-mono font-medium"
         >
           {part.slice(1, -1)}
         </code>
@@ -403,7 +403,7 @@ export default function AIChatBot() {
         {/* Greeting Tooltip */}
         {!isOpen && showTooltip && (
           <div className="hidden sm:flex items-center gap-2 mr-3 bg-white text-[#1f2937] text-xs font-medium px-3.5 py-2 rounded-full shadow-lg border border-[#fecdd3] animate-bounce duration-1000">
-            <Sparkles className="w-3.5 h-3.5 text-[#e31837] shrink-0" />
+            <Sparkles className="w-3.5 h-3.5 text-[#A30029] shrink-0" />
             <span>Hôm nay ăn gì? Bấm để hỏi quán nhé!</span>
             <button
               type="button"
@@ -427,11 +427,11 @@ export default function AIChatBot() {
           className={`relative group flex items-center justify-center rounded-full shadow-xl transition-all duration-300 cursor-pointer ${
             isOpen
               ? 'w-12 h-12 bg-gray-800 text-white hover:bg-gray-900'
-              : 'w-14 h-14 bg-gradient-to-tr from-[#e31837] via-[#f03d52] to-[#ff5b4f] text-white hover:scale-105 active:scale-95 shadow-[#e31837]/30'
+              : 'w-14 h-14 bg-gradient-to-tr from-[#A30029] via-[#f03d52] to-[#ff5b4f] text-white hover:scale-105 active:scale-95 shadow-[#A30029]/30'
           }`}
         >
           {!isOpen && (
-            <span className="absolute -inset-1 rounded-full bg-[#e31837] opacity-30 animate-ping pointer-events-none" />
+            <span className="absolute -inset-1 rounded-full bg-[#A30029] opacity-30 animate-ping pointer-events-none" />
           )}
 
           {isOpen ? (
@@ -457,11 +457,11 @@ export default function AIChatBot() {
           aria-label="NooNee"
         >
           {/* Header - 100% hidden model / API source */}
-          <div className="bg-gradient-to-r from-[#e31837] via-[#e52844] to-[#f43f5e] text-white px-4 py-3 flex items-center justify-between shrink-0 shadow-xs">
+          <div className="bg-gradient-to-r from-[#A30029] via-[#e52844] to-[#f43f5e] text-white px-4 py-3 flex items-center justify-between shrink-0 shadow-xs">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-xs flex items-center justify-center border border-white/20 relative shrink-0">
                 <Bot className="w-5 h-5 text-white" />
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border border-[#e31837] rounded-full" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border border-[#A30029] rounded-full" />
               </div>
               <div>
                 <h3 className="font-bold text-sm leading-none">NooNee</h3>
@@ -506,7 +506,7 @@ export default function AIChatBot() {
                 className={`flex gap-2.5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {msg.role === 'assistant' && (
-                  <div className="w-7 h-7 rounded-full bg-[#fdf2f2] border border-[#fecdd3] flex items-center justify-center text-[#e31837] shrink-0 mt-0.5">
+                  <div className="w-7 h-7 rounded-full bg-[#fdf2f2] border border-[#fecdd3] flex items-center justify-center text-[#A30029] shrink-0 mt-0.5">
                     <Bot className="w-4 h-4" />
                   </div>
                 )}
@@ -519,7 +519,7 @@ export default function AIChatBot() {
                   <div
                     className={`px-3.5 py-2.5 rounded-2xl shadow-xs text-sm ${
                       msg.role === 'user'
-                        ? 'bg-[#e31837] text-white rounded-tr-xs'
+                        ? 'bg-[#A30029] text-white rounded-tr-xs'
                         : 'bg-white border border-[#eaeaea] text-[#1f2937] rounded-tl-xs'
                     }`}
                   >
@@ -550,13 +550,13 @@ export default function AIChatBot() {
                               <div className="flex-1 min-w-0">
                                 <Link
                                   href={`/product/${product.slug}`}
-                                  className="font-semibold text-xs text-gray-900 truncate block hover:text-[#e31837] transition-colors"
+                                  className="font-semibold text-xs text-gray-900 truncate block hover:text-[#A30029] transition-colors"
                                   title={product.name}
                                 >
                                   {product.name}
                                 </Link>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                  <span className="text-[#e31837] font-bold text-xs">
+                                  <span className="text-[#A30029] font-bold text-xs">
                                     {formatVND(product.price)}
                                   </span>
                                   {product.rating > 0 && (
@@ -574,7 +574,7 @@ export default function AIChatBot() {
                               <button
                                 type="button"
                                 onClick={() => handleProductCardAddToCart(product)}
-                                className="shrink-0 bg-[#e31837] hover:bg-[#c9142e] text-white p-2 rounded-lg text-xs font-medium flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                                className="shrink-0 bg-[#A30029] hover:bg-[#c9142e] text-white p-2 rounded-lg text-xs font-medium flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
                                 title="Thêm vào giỏ hàng"
                               >
                                 <ShoppingBag className="w-3.5 h-3.5" />
@@ -603,13 +603,13 @@ export default function AIChatBot() {
             {/* Typing Indicator */}
             {isLoading && (
               <div className="flex gap-2.5 justify-start items-center">
-                <div className="w-7 h-7 rounded-full bg-[#fdf2f2] border border-[#fecdd3] flex items-center justify-center text-[#e31837] shrink-0">
+                <div className="w-7 h-7 rounded-full bg-[#fdf2f2] border border-[#fecdd3] flex items-center justify-center text-[#A30029] shrink-0">
                   <Bot className="w-4 h-4" />
                 </div>
                 <div className="bg-white border border-[#eaeaea] rounded-2xl rounded-tl-xs px-3.5 py-2.5 shadow-xs flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#e31837] animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#e31837] animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#e31837] animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#A30029] animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#A30029] animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#A30029] animate-bounce" style={{ animationDelay: '300ms' }} />
                   <span className="text-xs text-gray-500 ml-1">NooNee đang tìm món ngon...</span>
                 </div>
               </div>
@@ -626,7 +626,7 @@ export default function AIChatBot() {
                 type="button"
                 onClick={() => handleQuickCategoryClick(cat)}
                 disabled={isLoading}
-                className="whitespace-nowrap bg-white hover:bg-[#fff1f2] text-gray-700 hover:text-[#e31837] text-[11px] font-medium px-2.5 py-1 rounded-full border border-gray-200 hover:border-[#fecdd3] transition-colors shrink-0 cursor-pointer disabled:opacity-50"
+                className="whitespace-nowrap bg-white hover:bg-[#fff1f2] text-gray-700 hover:text-[#A30029] text-[11px] font-medium px-2.5 py-1 rounded-full border border-gray-200 hover:border-[#fecdd3] transition-colors shrink-0 cursor-pointer disabled:opacity-50"
               >
                 {cat.label}
               </button>
@@ -648,12 +648,12 @@ export default function AIChatBot() {
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Nhập món bạn muốn tìm kiếm hoặc hỏi NooNee..."
               disabled={isLoading}
-              className="flex-1 bg-gray-100 hover:bg-gray-100/80 focus:bg-white text-sm text-gray-900 rounded-xl px-3.5 py-2.5 outline-hidden focus:ring-2 focus:ring-[#e31837]/30 border border-transparent focus:border-[#e31837] transition-all"
+              className="flex-1 bg-gray-100 hover:bg-gray-100/80 focus:bg-white text-sm text-gray-900 rounded-xl px-3.5 py-2.5 outline-hidden focus:ring-2 focus:ring-[#A30029]/30 border border-transparent focus:border-[#A30029] transition-all"
             />
             <button
               type="submit"
               disabled={!inputMessage.trim() || isLoading}
-              className="w-10 h-10 rounded-xl bg-[#e31837] hover:bg-[#c9142e] text-white flex items-center justify-center shrink-0 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs cursor-pointer active:scale-95"
+              className="w-10 h-10 rounded-xl bg-[#A30029] hover:bg-[#c9142e] text-white flex items-center justify-center shrink-0 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs cursor-pointer active:scale-95"
               aria-label="Gửi tin nhắn"
             >
               <Send className="w-4 h-4" />

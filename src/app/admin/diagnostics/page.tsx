@@ -194,7 +194,7 @@ export default function AdminDiagnosticsPage() {
           <div className="flex items-center justify-between pb-3 border-b border-[#dddddd] gap-2">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#181d26] flex items-center justify-center shrink-0">
-                <QrCode className="w-4 h-4 text-[#e31837]" />
+                <QrCode className="w-4 h-4 text-[#A30029]" />
               </div>
               <div>
                 <h2 className="text-[13px] sm:text-[14px] font-semibold text-[#181d26] leading-tight">Cổng thanh toán VietQR (Sepay)</h2>
@@ -261,7 +261,7 @@ export default function AdminDiagnosticsPage() {
       <div className="bg-white rounded-[10px] p-4 sm:p-6 lg:p-8 border border-[#dddddd] space-y-4 sm:space-y-6 shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#dddddd]">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-[6px] bg-[#fff1f2] border border-[#fecdd3] text-[#e31837] flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-[6px] bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] flex items-center justify-center shrink-0">
               <Zap className="w-5 h-5" />
             </div>
             <div>
@@ -278,7 +278,7 @@ export default function AdminDiagnosticsPage() {
             type="button"
             disabled={testingAll}
             onClick={() => runApiTests()}
-            className="w-full sm:w-auto h-10 px-4 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-medium rounded-[6px] transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
+            className="w-full sm:w-auto h-10 px-4 bg-[#A30029] hover:bg-[#850021] text-white text-[13px] font-medium rounded-[6px] transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
           >
             {testingAll ? (
               <>
@@ -340,7 +340,7 @@ export default function AdminDiagnosticsPage() {
                       <span>Độ trễ:</span>{' '}
                       <strong
                         className={`font-mono ${
-                          isFast ? 'text-[#15803d]' : isMedium ? 'text-amber-700' : 'text-[#e31837]'
+                          isFast ? 'text-[#15803d]' : isMedium ? 'text-amber-700' : 'text-[#A30029]'
                         }`}
                       >
                         {api.latencyMs}ms
@@ -356,7 +356,7 @@ export default function AdminDiagnosticsPage() {
                     type="button"
                     disabled={isThisTesting || testingAll}
                     onClick={() => runApiTests(api.id)}
-                    className="text-[#e31837] hover:text-[#be0e27] font-semibold hover:underline flex items-center gap-1 disabled:opacity-40 ml-auto"
+                    className="text-[#A30029] hover:text-[#850021] font-semibold hover:underline flex items-center gap-1 disabled:opacity-40 ml-auto"
                   >
                     {isThisTesting ? (
                       <Loader2 className="w-3 h-3 animate-spin" />

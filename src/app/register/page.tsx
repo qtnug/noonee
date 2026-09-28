@@ -21,7 +21,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-3">
-      <Loader2 className="w-8 h-8 animate-spin text-[#e31837]" />
+      <Loader2 className="w-8 h-8 animate-spin text-[#A30029]" />
       <p className="text-[14px] text-gray-600 font-medium">Đang chuyển hướng...</p>
     </div>
   );

@@ -130,7 +130,7 @@ export default function AdminSupportPage() {
           onClick={() => setFilterType('all')}
           className={`px-3 py-1.5 rounded-[6px] text-[12px] sm:text-[13px] font-medium transition cursor-pointer border ${
             filterType === 'all'
-              ? 'bg-[#e31837] text-white border-[#e31837] shadow-xs'
+              ? 'bg-[#A30029] text-white border-[#A30029] shadow-xs'
               : 'bg-white text-[#41454d] border-[#dddddd] hover:bg-[#f8fafc]'
           }`}
         >
@@ -140,8 +140,8 @@ export default function AdminSupportPage() {
           onClick={() => setFilterType('complaints')}
           className={`px-3 py-1.5 rounded-[6px] text-[12px] sm:text-[13px] font-medium transition cursor-pointer border ${
             filterType === 'complaints'
-              ? 'bg-[#e31837] text-white border-[#e31837] shadow-xs'
-              : 'bg-white text-[#e31837] border-[#fecdd3] hover:bg-[#fff1f2]'
+              ? 'bg-[#A30029] text-white border-[#A30029] shadow-xs'
+              : 'bg-white text-[#A30029] border-[#fecdd3] hover:bg-[#fff1f2]'
           }`}
         >
           Có khiếu nại món ăn
@@ -176,12 +176,12 @@ export default function AdminSupportPage() {
                       setMobileView('chat');
                     }}
                     className={`w-full text-left p-3.5 sm:p-4 transition flex flex-col gap-1.5 cursor-pointer ${
-                      isSelected ? 'bg-[#fff1f2]/60 border-l-4 border-l-[#e31837]' : 'hover:bg-[#f8fafc]'
+                      isSelected ? 'bg-[#fff1f2]/60 border-l-4 border-l-[#A30029]' : 'hover:bg-[#f8fafc]'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <ShoppingBag className="w-3.5 h-3.5 text-[#e31837]" />
+                        <ShoppingBag className="w-3.5 h-3.5 text-[#A30029]" />
                         <span className="font-mono font-bold text-[13px] sm:text-[14px] text-[#181d26]">
                           {key === 'GENERAL'
                             ? 'Hỗ trợ chung'
@@ -193,7 +193,7 @@ export default function AdminSupportPage() {
                         </span>
                       </div>
                       {hasComplaint && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[4px] text-[10px] sm:text-[11px] font-bold bg-[#fff1f2] text-[#e31837] border border-[#fecdd3]">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[4px] text-[10px] sm:text-[11px] font-bold bg-[#fff1f2] text-[#A30029] border border-[#fecdd3]">
                           <AlertTriangle className="w-3 h-3" /> Khiếu nại
                         </span>
                       )}
@@ -224,7 +224,7 @@ export default function AdminSupportPage() {
                   <button
                     type="button"
                     onClick={() => setMobileView('list')}
-                    className="lg:hidden p-1.5 -ml-1 text-gray-600 hover:text-[#e31837] rounded-md hover:bg-gray-100 flex items-center gap-1 text-[12px] font-medium shrink-0 cursor-pointer"
+                    className="lg:hidden p-1.5 -ml-1 text-gray-600 hover:text-[#A30029] rounded-md hover:bg-gray-100 flex items-center gap-1 text-[12px] font-medium shrink-0 cursor-pointer"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     <span>Quay lại</span>
@@ -242,7 +242,7 @@ export default function AdminSupportPage() {
                           : `Đơn hàng #${selectedOrder}`}
                       </span>
                       {currentOrderHasComplaint && (
-                        <span className="text-[10px] sm:text-[11px] font-bold text-[#e31837] bg-[#fff1f2] border border-[#fecdd3] px-2 py-0.5 rounded-[4px]">
+                        <span className="text-[10px] sm:text-[11px] font-bold text-[#A30029] bg-[#fff1f2] border border-[#fecdd3] px-2 py-0.5 rounded-[4px]">
                           Khách khiếu nại
                         </span>
                       )}
@@ -275,14 +275,14 @@ export default function AdminSupportPage() {
                       <div
                         className={`max-w-md p-3.5 rounded-[10px] text-[13px] leading-relaxed ${
                           isAdmin
-                            ? 'bg-[#e31837] text-white rounded-tr-xs'
+                            ? 'bg-[#A30029] text-white rounded-tr-xs'
                             : m.isComplaint
                             ? 'bg-[#fff1f2] border border-[#fecdd3] text-[#181d26] rounded-tl-xs'
                             : 'bg-[#f8fafc] border border-[#dddddd] text-[#181d26] rounded-tl-xs'
                         }`}
                       >
                         {m.isComplaint && (
-                          <div className="flex items-center gap-1 font-bold text-[#e31837] mb-1 text-[11px]">
+                          <div className="flex items-center gap-1 font-bold text-[#A30029] mb-1 text-[11px]">
                             <AlertTriangle className="w-3 h-3" /> NỘI DUNG KHIẾU NẠI:
                           </div>
                         )}
@@ -301,12 +301,12 @@ export default function AdminSupportPage() {
                   placeholder="Nhập nội dung phản hồi khách hàng..."
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  className="flex-1 h-11 px-4 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#e31837]"
+                  className="flex-1 h-11 px-4 bg-white border border-[#dddddd] rounded-[6px] text-[14px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                 />
                 <button
                   type="submit"
                   disabled={isSending || !replyText.trim()}
-                  className="h-11 px-5 bg-[#e31837] hover:bg-[#be0e27] text-white text-[13px] font-medium rounded-[6px] transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-xs"
+                  className="h-11 px-5 bg-[#A30029] hover:bg-[#850021] text-white text-[13px] font-medium rounded-[6px] transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   <Send className="w-4 h-4" />
                   <span>{isSending ? 'Đang gửi...' : 'Gửi phản hồi'}</span>

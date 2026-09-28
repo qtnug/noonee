@@ -218,7 +218,7 @@ export default function ProductOptionsModal({
                 <h3 className="text-[16px] sm:text-[18px] font-semibold text-[#181d26] leading-snug line-clamp-1">
                   {product.name}
                 </h3>
-                <div className="text-[15px] font-bold text-[#e31837]">
+                <div className="text-[15px] font-bold text-[#A30029]">
                   {formatVND(product.price)}
                 </div>
               </div>
@@ -247,7 +247,7 @@ export default function ProductOptionsModal({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="text-[13px] font-semibold text-[#181d26] flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-[#e31837]" />
+                <Sparkles className="w-4 h-4 text-[#A30029]" />
                 <span>Tùy chọn món thêm / Topping:</span>
               </h4>
               <span className="text-[11px] text-[#9297a0]">Tùy chọn không bắt buộc</span>
@@ -263,13 +263,13 @@ export default function ProductOptionsModal({
                     onClick={() => toggleTopping(top)}
                     className={`flex items-center justify-between p-2.5 rounded-[8px] border text-left transition cursor-pointer text-[13px] ${
                       isSelected
-                        ? 'bg-[#fff1f2]/30 border-[#e31837] text-[#181d26] shadow-2xs'
+                        ? 'bg-[#fff1f2]/30 border-[#A30029] text-[#181d26] shadow-2xs'
                         : 'bg-white border-[#dddddd] text-[#41454d] hover:border-[#fecdd3]'
                     }`}
                   >
                     <div className="flex items-center gap-2 min-w-0 pr-1">
                       {isSelected ? (
-                        <CheckSquare className="w-4 h-4 text-[#e31837] shrink-0" />
+                        <CheckSquare className="w-4 h-4 text-[#A30029] shrink-0" />
                       ) : (
                         <Square className="w-4 h-4 text-gray-300 shrink-0" />
                       )}
@@ -281,7 +281,7 @@ export default function ProductOptionsModal({
                       className={`text-[12px] font-semibold shrink-0 ${
                         top.price > 0
                           ? isSelected
-                            ? 'text-[#e31837]'
+                            ? 'text-[#A30029]'
                             : 'text-[#41454d]'
                           : 'text-[#16a34a]'
                       }`}
@@ -296,7 +296,7 @@ export default function ProductOptionsModal({
             {selectedToppings.length > 0 && (
               <div className="flex items-center justify-between pt-2 text-[12px] text-[#41454d] bg-[#f8fafc] px-3 py-1.5 rounded-[6px] border border-[#dddddd]">
                 <span>Đã chọn {selectedToppings.length} topping:</span>
-                <span className="font-bold text-[#e31837]">
+                <span className="font-bold text-[#A30029]">
                   +{formatVND(toppingsTotal)} / phần
                 </span>
               </div>
@@ -314,7 +314,7 @@ export default function ProductOptionsModal({
               value={itemNote}
               onChange={(e) => setItemNote(e.target.value)}
               maxLength={150}
-              className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[8px] text-[13px] text-[#181d26] placeholder-[#9297a0] focus:outline-none focus:border-[#e31837] focus:ring-1 focus:ring-[#e31837] transition"
+              className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[8px] text-[13px] text-[#181d26] placeholder-[#9297a0] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] transition"
             />
           </div>
         </div>
@@ -334,7 +334,7 @@ export default function ProductOptionsModal({
               <button
                 type="button"
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="p-2 text-[#41454d] hover:text-[#e31837] transition cursor-pointer"
+                className="p-2 text-[#41454d] hover:text-[#A30029] transition cursor-pointer"
                 aria-label="Giảm số lượng"
               >
                 <Minus className="w-4 h-4" />
@@ -345,7 +345,7 @@ export default function ProductOptionsModal({
               <button
                 type="button"
                 onClick={() => setQuantity(quantity + 1)}
-                className="p-2 text-[#41454d] hover:text-[#e31837] transition cursor-pointer"
+                className="p-2 text-[#41454d] hover:text-[#A30029] transition cursor-pointer"
                 aria-label="Tăng số lượng"
               >
                 <Plus className="w-4 h-4" />
@@ -359,7 +359,7 @@ export default function ProductOptionsModal({
               type="button"
               onClick={handleConfirmAdd}
               disabled={!product.isAvailable || isSubmitting}
-              className={`flex-1 h-11 px-3 rounded-[10px] text-[13px] sm:text-[14px] font-semibold transition flex items-center justify-center gap-1.5 border border-[#dddddd] bg-white hover:bg-rose-50/60 text-[#181d26] hover:border-[#e31837] cursor-pointer disabled:opacity-50`}
+              className={`flex-1 h-11 px-3 rounded-[10px] text-[13px] sm:text-[14px] font-semibold transition flex items-center justify-center gap-1.5 border border-[#dddddd] bg-white hover:bg-rose-50/60 text-[#181d26] hover:border-[#A30029] cursor-pointer disabled:opacity-50`}
             >
               {isSubmitting ? (
                 <>
@@ -368,7 +368,7 @@ export default function ProductOptionsModal({
                 </>
               ) : (
                 <>
-                  <ShoppingBag className="w-4 h-4 text-[#e31837]" />
+                  <ShoppingBag className="w-4 h-4 text-[#A30029]" />
                   <span>Thêm vào giỏ</span>
                 </>
               )}
@@ -378,7 +378,7 @@ export default function ProductOptionsModal({
               type="button"
               onClick={handleBuyNow}
               disabled={!product.isAvailable || isSubmitting}
-              className={`flex-1 h-11 px-3 rounded-[10px] text-[13px] sm:text-[14px] font-semibold transition flex items-center justify-center gap-1.5 shadow-sm bg-[#e31837] hover:bg-[#be0e27] active:bg-[#a50b20] text-white cursor-pointer disabled:opacity-50`}
+              className={`flex-1 h-11 px-3 rounded-[10px] text-[13px] sm:text-[14px] font-semibold transition flex items-center justify-center gap-1.5 shadow-sm bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white cursor-pointer disabled:opacity-50`}
             >
               <Zap className="w-4 h-4" />
               <span>Mua ngay • {formatVND(totalPrice)}</span>

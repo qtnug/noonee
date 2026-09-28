@@ -15,7 +15,7 @@ export default function AdminHeaderUser() {
     <div className="flex items-center gap-2 sm:gap-4 shrink-0">
       <Link
         href="/"
-        className="hidden md:inline-flex items-center gap-1.5 text-[12px] text-[#41454d] hover:text-[#e31837] font-medium bg-[#f8fafc] px-3 py-1.5 rounded-[6px] border border-[#dddddd] transition"
+        className="hidden md:inline-flex items-center gap-1.5 text-[12px] text-[#41454d] hover:text-[#A30029] font-medium bg-[#f8fafc] px-3 py-1.5 rounded-[6px] border border-[#dddddd] transition"
       >
         <ExternalLink className="w-3.5 h-3.5" />
         <span>Trang bán hàng</span>
@@ -29,7 +29,7 @@ export default function AdminHeaderUser() {
       <button
         onClick={logout}
         title="Đăng xuất khỏi trang quản trị"
-        className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-[6px] text-[11px] sm:text-[12px] font-medium text-[#e31837] hover:bg-[#fff1f2] border border-[#fecdd3] transition cursor-pointer shrink-0"
+        className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-[6px] text-[11px] sm:text-[12px] font-medium text-[#A30029] hover:bg-[#fff1f2] border border-[#fecdd3] transition cursor-pointer shrink-0"
       >
         <LogOut className="w-3.5 h-3.5" />
         <span className="hidden sm:inline">Đăng xuất</span>
