@@ -49,3 +49,11 @@ scripts/
 *.zip
 *.rar
 *.tar.gz
+
+# Database dumps (contains sensitive data)
+database_data_dump/
+
+# Temporary files & office locks
+~$*
+*_backup.*
+*_updated.*
