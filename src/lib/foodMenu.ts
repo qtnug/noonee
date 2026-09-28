@@ -189,7 +189,7 @@ export async function getFoodMenuItems(): Promise<Product[]> {
 }
 
 /**
- * Build a concise, high-density food menu prompt context for the Gemma 4 31B model
+ * Build a concise, high-density food menu prompt context for the LLM7 model
  */
 export async function getFoodMenuSummaryForPrompt(): Promise<string> {
   const products = await getFoodMenuItems();

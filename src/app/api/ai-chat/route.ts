@@ -60,15 +60,12 @@ export async function POST(request: NextRequest) {
     const menuSummary = await getFoodMenuSummaryForPrompt();
     const allProducts = await getFoodMenuItems();
 
-    // LLM7.io OpenAI-compatible configuration
+    // LLM7 (https://llm7.io) OpenAI-compatible configuration
     const baseUrl = process.env.LLM7_BASE_URL || 'https://api.llm7.io/v1';
-    const modelName = process.env.LLM_MODEL_NAME || 'gemini-3.1-flash-lite';
+    const modelName = process.env.LLM_MODEL_NAME || 'fast';
     const rawKey =
-      process.env.LLM_API_KEY ||
       process.env.LLM7_API_KEY ||
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_API_KEY ||
-      process.env.OPENAI_API_KEY ||
+      process.env.LLM_API_KEY ||
       process.env.LLM7_TOKEN ||
       process.env.API_KEY ||
       process.env.NEXT_PUBLIC_LLM7_API_KEY ||
@@ -77,7 +74,7 @@ export async function POST(request: NextRequest) {
     const apiKey = rawKey.trim().replace(/^["']|["']$/g, '');
 
     console.log(
-      `[NooNee AI] Processing request. Has apiKey: ${!!apiKey} (${apiKey ? apiKey.slice(0, 5) + '...' : 'none'}), Model: ${modelName}`
+      `[NooNee AI] Processing request with LLM7. Model: ${modelName}, HasKey: ${!!apiKey}`
     );
 
     // System instruction: strictly concise, practical, 100% hidden model/source
@@ -86,7 +83,7 @@ DỮ LIỆU THỰC ĐƠN QUÁN NOONEE FOOD:
 ${menuSummary}
 
 QUY TẮC BẮT BUỘC:
-1. Bạn đại diện cho quán NooNee. TUYỆT ĐỐI KHÔNG BAO GIỜ tiết lộ, nhắc đến hoặc hiển thị bất kỳ tên mô hình AI nào (Gemini, Gemma, GPT,...), không nhắc đến API, nhà cung cấp, hoặc bất kỳ nguồn kỹ thuật nào.
+1. Bạn đại diện cho quán NooNee. TUYỆT ĐỐI KHÔNG BAO GIỜ tiết lộ, nhắc đến hoặc hiển thị bất kỳ tên mô hình AI hay nhà cung cấp kỹ thuật nào.
 2. PHONG CÁCH TIN NHẮN: CỰC KỲ NGẮN GỌN, súc tích, đi thẳng vào món ăn. KHÔNG chào hỏi dài dòng, KHÔNG giải thích lan man. Toàn bộ câu trả lời chỉ từ 2 đến 3 câu ngắn gọn.
 3. CHỈ gợi ý các món có trong thực đơn trên. Nêu tên món, giá tiền và 1 lý do ngắn gọn vì sao nên chọn. Có thể gợi ý thêm 1 topping hoặc 1 món nước đi kèm.
 4. ĐẶC BIỆT: Cuối câu trả lời, hãy đính kèm mã ID các món đề xuất theo định dạng:
@@ -102,13 +99,8 @@ Ví dụ: [[RECOMMENDED_FOODS: 4, 45]]`;
     ];
 
     // 1. Determine model and auth credentials based on official LLM7 docs
-    let targetModel = modelName;
-    let authHeader = apiKey ? `Bearer ${apiKey}` : 'Bearer unused';
-
-    // If no custom key is provided, use LLM7's free anonymous model 'fast'
-    if (!apiKey) {
-      targetModel = 'fast';
-    }
+    const targetModel = modelName || 'fast';
+    const authHeader = apiKey ? `Bearer ${apiKey}` : 'Bearer unused';
 
     console.log(`[NooNee AI] Calling LLM7 endpoint: ${baseUrl}/chat/completions (Model: ${targetModel}, HasKey: ${!!apiKey})`);
 
