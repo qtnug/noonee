@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateCoupon } from '@/lib/coupons';
-import { hasUserPaidFirstVietqr, getUserSpendingStats } from '@/lib/db';
+import { hasUserPaidFirstVietqr, getUserSpendingStats, getCouponByCode } from '@/lib/db';
 import { getMembershipTier } from '@/lib/membership';
 import { authenticateRequest } from '@/lib/auth';
 import { checkRateLimit, getClientIp, getRateLimitHeaders } from '@/lib/rateLimit';
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { code, subtotal, paymentMethod, userId } = body;
+    const { code, subtotal, paymentMethod, userId, cartItems } = body;
     const cleanCode = sanitizeText(code, 50).toUpperCase();
 
     const authUser = authenticateRequest(request);
@@ -48,12 +48,27 @@ export async function POST(request: NextRequest) {
     let userTier = null;
 
     if (targetUserId) {
-      const [hasPaid, stats] = await Promise.all([
-        hasUserPaidFirstVietqr(targetUserId),
-        getUserSpendingStats(targetUserId),
-      ]);
-      isNewUser = !hasPaid;
-      userTier = getMembershipTier(stats.totalSpent).tier;
+      try {
+        const [hasPaid, stats] = await Promise.all([
+          hasUserPaidFirstVietqr(targetUserId),
+          getUserSpendingStats(targetUserId),
+        ]);
+        isNewUser = !hasPaid;
+        userTier = getMembershipTier(stats.totalSpent).tier;
+      } catch (e) {
+        console.warn('Could not load user stats for promo validation:', e);
+      }
+    }
+
+    let dbCoupon = null;
+    try {
+      dbCoupon = await getCouponByCode(cleanCode);
+    } catch (dbErr: any) {
+      console.error('Error fetching coupon from DB in validate route:', dbErr);
+      return NextResponse.json(
+        { success: false, message: dbErr?.message || 'Lỗi kết nối cơ sở dữ liệu khi kiểm tra mã giảm giá' },
+        { status: 500 }
+      );
     }
 
     const result = validateCoupon(
@@ -61,7 +76,9 @@ export async function POST(request: NextRequest) {
       Number(subtotal) || 0,
       paymentMethod || 'Sepay',
       isNewUser,
-      userTier
+      userTier,
+      Array.isArray(cartItems) ? cartItems : undefined,
+      dbCoupon ? [dbCoupon] : []
     );
 
     if (!result.valid) {
@@ -84,7 +101,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Coupon validation error:', error);
     return NextResponse.json(
-      { success: false, message: 'Đã xảy ra lỗi khi kiểm tra mã giảm giá' },
+      { success: false, message: error?.message || 'Đã xảy ra lỗi khi kiểm tra mã giảm giá' },
       { status: 500 }
     );
   }

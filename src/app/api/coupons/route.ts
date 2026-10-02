@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllCoupons, addCustomCoupon, deleteCustomCoupon, findCouponByCode, generateRandomCouponCode } from '@/lib/coupons';
+import { generateRandomCouponCode } from '@/lib/coupons';
+import { getCoupons, createCoupon, deleteCoupon } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth';
 import { Coupon } from '@/types';
 
@@ -7,7 +8,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const coupons = getAllCoupons();
+    const { searchParams } = new URL(request.url);
+    const activeOnly = searchParams.get('active') === 'true';
+    const type = searchParams.get('type') || undefined;
+
+    const coupons = await getCoupons({ activeOnly, type });
     return NextResponse.json({
       success: true,
       data: coupons,
@@ -15,7 +20,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Error fetching coupons:', error);
     return NextResponse.json(
-      { success: false, message: 'Lỗi khi tải danh sách mã giảm giá' },
+      { success: false, message: error?.message || 'Lỗi khi tải danh sách mã giảm giá từ cơ sở dữ liệu' },
       { status: 500 }
     );
   }
@@ -45,6 +50,7 @@ export async function POST(request: NextRequest) {
       categoryExclusive,
       minTier,
       isOneTimeUse,
+      couponType,
     } = body;
 
     // Generate code if not provided or requested random
@@ -76,16 +82,17 @@ export async function POST(request: NextRequest) {
       minTier: minTier || undefined,
       isOneTimeUse: Boolean(isOneTimeUse),
       isActive: true,
+      couponType: couponType || 'food_discount',
       createdAt: new Date().toISOString(),
       badge: discountType === 'percentage' ? `Giảm ${discountValue}%` : `Giảm ${Math.round(discountValue / 1000)}k`,
     };
 
-    addCustomCoupon(newCoupon);
+    const savedCoupon = await createCoupon(newCoupon);
 
     return NextResponse.json({
       success: true,
-      data: newCoupon,
-      message: `Đã tạo mã giảm giá "${newCoupon.code}" thành công`,
+      data: savedCoupon,
+      message: `Đã tạo và lưu mã giảm giá "${savedCoupon.code}" vào cơ sở dữ liệu thành công`,
     });
   } catch (error: any) {
     console.error('Error creating coupon:', error);
@@ -116,15 +123,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const deleted = deleteCustomCoupon(code);
-    const target = findCouponByCode(code);
-    if (target) {
-      target.isActive = false;
-    }
+    await deleteCoupon(code);
 
     return NextResponse.json({
       success: true,
-      message: `Đã xóa hoặc vô hiệu hóa mã "${code}"`,
+      message: `Đã xóa mã giảm giá "${code}" khỏi cơ sở dữ liệu`,
     });
   } catch (error: any) {
     console.error('Error deleting coupon:', error);

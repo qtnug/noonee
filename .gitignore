@@ -59,3 +59,7 @@ database_data_dump/
 *_updated.*
 *.docx
 *.doc
+
+# Documentation & Database scripts (not part of web runtime)
+docs/
+database/

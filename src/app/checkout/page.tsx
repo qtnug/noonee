@@ -25,7 +25,7 @@ import {
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatVND } from '@/lib/utils';
-import { getAllCoupons, validateCoupon } from '@/lib/coupons';
+import { validateCoupon } from '@/lib/coupons';
 import { Coupon, GroupOrder } from '@/types';
 import { MembershipTierInfo } from '@/lib/membership';
 import AddressAutocompleteInput from '@/components/AddressAutocompleteInput';
@@ -59,6 +59,10 @@ function CheckoutContent() {
   const [couponError, setCouponError] = useState('');
   const [couponSuccess, setCouponSuccess] = useState('');
   const [showCouponsList, setShowCouponsList] = useState(false);
+  const [allCoupons, setAllCoupons] = useState<Coupon[]>([]);
+  const [couponsLoading, setCouponsLoading] = useState(true);
+  const [couponsError, setCouponsError] = useState('');
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   // couponSlot tracks which slot user is currently selecting for
   const [couponSlot, setCouponSlot] = useState<'food' | 'freeship'>('food');
   const [isNewUser, setIsNewUser] = useState(true);
@@ -67,6 +71,26 @@ function CheckoutContent() {
   const [useWallet, setUseWallet] = useState<boolean>(false);
   const [saveAsDefaultAddress, setSaveAsDefaultAddress] = useState(false);
   const [hpBotTrap, setHpBotTrap] = useState('');
+
+  // Fetch active coupons from database
+  const fetchActiveCoupons = () => {
+    setCouponsLoading(true);
+    setCouponsError('');
+    fetch('/api/coupons?active=true')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.data)) {
+          setAllCoupons(data.data);
+        } else {
+          setCouponsError(data.message || 'Không thể tải mã giảm giá từ CSDL');
+        }
+      })
+      .catch((err) => {
+        console.error('Error loading coupons in checkout:', err);
+        setCouponsError('Không thể kết nối máy chủ để tải mã giảm giá');
+      })
+      .finally(() => setCouponsLoading(false));
+  };
 
   // Restore coupon if returning from cancelled payment
   useEffect(() => {
@@ -77,6 +101,10 @@ function CheckoutContent() {
         setTimeout(() => handleApplyCoupon(restored), 300);
       }
     } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    fetchActiveCoupons();
   }, []);
 
   // Fetch Group Order if groupCode param is present
@@ -152,9 +180,9 @@ function CheckoutContent() {
 
   // Sorted food coupons with discount recommendation
   const sortedFoodCoupons = useMemo(() => {
-    const list = getAllCoupons().filter(c => c.couponType === 'food_discount' || !c.couponType);
+    const list = allCoupons.filter(c => c.couponType === 'food_discount' || !c.couponType);
     return list.map((c) => {
-      const check = validateCoupon(c.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
+      const check = validateCoupon(c.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems, allCoupons);
       return {
         coupon: c,
         check,
@@ -165,13 +193,13 @@ function CheckoutContent() {
       if (!a.check.valid && b.check.valid) return 1;
       return b.discountAmount - a.discountAmount;
     });
-  }, [effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, cartProductItems]);
+  }, [allCoupons, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, cartProductItems]);
 
   // Sorted freeship coupons
   const sortedFreeshipCoupons = useMemo(() => {
-    const list = getAllCoupons().filter(c => c.couponType === 'freeship');
+    const list = allCoupons.filter(c => c.couponType === 'freeship');
     return list.map((c) => {
-      const check = validateCoupon(c.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
+      const check = validateCoupon(c.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems, allCoupons);
       return {
         coupon: c,
         check,
@@ -182,7 +210,7 @@ function CheckoutContent() {
       if (!a.check.valid && b.check.valid) return 1;
       return 0;
     });
-  }, [effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, cartProductItems]);
+  }, [allCoupons, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, cartProductItems]);
 
   // Combined sorted coupons for modal (food first, then freeship)
   const sortedCouponsWithDiscount = useMemo(() => {
@@ -204,7 +232,7 @@ function CheckoutContent() {
   // Revalidate food coupon if subtotal changes
   useEffect(() => {
     if (appliedFoodCoupon && effectiveTotalPrice > 0) {
-      const recheck = validateCoupon(appliedFoodCoupon.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
+      const recheck = validateCoupon(appliedFoodCoupon.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems, [appliedFoodCoupon]);
       if (!recheck.valid) {
         setAppliedFoodCoupon(null);
         setFoodDiscountAmount(0);
@@ -219,7 +247,7 @@ function CheckoutContent() {
   // Revalidate freeship coupon if subtotal changes
   useEffect(() => {
     if (appliedFreeshipCoupon && effectiveTotalPrice > 0) {
-      const recheck = validateCoupon(appliedFreeshipCoupon.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
+      const recheck = validateCoupon(appliedFreeshipCoupon.code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems, [appliedFreeshipCoupon]);
       if (!recheck.valid) {
         setAppliedFreeshipCoupon(null);
         setFreeshipDiscountAmount(0);
@@ -228,7 +256,7 @@ function CheckoutContent() {
     }
   }, [effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, appliedFreeshipCoupon, cart]);
 
-  const handleApplyCoupon = (codeToApply?: string) => {
+  const handleApplyCoupon = async (codeToApply?: string) => {
     const code = (codeToApply || couponInput).trim().toUpperCase();
     setCouponError('');
     setCouponSuccess('');
@@ -238,25 +266,45 @@ function CheckoutContent() {
       return;
     }
 
-    const res = validateCoupon(code, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo?.tier, cartProductItems);
-    if (!res.valid) {
-      setCouponError(res.message || 'Mã không hợp lệ');
-      return;
-    }
+    setIsValidatingCoupon(true);
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({
+          code,
+          subtotal: effectiveTotalPrice,
+          paymentMethod,
+          userId: user?.id,
+          cartItems: cartProductItems,
+        }),
+      });
 
-    const coupon = res.coupon!;
-    const isFreeship = coupon.couponType === 'freeship';
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setCouponError(data.message || 'Mã giảm giá không hợp lệ hoặc đã hết hạn');
+        return;
+      }
 
-    if (isFreeship) {
-      setAppliedFreeshipCoupon(coupon);
-      setFreeshipDiscountAmount(res.discountAmount);
-      setCouponSuccess(`Đã áp dụng mã freeship "${code}" thành công!`);
-    } else {
-      setAppliedFoodCoupon(coupon);
-      setFoodDiscountAmount(res.discountAmount);
-      setCouponSuccess(`Đã áp dụng mã "${code}" thành công! Tiết kiệm ${formatVND(res.discountAmount)}`);
+      const coupon: Coupon = data.coupon;
+      const isFreeship = coupon.couponType === 'freeship';
+
+      if (isFreeship) {
+        setAppliedFreeshipCoupon(coupon);
+        setFreeshipDiscountAmount(data.discountAmount);
+        setCouponSuccess(`Đã áp dụng mã freeship "${code}" thành công!`);
+      } else {
+        setAppliedFoodCoupon(coupon);
+        setFoodDiscountAmount(data.discountAmount);
+        setCouponSuccess(`Đã áp dụng mã "${code}" thành công! Tiết kiệm ${formatVND(data.discountAmount)}`);
+      }
+      setCouponInput('');
+    } catch (err: any) {
+      console.error('Error applying coupon:', err);
+      setCouponError(err.message || 'Lỗi khi kiểm tra mã giảm giá với máy chủ');
+    } finally {
+      setIsValidatingCoupon(false);
     }
-    setCouponInput('');
   };
 
   const handleRemoveFoodCoupon = () => {
@@ -1037,10 +1085,10 @@ function CheckoutContent() {
                             <button
                               type="button"
                               onClick={() => handleApplyCoupon()}
-                              disabled={!couponInput.trim()}
+                              disabled={!couponInput.trim() || isValidatingCoupon}
                               className={`h-9 px-4 text-white text-[12px] font-semibold rounded-[6px] transition cursor-pointer disabled:opacity-50 shrink-0 ${couponSlot === 'freeship' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-[#A30029] hover:bg-[#850021]'}`}
                             >
-                              Áp dụng
+                              {isValidatingCoupon ? 'Đang kiểm tra...' : 'Áp dụng'}
                             </button>
                           </div>
                           {couponError && <p className="text-[12px] text-[#A30029] font-medium mt-1.5">{couponError}</p>}
@@ -1049,9 +1097,36 @@ function CheckoutContent() {
 
                         {/* Available Coupons List (filtered by slot) */}
                         <div className="space-y-2.5 pt-2 border-t border-[#dddddd]">
-                          <span className="text-[12px] font-bold text-[#181d26] block">
-                            {couponSlot === 'freeship' ? 'Mã Freeship có sẵn:' : 'Mã giảm đồ ăn có sẵn:'}
-                          </span>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[12px] font-bold text-[#181d26]">
+                              {couponSlot === 'freeship' ? 'Mã Freeship có sẵn:' : 'Mã giảm đồ ăn có sẵn:'}
+                            </span>
+                            {couponsLoading && (
+                              <span className="text-[11px] text-gray-400 flex items-center gap-1">
+                                <Loader2 className="w-3 h-3 animate-spin" /> Đang tải...
+                              </span>
+                            )}
+                          </div>
+
+                          {couponsError && !couponsLoading && (
+                            <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-[6px] text-[12px] text-amber-800 space-y-1">
+                              <p className="font-semibold">⚠️ {couponsError}</p>
+                              <p className="text-[11px] text-amber-700">Bạn vẫn có thể nhập mã giảm giá trực tiếp vào ô bên trên.</p>
+                              <button
+                                type="button"
+                                onClick={fetchActiveCoupons}
+                                className="text-[11px] font-bold text-[#A30029] underline hover:no-underline cursor-pointer"
+                              >
+                                Thử tải lại danh sách
+                              </button>
+                            </div>
+                          )}
+
+                          {!couponsLoading && !couponsError && (couponSlot === 'freeship' ? sortedFreeshipCoupons : sortedFoodCoupons).length === 0 && (
+                            <div className="py-6 text-center text-[12px] text-gray-500">
+                              Chưa có mã {couponSlot === 'freeship' ? 'freeship' : 'giảm đồ ăn'} nào khả dụng trong CSDL.
+                            </div>
+                          )}
                           {(couponSlot === 'freeship' ? sortedFreeshipCoupons : sortedFoodCoupons).map(({ coupon: c, check, discountAmount: disc }) => {
                             const isFreeship = c.couponType === 'freeship';
                             const isApplied = isFreeship

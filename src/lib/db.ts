@@ -1,6 +1,6 @@
 import sql from 'mssql';
 import bcrypt from 'bcryptjs';
-import { Category, Product, Order, OrderItem, User, Review, SupportMessage, GroupOrder, GroupMember, GroupMemberItem } from '@/types';
+import { Category, Product, Order, OrderItem, User, Review, SupportMessage, GroupOrder, GroupMember, GroupMemberItem, Coupon } from '@/types';
 import { generateGroupCode, computeGroupOrderStats, MIN_GROUP_MEMBERS, MAX_GROUP_MEMBERS } from '@/lib/groupOrder';
 
 function parseToppingsField(raw: any): any[] {
@@ -10,27 +10,61 @@ function parseToppingsField(raw: any): any[] {
   } catch { return []; }
 }
 
-// Cloud Database Configuration from environment (.env.local)
-const dbConfig = {
-  user: process.env.SQLSERVER_USER,
-  password: process.env.SQLSERVER_PASSWORD,
-  server: process.env.SQLSERVER_HOST,
-  port: parseInt(process.env.SQLSERVER_PORT || '1433'),
-  database: process.env.SQLSERVER_DATABASE,
-  options: {
-    encrypt: true,
-    trustServerCertificate: true,
-    connectTimeout: 15000,
-    requestTimeout: 15000,
-  },
-  pool: {
-    max: 10,
-    min: 0,
-    idleTimeoutMillis: 30000,
-  },
-};
-if (!dbConfig.user || !dbConfig.password || !dbConfig.server) {
-  console.warn('⚠️ Database credentials not configured. Set SQLSERVER_USER, SQLSERVER_PASSWORD, SQLSERVER_HOST in .env.local');
+// Cloud/Local Database Configuration from environment (.env.local)
+export function getDatabaseConfig(): any {
+  const rawHost = (process.env.SQLSERVER_HOST || '').trim();
+  let server = rawHost;
+  let instanceName: string | undefined;
+
+  // Handle host\\instance format (e.g. localhost\\SQLEXPRESS, .\\SQLEXPRESS)
+  if (rawHost.includes('\\')) {
+    const parts = rawHost.split('\\');
+    server = parts[0] === '.' || parts[0] === '(local)' ? 'localhost' : parts[0];
+    instanceName = parts[1];
+  } else if (rawHost === '.' || rawHost === '(local)') {
+    server = 'localhost';
+  }
+
+  const explicitPort = process.env.SQLSERVER_PORT ? parseInt(process.env.SQLSERVER_PORT) : undefined;
+  const port = explicitPort || (instanceName ? undefined : 1433);
+
+  const trustCert = process.env.SQLSERVER_TRUST_CERT !== 'false';
+  const isLocal = !server || server.toLowerCase() === 'localhost' || server === '127.0.0.1';
+  const encrypt = process.env.SQLSERVER_ENCRYPT !== undefined
+    ? process.env.SQLSERVER_ENCRYPT === 'true'
+    : !isLocal;
+
+  const config: any = {
+    user: process.env.SQLSERVER_USER,
+    password: process.env.SQLSERVER_PASSWORD,
+    server: server || 'localhost',
+    database: process.env.SQLSERVER_DATABASE,
+    options: {
+      encrypt,
+      trustServerCertificate: trustCert,
+      connectTimeout: 15000,
+      requestTimeout: 15000,
+    },
+    pool: {
+      max: 10,
+      min: 0,
+      idleTimeoutMillis: 30000,
+    },
+  };
+
+  if (port) {
+    config.port = port;
+  }
+  if (instanceName) {
+    config.options.instanceName = instanceName;
+  }
+
+  return config;
+}
+
+const _initialCfg = getDatabaseConfig();
+if (!_initialCfg.user || !_initialCfg.password || !_initialCfg.database) {
+  console.warn('⚠️ Database credentials not configured. Set SQLSERVER_USER, SQLSERVER_PASSWORD, SQLSERVER_DATABASE in .env.local');
 }
 
 // Global pool singleton for Next.js hot reloading
@@ -146,8 +180,11 @@ async function ensureSchemaColumns(pool: any) {
 }
 
 async function getCloudPool(): Promise<any> {
-  // If credentials are not configured, directly return null without attempting connect
-  if (!dbConfig.user || !dbConfig.password || !dbConfig.server) {
+  const connectionString = (process.env.DATABASE_URL || process.env.SQLSERVER_CONNECTION_STRING || '').trim();
+  const config = connectionString || getDatabaseConfig();
+
+  // If using config object, verify minimal credentials
+  if (!connectionString && (!config.user || !config.password || !config.database)) {
     return null;
   }
 
@@ -157,19 +194,19 @@ async function getCloudPool(): Promise<any> {
 
   if (!poolPromise) {
     try {
-      poolPromise = (sql as any).connect(dbConfig)
+      poolPromise = (sql as any).connect(config)
         .then((pool: any) => {
           global._sqlPool = pool;
           ensureSchemaColumns(pool);
           return pool;
         })
         .catch((err: any) => {
-          console.warn('⚠️ Cloud SQL Server connection failed, using fallback:', err.message);
+          console.warn('⚠️ SQL Server connection failed, using fallback:', err.message);
           poolPromise = null;
           return null;
         });
     } catch (err: any) {
-      console.warn('⚠️ Cloud SQL Server sync connect error:', err.message);
+      console.warn('⚠️ SQL Server sync connect error:', err.message);
       poolPromise = null;
       return null;
     }
@@ -1344,14 +1381,15 @@ export async function checkDatabaseHealth(): Promise<{
       const prodRes = await pool.request().query('SELECT COUNT(*) AS cnt FROM Products');
       const orderRes = await pool.request().query('SELECT COUNT(*) AS cnt FROM Orders');
 
+      const cfg = getDatabaseConfig();
       return {
         connected: true,
-        engine: 'Microsoft SQL Server (Cloud - MonsterASP / databaseasp.net)',
-        database: `${dbConfig.database} @ ${dbConfig.server}`,
+        engine: 'Microsoft SQL Server',
+        database: `${cfg.database} @ ${cfg.server}`,
         categoryCount: catRes.recordset[0]?.cnt || 0,
         productCount: prodRes.recordset[0]?.cnt || 0,
         orderCount: orderRes.recordset[0]?.cnt || 0,
-        details: `Kết nối thành công tới CSDL trên Cloud: ${dbConfig.server} (User: ${dbConfig.user}, Port: ${dbConfig.port})`
+        details: `Kết nối thành công tới CSDL SQL Server: ${cfg.server} (DB: ${cfg.database}, User: ${cfg.user})`
       };
     }
   } catch (err: any) {
@@ -2398,5 +2436,252 @@ export async function completeGroupOrder(code: string, orderCode: string): Promi
   group.orderCode = orderCode;
   await saveGroupOrderMembers(group.code, group.members, 'completed', orderCode);
   return true;
+}
+
+// ==========================================
+// VOUCHERS / COUPONS DATABASE APIS (Database Only)
+// ==========================================
+
+export async function getCoupons(options?: { activeOnly?: boolean; type?: string }): Promise<Coupon[]> {
+  const pool = await getCloudPool();
+  if (!pool) {
+    throw new Error('Chưa thể kết nối tới cơ sở dữ liệu SQL Server. Vui lòng kiểm tra kết nối CSDL.');
+  }
+
+  let query = `
+    SELECT id, code, name, description, discountType, 
+           CAST(discountValue AS BIGINT) AS discountValue, 
+           CAST(minOrderAmount AS BIGINT) AS minOrderAmount, 
+           CAST(maxDiscountAmount AS BIGINT) AS maxDiscountAmount,
+           requiresVietQR, forNewUserOnly, badge, minTier, 
+           expiryDate, usageLimit, usedCount, categoryExclusive, 
+           isOneTimeUse, isActive, couponType, createdAt
+    FROM Coupons WITH (NOLOCK)
+    WHERE 1=1
+  `;
+  const req = pool.request();
+  if (options?.activeOnly) {
+    query += ` AND (isActive = 1 OR isActive IS NULL)`;
+  }
+  if (options?.type) {
+    req.input('type', sql.NVarChar(50), options.type);
+    query += ` AND couponType = @type`;
+  }
+  query += ` ORDER BY id ASC`;
+  const result = await req.query(query);
+  if (result.recordset) {
+    return result.recordset.map((r: any) => ({
+      id: r.id,
+      code: r.code,
+      name: r.name,
+      description: r.description || '',
+      discountType: r.discountType === 'percentage' ? 'percentage' : 'fixed',
+      discountValue: Number(r.discountValue) || 0,
+      minOrderAmount: Number(r.minOrderAmount) || 0,
+      maxDiscountAmount: r.maxDiscountAmount != null ? Number(r.maxDiscountAmount) : undefined,
+      requiresVietQR: Boolean(r.requiresVietQR),
+      forNewUserOnly: Boolean(r.forNewUserOnly),
+      badge: r.badge || undefined,
+      minTier: r.minTier || undefined,
+      expiryDate: r.expiryDate || undefined,
+      usageLimit: Number(r.usageLimit) || 100,
+      usedCount: Number(r.usedCount) || 0,
+      categoryExclusive: r.categoryExclusive || 'all',
+      isOneTimeUse: Boolean(r.isOneTimeUse),
+      isActive: r.isActive !== false && r.isActive !== 0,
+      couponType: r.couponType || 'food_discount',
+      createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : undefined,
+    }));
+  }
+
+  return [];
+}
+
+export async function getCouponByCode(code: string): Promise<Coupon | null> {
+  const clean = (code || '').trim().toUpperCase();
+  if (!clean) return null;
+
+  const pool = await getCloudPool();
+  if (!pool) {
+    throw new Error('Chưa thể kết nối tới cơ sở dữ liệu SQL Server');
+  }
+
+  const req = pool.request();
+  req.input('code', sql.NVarChar(50), clean);
+  const res = await req.query(`
+    SELECT TOP 1 id, code, name, description, discountType, 
+           CAST(discountValue AS BIGINT) AS discountValue, 
+           CAST(minOrderAmount AS BIGINT) AS minOrderAmount, 
+           CAST(maxDiscountAmount AS BIGINT) AS maxDiscountAmount,
+           requiresVietQR, forNewUserOnly, badge, minTier, 
+           expiryDate, usageLimit, usedCount, categoryExclusive, 
+           isOneTimeUse, isActive, couponType, createdAt
+    FROM Coupons WITH (NOLOCK)
+    WHERE UPPER(code) = UPPER(@code)
+  `);
+  if (res.recordset && res.recordset[0]) {
+    const r = res.recordset[0];
+    return {
+      id: r.id,
+      code: r.code,
+      name: r.name,
+      description: r.description || '',
+      discountType: r.discountType === 'percentage' ? 'percentage' : 'fixed',
+      discountValue: Number(r.discountValue) || 0,
+      minOrderAmount: Number(r.minOrderAmount) || 0,
+      maxDiscountAmount: r.maxDiscountAmount != null ? Number(r.maxDiscountAmount) : undefined,
+      requiresVietQR: Boolean(r.requiresVietQR),
+      forNewUserOnly: Boolean(r.forNewUserOnly),
+      badge: r.badge || undefined,
+      minTier: r.minTier || undefined,
+      expiryDate: r.expiryDate || undefined,
+      usageLimit: Number(r.usageLimit) || 100,
+      usedCount: Number(r.usedCount) || 0,
+      categoryExclusive: r.categoryExclusive || 'all',
+      isOneTimeUse: Boolean(r.isOneTimeUse),
+      isActive: r.isActive !== false && r.isActive !== 0,
+      couponType: r.couponType || 'food_discount',
+      createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : undefined,
+    };
+  }
+
+  return null;
+}
+
+export async function createCoupon(data: Coupon): Promise<Coupon> {
+  const cleanCode = data.code.trim().toUpperCase();
+
+  const pool = await getCloudPool();
+  if (!pool) {
+    throw new Error('Không thể kết nối cơ sở dữ liệu để tạo mã giảm giá');
+  }
+
+  const req = pool.request();
+  req.input('code', sql.NVarChar(50), cleanCode);
+  req.input('name', sql.NVarChar(255), data.name.trim());
+  req.input('desc', sql.NVarChar(500), data.description ? data.description.trim() : null);
+  req.input('discountType', sql.NVarChar(50), data.discountType || 'fixed');
+  req.input('discountValue', sql.Decimal(18, 0), Number(data.discountValue) || 0);
+  req.input('minOrderAmount', sql.Decimal(18, 0), Number(data.minOrderAmount) || 0);
+  req.input('maxDiscountAmount', sql.Decimal(18, 0), data.maxDiscountAmount ? Number(data.maxDiscountAmount) : null);
+  req.input('requiresVietQR', sql.Bit, data.requiresVietQR ? 1 : 0);
+  req.input('forNewUserOnly', sql.Bit, data.forNewUserOnly ? 1 : 0);
+  req.input('badge', sql.NVarChar(100), data.badge || null);
+  req.input('minTier', sql.NVarChar(50), data.minTier || null);
+  req.input('expiryDate', sql.NVarChar(50), data.expiryDate || null);
+  req.input('usageLimit', sql.Int, Number(data.usageLimit) || 100);
+  req.input('usedCount', sql.Int, Number(data.usedCount) || 0);
+  req.input('categoryExclusive', sql.NVarChar(50), data.categoryExclusive || 'all');
+  req.input('isOneTimeUse', sql.Bit, data.isOneTimeUse ? 1 : 0);
+  req.input('isActive', sql.Bit, data.isActive !== false ? 1 : 0);
+  req.input('couponType', sql.NVarChar(50), data.couponType || 'food_discount');
+
+  const res = await req.query(`
+    IF EXISTS (SELECT 1 FROM Coupons WHERE UPPER(code) = UPPER(@code))
+    BEGIN
+      UPDATE Coupons SET
+        name = @name,
+        description = @desc,
+        discountType = @discountType,
+        discountValue = @discountValue,
+        minOrderAmount = @minOrderAmount,
+        maxDiscountAmount = @maxDiscountAmount,
+        requiresVietQR = @requiresVietQR,
+        forNewUserOnly = @forNewUserOnly,
+        badge = @badge,
+        minTier = @minTier,
+        expiryDate = @expiryDate,
+        usageLimit = @usageLimit,
+        categoryExclusive = @categoryExclusive,
+        isOneTimeUse = @isOneTimeUse,
+        isActive = @isActive,
+        couponType = @couponType,
+        updatedAt = GETDATE()
+      OUTPUT INSERTED.id, INSERTED.code, INSERTED.name, INSERTED.description, INSERTED.discountType,
+             CAST(INSERTED.discountValue AS BIGINT) AS discountValue,
+             CAST(INSERTED.minOrderAmount AS BIGINT) AS minOrderAmount,
+             CAST(INSERTED.maxDiscountAmount AS BIGINT) AS maxDiscountAmount,
+             INSERTED.requiresVietQR, INSERTED.forNewUserOnly, INSERTED.badge, INSERTED.minTier,
+             INSERTED.expiryDate, INSERTED.usageLimit, INSERTED.usedCount, INSERTED.categoryExclusive,
+             INSERTED.isOneTimeUse, INSERTED.isActive, INSERTED.couponType, INSERTED.createdAt
+      WHERE UPPER(code) = UPPER(@code)
+    END
+    ELSE
+    BEGIN
+      INSERT INTO Coupons (code, name, description, discountType, discountValue, minOrderAmount, maxDiscountAmount, requiresVietQR, forNewUserOnly, badge, minTier, expiryDate, usageLimit, usedCount, categoryExclusive, isOneTimeUse, isActive, couponType)
+      OUTPUT INSERTED.id, INSERTED.code, INSERTED.name, INSERTED.description, INSERTED.discountType,
+             CAST(INSERTED.discountValue AS BIGINT) AS discountValue,
+             CAST(INSERTED.minOrderAmount AS BIGINT) AS minOrderAmount,
+             CAST(INSERTED.maxDiscountAmount AS BIGINT) AS maxDiscountAmount,
+             INSERTED.requiresVietQR, INSERTED.forNewUserOnly, INSERTED.badge, INSERTED.minTier,
+             INSERTED.expiryDate, INSERTED.usageLimit, INSERTED.usedCount, INSERTED.categoryExclusive,
+             INSERTED.isOneTimeUse, INSERTED.isActive, INSERTED.couponType, INSERTED.createdAt
+      VALUES (@code, @name, @desc, @discountType, @discountValue, @minOrderAmount, @maxDiscountAmount, @requiresVietQR, @forNewUserOnly, @badge, @minTier, @expiryDate, @usageLimit, @usedCount, @categoryExclusive, @isOneTimeUse, @isActive, @couponType)
+    END
+  `);
+
+  if (res.recordset && res.recordset[0]) {
+    const r = res.recordset[0];
+    return {
+      id: r.id,
+      code: r.code,
+      name: r.name,
+      description: r.description || '',
+      discountType: r.discountType === 'percentage' ? 'percentage' : 'fixed',
+      discountValue: Number(r.discountValue) || 0,
+      minOrderAmount: Number(r.minOrderAmount) || 0,
+      maxDiscountAmount: r.maxDiscountAmount != null ? Number(r.maxDiscountAmount) : undefined,
+      requiresVietQR: Boolean(r.requiresVietQR),
+      forNewUserOnly: Boolean(r.forNewUserOnly),
+      badge: r.badge || undefined,
+      minTier: r.minTier || undefined,
+      expiryDate: r.expiryDate || undefined,
+      usageLimit: Number(r.usageLimit) || 100,
+      usedCount: Number(r.usedCount) || 0,
+      categoryExclusive: r.categoryExclusive || 'all',
+      isOneTimeUse: Boolean(r.isOneTimeUse),
+      isActive: r.isActive !== false && r.isActive !== 0,
+      couponType: r.couponType || 'food_discount',
+      createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : undefined,
+    };
+  }
+
+  throw new Error('Không thể lưu mã giảm giá vào cơ sở dữ liệu');
+}
+
+export async function deleteCoupon(code: string): Promise<boolean> {
+  const clean = code.trim().toUpperCase();
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('code', sql.NVarChar(50), clean);
+      await req.query(`DELETE FROM Coupons WHERE UPPER(code) = UPPER(@code)`);
+      return true;
+    }
+  } catch (err) {
+    console.error('Error deleting coupon from database:', err);
+  }
+  return false;
+}
+
+export async function incrementCouponUsage(code: string): Promise<boolean> {
+  const clean = code.trim().toUpperCase();
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('code', sql.NVarChar(50), clean);
+      await req.query(`
+        UPDATE Coupons 
+        SET usedCount = ISNULL(usedCount, 0) + 1, updatedAt = GETDATE() 
+        WHERE UPPER(code) = UPPER(@code)
+      `);
+      return true;
+    }
+  } catch (err) {
+    console.error('Error incrementing coupon usage in database:', err);
+  }
+  return false;
 }
 

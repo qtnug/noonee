@@ -50,15 +50,22 @@ export default function AdminCouponsPage() {
   const [isOneTimeUse, setIsOneTimeUse] = useState(false);
   const [couponType, setCouponType] = useState<'food_discount' | 'freeship'>('food_discount');
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const fetchCoupons = async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch('/api/coupons');
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         setCoupons(data.data);
+      } else {
+        setLoadError(data.message || 'Không thể tải danh sách mã ưu đãi từ CSDL');
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      setLoadError(e.message || 'Lỗi kết nối máy chủ');
     } finally {
       setLoading(false);
     }
@@ -229,6 +236,24 @@ export default function AdminCouponsPage() {
           </button>
         </div>
       </div>
+
+      {loadError && (
+        <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-[8px] text-[13px] flex items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+            <div>
+              <p className="font-bold">Lỗi kết nối cơ sở dữ liệu:</p>
+              <p className="text-[12px]">{loadError}</p>
+            </div>
+          </div>
+          <button
+            onClick={fetchCoupons}
+            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-semibold text-[12px] rounded-[4px] shrink-0 transition cursor-pointer"
+          >
+            Thử lại
+          </button>
+        </div>
+      )}
 
       {/* Stats Summary Bar */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

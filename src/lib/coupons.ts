@@ -2,8 +2,8 @@ import { Coupon } from '@/types';
 import { formatVND } from './utils';
 import { MembershipTierName } from './membership';
 
-// In-memory store for custom coupons created by Admin
-let customCoupons: Coupon[] = [];
+// Coupons are strictly loaded and managed in database (MSSQL)
+export const AVAILABLE_COUPONS: Coupon[] = [];
 
 // Helper to generate non-guessable random coupon codes
 export function generateRandomCouponCode(prefix: string = 'NOONEE'): string {
@@ -14,149 +14,6 @@ export function generateRandomCouponCode(prefix: string = 'NOONEE'): string {
   }
   return `${prefix}_${rand}`;
 }
-
-export const AVAILABLE_COUPONS: Coupon[] = [
-  // ── LOẠI 1: FREESHIP (giảm phí giao hàng) ──────────────────────────────────
-  {
-    code: 'FREESHIP',
-    name: 'Miễn phí giao hàng (Freeship)',
-    description: 'Miễn toàn bộ phí giao hàng cho đơn từ 120.000 ₫.',
-    discountType: 'fixed',
-    discountValue: 0, // xử lý riêng: shippingFee = 0
-    minOrderAmount: 120000,
-    badge: 'Freeship',
-    expiryDate: '2026-12-31',
-    usageLimit: 500,
-    usedCount: 162,
-    couponType: 'freeship',
-  },
-  {
-    code: 'SHIP15K',
-    name: 'Giảm 15k phí giao hàng',
-    description: 'Hỗ trợ 15.000 ₫ phí vận chuyển cho đơn từ 80.000 ₫.',
-    discountType: 'fixed',
-    discountValue: 15000,
-    minOrderAmount: 80000,
-    badge: 'Giảm ship 15k',
-    expiryDate: '2026-12-31',
-    usageLimit: 300,
-    usedCount: 88,
-    couponType: 'freeship',
-  },
-
-  // ── LOẠI 2: GIẢM ĐỒ ĂN (food_discount) ────────────────────────────────────
-  {
-    code: 'VIETQR20',
-    name: 'Giảm 20% đơn đầu tiên bằng VietQR',
-    description: 'Ưu đãi đặc quyền cho khách hàng mới khi thanh toán quét mã VietQR.',
-    discountType: 'percentage',
-    discountValue: 20,
-    minOrderAmount: 0,
-    maxDiscountAmount: 40000,
-    requiresVietQR: true,
-    forNewUserOnly: true,
-    badge: 'Khách mới 20%',
-    expiryDate: '2026-12-31',
-    usageLimit: 1000,
-    usedCount: 84,
-    couponType: 'food_discount',
-  },
-  {
-    code: 'GIAM10K',
-    name: 'Tiết kiệm nhanh - Giảm 10k',
-    description: 'Giảm ngay 10.000 ₫ cho đơn hàng từ 50.000 ₫.',
-    discountType: 'fixed',
-    discountValue: 10000,
-    minOrderAmount: 50000,
-    badge: 'Giảm 10k',
-    expiryDate: '2026-12-31',
-    usageLimit: 500,
-    usedCount: 145,
-    couponType: 'food_discount',
-  },
-  {
-    code: 'GIAM20K',
-    name: 'Ăn ngon chuẩn vị - Giảm 20k',
-    description: 'Giảm ngay 20.000 ₫ cho đơn hàng từ 90.000 ₫.',
-    discountType: 'fixed',
-    discountValue: 20000,
-    minOrderAmount: 90000,
-    badge: 'Giảm 20k',
-    expiryDate: '2026-12-31',
-    usageLimit: 300,
-    usedCount: 112,
-    couponType: 'food_discount',
-  },
-  {
-    code: 'GIAM30K',
-    name: 'Ăn no thỏa thích - Giảm 30k',
-    description: 'Giảm ngay 30.000 ₫ cho đơn hàng từ 140.000 ₫.',
-    discountType: 'fixed',
-    discountValue: 30000,
-    minOrderAmount: 140000,
-    badge: 'Giảm 30k',
-    expiryDate: '2026-12-31',
-    usageLimit: 200,
-    usedCount: 83,
-    couponType: 'food_discount',
-  },
-  {
-    code: 'GIAM20P',
-    name: 'Ưu đãi tiệc ngon - Giảm 20%',
-    description: 'Giảm 20% tối đa 35.000 ₫ cho đơn từ 80.000 ₫.',
-    discountType: 'percentage',
-    discountValue: 20,
-    maxDiscountAmount: 35000,
-    minOrderAmount: 80000,
-    badge: 'Giảm 20%',
-    expiryDate: '2026-12-31',
-    usageLimit: 200,
-    usedCount: 88,
-    couponType: 'food_discount',
-  },
-  {
-    code: 'SILVER10',
-    name: 'Voucher Thành Viên Bạc - Giảm 10k',
-    description: 'Đặc quyền từ Hạng Bạc trở lên: Giảm 10.000 ₫ cho đơn từ 80.000 ₫.',
-    discountType: 'fixed',
-    discountValue: 10000,
-    minOrderAmount: 80000,
-    badge: 'Từ Hạng Bạc',
-    minTier: 'Silver',
-    expiryDate: '2026-12-31',
-    usageLimit: 9999,
-    usedCount: 19,
-    couponType: 'food_discount',
-  },
-  {
-    code: 'GOLD25',
-    name: 'Voucher Thành Viên Vàng - Giảm 25k',
-    description: 'Đặc quyền từ Hạng Vàng trở lên: Giảm 25.000 ₫ cho đơn từ 150.000 ₫.',
-    discountType: 'fixed',
-    discountValue: 25000,
-    minOrderAmount: 150000,
-    badge: 'Từ Hạng Vàng',
-    minTier: 'Gold',
-    expiryDate: '2026-12-31',
-    usageLimit: 9999,
-    usedCount: 8,
-    couponType: 'food_discount',
-  },
-  {
-    code: 'DIAMOND50',
-    name: 'Voucher VIP Kim Cương - Giảm 50k',
-    description: 'Đặc quyền Hạng Kim Cương: Giảm 50.000 ₫ cho đơn từ 200.000 ₫.',
-    discountType: 'fixed',
-    discountValue: 50000,
-    minOrderAmount: 200000,
-    badge: 'VIP Kim Cương',
-    minTier: 'Diamond',
-    expiryDate: '2026-12-31',
-    usageLimit: 9999,
-    usedCount: 3,
-    couponType: 'food_discount',
-  },
-];
 
 const TIER_RANK: Record<MembershipTierName, number> = {
   Bronze: 0,
@@ -172,45 +29,12 @@ const TIER_VI_NAME: Record<MembershipTierName, string> = {
   Diamond: 'Kim Cương',
 };
 
-// Functions to query & manage coupons
 export function getAllCoupons(): Coupon[] {
-  return [...AVAILABLE_COUPONS, ...customCoupons];
-}
-
-export function getFoodDiscountCoupons(): Coupon[] {
-  return getAllCoupons().filter(c => c.couponType === 'food_discount' || !c.couponType);
-}
-
-export function getFreeshippingCoupons(): Coupon[] {
-  return getAllCoupons().filter(c => c.couponType === 'freeship');
+  return [];
 }
 
 export function findCouponByCode(code: string): Coupon | undefined {
-  const clean = (code || '').trim().toUpperCase();
-  return getAllCoupons().find((c) => c.code.toUpperCase() === clean);
-}
-
-export function addCustomCoupon(coupon: Coupon): Coupon {
-  const existingIndex = customCoupons.findIndex(c => c.code.toUpperCase() === coupon.code.toUpperCase());
-  if (existingIndex >= 0) {
-    customCoupons[existingIndex] = coupon;
-  } else {
-    customCoupons.unshift(coupon);
-  }
-  return coupon;
-}
-
-export function deleteCustomCoupon(code: string): boolean {
-  const initialLen = customCoupons.length;
-  customCoupons = customCoupons.filter(c => c.code.toUpperCase() !== code.toUpperCase());
-  return customCoupons.length < initialLen;
-}
-
-export function incrementCouponUsage(code: string): void {
-  const coupon = findCouponByCode(code);
-  if (coupon) {
-    coupon.usedCount = (coupon.usedCount || 0) + 1;
-  }
+  return undefined;
 }
 
 export interface ValidateCouponResult {
@@ -226,14 +50,17 @@ export function validateCoupon(
   paymentMethod: 'Sepay' | 'COD' | string,
   isNewUser: boolean,
   userTier?: MembershipTierName | null,
-  cartItems?: { categoryId?: number; isFeatured?: boolean; name?: string; [key: string]: any }[]
+  cartItems?: { categoryId?: number; isFeatured?: boolean; name?: string; [key: string]: any }[],
+  couponsList?: Coupon[]
 ): ValidateCouponResult {
   const code = (inputCode || '').trim().toUpperCase();
   if (!code) {
     return { valid: false, message: 'Vui lòng nhập mã giảm giá', discountAmount: 0 };
   }
 
-  const coupon = findCouponByCode(code);
+  const coupon = couponsList && couponsList.length > 0
+    ? couponsList.find((c) => c.code.toUpperCase() === code)
+    : findCouponByCode(code);
   if (!coupon) {
     return {
       valid: false,

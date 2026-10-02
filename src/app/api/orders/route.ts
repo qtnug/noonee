@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOrders, createOrder, getProducts, hasUserPaidFirstVietqr, getUserSpendingStats, getGroupOrderByCode, completeGroupOrder } from '@/lib/db';
+import { getOrders, createOrder, getProducts, hasUserPaidFirstVietqr, getUserSpendingStats, getGroupOrderByCode, completeGroupOrder, getCouponByCode, incrementCouponUsage } from '@/lib/db';
 import { generateOrderCode } from '@/lib/utils';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { requireAuth, requireAdmin, authenticateRequest, AuthError } from '@/lib/auth';
-import { validateCoupon, incrementCouponUsage } from '@/lib/coupons';
+import { validateCoupon } from '@/lib/coupons';
 import { getMembershipTier } from '@/lib/membership';
 import { calculateGroupDiscount } from '@/lib/groupOrder';
 
@@ -174,17 +174,39 @@ export async function POST(request: NextRequest) {
     let validCouponCode: string | null = null;
 
     if (couponCode) {
-      const [isFirstPaid, spendingStats] = await Promise.all([
-        hasUserPaidFirstVietqr(userId),
-        getUserSpendingStats(userId),
-      ]);
+      let isFirstPaid = false;
+      let spendingStats = { totalSpent: 0, orderCount: 0 };
+      let dbCoupon = null;
+
+      try {
+        const [p1, p2, p3] = await Promise.all([
+          hasUserPaidFirstVietqr(userId),
+          getUserSpendingStats(userId),
+          getCouponByCode(couponCode),
+        ]);
+        isFirstPaid = p1;
+        spendingStats = p2;
+        dbCoupon = p3;
+      } catch (err: any) {
+        console.error('Error fetching coupon or user stats for order creation:', err);
+      }
+
       const userTier = getMembershipTier(spendingStats.totalSpent).tier;
       const isNewUser = !isFirstPaid;
-      const validation = validateCoupon(couponCode, subtotal, paymentMethod || 'Sepay', isNewUser, userTier, items);
+      const validation = validateCoupon(couponCode, subtotal, paymentMethod || 'Sepay', isNewUser, userTier, items, dbCoupon ? [dbCoupon] : []);
       if (validation.valid) {
         discountAmount = validation.discountAmount;
         validCouponCode = validation.coupon ? validation.coupon.code : String(couponCode).toUpperCase();
-        incrementCouponUsage(validCouponCode);
+        try {
+          await incrementCouponUsage(validCouponCode);
+        } catch (e) {
+          console.warn('Failed to increment coupon usage in DB:', e);
+        }
+      } else {
+        return NextResponse.json(
+          { success: false, message: `Mã giảm giá "${couponCode}" không hợp lệ: ${validation.message || 'Không đủ điều kiện'}` },
+          { status: 400 }
+        );
       }
     }
 
@@ -192,17 +214,39 @@ export async function POST(request: NextRequest) {
     let validFreeshipCode: string | null = null;
     let freeshipDiscount = 0;
     if (freeshipCouponCode) {
-      const [isFirstPaid2, spendingStats2] = await Promise.all([
-        hasUserPaidFirstVietqr(userId),
-        getUserSpendingStats(userId),
-      ]);
+      let isFirstPaid2 = false;
+      let spendingStats2 = { totalSpent: 0, orderCount: 0 };
+      let dbFreeship = null;
+
+      try {
+        const [p1, p2, p3] = await Promise.all([
+          hasUserPaidFirstVietqr(userId),
+          getUserSpendingStats(userId),
+          getCouponByCode(freeshipCouponCode),
+        ]);
+        isFirstPaid2 = p1;
+        spendingStats2 = p2;
+        dbFreeship = p3;
+      } catch (err: any) {
+        console.error('Error fetching freeship coupon for order creation:', err);
+      }
+
       const userTier2 = getMembershipTier(spendingStats2.totalSpent).tier;
       const isNewUser2 = !isFirstPaid2;
-      const freeshipValidation = validateCoupon(freeshipCouponCode, subtotal, paymentMethod || 'Sepay', isNewUser2, userTier2, items);
+      const freeshipValidation = validateCoupon(freeshipCouponCode, subtotal, paymentMethod || 'Sepay', isNewUser2, userTier2, items, dbFreeship ? [dbFreeship] : []);
       if (freeshipValidation.valid && freeshipValidation.coupon?.couponType === 'freeship') {
         validFreeshipCode = freeshipValidation.coupon.code;
         freeshipDiscount = freeshipValidation.discountAmount;
-        incrementCouponUsage(validFreeshipCode);
+        try {
+          await incrementCouponUsage(validFreeshipCode);
+        } catch (e) {
+          console.warn('Failed to increment freeship coupon usage in DB:', e);
+        }
+      } else {
+        return NextResponse.json(
+          { success: false, message: `Mã freeship "${freeshipCouponCode}" không hợp lệ: ${freeshipValidation.message || 'Không đủ điều kiện'}` },
+          { status: 400 }
+        );
       }
     }
 
