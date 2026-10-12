@@ -23,69 +23,7 @@ export function getAvailableToppings(product: Product): ProductTopping[] {
   if (product.toppings && Array.isArray(product.toppings) && product.toppings.length > 0) {
     return product.toppings;
   }
-
-  const catName = (product.categoryName || '').toLowerCase();
-  const prodName = product.name.toLowerCase();
-
-  // 1. Cơm & Bún Phở
-  if (
-    product.categoryId === 1 ||
-    catName.includes('cơm') ||
-    catName.includes('bún') ||
-    catName.includes('phở') ||
-    prodName.includes('cơm') ||
-    prodName.includes('phở') ||
-    prodName.includes('bún')
-  ) {
-    return [
-      { id: 'top_egg', name: 'Trứng ốp la lòng đào', price: 10000 },
-      { id: 'top_cha', name: 'Thêm chả lụa / Chả bì', price: 12000 },
-      { id: 'top_meat', name: 'Thêm thịt / Nạm gầu / Sườn', price: 20000 },
-      { id: 'top_quay', name: 'Quẩy giòn ăn kèm', price: 5000 },
-    ];
-  }
-
-  // 2. Đồ ăn nhanh & Món nhẹ
-  if (
-    product.categoryId === 2 ||
-    catName.includes('nhanh') ||
-    catName.includes('nhẹ') ||
-    prodName.includes('bánh mì') ||
-    prodName.includes('nem') ||
-    prodName.includes('gà')
-  ) {
-    return [
-      { id: 'top_cheese', name: 'Thêm phô mai kéo sợi', price: 10000 },
-      { id: 'top_pate', name: 'Thêm pate gan béo ngậy', price: 10000 },
-      { id: 'top_sausage', name: 'Thêm xúc xích nướng', price: 12000 },
-      { id: 'top_spicy_sauce', name: 'Sốt cay đặc biệt quán', price: 5000 },
-    ];
-  }
-
-  // 3. Đồ uống & Tráng miệng
-  if (
-    product.categoryId === 3 ||
-    catName.includes('uống') ||
-    catName.includes('trà') ||
-    catName.includes('cà phê') ||
-    prodName.includes('trà') ||
-    prodName.includes('cà phê')
-  ) {
-    return [
-      { id: 'top_pearl', name: 'Trân châu đường đen', price: 8000 },
-      { id: 'top_peach', name: 'Thạch đào giòn sần sật', price: 8000 },
-      { id: 'top_cream', name: 'Kem muối béo ngậy', price: 10000 },
-      { id: 'top_less_sugar', name: 'Ít ngọt (50% đường)', price: 0 },
-      { id: 'top_less_ice', name: 'Ít đá (50% đá)', price: 0 },
-    ];
-  }
-
-  // 4. Default / Món đặc biệt
-  return [
-    { id: 'top_large', name: 'Nâng cấp suất lớn (Thêm 30% món)', price: 15000 },
-    { id: 'top_egg_gen', name: 'Trứng ốp la lòng đào', price: 10000 },
-    { id: 'top_sauce_gen', name: 'Nước sốt đặc biệt ăn kèm', price: 5000 },
-  ];
+  return [];
 }
 
 interface ProductOptionsModalProps {
@@ -244,64 +182,66 @@ export default function ProductOptionsModal({
         {/* Modal Body: Options & Notes (Scrollable) */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
           {/* 1. Toppings Selector */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-[13px] font-semibold text-[#181d26] flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-[#A30029]" />
-                <span>Tùy chọn món thêm / Topping:</span>
-              </h4>
-              <span className="text-[11px] text-[#9297a0]">Tùy chọn không bắt buộc</span>
-            </div>
+          {availableToppings.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-[13px] font-semibold text-[#181d26] flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-[#A30029]" />
+                  <span>Tùy chọn món thêm / Topping:</span>
+                </h4>
+                <span className="text-[11px] text-[#9297a0]">Tùy chọn không bắt buộc</span>
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {availableToppings.map((top) => {
-                const isSelected = selectedToppings.some((t) => t.id === top.id);
-                return (
-                  <button
-                    key={top.id}
-                    type="button"
-                    onClick={() => toggleTopping(top)}
-                    className={`flex items-center justify-between p-2.5 rounded-[8px] border text-left transition cursor-pointer text-[13px] ${
-                      isSelected
-                        ? 'bg-[#fff1f2]/30 border-[#A30029] text-[#181d26] shadow-2xs'
-                        : 'bg-white border-[#dddddd] text-[#41454d] hover:border-[#fecdd3]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 min-w-0 pr-1">
-                      {isSelected ? (
-                        <CheckSquare className="w-4 h-4 text-[#A30029] shrink-0" />
-                      ) : (
-                        <Square className="w-4 h-4 text-gray-300 shrink-0" />
-                      )}
-                      <span className={`truncate ${isSelected ? 'font-semibold text-[#181d26]' : 'font-normal'}`}>
-                        {top.name}
-                      </span>
-                    </div>
-                    <span
-                      className={`text-[12px] font-semibold shrink-0 ${
-                        top.price > 0
-                          ? isSelected
-                            ? 'text-[#A30029]'
-                            : 'text-[#41454d]'
-                          : 'text-[#16a34a]'
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {availableToppings.map((top) => {
+                  const isSelected = selectedToppings.some((t) => t.id === top.id);
+                  return (
+                    <button
+                      key={top.id}
+                      type="button"
+                      onClick={() => toggleTopping(top)}
+                      className={`flex items-center justify-between p-2.5 rounded-[8px] border text-left transition cursor-pointer text-[13px] ${
+                        isSelected
+                          ? 'bg-[#fff1f2]/30 border-[#A30029] text-[#181d26] shadow-2xs'
+                          : 'bg-white border-[#dddddd] text-[#41454d] hover:border-[#fecdd3]'
                       }`}
                     >
-                      {top.price > 0 ? `+${formatVND(top.price)}` : 'Miễn phí'}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {selectedToppings.length > 0 && (
-              <div className="flex items-center justify-between pt-2 text-[12px] text-[#41454d] bg-[#f8fafc] px-3 py-1.5 rounded-[6px] border border-[#dddddd]">
-                <span>Đã chọn {selectedToppings.length} topping:</span>
-                <span className="font-bold text-[#A30029]">
-                  +{formatVND(toppingsTotal)} / phần
-                </span>
+                      <div className="flex items-center gap-2 min-w-0 pr-1">
+                        {isSelected ? (
+                          <CheckSquare className="w-4 h-4 text-[#A30029] shrink-0" />
+                        ) : (
+                          <Square className="w-4 h-4 text-gray-300 shrink-0" />
+                        )}
+                        <span className={`truncate ${isSelected ? 'font-semibold text-[#181d26]' : 'font-normal'}`}>
+                          {top.name}
+                        </span>
+                      </div>
+                      <span
+                        className={`text-[12px] font-semibold shrink-0 ${
+                          top.price > 0
+                            ? isSelected
+                              ? 'text-[#A30029]'
+                              : 'text-[#41454d]'
+                            : 'text-[#16a34a]'
+                        }`}
+                      >
+                        {top.price > 0 ? `+${formatVND(top.price)}` : 'Miễn phí'}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-            )}
-          </div>
+
+              {selectedToppings.length > 0 && (
+                <div className="flex items-center justify-between pt-2 text-[12px] text-[#41454d] bg-[#f8fafc] px-3 py-1.5 rounded-[6px] border border-[#dddddd]">
+                  <span>Đã chọn {selectedToppings.length} topping:</span>
+                  <span className="font-bold text-[#A30029]">
+                    +{formatVND(toppingsTotal)} / phần
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 2. Item Culinary Note */}
           <div className="space-y-2 pt-3 border-t border-[#dddddd]">
