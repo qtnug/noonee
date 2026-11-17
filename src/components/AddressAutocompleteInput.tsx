@@ -19,6 +19,7 @@ interface Props {
   required?: boolean;
   disabled?: boolean;
   autoCalculate?: boolean;
+  branchId?: number;
 }
 
 export default function AddressAutocompleteInput({
@@ -30,6 +31,7 @@ export default function AddressAutocompleteInput({
   required = false,
   disabled = false,
   autoCalculate,
+  branchId,
 }: Props) {
   const [inputValue, setInputValue] = useState(value || '');
   const [predictions, setPredictions] = useState<GoongPrediction[]>([]);
@@ -61,7 +63,7 @@ export default function AddressAutocompleteInput({
       const res = await fetch('/api/goong/distance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
+        body: JSON.stringify({ ...params, branchId }),
       });
       const data = await res.json();
       if (data.success && data.data) {
@@ -98,13 +100,12 @@ export default function AddressAutocompleteInput({
     if (
       shouldAutoCalc &&
       trimmed.length >= 3 &&
-      trimmed !== lastCalculatedAddrRef.current &&
       !isUserTypingRef.current
     ) {
       lastCalculatedAddrRef.current = trimmed;
       calculateDistance({ address: trimmed });
     }
-  }, [value, autoCalculate, onDistanceCalculated]);
+  }, [value, autoCalculate, onDistanceCalculated, branchId]);
 
   // Handle click outside to close dropdown & cleanup timers on unmount
   useEffect(() => {

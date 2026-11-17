@@ -4,7 +4,7 @@ import { updateOrderStatus, getOrderByCode } from '@/lib/db';
 export async function POST(request: NextRequest) {
   try {
     // Allow payment simulation unless explicitly disabled
-    if (process.env.DISABLE_PAYMENT_SIMULATION === 'true') {
+    if (process.env.NODE_ENV !== 'development' || process.env.DISABLE_PAYMENT_SIMULATION === 'true') {
       return NextResponse.json(
         { success: false, message: 'Chức năng giả lập thanh toán đã bị vô hiệu hóa' },
         { status: 403 }
@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Không thể thanh toán cho đơn hàng đã bị hủy' }, { status: 400 });
     }
 
-    await updateOrderStatus(orderCode, 'Pending', 'Paid');
+    const updated = await updateOrderStatus(orderCode, 'Pending', 'Paid');
+    if (!updated) return NextResponse.json({ success: false, message: 'Không cập nhật được thanh toán' }, { status: 500 });
 
     return NextResponse.json({
       success: true,

@@ -12,10 +12,13 @@ export async function GET(
   { params }: { params: { code: string } }
 ) {
   try {
+    const authUser = authenticateRequest(request);
+    if (!authUser) return NextResponse.json({ success: false, message: 'Vui lòng đăng nhập' }, { status: 401 });
     const order = await getOrderByCode(params.code);
     if (!order) {
       return NextResponse.json({ success: false, message: 'Không tìm thấy đơn hàng' }, { status: 404 });
     }
+    if (authUser.role !== 'admin' && order.userId !== authUser.userId) return NextResponse.json({ success: false, message: 'Không có quyền xem đơn hàng' }, { status: 403 });
     return NextResponse.json({ success: true, data: order });
   } catch (error: any) {
     console.error('Error fetching order by code:', error);
@@ -36,12 +39,13 @@ export async function PATCH(
     if (!existingOrder) {
       return NextResponse.json({ success: false, message: 'Không tìm thấy đơn hàng' }, { status: 404 });
     }
+    if (!authUser) return NextResponse.json({ success: false, message: 'Vui lòng đăng nhập' }, { status: 401 });
 
     // Cancellation request
     if (status === 'Cancelled' || action === 'cancel') {
       // If user is authenticated, check ownership (or admin)
       if (authUser) {
-        if (authUser.role !== 'admin' && existingOrder.userId && existingOrder.userId !== authUser.userId) {
+        if (authUser.role !== 'admin' && existingOrder.userId !== authUser.userId) {
           return NextResponse.json({ success: false, message: 'Bạn không có quyền hủy đơn hàng này' }, { status: 403 });
         }
       }

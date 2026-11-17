@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateGroupMemberItem, getProducts } from '@/lib/db';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
+import { authenticateRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,12 @@ export async function POST(
 
     const body = await request.json();
     const { memberId, action, item, requesterMemberId } = body;
+    const authUser = authenticateRequest(request);
+    if (!authUser) return NextResponse.json({ success: false, message: 'Vui lòng đăng nhập' }, { status: 401 });
+    const { getGroupOrderByCode } = await import('@/lib/db');
+    const group = await getGroupOrderByCode(code);
+    const requester = group?.members.find(m => m.userId === authUser.userId);
+    if (!requester || (requesterMemberId && requesterMemberId !== requester.id)) return NextResponse.json({ success: false, message: 'Không có quyền sửa đơn nhóm' }, { status: 403 });
 
     if (!memberId) {
       return NextResponse.json(
@@ -75,7 +82,7 @@ export async function POST(
       item.productName = genuineProd.name;
     }
 
-    const result = await updateGroupMemberItem(code, memberId, action, item || {}, requesterMemberId || memberId);
+    const result = await updateGroupMemberItem(code, memberId, action, item || {}, requester.id);
     if (!result.success) {
       return NextResponse.json(
         { success: false, message: result.message },

@@ -26,6 +26,21 @@ export interface ProductTopping {
   price: number;
 }
 
+export interface Branch {
+  id: number;
+  code: string;
+  name: string;
+  shortName: string;
+  address: string;
+  district: string;
+  city: string;
+  lat: number;
+  lng: number;
+  phone: string;
+  openHours: string;
+  isDefault?: boolean;
+}
+
 export interface Product {
   id: number;
   categoryId: number;
@@ -40,6 +55,7 @@ export interface Product {
   rating: number;
   prepTime?: number;
   toppings?: ProductTopping[];
+  branchId?: number | null; // null = all branches, 1 = CS1 (120 Yên Lãng), 2 = CS2 (269 Cầu Giấy)
   createdAt?: string;
 }
 
@@ -88,6 +104,8 @@ export interface Order {
   cancelReason?: string | null;
   walletAmountUsed?: number;
   refundStatus?: 'None' | 'Refunded';
+  branchId?: number;
+  branchName?: string;
   createdAt: string;
   updatedAt: string;
   items?: OrderItem[];

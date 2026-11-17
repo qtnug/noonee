@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const orderCode = searchParams.get('orderCode') || undefined;
     
     const authUser = authenticateRequest(request);
-    const userId = authUser ? authUser.userId : (userIdParam ? parseInt(userIdParam) : undefined);
+    const userId = authUser?.userId;
 
     if (!productId) {
       return NextResponse.json({ success: false, message: 'Thiếu productId' }, { status: 400 });
@@ -29,9 +29,9 @@ export async function GET(request: NextRequest) {
     let userReview = null;
     let hasOrdered = false;
 
-    if (userId || orderCode) {
-      hasOrdered = await hasUserOrderedProduct(prodId, userId, orderCode);
-      userReview = await getUserReview(prodId, userId, orderCode);
+    if (userId) {
+      hasOrdered = await hasUserOrderedProduct(prodId, userId);
+      userReview = await getUserReview(prodId, userId);
     }
 
     return NextResponse.json({

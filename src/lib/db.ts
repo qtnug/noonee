@@ -127,6 +127,15 @@ async function ensureSchemaColumns(pool: any) {
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'shippingFee')
         ALTER TABLE Orders ADD shippingFee DECIMAL(18, 0) DEFAULT 0;
 
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'branchId')
+        ALTER TABLE Products ADD branchId INT NULL;
+
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'branchId')
+        ALTER TABLE Orders ADD branchId INT DEFAULT 1;
+
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'branchName')
+        ALTER TABLE Orders ADD branchName NVARCHAR(150) DEFAULT N'NooNee - Cơ sở 120 Yên Lãng';
+
       IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'GroupOrders')
       BEGIN
         CREATE TABLE GroupOrders (
@@ -528,7 +537,7 @@ export async function getAllProductsCached(): Promise<Product[]> {
       const query = `
         SELECT p.id, p.categoryId, c.name AS categoryName, p.name, p.slug, p.description, 
                CAST(p.price AS INT) AS price, p.image, p.isAvailable, p.isFeatured, 
-               CAST(p.rating AS FLOAT) AS rating, ISNULL(p.prepTime, 15) AS prepTime, p.toppings, p.createdAt 
+               CAST(p.rating AS FLOAT) AS rating, ISNULL(p.prepTime, 15) AS prepTime, p.toppings, p.branchId, p.createdAt 
         FROM Products p WITH (NOLOCK)
         LEFT JOIN Categories c WITH (NOLOCK) ON p.categoryId = c.id
         ORDER BY p.isFeatured DESC, p.id ASC
@@ -538,6 +547,7 @@ export async function getAllProductsCached(): Promise<Product[]> {
         const mapped = result.recordset.map((r: any) => ({
           ...r,
           prepTime: r.prepTime || 15,
+          branchId: r.branchId !== undefined && r.branchId !== null ? Number(r.branchId) : null,
           toppings: parseToppingsField(r.toppings),
           isAvailable: Boolean(r.isAvailable),
           isFeatured: Boolean(r.isFeatured),
@@ -554,9 +564,22 @@ export async function getAllProductsCached(): Promise<Product[]> {
   return inMemoryProducts;
 }
 
-export async function getProducts(options?: { categoryId?: number; search?: string; isFeatured?: boolean; page?: number; limit?: number }): Promise<Product[]> {
+export async function getProducts(options?: {
+  categoryId?: number;
+  search?: string;
+  isFeatured?: boolean;
+  branchId?: number | 'all' | null;
+  page?: number;
+  limit?: number;
+}): Promise<Product[]> {
   const allProducts = await getAllProductsCached();
   let result = [...allProducts];
+
+  // Branch filter: if a specific branchId (1 or 2) is chosen, include dishes available for that branch + dishes for all branches (branchId === null)
+  if (options?.branchId && options.branchId !== 'all') {
+    const bId = Number(options.branchId);
+    result = result.filter(p => p.branchId === null || p.branchId === undefined || p.branchId === bId);
+  }
 
   if (options?.categoryId) {
     result = result.filter(p => p.categoryId === options.categoryId);
@@ -583,7 +606,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       const res = await req.query(`
         SELECT p.id, p.categoryId, c.name AS categoryName, p.name, p.slug, p.description, 
                CAST(p.price AS INT) AS price, p.image, p.isAvailable, p.isFeatured, 
-               CAST(p.rating AS FLOAT) AS rating, ISNULL(p.prepTime, 15) AS prepTime, p.toppings, p.createdAt 
+               CAST(p.rating AS FLOAT) AS rating, ISNULL(p.prepTime, 15) AS prepTime, p.toppings, p.branchId, p.createdAt 
         FROM Products p 
         LEFT JOIN Categories c ON p.categoryId = c.id
         WHERE p.slug = @slug
@@ -594,6 +617,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
         return {
           ...row,
           prepTime: row.prepTime || 15,
+          branchId: row.branchId !== undefined && row.branchId !== null ? Number(row.branchId) : null,
           toppings: parsedToppings,
           isAvailable: Boolean(row.isAvailable),
           isFeatured: Boolean(row.isFeatured),
@@ -633,18 +657,20 @@ export async function createProduct(data: Omit<Product, 'id'>): Promise<Product>
       const topStr = data.toppings ? (typeof data.toppings === 'string' ? data.toppings : JSON.stringify(data.toppings)) : null;
       req.input('toppings', sql.NVarChar(sql.MAX), topStr);
       req.input('prepTime', sql.Int, data.prepTime ? Number(data.prepTime) : 15);
+      req.input('branchId', sql.Int, data.branchId ? Number(data.branchId) : null);
 
       const res = await req.query(`
-        INSERT INTO Products (categoryId, name, slug, description, price, image, isAvailable, isFeatured, rating, toppings, prepTime)
+        INSERT INTO Products (categoryId, name, slug, description, price, image, isAvailable, isFeatured, rating, toppings, prepTime, branchId)
         OUTPUT INSERTED.id, INSERTED.categoryId, INSERTED.name, INSERTED.slug, INSERTED.description, 
                CAST(INSERTED.price AS INT) AS price, INSERTED.image, INSERTED.isAvailable, INSERTED.isFeatured, 
-               CAST(INSERTED.rating AS FLOAT) AS rating, ISNULL(INSERTED.prepTime, 15) AS prepTime, INSERTED.toppings, INSERTED.createdAt
-        VALUES (@catId, @name, @slug, @desc, @price, @img, @avail, @feat, @rat, @toppings, @prepTime)
+               CAST(INSERTED.rating AS FLOAT) AS rating, ISNULL(INSERTED.prepTime, 15) AS prepTime, INSERTED.toppings, INSERTED.branchId, INSERTED.createdAt
+        VALUES (@catId, @name, @slug, @desc, @price, @img, @avail, @feat, @rat, @toppings, @prepTime, @branchId)
       `);
       if (res.recordset && res.recordset[0]) {
         return {
           ...res.recordset[0],
           prepTime: res.recordset[0].prepTime || 15,
+          branchId: res.recordset[0].branchId !== undefined && res.recordset[0].branchId !== null ? Number(res.recordset[0].branchId) : null,
           toppings: data.toppings || [],
           isAvailable: Boolean(res.recordset[0].isAvailable),
           isFeatured: Boolean(res.recordset[0].isFeatured),
@@ -700,6 +726,10 @@ export async function updateProduct(id: number, data: Partial<Product>): Promise
         req.input('prepTime', sql.Int, Number(data.prepTime));
         setClauses.push('prepTime = @prepTime');
       }
+      if (data.branchId !== undefined) {
+        req.input('branchId', sql.Int, data.branchId ? Number(data.branchId) : null);
+        setClauses.push('branchId = @branchId');
+      }
       if (data.toppings !== undefined) {
         const topStr = typeof data.toppings === 'string' ? data.toppings : JSON.stringify(data.toppings);
         req.input('toppings', sql.NVarChar(sql.MAX), topStr);
@@ -748,10 +778,13 @@ export async function createOrder(data: {
   shippingFee?: number;
   discountAmount?: number;
   couponCode?: string | null;
+  freeshipCouponCode?: string | null;
   groupCode?: string | null;
   paymentMethod?: 'Sepay' | 'COD' | 'Wallet';
   paymentStatus?: 'Unpaid' | 'Paid';
   walletAmountUsed?: number;
+  branchId?: number;
+  branchName?: string;
   items: {
     productId: number;
     productName: string;
@@ -761,6 +794,9 @@ export async function createOrder(data: {
     note?: string | null;
   }[];
 }): Promise<Order> {
+  const chosenBranchId = data.branchId ? Number(data.branchId) : 1;
+  const chosenBranchName = data.branchName || (chosenBranchId === 2 ? 'NooNee - Cơ sở 269 Cầu Giấy' : 'NooNee - Cơ sở 120 Yên Lãng');
+
   const newOrder: Order = {
     id: inMemoryOrders.length + 1,
     orderCode: data.orderCode,
@@ -780,6 +816,8 @@ export async function createOrder(data: {
     walletAmountUsed: data.walletAmountUsed || 0,
     refundStatus: 'None',
     cancelReason: null,
+    branchId: chosenBranchId,
+    branchName: chosenBranchName,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     items: data.items.map(item => ({
@@ -787,7 +825,6 @@ export async function createOrder(data: {
       total: item.price * item.quantity
     }))
   };
-  inMemoryOrders.unshift(newOrder);
 
   // 1. Insert into Cloud SQL Server
   try {
@@ -825,12 +862,37 @@ export async function createOrder(data: {
         req.input('method', sql.NVarChar(50), data.paymentMethod || 'Sepay');
         req.input('payStatus', sql.NVarChar(50), data.paymentStatus || 'Unpaid');
         req.input('walletAmount', sql.Decimal(18, 0), data.walletAmountUsed || 0);
+        req.input('branchId', sql.Int, chosenBranchId);
+        req.input('branchName', sql.NVarChar(150), chosenBranchName);
 
         const orderRes = await req.query(`
-          INSERT INTO Orders (orderCode, userId, customerName, customerPhone, deliveryAddress, notes, totalAmount, shippingFee, discountAmount, couponCode, groupCode, status, paymentMethod, paymentStatus, walletAmountUsed)
+          INSERT INTO Orders (orderCode, userId, customerName, customerPhone, deliveryAddress, notes, totalAmount, shippingFee, discountAmount, couponCode, groupCode, status, paymentMethod, paymentStatus, walletAmountUsed, branchId, branchName)
           OUTPUT INSERTED.id
-          VALUES (@code, @userId, @name, @phone, @address, @notes, @amount, @shippingFee, @discount, @coupon, @groupCode, 'Pending', @method, @payStatus, @walletAmount)
+          VALUES (@code, @userId, @name, @phone, @address, @notes, @amount, @shippingFee, @discount, @coupon, @groupCode, 'Pending', @method, @payStatus, @walletAmount, @branchId, @branchName)
         `);
+
+        if (data.groupCode) {
+          const groupReq = new sql.Request(transaction);
+          groupReq.input('groupCode', sql.NVarChar(50), data.groupCode);
+          groupReq.input('orderCode', sql.NVarChar(50), data.orderCode);
+          const groupRes = await groupReq.query(`
+            UPDATE GroupOrders SET status = 'completed', orderCode = @orderCode, updatedAt = GETDATE()
+            WHERE code = @groupCode AND status = 'locked' AND orderCode IS NULL
+          `);
+          if ((groupRes.rowsAffected?.[0] || 0) !== 1) throw new Error('Group order is not available for checkout');
+        }
+
+        for (const couponCode of Array.from(new Set([data.couponCode, data.freeshipCouponCode].filter((code): code is string => Boolean(code))))) {
+          const couponReq = new sql.Request(transaction);
+          couponReq.input('couponCode', sql.NVarChar(50), couponCode);
+          const couponRes = await couponReq.query(`
+            UPDATE Coupons SET usedCount = ISNULL(usedCount, 0) + 1, updatedAt = GETDATE()
+            WHERE UPPER(code) = UPPER(@couponCode)
+              AND (usageLimit IS NULL OR ISNULL(usedCount, 0) < usageLimit)
+              AND (isActive = 1 OR isActive IS NULL)
+          `);
+          if ((couponRes.rowsAffected?.[0] || 0) !== 1) throw new Error('Coupon usage limit reached or coupon unavailable');
+        }
 
         const orderId = orderRes.recordset[0]?.id;
         if (orderId) {
@@ -853,6 +915,7 @@ export async function createOrder(data: {
           }
         }
         await transaction.commit();
+        inMemoryOrders.unshift(newOrder);
         
         // Update in-memory user wallet if needed
         if (data.walletAmountUsed && data.walletAmountUsed > 0 && data.userId) {
@@ -865,12 +928,15 @@ export async function createOrder(data: {
       } catch (err) {
         await transaction.rollback();
         console.error('Error inserting order in cloud, transaction rolled back:', err);
+        throw err;
       }
     }
   } catch (err) {
     console.error('Error inserting order in cloud:', err);
+    throw err;
   }
-
+  if (process.env.NODE_ENV === 'production') throw new Error('Database unavailable for order creation');
+  inMemoryOrders.unshift(newOrder);
   return newOrder;
 }
 
@@ -890,6 +956,8 @@ export async function getOrderByCode(code: string): Promise<Order | null> {
                o.cancelReason, CAST(ISNULL(o.walletAmountUsed, 0) AS BIGINT) AS walletAmountUsed,
                ISNULL(o.refundStatus, 'None') AS refundStatus,
                o.groupCode,
+               ISNULL(o.branchId, 1) AS branchId,
+               ISNULL(o.branchName, N'NooNee - Cơ sở 120 Yên Lãng') AS branchName,
                o.createdAt, o.updatedAt
         FROM Orders o
         WHERE o.orderCode = @code
@@ -907,16 +975,24 @@ export async function getOrderByCode(code: string): Promise<Order | null> {
         order.items = itemsRes.recordset || [];
         return order;
       }
+      return null;
     }
   } catch (err) {
     console.error('Error fetching order from cloud:', err);
+    if (process.env.NODE_ENV === 'production') throw err;
   }
-
-
+  if (process.env.NODE_ENV === 'production') throw new Error('Database unavailable for order lookup');
   return inMemoryOrders.find(o => o.orderCode === cleanCode) || null;
 }
 
-export async function getOrders(filter?: { status?: string; search?: string; userId?: number; page?: number; limit?: number }): Promise<Order[]> {
+export async function getOrders(filter?: {
+  status?: string;
+  search?: string;
+  userId?: number;
+  branchId?: number | 'all';
+  page?: number;
+  limit?: number;
+}): Promise<Order[]> {
   const cleanSearch = (filter?.search || '').trim().replace(/^#+/, '');
   try {
     const pool = await getCloudPool();
@@ -930,6 +1006,8 @@ export async function getOrders(filter?: { status?: string; search?: string; use
                o.cancelReason, CAST(ISNULL(o.walletAmountUsed, 0) AS BIGINT) AS walletAmountUsed,
                ISNULL(o.refundStatus, 'None') AS refundStatus,
                o.groupCode,
+               ISNULL(o.branchId, 1) AS branchId,
+               ISNULL(o.branchName, N'NooNee - Cơ sở 120 Yên Lãng') AS branchName,
                o.createdAt, o.updatedAt
         FROM Orders o
         WHERE 1=1
@@ -949,6 +1027,14 @@ export async function getOrders(filter?: { status?: string; search?: string; use
         req.input('status', sql.NVarChar(50), filter.status);
         query += ` AND o.status = @status`;
       }
+      if (filter?.branchId && filter.branchId !== 'all') {
+        req.input('branchId', sql.Int, Number(filter.branchId));
+        if (Number(filter.branchId) === 1) {
+          query += ` AND (o.branchId = 1 OR o.branchId IS NULL)`;
+        } else {
+          query += ` AND o.branchId = @branchId`;
+        }
+      }
       if (cleanSearch) {
         req.input('search', sql.NVarChar(100), `%${cleanSearch}%`);
         query += ` AND (o.orderCode LIKE @search OR o.customerName LIKE @search OR o.customerPhone LIKE @search)`;
@@ -966,10 +1052,13 @@ export async function getOrders(filter?: { status?: string; search?: string; use
       if (result.recordset) {
         return result.recordset;
       }
+      return [];
     }
   } catch (err) {
     console.error('Error fetching orders from cloud:', err);
+    if (process.env.NODE_ENV === 'production') throw err;
   }
+  if (process.env.NODE_ENV === 'production') throw new Error('Database unavailable for orders listing');
 
   let res = [...inMemoryOrders];
   if (filter?.userId) {
@@ -1028,12 +1117,14 @@ export async function updateOrderStatus(
 ): Promise<boolean> {
   const cleanCode = orderCode.trim().replace(/^#+/, '');
   const o = inMemoryOrders.find(ord => ord.orderCode === cleanCode);
-  if (o) {
-    o.status = status as any;
-    if (paymentStatus) o.paymentStatus = paymentStatus as any;
-    if (cancelReason !== undefined) o.cancelReason = cancelReason;
-    o.updatedAt = new Date().toISOString();
-  }
+  const updateLocal = () => {
+    if (o) {
+      o.status = status as any;
+      if (paymentStatus) o.paymentStatus = paymentStatus as any;
+      if (cancelReason !== undefined) o.cancelReason = cancelReason;
+      o.updatedAt = new Date().toISOString();
+    }
+  };
 
   try {
     const pool = await getCloudPool();
@@ -1052,15 +1143,22 @@ export async function updateOrderStatus(
         sqlQuery += `, cancelReason = @cancelReason`;
       }
       sqlQuery += ` WHERE orderCode = @code`;
+      if (paymentStatus === 'Paid') sqlQuery += ` AND status <> 'Cancelled'`;
 
-      await req.query(sqlQuery);
-      return true;
+      const result = await req.query(sqlQuery);
+      const updated = (result.rowsAffected?.[0] || 0) > 0;
+      if (updated) updateLocal();
+      return updated;
     }
   } catch (err) {
     console.error('Error updating order status in cloud:', err);
+    return false;
   }
-
-  return true;
+  if (process.env.NODE_ENV !== 'production' && o) {
+    updateLocal();
+    return true;
+  }
+  return false;
 }
 
 // ==========================================
@@ -1170,6 +1268,58 @@ export async function cancelOrder(orderCode: string, cancelReason: string, allow
     return { success: false, message: 'Đơn hàng đang giao hoặc đã hoàn thành, không thể hủy!' };
   }
 
+  // Claim cancellation and refund atomically. The conditional UPDATE means
+  // concurrent cancellation requests cannot refund the same order twice.
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const tx = new sql.Transaction(pool);
+      await tx.begin();
+      try {
+        const req = new sql.Request(tx);
+        req.input('code', sql.NVarChar(50), cleanCode);
+        req.input('reason', sql.NVarChar(500), cancelReason || 'Hủy theo yêu cầu');
+        const allowed = allowProcessingCancel ? "('Pending', 'Processing')" : "('Pending')";
+        const changed = await req.query(`
+          UPDATE Orders SET status = 'Cancelled', cancelReason = @reason,
+            refundStatus = CASE WHEN paymentStatus = 'Paid' OR ISNULL(walletAmountUsed, 0) > 0 THEN 'Refunded' ELSE 'None' END,
+            updatedAt = GETDATE()
+          OUTPUT INSERTED.userId, INSERTED.paymentStatus, INSERTED.totalAmount, INSERTED.walletAmountUsed
+          WHERE orderCode = @code AND status IN ${allowed}
+        `);
+        const row = changed.recordset?.[0];
+        if (!row) {
+          await tx.rollback();
+          return { success: false, message: 'Đơn hàng đã thay đổi trạng thái hoặc đã được hủy' };
+        }
+        const refundAmount = (row.paymentStatus === 'Paid' ? Number(row.totalAmount) || 0 : 0) + (Number(row.walletAmountUsed) || 0);
+        if (refundAmount > 0 && row.userId) {
+          const walletReq = new sql.Request(tx);
+          walletReq.input('userId', sql.Int, row.userId);
+          walletReq.input('amount', sql.Decimal(18, 0), refundAmount);
+          const walletRes = await walletReq.query('UPDATE Users SET walletBalance = ISNULL(walletBalance, 0) + @amount WHERE id = @userId');
+          if ((walletRes.rowsAffected?.[0] || 0) !== 1) throw new Error('Wallet refund could not be committed');
+        }
+        await tx.commit();
+        const local = inMemoryOrders.find(o => o.orderCode === cleanCode);
+        if (local) {
+          local.status = 'Cancelled';
+          local.cancelReason = cancelReason;
+          local.refundStatus = refundAmount > 0 ? 'Refunded' : 'None';
+          local.updatedAt = new Date().toISOString();
+        }
+        return { success: true, message: 'Hủy đơn hàng thành công', refundedAmount: refundAmount };
+      } catch (err) {
+        await tx.rollback();
+        throw err;
+      }
+    }
+    if (process.env.NODE_ENV === 'production') return { success: false, message: 'Không thể kết nối cơ sở dữ liệu để hủy đơn' };
+  } catch (err) {
+    console.error('Atomic order cancellation failed:', err);
+    return { success: false, message: 'Không thể hoàn tất hủy đơn và hoàn tiền' };
+  }
+
   // Calculate refund
   // 1. If paid via gateway: refund totalAmount
   // 2. If wallet was used: refund walletAmountUsed
@@ -1226,7 +1376,10 @@ export async function cancelOrder(orderCode: string, cancelReason: string, allow
   };
 }
 
-export async function getAdminStats(period: 'all' | 'today' | 'week' | 'month' | 'quarter' = 'all') {
+export async function getAdminStats(
+  period: 'all' | 'today' | 'week' | 'month' | 'quarter' = 'all',
+  branchId?: number | 'all'
+) {
   let dateCondition = '1=1';
   const now = new Date();
   let cutoffDate: Date | null = null;
@@ -1246,6 +1399,16 @@ export async function getAdminStats(period: 'all' | 'today' | 'week' | 'month' |
     cutoffDate = new Date(now.getFullYear(), quarterMonth, 1);
   }
 
+  let branchCondition = '1=1';
+  if (branchId && branchId !== 'all') {
+    const bId = Number(branchId);
+    if (bId === 1) {
+      branchCondition = '(branchId = 1 OR branchId IS NULL)';
+    } else {
+      branchCondition = `branchId = ${bId}`;
+    }
+  }
+
   try {
     const pool = await getCloudPool();
     if (pool) {
@@ -1256,24 +1419,28 @@ export async function getAdminStats(period: 'all' | 'today' | 'week' | 'month' |
           COUNT(CASE WHEN status = 'Pending' THEN 1 END) AS pendingOrders,
           COUNT(CASE WHEN status = 'Delivering' THEN 1 END) AS deliveringOrders,
           COUNT(CASE WHEN status = 'Completed' THEN 1 END) AS completedOrders,
-          COUNT(CASE WHEN status = 'Cancelled' THEN 1 END) AS cancelledOrders
+          COUNT(CASE WHEN status = 'Cancelled' THEN 1 END) AS cancelledOrders,
+          CAST(ISNULL(SUM(CASE WHEN paymentStatus = 'Paid' AND (branchId = 1 OR branchId IS NULL) THEN totalAmount ELSE 0 END), 0) AS BIGINT) AS branch1Revenue,
+          COUNT(CASE WHEN (branchId = 1 OR branchId IS NULL) THEN 1 END) AS branch1Orders,
+          CAST(ISNULL(SUM(CASE WHEN paymentStatus = 'Paid' AND branchId = 2 THEN totalAmount ELSE 0 END), 0) AS BIGINT) AS branch2Revenue,
+          COUNT(CASE WHEN branchId = 2 THEN 1 END) AS branch2Orders
         FROM Orders
-        WHERE ${dateCondition}
+        WHERE ${dateCondition} AND ${branchCondition}
       `);
       const prodRes = await pool.request().query('SELECT COUNT(*) AS cnt FROM Products');
       const recentRes = await pool.request().query(`
         SELECT TOP 10 id, orderCode, customerName, customerPhone, CAST(totalAmount AS BIGINT) AS totalAmount, 
-               paymentMethod, paymentStatus, status, createdAt
+               paymentMethod, paymentStatus, status, ISNULL(branchId, 1) AS branchId, ISNULL(branchName, N'NooNee - Cơ sở 120 Yên Lãng') AS branchName, createdAt
         FROM Orders 
-        WHERE ${dateCondition}
+        WHERE ${dateCondition} AND ${branchCondition}
         ORDER BY id DESC
       `);
 
       // Orders for calculating top products
       const allPeriodOrdersRes = await pool.request().query(`
-        SELECT id, totalAmount, paymentStatus, status, items, createdAt
+        SELECT id, totalAmount, paymentStatus, status, items, ISNULL(branchId, 1) AS branchId, createdAt
         FROM Orders
-        WHERE ${dateCondition}
+        WHERE ${dateCondition} AND ${branchCondition}
       `);
       
       const ordersList = allPeriodOrdersRes.recordset || [];
@@ -1312,6 +1479,23 @@ export async function getAdminStats(period: 'all' | 'today' | 'week' | 'month' |
         topProducts,
         averageOrderValue,
         period,
+        selectedBranchId: branchId || 'all',
+        branchBreakdown: {
+          branch1: {
+            id: 1,
+            name: 'NooNee - Cơ sở 120 Yên Lãng',
+            shortName: '120 Yên Lãng',
+            revenue: Number(res.recordset[0]?.branch1Revenue || 0),
+            orders: Number(res.recordset[0]?.branch1Orders || 0),
+          },
+          branch2: {
+            id: 2,
+            name: 'NooNee - Cơ sở 269 Cầu Giấy',
+            shortName: '269 Cầu Giấy',
+            revenue: Number(res.recordset[0]?.branch2Revenue || 0),
+            orders: Number(res.recordset[0]?.branch2Orders || 0),
+          },
+        },
       };
     }
   } catch (e) { console.error('Admin stats error:', e); }
@@ -1981,13 +2165,13 @@ export async function getSupportMessages(options?: { orderCode?: string; userId?
       }
       query += ` ORDER BY id ASC`;
       const res = await req.query(query);
-      if (res.recordset && res.recordset.length > 0) {
-        return res.recordset;
-      }
+      return res.recordset || [];
     }
   } catch (err) {
     console.error('Error fetching support messages from cloud:', err);
+    if (process.env.NODE_ENV === 'production') throw err;
   }
+  if (process.env.NODE_ENV === 'production') throw new Error('Database unavailable for support messages');
 
   // Robust In-memory fallback
   let list = [...inMemorySupportMessages];
@@ -2048,7 +2232,9 @@ export async function createSupportMessage(data: {
     }
   } catch (err) {
     console.error('Error creating support message in cloud:', err);
+    if (process.env.NODE_ENV === 'production') throw err;
   }
+  if (process.env.NODE_ENV === 'production') throw new Error('Database unavailable for support message creation');
 
   inMemorySupportMessages.push(fallbackMsg);
   return fallbackMsg;
@@ -2086,7 +2272,6 @@ export async function createGroupOrder(data: {
   };
 
   const enriched = computeGroupOrderStats(newGroup);
-  inMemoryGroupOrders.unshift(enriched);
 
   try {
     const pool = await getCloudPool();
@@ -2104,11 +2289,15 @@ export async function createGroupOrder(data: {
       if (res.recordset && res.recordset[0]) {
         enriched.id = res.recordset[0].id;
       }
+      inMemoryGroupOrders.unshift(enriched);
+      return enriched;
     }
   } catch (err) {
     console.error('Error creating group order in cloud:', err);
+    throw err;
   }
-
+  if (process.env.NODE_ENV === 'production') throw new Error('Database unavailable for group creation');
+  inMemoryGroupOrders.unshift(enriched);
   return enriched;
 }
 
@@ -2149,10 +2338,13 @@ export async function getGroupOrderByCode(code: string): Promise<GroupOrder | nu
         else inMemoryGroupOrders.unshift(enriched);
         return enriched;
       }
+      return null;
     }
   } catch (err) {
     console.error('Error fetching group order from cloud:', err);
+    if (process.env.NODE_ENV === 'production') throw err;
   }
+  if (process.env.NODE_ENV === 'production') throw new Error('Database unavailable for group lookup');
 
   const inMem = inMemoryGroupOrders.find(g => g.code === cleanCode);
   return inMem ? computeGroupOrderStats(inMem) : null;
@@ -2167,13 +2359,15 @@ export async function saveGroupOrderMembers(
   const cleanCode = (code || '').trim().toUpperCase();
   const membersJson = JSON.stringify(members);
 
-  const inMem = inMemoryGroupOrders.find(g => g.code === cleanCode);
-  if (inMem) {
-    inMem.members = members;
-    if (status) inMem.status = status;
-    if (orderCode) inMem.orderCode = orderCode;
-    inMem.updatedAt = new Date().toISOString();
-  }
+  const updateLocal = () => {
+    const inMem = inMemoryGroupOrders.find(g => g.code === cleanCode);
+    if (inMem) {
+      inMem.members = members;
+      if (status) inMem.status = status;
+      if (orderCode) inMem.orderCode = orderCode;
+      inMem.updatedAt = new Date().toISOString();
+    }
+  };
 
   try {
     const pool = await getCloudPool();
@@ -2191,13 +2385,20 @@ export async function saveGroupOrderMembers(
         sqlQuery += `, orderCode = @orderCode`;
       }
       sqlQuery += ` WHERE code = @code`;
-      await req.query(sqlQuery);
-      return true;
+      const result = await req.query(sqlQuery);
+      const saved = (result.rowsAffected?.[0] || 0) > 0;
+      if (saved) updateLocal();
+      return saved;
     }
   } catch (err) {
     console.error('Error saving group order members in cloud:', err);
+    return false;
   }
-  return true;
+  if (process.env.NODE_ENV !== 'production') {
+    updateLocal();
+    return true;
+  }
+  return false;
 }
 
 export async function joinGroupOrder(
@@ -2222,13 +2423,13 @@ export async function joinGroupOrder(
 
   // Check if member already exists by provided memberId or (userId / name)
   let existingMember = group.members.find(
-    m => (memberId && m.id === memberId) || (userId && m.userId === userId) || m.name.toLowerCase() === name.toLowerCase()
+    m => Boolean(userId && m.userId === userId)
   );
 
   if (existingMember) {
     existingMember.name = name;
     if (userId && !existingMember.userId) existingMember.userId = userId;
-    await saveGroupOrderMembers(group.code, group.members);
+    if (!(await saveGroupOrderMembers(group.code, group.members))) return { success: false, message: 'Không lưu được thành viên nhóm' };
     return { success: true, group: computeGroupOrderStats(group), member: existingMember };
   }
 
@@ -2247,7 +2448,7 @@ export async function joinGroupOrder(
   };
 
   group.members.push(newMember);
-  await saveGroupOrderMembers(group.code, group.members);
+  if (!(await saveGroupOrderMembers(group.code, group.members))) return { success: false, message: 'Không lưu được thành viên nhóm' };
   return { success: true, group: computeGroupOrderStats(group), member: newMember };
 }
 
@@ -2342,7 +2543,7 @@ export async function updateGroupMemberItem(
     }
   }
 
-  await saveGroupOrderMembers(group.code, group.members);
+  if (!(await saveGroupOrderMembers(group.code, group.members))) return { success: false, message: 'Không lưu được món của nhóm' };
   return { success: true, group: computeGroupOrderStats(group) };
 }
 
@@ -2369,7 +2570,7 @@ export async function removeGroupMember(
   }
 
   group.members = group.members.filter(m => m.id !== memberIdToRemove);
-  await saveGroupOrderMembers(group.code, group.members);
+  if (!(await saveGroupOrderMembers(group.code, group.members))) return { success: false, message: 'Không lưu được thay đổi thành viên' };
   return { success: true, group: computeGroupOrderStats(group) };
 }
 
@@ -2401,7 +2602,7 @@ export async function lockGroupOrder(
   }
 
   group.status = 'locked';
-  await saveGroupOrderMembers(group.code, group.members, 'locked');
+  if (!(await saveGroupOrderMembers(group.code, group.members, 'locked'))) return { success: false, message: 'Không khóa được đơn nhóm' };
   return { success: true, group: computeGroupOrderStats(group) };
 }
 
@@ -2425,7 +2626,7 @@ export async function unlockGroupOrder(
   }
 
   group.status = 'active';
-  await saveGroupOrderMembers(group.code, group.members, 'active');
+  if (!(await saveGroupOrderMembers(group.code, group.members, 'active'))) return { success: false, message: 'Không mở khóa được đơn nhóm' };
   return { success: true, group: computeGroupOrderStats(group) };
 }
 
@@ -2434,8 +2635,7 @@ export async function completeGroupOrder(code: string, orderCode: string): Promi
   if (!group) return false;
   group.status = 'completed';
   group.orderCode = orderCode;
-  await saveGroupOrderMembers(group.code, group.members, 'completed', orderCode);
-  return true;
+  return await saveGroupOrderMembers(group.code, group.members, 'completed', orderCode);
 }
 
 // ==========================================

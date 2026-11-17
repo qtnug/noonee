@@ -13,6 +13,7 @@ import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
 import { ToastProvider } from '@/context/ToastContext';
+import { BranchProvider } from '@/context/BranchContext';
 
 const montserrat = Montserrat({
   subsets: ['latin', 'vietnamese'],
@@ -63,20 +64,22 @@ export default function RootLayout({
     <html lang="vi" className={`${plusJakartaSans.variable} ${montserrat.variable} ${friemFont.variable} font-sans`}>
       <body className="flex flex-col min-h-screen pb-14 md:pb-0 font-sans bg-[#FFFAF0] text-[#0f172a]">
         <AuthProvider>
-          <FavoritesProvider>
-            <CartProvider>
-              <ToastProvider>
-                <Navbar />
-                <NavbarPromoMarquee />
-                <main className="flex-1">{children}</main>
-                <Footer />
-                <CartDrawer />
-                <MobileBottomNav />
-                <AIChatBot />
-                <HoneypotTrap />
-              </ToastProvider>
-            </CartProvider>
-          </FavoritesProvider>
+          <BranchProvider>
+            <FavoritesProvider>
+              <CartProvider>
+                <ToastProvider>
+                  <Navbar />
+                  <NavbarPromoMarquee />
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                  <CartDrawer />
+                  <MobileBottomNav />
+                  <AIChatBot />
+                  <HoneypotTrap />
+                </ToastProvider>
+              </CartProvider>
+            </FavoritesProvider>
+          </BranchProvider>
         </AuthProvider>
       </body>
     </html>

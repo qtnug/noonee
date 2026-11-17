@@ -8,6 +8,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const placeId = searchParams.get('placeId') || undefined;
     const address = searchParams.get('address') || undefined;
+    const branchIdParam = searchParams.get('branchId');
+    const branchId = branchIdParam ? parseInt(branchIdParam) : undefined;
     const latParam = searchParams.get('lat');
     const lngParam = searchParams.get('lng');
 
@@ -29,6 +31,7 @@ export async function GET(request: NextRequest) {
       address,
       lat,
       lng,
+      branchId,
     });
 
     return NextResponse.json({
@@ -50,7 +53,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { placeId, address, lat, lng } = body;
+    const { placeId, address, lat, lng, branchId } = body;
 
     if (!placeId && !address && (!lat || !lng)) {
       return NextResponse.json(
@@ -67,6 +70,7 @@ export async function POST(request: NextRequest) {
       address,
       lat: typeof lat === 'number' ? lat : lat ? parseFloat(lat) : undefined,
       lng: typeof lng === 'number' ? lng : lng ? parseFloat(lng) : undefined,
+      branchId: branchId ? Number(branchId) : undefined,
     });
 
     return NextResponse.json({

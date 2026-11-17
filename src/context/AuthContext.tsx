@@ -20,53 +20,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('food_user');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setUser(parsed);
-        if (parsed.token && typeof document !== 'undefined') {
-          document.cookie = `auth_token=${parsed.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax;`;
-        }
-      }
-    } catch (e) {
-      // ignore
-    }
-    setIsLoading(false);
+    let active = true;
+    fetch('/api/user/profile', { cache: 'no-store' })
+      .then(async (response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (active) setUser(data?.success ? data.data.user : null);
+      })
+      .catch(() => { if (active) setUser(null); })
+      .finally(() => { if (active) setIsLoading(false); });
+    return () => { active = false; };
   }, []);
 
   const login = (newUser: User) => {
-    setUser(newUser);
-    try {
-      localStorage.setItem('food_user', JSON.stringify(newUser));
-      if (newUser.token && typeof document !== 'undefined') {
-        document.cookie = `auth_token=${newUser.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax;`;
-      }
-    } catch (e) {
-      // ignore
-    }
+    const { token: _unusedToken, ...safeUser } = newUser;
+    setUser(safeUser as User);
   };
 
   const logout = () => {
     setUser(null);
-    try {
-      localStorage.removeItem('food_user');
-      if (typeof document !== 'undefined') {
-        document.cookie = 'auth_token=; path=/; max-age=0; SameSite=Lax;';
-      }
-    } catch (e) {
-      // ignore
-    }
+    localStorage.removeItem('food_user');
+    void fetch('/api/auth/logout', { method: 'POST' });
   };
 
-  const token = user?.token || null;
+  const token = null;
 
-  const getAuthHeader = (): Record<string, string> => {
-    if (user?.token) {
-      return { Authorization: `Bearer ${user.token}` };
-    }
-    return {};
-  };
+  const getAuthHeader = (): Record<string, string> => ({});
 
   return (
     <AuthContext.Provider

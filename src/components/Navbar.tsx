@@ -25,6 +25,7 @@ import {
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatVND } from '@/lib/utils';
+import BranchSelector from '@/components/BranchSelector';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -260,6 +261,8 @@ export default function Navbar() {
 
         {/* Right Action Cluster */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {/* Branch Selector */}
+          <BranchSelector />
 
           {/* Cart Drawer Trigger */}
           <button
@@ -432,6 +435,9 @@ export default function Navbar() {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-[#FFFAF0] border-t border-[#ebdcd0] px-4 py-4 space-y-3 shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="pb-2 border-b border-[#ebdcd0]">
+            <BranchSelector />
+          </div>
           <div className="space-y-1 text-sm font-medium">
             <Link
               href="/menu"

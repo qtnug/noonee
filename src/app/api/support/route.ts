@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupportMessages, createSupportMessage } from '@/lib/db';
+import { getSupportMessages, createSupportMessage, getOrderByCode } from '@/lib/db';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { authenticateRequest } from '@/lib/auth';
 
@@ -7,10 +7,16 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    const authUser = authenticateRequest(request);
+    if (!authUser) return NextResponse.json({ success: false, message: 'Vui lòng đăng nhập' }, { status: 401 });
     const { searchParams } = new URL(request.url);
     const orderCode = searchParams.get('orderCode') || undefined;
     const userIdParam = searchParams.get('userId');
-    const userId = userIdParam ? parseInt(userIdParam) : undefined;
+    const userId = authUser.role === 'admin' ? (userIdParam ? parseInt(userIdParam) : undefined) : authUser.userId;
+    if (authUser.role !== 'admin' && orderCode) {
+      const order = await getOrderByCode(orderCode);
+      if (!order || order.userId !== authUser.userId) return NextResponse.json({ success: false, message: 'Không có quyền xem hội thoại này' }, { status: 403 });
+    }
 
     const messages = await getSupportMessages({ orderCode, userId });
     return NextResponse.json({ success: true, data: messages });
@@ -44,6 +50,7 @@ export async function POST(request: NextRequest) {
     // Prevent role spoofing (H12)
     // Only verified admin users can post with senderRole === 'admin'
     const authUser = authenticateRequest(request);
+    if (!authUser) return NextResponse.json({ success: false, message: 'Vui lòng đăng nhập' }, { status: 401 });
     let resolvedRole: 'admin' | 'customer' = 'customer';
     if (senderRole === 'admin' && authUser && authUser.role === 'admin') {
       resolvedRole = 'admin';
@@ -57,8 +64,17 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (resolvedRole === 'customer') {
+      const order = await getOrderByCode(cleanOrderCode);
+      if (!order || order.userId !== authUser.userId) return NextResponse.json({ success: false, message: 'Không có quyền gửi tin nhắn cho đơn này' }, { status: 403 });
+    }
 
-    const resolvedUserId = authUser ? authUser.userId : (userId ? parseInt(String(userId)) : null);
+    let resolvedUserId = authUser.userId;
+    if (resolvedRole === 'admin' && cleanOrderCode) {
+      const order = await getOrderByCode(cleanOrderCode);
+      if (!order) return NextResponse.json({ success: false, message: 'Không tìm thấy đơn hàng' }, { status: 404 });
+      resolvedUserId = order.userId || authUser.userId;
+    }
 
     const newMsg = await createSupportMessage({
       orderCode: orderCode ? String(orderCode).trim() : null,

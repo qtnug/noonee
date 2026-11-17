@@ -27,6 +27,9 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = await request.json();
+    if (payload.transferType && String(payload.transferType).toLowerCase() !== 'in') {
+      return NextResponse.json({ success: false, message: 'Giao dịch không phải tiền vào' }, { status: 400 });
+    }
     console.log('[Sepay Webhook Received]:', {
       id: payload.id,
       gateway: payload.gateway,
@@ -91,7 +94,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Update order payment status to Paid
-    await updateOrderStatus(orderCode, 'Pending', 'Paid');
+    const updated = await updateOrderStatus(orderCode, order.status, 'Paid');
+    if (!updated) return NextResponse.json({ success: false, message: 'Không cập nhật được trạng thái thanh toán' }, { status: 500 });
 
     return NextResponse.json({
       success: true,

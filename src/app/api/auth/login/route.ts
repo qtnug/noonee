@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       success: true,
       message: 'Đăng nhập thành công',
-      token,
       user: {
         id: user.id,
         username: user.username,
@@ -59,7 +58,6 @@ export async function POST(request: NextRequest) {
         address: user.address,
         role: user.role,
         walletBalance: user.walletBalance,
-        token,
       },
     });
 
@@ -68,6 +66,8 @@ export async function POST(request: NextRequest) {
       path: '/',
       maxAge: 7 * 24 * 60 * 60,
       sameSite: 'lax',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
     });
 
     return response;

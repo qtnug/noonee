@@ -17,8 +17,10 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const period = (searchParams.get('period') || 'all') as any;
+    const branchParam = searchParams.get('branch');
+    const branchId = branchParam === 'all' || !branchParam ? 'all' : parseInt(branchParam);
 
-    const stats = await getAdminStats(period);
+    const stats = await getAdminStats(period, branchId);
     return NextResponse.json({ success: true, data: stats });
   } catch (error: any) {
     console.error('Error fetching admin stats:', error);

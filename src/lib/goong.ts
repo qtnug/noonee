@@ -1,5 +1,7 @@
 // Goong.io Map & Distance Service for NooNee Food
 
+import { BRANCHES, getBranchById } from '@/lib/branches';
+
 export const STORE_ADDRESS = '120 Yên Lãng, Đống Đa, Hà Nội';
 export const STORE_NAME = 'Quán Ăn NooNee (Cơ sở 120 Yên Lãng)';
 export const MAX_DELIVERY_DISTANCE_KM = 15;
@@ -28,6 +30,10 @@ export interface DistanceCalculationResult {
   shippingFee: number;
   isSimulated?: boolean;
   isOutOfRange?: boolean;
+  branchId?: number;
+  branchName?: string;
+  nearestBranchId?: number;
+  distanceToBranches?: { branchId: number; branchName: string; distanceKm: number }[];
 }
 
 // Fallback popular landmarks in Hanoi when API key is missing or offline
@@ -204,14 +210,19 @@ export async function getGoongPlaceDetail(
 }
 
 /**
- * Calculate distance, delivery time, and shipping fee from 120 Yên Lãng to destination
+ * Calculate distance, delivery time, and shipping fee from the active branch to destination
  */
 export async function calculateDistanceFromStore(params: {
   placeId?: string;
   address?: string;
   lat?: number;
   lng?: number;
+  branchId?: number;
 }): Promise<DistanceCalculationResult> {
+  const selectedBranch = getBranchById(params.branchId || 1);
+  const branchCoords = { lat: selectedBranch.lat, lng: selectedBranch.lng };
+  const storeAddress = selectedBranch.address;
+
   const apiKey = getGoongApiKey();
   let destLat = params.lat;
   let destLng = params.lng;
@@ -279,10 +290,19 @@ export async function calculateDistanceFromStore(params: {
     }
   }
 
-  // 3. Try Goong Distance Matrix API for real bike driving distance
+  // Calculate distance to all branches to detect the nearest one
+  const distanceToBranches = BRANCHES.map((b) => ({
+    branchId: b.id,
+    branchName: b.name,
+    distanceKm: calculateHaversineDistance(b.lat, b.lng, destLat!, destLng!),
+  })).sort((a, b) => a.distanceKm - b.distanceKm);
+
+  const nearestBranchId = distanceToBranches[0].branchId;
+
+  // 3. Try Goong Distance Matrix API for real bike driving distance from selected branch
   if (apiKey && destLat && destLng) {
     try {
-      const dmUrl = `https://rsapi.goong.io/DistanceMatrix?origins=${STORE_COORDINATES.lat},${STORE_COORDINATES.lng}&destinations=${destLat},${destLng}&vehicle=bike&api_key=${apiKey}`;
+      const dmUrl = `https://rsapi.goong.io/DistanceMatrix?origins=${branchCoords.lat},${branchCoords.lng}&destinations=${destLat},${destLng}&vehicle=bike&api_key=${apiKey}`;
       const res = await fetch(dmUrl);
       const data = await res.json();
 
@@ -303,8 +323,8 @@ export async function calculateDistanceFromStore(params: {
         const deliveryEstimateText = `${totalMin - 5} - ${totalMin + 5} phút`;
 
         return {
-          storeAddress: STORE_ADDRESS,
-          customerAddress: destAddress || `${distanceKm} km từ 120 Yên Lãng`,
+          storeAddress,
+          customerAddress: destAddress || `${distanceKm} km từ ${selectedBranch.shortName}`,
           distanceKm,
           distanceText: `${distanceKm} km`,
           durationMinutes,
@@ -313,6 +333,10 @@ export async function calculateDistanceFromStore(params: {
           shippingFee,
           isSimulated: false,
           isOutOfRange: distanceKm > MAX_DELIVERY_DISTANCE_KM,
+          branchId: selectedBranch.id,
+          branchName: selectedBranch.name,
+          nearestBranchId,
+          distanceToBranches,
         };
       }
     } catch (err) {
@@ -322,8 +346,8 @@ export async function calculateDistanceFromStore(params: {
 
   // 4. Fallback calculation using coordinates
   const distanceKm = calculateHaversineDistance(
-    STORE_COORDINATES.lat,
-    STORE_COORDINATES.lng,
+    branchCoords.lat,
+    branchCoords.lng,
     destLat,
     destLng
   );
@@ -334,8 +358,8 @@ export async function calculateDistanceFromStore(params: {
   const deliveryEstimateText = `${totalMin - 5} - ${totalMin + 5} phút`;
 
   return {
-    storeAddress: STORE_ADDRESS,
-    customerAddress: destAddress || `${distanceKm} km từ 120 Yên Lãng`,
+    storeAddress,
+    customerAddress: destAddress || `${distanceKm} km từ ${selectedBranch.shortName}`,
     distanceKm,
     distanceText: `${distanceKm} km`,
     durationMinutes,
@@ -344,5 +368,9 @@ export async function calculateDistanceFromStore(params: {
     shippingFee,
     isSimulated: true,
     isOutOfRange: distanceKm > MAX_DELIVERY_DISTANCE_KM,
+    branchId: selectedBranch.id,
+    branchName: selectedBranch.name,
+    nearestBranchId,
+    distanceToBranches,
   };
 }

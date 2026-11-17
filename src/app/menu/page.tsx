@@ -21,11 +21,14 @@ import { motion } from 'framer-motion';
 import ProductCard from '@/components/ProductCard';
 import { Product, Category } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import { useBranch } from '@/context/BranchContext';
+import BranchSelector from '@/components/BranchSelector';
 
 const ITEMS_PER_PAGE = 8; // 4 cột x 2 dòng = 8 món mỗi trang
 
 function MenuPageContent() {
   const { user } = useAuth();
+  const { currentBranch } = useBranch();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('categoryId');
   const initialSearch = searchParams.get('search') || '';
@@ -103,6 +106,11 @@ function MenuPageContent() {
   const filteredProducts = useMemo(() => {
     let list = [...products];
 
+    // Branch filter: show dishes for current branch + dishes available at all branches (branchId === null)
+    list = list.filter(
+      (p) => p.branchId === null || p.branchId === undefined || p.branchId === currentBranch.id
+    );
+
     if (onlyDeals) {
       list = list.filter((p) => p.isFeatured);
     }
@@ -132,14 +140,14 @@ function MenuPageContent() {
     }
 
     return list;
-  }, [products, selectedCategory, onlyDeals, searchQuery, sortBy]);
+  }, [products, selectedCategory, onlyDeals, searchQuery, sortBy, currentBranch.id]);
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
 
   // Reset page when any filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, onlyDeals, searchQuery, sortBy]);
+  }, [selectedCategory, onlyDeals, searchQuery, sortBy, currentBranch.id]);
 
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
@@ -186,6 +194,10 @@ function MenuPageContent() {
             <p className="text-[14px] text-[#41454d] max-w-2xl leading-relaxed">
               Thực đơn phong phú hơn 50+ món cơm rang vàng ruộm, cơm tấm sườn bì chả, phở bò gia truyền, đồ ăn vặt và đồ uống mát lạnh chuẩn vị.
             </p>
+            <div className="pt-1 flex items-center gap-2 flex-wrap text-[13px]">
+              <span className="text-[#64748b]">Cơ sở đang duyệt:</span>
+              <BranchSelector compact />
+            </div>
           </div>
 
           {/* Group order banner & counter (STT 9) */}

@@ -19,6 +19,7 @@ import { formatVND, formatDate } from '@/lib/utils';
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [branchFilter, setBranchFilter] = useState<'all' | '1' | '2'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,6 +35,7 @@ export default function AdminOrdersPage() {
     try {
       const query = new URLSearchParams();
       if (statusFilter !== 'all') query.set('status', statusFilter);
+      if (branchFilter !== 'all') query.set('branch', branchFilter);
       const cleaned = searchQuery.trim().replace(/^#+/, '');
       if (cleaned) query.set('search', cleaned);
 
@@ -52,7 +54,7 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     setCurrentPage(1);
     fetchOrders();
-  }, [statusFilter, searchQuery]);
+  }, [statusFilter, branchFilter, searchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(orders.length / pageSize));
   const paginatedOrders = orders.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -162,6 +164,54 @@ export default function AdminOrdersPage() {
         </button>
       </div>
 
+      {/* Branch Filter Tabs */}
+      <div className="bg-white p-3 rounded-[10px] border border-[#dddddd] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#A30029]" />
+          <span className="text-[13px] font-bold text-[#181d26]">Cơ sở lọc đơn:</span>
+          <span className="text-[12px] text-[#9297a0]">
+            {branchFilter === 'all'
+              ? '(Tất cả 2 cơ sở)'
+              : branchFilter === '1'
+              ? '(Chỉ CS 120 Yên Lãng)'
+              : '(Chỉ CS 269 Cầu Giấy)'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5 p-1 bg-gray-100 rounded-lg">
+          <button
+            onClick={() => setBranchFilter('all')}
+            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition cursor-pointer ${
+              branchFilter === 'all'
+                ? 'bg-[#A30029] text-white shadow-xs'
+                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
+            }`}
+          >
+            🏢 Cả 2 cơ sở
+          </button>
+          <button
+            onClick={() => setBranchFilter('1')}
+            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition cursor-pointer ${
+              branchFilter === '1'
+                ? 'bg-[#A30029] text-white shadow-xs'
+                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
+            }`}
+          >
+            📍 CS1: 120 Yên Lãng
+          </button>
+          <button
+            onClick={() => setBranchFilter('2')}
+            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition cursor-pointer ${
+              branchFilter === '2'
+                ? 'bg-[#A30029] text-white shadow-xs'
+                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
+            }`}
+          >
+            📍 CS2: 269 Cầu Giấy
+          </button>
+        </div>
+      </div>
+
       {/* Filters Bar */}
       <div className="bg-white p-3.5 sm:p-4 rounded-[10px] border border-[#dddddd] flex flex-col md:flex-row gap-3 sm:gap-4 items-stretch md:items-center justify-between">
         {/* Search */}
@@ -216,6 +266,7 @@ export default function AdminOrdersPage() {
               <thead className="bg-[#f8fafc] border-b border-[#dddddd] text-[#9297a0] font-medium uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="py-3 px-4">Mã đơn</th>
+                  <th className="py-3 px-4">Cơ sở</th>
                   <th className="py-3 px-4">Khách hàng & Địa chỉ</th>
                   <th className="py-3 px-4">Tổng tiền</th>
                   <th className="py-3 px-4">Phương thức</th>
@@ -239,6 +290,17 @@ export default function AdminOrdersPage() {
                       <span className="block text-[11px] text-[#9297a0] font-normal">
                         {formatDate(order.createdAt)}
                       </span>
+                    </td>
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      {order.branchId === 2 ? (
+                        <span className="px-2 py-0.5 rounded-[4px] bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold">
+                          CS 269 Cầu Giấy
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-[4px] bg-rose-50 text-[#A30029] border border-rose-200 text-[11px] font-bold">
+                          CS 120 Yên Lãng
+                        </span>
+                      )}
                     </td>
                     <td className="py-3.5 px-4 max-w-xs">
                       <div className="font-medium text-[#181d26]">{order.customerName}</div>

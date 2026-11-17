@@ -40,12 +40,13 @@ export default function AdminOverviewPage() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<'today' | 'week' | 'month' | 'quarter' | 'all'>('week');
+  const [selectedBranch, setSelectedBranch] = useState<'all' | '1' | '2'>('all');
   const [updatingCode, setUpdatingCode] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const fetchStats = async (p = period) => {
+  const fetchStats = async (p = period, b = selectedBranch) => {
     try {
-      const res = await fetch(`/api/admin/stats?period=${p}`);
+      const res = await fetch(`/api/admin/stats?period=${p}&branch=${b}`);
       const data = await res.json();
       if (data.success) {
         setStats(data.data);
@@ -58,13 +59,13 @@ export default function AdminOverviewPage() {
   };
 
   useEffect(() => {
-    fetchStats(period);
-  }, [period]);
+    fetchStats(period, selectedBranch);
+  }, [period, selectedBranch]);
 
   useEffect(() => {
-    const interval = setInterval(() => fetchStats(period), 8000);
+    const interval = setInterval(() => fetchStats(period, selectedBranch), 8000);
     return () => clearInterval(interval);
-  }, [period]);
+  }, [period, selectedBranch]);
 
   const handleUpdateStatus = async (orderCode: string, newStatus: string, newPaymentStatus?: string) => {
     setUpdatingCode(orderCode);
@@ -160,6 +161,57 @@ export default function AdminOverviewPage() {
         </div>
       )}
 
+      {/* Branch Filter & Navigation Tabs */}
+      <div className="bg-white p-3 sm:p-4 rounded-[10px] border border-[#dddddd] shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#A30029] animate-pulse" />
+          <span className="text-[13px] font-bold text-[#181d26]">Cơ sở hiển thị:</span>
+          <span className="text-[12px] text-[#9297a0]">
+            {selectedBranch === 'all'
+              ? '(Toàn chuỗi 2 cơ sở)'
+              : selectedBranch === '1'
+              ? '(Cơ sở 1: 120 Yên Lãng)'
+              : '(Cơ sở 2: 269 Cầu Giấy)'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5 p-1 bg-gray-100 rounded-lg overflow-x-auto no-scrollbar">
+          <button
+            type="button"
+            onClick={() => setSelectedBranch('all')}
+            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition whitespace-nowrap cursor-pointer ${
+              selectedBranch === 'all'
+                ? 'bg-[#A30029] text-white shadow-xs'
+                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
+            }`}
+          >
+            🏢 Cả 2 cơ sở (Tổng quan)
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedBranch('1')}
+            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition whitespace-nowrap cursor-pointer ${
+              selectedBranch === '1'
+                ? 'bg-[#A30029] text-white shadow-xs'
+                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
+            }`}
+          >
+            📍 CS1: 120 Yên Lãng
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedBranch('2')}
+            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition whitespace-nowrap cursor-pointer ${
+              selectedBranch === '2'
+                ? 'bg-[#A30029] text-white shadow-xs'
+                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
+            }`}
+          >
+            📍 CS2: 269 Cầu Giấy
+          </button>
+        </div>
+      </div>
+
       {/* Time Period Filter Bar (Tuần / Tháng / Quý / Hôm nay / Tất cả) */}
       <div className="bg-white p-3 sm:p-4 rounded-[10px] border border-[#dddddd] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-[13px] font-semibold text-[#181d26]">
@@ -189,6 +241,81 @@ export default function AdminOverviewPage() {
           ))}
         </div>
       </div>
+
+      {/* Chain Branch Breakdown Comparison (Displayed when All Branches is selected) */}
+      {selectedBranch === 'all' && stats?.branchBreakdown && (
+        <div className="bg-gradient-to-r from-rose-50/60 via-white to-indigo-50/60 p-4 sm:p-5 rounded-xl border border-gray-200 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[14px] font-bold text-gray-900 flex items-center gap-2">
+              <span>📊 Phân bổ doanh thu & đơn hàng giữa 2 cơ sở</span>
+              <span className="text-[11px] font-normal text-gray-500">({periodLabels[period]})</span>
+            </h3>
+            <span className="text-[11px] font-medium text-gray-500">Cập nhật tự động</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Branch 1 Card */}
+            <div className="p-4 bg-white rounded-lg border border-rose-200 shadow-2xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-bold bg-rose-50 text-[#A30029] border border-rose-200">
+                  📍 Cơ sở 1: 120 Yên Lãng (Đống Đa)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedBranch('1')}
+                  className="text-[11px] font-bold text-[#A30029] hover:underline cursor-pointer"
+                >
+                  Lọc cơ sở này →
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                  <span className="text-[11px] text-gray-500 block">Doanh thu CS1</span>
+                  <span className="text-[18px] font-bold text-[#A30029]">
+                    {formatVND(stats.branchBreakdown.branch1?.revenue || 0)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[11px] text-gray-500 block">Đơn hàng hoàn tất</span>
+                  <span className="text-[18px] font-bold text-gray-800">
+                    {stats.branchBreakdown.branch1?.orders || 0} đơn
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Branch 2 Card */}
+            <div className="p-4 bg-white rounded-lg border border-indigo-200 shadow-2xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  📍 Cơ sở 2: 269 Cầu Giấy (Cầu Giấy)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedBranch('2')}
+                  className="text-[11px] font-bold text-indigo-700 hover:underline cursor-pointer"
+                >
+                  Lọc cơ sở này →
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                  <span className="text-[11px] text-gray-500 block">Doanh thu CS2</span>
+                  <span className="text-[18px] font-bold text-indigo-700">
+                    {formatVND(stats.branchBreakdown.branch2?.revenue || 0)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[11px] text-gray-500 block">Đơn hàng hoàn tất</span>
+                  <span className="text-[18px] font-bold text-gray-800">
+                    {stats.branchBreakdown.branch2?.orders || 0} đơn
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Metric Cards Grid (2-cols on mobile, 4-cols on lg) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
@@ -457,6 +584,7 @@ export default function AdminOverviewPage() {
             <thead>
               <tr className="border-b border-[#dddddd] text-[#9297a0] uppercase tracking-wider font-medium text-[11px]">
                 <th className="pb-3">Mã đơn</th>
+                <th className="pb-3">Cơ sở</th>
                 <th className="pb-3">Khách hàng</th>
                 <th className="pb-3">Số tiền</th>
                 <th className="pb-3">Phương thức</th>
@@ -472,6 +600,17 @@ export default function AdminOverviewPage() {
                     <Link href={`/orders/${order.orderCode}`} className="hover:underline">
                       #{order.orderCode}
                     </Link>
+                  </td>
+                  <td className="py-3.5">
+                    {order.branchId === 2 ? (
+                      <span className="px-2 py-0.5 rounded-[4px] bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold whitespace-nowrap">
+                        CS 269 Cầu Giấy
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-[4px] bg-rose-50 text-[#A30029] border border-rose-200 text-[11px] font-bold whitespace-nowrap">
+                        CS 120 Yên Lãng
+                      </span>
+                    )}
                   </td>
                   <td className="py-3.5">
                     <span className="font-medium text-[#181d26] block">{order.customerName}</span>

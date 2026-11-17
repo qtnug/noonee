@@ -139,7 +139,6 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: 'Đăng ký tài khoản thành công',
-        token,
         user: {
           id: newUser.id,
           username: newUser.username,
@@ -149,7 +148,6 @@ export async function POST(request: NextRequest) {
           address: newUser.address,
           role: newUser.role,
           walletBalance: 0,
-          token,
         },
       },
       { status: 201 }
@@ -160,6 +158,8 @@ export async function POST(request: NextRequest) {
       path: '/',
       maxAge: 7 * 24 * 60 * 60,
       sameSite: 'lax',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
     });
 
     return response;

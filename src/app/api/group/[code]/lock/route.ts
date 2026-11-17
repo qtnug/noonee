@@ -18,9 +18,13 @@ export async function POST(
     }
 
     const authUser = authenticateRequest(request);
+    if (!authUser) return NextResponse.json({ success: false, message: 'Vui lòng đăng nhập' }, { status: 401 });
+    const { getGroupOrderByCode } = await import('@/lib/db');
+    const group = await getGroupOrderByCode(code);
+    if (!group || group.hostUserId !== authUser.userId) return NextResponse.json({ success: false, message: 'Chỉ trưởng nhóm có quyền này' }, { status: 403 });
     const body = await request.json();
     const action = body.action || 'lock';
-    const requesterMemberId = body.requesterMemberId || undefined;
+    const requesterMemberId = group.members.find(m => m.userId === authUser.userId && m.isHost)?.id;
 
     if (action === 'unlock') {
       const res = await unlockGroupOrder(code, requesterMemberId, authUser?.userId);

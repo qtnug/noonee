@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOrders, createOrder, getProducts, hasUserPaidFirstVietqr, getUserSpendingStats, getGroupOrderByCode, completeGroupOrder, getCouponByCode, incrementCouponUsage } from '@/lib/db';
+import { getOrders, createOrder, getProducts, hasUserPaidFirstVietqr, getUserSpendingStats, getGroupOrderByCode, completeGroupOrder, getCouponByCode } from '@/lib/db';
 import { generateOrderCode } from '@/lib/utils';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { requireAuth, requireAdmin, authenticateRequest, AuthError } from '@/lib/auth';
@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || undefined;
     const search = searchParams.get('search') || undefined;
+    const branchParam = searchParams.get('branchId') || searchParams.get('branch');
+    const branchId = branchParam && branchParam !== 'all' ? parseInt(branchParam) : undefined;
     const userIdParam = searchParams.get('userId');
     const page = searchParams.get('page') ? parseInt(searchParams.get('page')!) : undefined;
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
@@ -32,7 +34,7 @@ export async function GET(request: NextRequest) {
       targetUserId = authUser.userId;
     }
 
-    const orders = await getOrders({ status, search, userId: targetUserId, page, limit });
+    const orders = await getOrders({ status, search, userId: targetUserId, branchId, page, limit });
     return NextResponse.json({ success: true, data: orders });
   } catch (error: any) {
     console.error('Error fetching orders:', error);
@@ -62,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { customerName, customerPhone, deliveryAddress, notes, items, paymentMethod, couponCode, freeshipCouponCode, useWallet, groupCode, hp_bot_trap } = body;
+    const { customerName, customerPhone, deliveryAddress, notes, items, paymentMethod, couponCode, freeshipCouponCode, useWallet, groupCode, hp_bot_trap, branchId, branchName } = body;
 
     // Anti-bot honeypot check (STT 1)
     if (hp_bot_trap) {
@@ -197,11 +199,6 @@ export async function POST(request: NextRequest) {
       if (validation.valid) {
         discountAmount = validation.discountAmount;
         validCouponCode = validation.coupon ? validation.coupon.code : String(couponCode).toUpperCase();
-        try {
-          await incrementCouponUsage(validCouponCode);
-        } catch (e) {
-          console.warn('Failed to increment coupon usage in DB:', e);
-        }
       } else {
         return NextResponse.json(
           { success: false, message: `Mã giảm giá "${couponCode}" không hợp lệ: ${validation.message || 'Không đủ điều kiện'}` },
@@ -237,11 +234,6 @@ export async function POST(request: NextRequest) {
       if (freeshipValidation.valid && freeshipValidation.coupon?.couponType === 'freeship') {
         validFreeshipCode = freeshipValidation.coupon.code;
         freeshipDiscount = freeshipValidation.discountAmount;
-        try {
-          await incrementCouponUsage(validFreeshipCode);
-        } catch (e) {
-          console.warn('Failed to increment freeship coupon usage in DB:', e);
-        }
       } else {
         return NextResponse.json(
           { success: false, message: `Mã freeship "${freeshipCouponCode}" không hợp lệ: ${freeshipValidation.message || 'Không đủ điều kiện'}` },
@@ -258,11 +250,11 @@ export async function POST(request: NextRequest) {
       if (!group) {
         return NextResponse.json({ success: false, message: 'Nhóm đặt món không tồn tại trong hệ thống.' }, { status: 400 });
       }
-      if (group.status === 'completed') {
+      if (group.status !== 'locked') {
         return NextResponse.json({ success: false, message: 'Đơn nhóm này đã được hoàn tất thanh toán trước đó!' }, { status: 400 });
       }
       // Authorization check (Test Case 4.1): Only the group host can checkout
-      if (group.hostUserId && group.hostUserId !== userId) {
+      if (group.hostUserId !== userId) {
         return NextResponse.json({ success: false, message: 'Chỉ trưởng nhóm mới có quyền tiến hành thanh toán đơn nhóm này.' }, { status: 403 });
       }
       if ((group.members?.length || 0) < 2) {
@@ -278,7 +270,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const shippingFee = typeof body.shippingFee === 'number' ? Math.max(0, Math.round(body.shippingFee)) : 0;
+    const chosenBranchId = branchId ? Number(branchId) : 1;
+    const chosenBranchName = branchName || (chosenBranchId === 2 ? 'NooNee - Cơ sở 269 Cầu Giấy' : 'NooNee - Cơ sở 120 Yên Lãng');
+
+    const { calculateDistanceFromStore } = await import('@/lib/goong');
+    const distanceResult = await calculateDistanceFromStore({
+      address: String(deliveryAddress).trim(),
+      branchId: chosenBranchId,
+    });
+    if (process.env.NODE_ENV === 'production' && distanceResult.isSimulated) {
+      return NextResponse.json({ success: false, message: 'Chưa xác minh được phí giao hàng. Vui lòng thử lại.' }, { status: 503 });
+    }
+    if (distanceResult.isOutOfRange) return NextResponse.json({ success: false, message: 'Địa chỉ ngoài phạm vi giao hàng' }, { status: 400 });
+    const shippingFee = distanceResult.shippingFee;
     // Apply freeship coupon to shipping fee
     const isFullFreeship = validFreeshipCode === 'FREESHIP';
     const effectiveShippingDiscount = isFullFreeship ? shippingFee : Math.min(shippingFee, freeshipDiscount);
@@ -313,10 +317,13 @@ export async function POST(request: NextRequest) {
       shippingFee: finalShippingFee,
       discountAmount: effectiveFoodDiscount,
       couponCode: validCouponCode,
+      freeshipCouponCode: validFreeshipCode,
       groupCode: validatedGroupCode,
       paymentMethod: isFullyPaidByWallet ? 'Wallet' : (paymentMethod || 'Sepay'),
       paymentStatus: isFullyPaidByWallet ? 'Paid' : 'Unpaid',
       walletAmountUsed,
+      branchId: chosenBranchId,
+      branchName: chosenBranchName,
       items: validatedItems,
     });
 

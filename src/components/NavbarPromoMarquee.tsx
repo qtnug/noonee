@@ -62,6 +62,18 @@ export default function NavbarPromoMarquee() {
 
       <span className="text-white/40 text-[10px] select-none">✦</span>
 
+      {/* Chuỗi 2 cơ sở */}
+      <div className="inline-flex items-center gap-1.5">
+        <span className="inline-flex items-center gap-0.5 bg-rose-900/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider border border-white/20">
+          📍 2 CƠ SỞ NOONEE
+        </span>
+        <span className="text-white/95">
+          <strong className="text-amber-200 font-semibold">CS1 120 Yên Lãng</strong> &amp; <strong className="text-amber-200 font-semibold">CS2 269 Cầu Giấy</strong> • Tự động giao từ quán gần bạn nhất!
+        </span>
+      </div>
+
+      <span className="text-white/40 text-[10px] select-none">✦</span>
+
       {/* 3. Freeship 120k */}
       <Link
         href="/menu"

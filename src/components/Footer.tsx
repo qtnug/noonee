@@ -105,23 +105,33 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Col 4: Liên Hệ & Cửa Hàng */}
+          {/* Col 4: Hệ thống cơ sở */}
           <div>
             <h4 className="text-[#0f172a] text-[14px] font-bold uppercase tracking-wider mb-4">
-              Liên Hệ & Cửa Hàng
+              Hệ thống 2 cơ sở
             </h4>
-            <ul className="space-y-2.5 text-[14px] text-[#475569] font-medium">
+            <ul className="space-y-2.5 text-[13px] text-[#475569] font-medium">
               <li className="flex items-start gap-2">
-                <CiMapPin className="w-5 h-5 text-[#A30029] shrink-0 stroke-1" />
-                <span>120 Yên Lãng, Đống Đa, Hà Nội</span>
+                <CiMapPin className="w-5 h-5 text-[#A30029] shrink-0 stroke-1 mt-0.5" />
+                <div>
+                  <strong className="text-[#0f172a] block">CS1: 120 Yên Lãng</strong>
+                  <span>Thịnh Quang, Đống Đa, Hà Nội</span>
+                </div>
               </li>
-              <li className="flex items-center gap-2">
+              <li className="flex items-start gap-2">
+                <CiMapPin className="w-5 h-5 text-[#A30029] shrink-0 stroke-1 mt-0.5" />
+                <div>
+                  <strong className="text-[#0f172a] block">CS2: 269 Cầu Giấy</strong>
+                  <span>Quan Hoa, Cầu Giấy, Hà Nội</span>
+                </div>
+              </li>
+              <li className="flex items-center gap-2 pt-1">
                 <CiPhone className="w-5 h-5 text-[#A30029] shrink-0 stroke-1" />
-                <span>Hotline: <strong className="text-[#0f172a] font-bold">0988.888.888</strong></span>
+                <span>Hotline: <strong className="text-[#0f172a] font-bold">0943.190.609</strong></span>
               </li>
               <li className="flex items-center gap-2">
                 <CiClock2 className="w-5 h-5 text-[#A30029] shrink-0 stroke-1" />
-                <span>Giờ phục vụ: 06:00 - 24:00</span>
+                <span>Giờ mở cửa: 08:00 - 22:30</span>
               </li>
             </ul>
           </div>

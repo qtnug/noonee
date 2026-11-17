@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { removeGroupMember } from '@/lib/db';
+import { authenticateRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +19,12 @@ export async function POST(
 
     const body = await request.json();
     const { memberIdToRemove, requesterMemberId } = body;
+    const authUser = authenticateRequest(request);
+    if (!authUser) return NextResponse.json({ success: false, message: 'Vui lòng đăng nhập' }, { status: 401 });
+    const { getGroupOrderByCode } = await import('@/lib/db');
+    const group = await getGroupOrderByCode(code);
+    const requester = group?.members.find(m => m.userId === authUser.userId);
+    if (!requester || (requesterMemberId && requesterMemberId !== requester.id)) return NextResponse.json({ success: false, message: 'Không có quyền xóa thành viên' }, { status: 403 });
 
     if (!memberIdToRemove) {
       return NextResponse.json(
@@ -26,7 +33,7 @@ export async function POST(
       );
     }
 
-    const res = await removeGroupMember(code, memberIdToRemove, requesterMemberId);
+    const res = await removeGroupMember(code, memberIdToRemove, requester.id);
     if (!res.success) {
       return NextResponse.json(
         { success: false, message: res.message },

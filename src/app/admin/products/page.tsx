@@ -31,6 +31,7 @@ export default function AdminProductsPage() {
   // Filter & Sorting State
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<number | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'out_of_stock' | 'featured'>('all');
+  const [branchFilter, setBranchFilter] = useState<'all' | '1' | '2' | 'both'>('all');
   const [sortOrder, setSortOrder] = useState<'default' | 'price_asc' | 'price_desc' | 'name_asc'>('default');
 
   // Excel Import State
@@ -47,6 +48,7 @@ export default function AdminProductsPage() {
   // Form Fields
   const [formName, setFormName] = useState('');
   const [formCategoryId, setFormCategoryId] = useState<number>(1);
+  const [formBranchId, setFormBranchId] = useState<number | null>(null);
   const [formPrice, setFormPrice] = useState<number>(50000);
   const [formPrepTime, setFormPrepTime] = useState<number>(15);
   const [formImage, setFormImage] = useState('');
@@ -138,6 +140,7 @@ export default function AdminProductsPage() {
     setFormName('');
     setFormPrice(50000);
     setFormPrepTime(15);
+    setFormBranchId(null);
     setFormImage('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80');
     setFormDesc('');
     setFormAvailable(true);
@@ -153,6 +156,7 @@ export default function AdminProductsPage() {
     setEditingProduct(p);
     setFormName(p.name);
     setFormCategoryId(p.categoryId);
+    setFormBranchId(p.branchId !== undefined && p.branchId !== null ? Number(p.branchId) : null);
     setFormPrice(p.price);
     setFormPrepTime(p.prepTime || 15);
     setFormImage(p.image);
@@ -176,6 +180,7 @@ export default function AdminProductsPage() {
           body: JSON.stringify({
             name: formName,
             categoryId: formCategoryId,
+            branchId: formBranchId,
             price: formPrice,
             prepTime: formPrepTime || 15,
             image: formImage,
@@ -192,6 +197,7 @@ export default function AdminProductsPage() {
           body: JSON.stringify({
             name: formName,
             categoryId: formCategoryId,
+            branchId: formBranchId,
             price: formPrice,
             prepTime: formPrepTime || 15,
             image: formImage,
@@ -405,6 +411,9 @@ export default function AdminProductsPage() {
       if (selectedCategoryFilter !== 'all' && p.categoryId !== selectedCategoryFilter) {
         return false;
       }
+      if (branchFilter === '1' && p.branchId !== 1) return false;
+      if (branchFilter === '2' && p.branchId !== 2) return false;
+      if (branchFilter === 'both' && p.branchId !== null && p.branchId !== undefined) return false;
       if (statusFilter === 'available' && !p.isAvailable) return false;
       if (statusFilter === 'out_of_stock' && p.isAvailable) return false;
       if (statusFilter === 'featured' && !p.isFeatured) return false;
@@ -466,6 +475,70 @@ export default function AdminProductsPage() {
           >
             <Plus className="w-4 h-4" />
             <span>Thêm món mới</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Branch Tabs Filter */}
+      <div className="bg-white p-3 sm:p-3.5 rounded-[10px] border border-[#dddddd] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#A30029]" />
+          <span className="text-[13px] font-bold text-[#181d26]">Cơ sở áp dụng món:</span>
+          <span className="text-[12px] text-[#9297a0]">
+            {branchFilter === 'all'
+              ? '(Tất cả món trong hệ thống)'
+              : branchFilter === '1'
+              ? '(Chỉ bán tại CS 120 Yên Lãng)'
+              : branchFilter === '2'
+              ? '(Chỉ bán tại CS 269 Cầu Giấy)'
+              : '(Món bán chung cả 2 cơ sở)'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5 p-1 bg-gray-100 rounded-lg overflow-x-auto no-scrollbar">
+          <button
+            type="button"
+            onClick={() => { setBranchFilter('all'); setCurrentPage(1); }}
+            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition whitespace-nowrap cursor-pointer ${
+              branchFilter === 'all'
+                ? 'bg-[#A30029] text-white shadow-xs'
+                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
+            }`}
+          >
+            Tất cả món ({products.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => { setBranchFilter('1'); setCurrentPage(1); }}
+            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition whitespace-nowrap cursor-pointer ${
+              branchFilter === '1'
+                ? 'bg-[#A30029] text-white shadow-xs'
+                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
+            }`}
+          >
+            📍 Chỉ CS1 (120 Yên Lãng)
+          </button>
+          <button
+            type="button"
+            onClick={() => { setBranchFilter('2'); setCurrentPage(1); }}
+            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition whitespace-nowrap cursor-pointer ${
+              branchFilter === '2'
+                ? 'bg-[#A30029] text-white shadow-xs'
+                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
+            }`}
+          >
+            📍 Chỉ CS2 (269 Cầu Giấy)
+          </button>
+          <button
+            type="button"
+            onClick={() => { setBranchFilter('both'); setCurrentPage(1); }}
+            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition whitespace-nowrap cursor-pointer ${
+              branchFilter === 'both'
+                ? 'bg-[#A30029] text-white shadow-xs'
+                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
+            }`}
+          >
+            🌿 Dùng chung 2 CS
           </button>
         </div>
       </div>
@@ -595,6 +668,7 @@ export default function AdminProductsPage() {
                 <tr>
                   <th className="py-3 px-4">Món ăn</th>
                   <th className="py-3 px-4">Danh mục</th>
+                  <th className="py-3 px-4">Cơ sở phục vụ</th>
                   <th className="py-3 px-4">Đơn giá</th>
                   <th className="py-3 px-4">Nổi bật</th>
                   <th className="py-3 px-4">Trạng thái bán</th>
@@ -628,6 +702,21 @@ export default function AdminProductsPage() {
                         <Clock className="w-3 h-3 text-[#A30029]" />
                         <span>{p.prepTime || 15} phút</span>
                       </div>
+                    </td>
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      {p.branchId === 1 ? (
+                        <span className="px-2 py-0.5 rounded-[4px] bg-rose-50 text-[#A30029] border border-rose-200 text-[11px] font-bold">
+                          CS1 120 Yên Lãng
+                        </span>
+                      ) : p.branchId === 2 ? (
+                        <span className="px-2 py-0.5 rounded-[4px] bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold">
+                          CS2 269 Cầu Giấy
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-[4px] bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
+                          Cả 2 cơ sở
+                        </span>
+                      )}
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-[#181d26]">
                       {formatVND(p.price)}
@@ -792,6 +881,56 @@ export default function AdminProductsPage() {
                     onChange={(e) => setFormPrepTime(Number(e.target.value))}
                     className="w-full h-10 px-3.5 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                   />
+                </div>
+              </div>
+
+              {/* Branch Assignment Field */}
+              <div className="space-y-1.5 p-3 bg-gray-50/80 rounded-lg border border-gray-200">
+                <label className="font-semibold text-[#181d26] flex items-center gap-1.5">
+                  <span>Cơ sở phục vụ món này</span>
+                  <span className="text-[11px] text-gray-500 font-normal">
+                    (Phân bổ theo yêu cầu món ăn khác nhau giữa các cơ sở)
+                  </span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormBranchId(null)}
+                    className={`p-2.5 rounded-lg border text-left text-[12px] font-semibold transition cursor-pointer ${
+                      formBranchId === null
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-800 ring-1 ring-emerald-500 shadow-xs'
+                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="font-bold">🌿 Cả 2 cơ sở</div>
+                    <div className="text-[10px] text-gray-500 font-normal">Toàn bộ khách đều thấy</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormBranchId(1)}
+                    className={`p-2.5 rounded-lg border text-left text-[12px] font-semibold transition cursor-pointer ${
+                      formBranchId === 1
+                        ? 'bg-rose-50 border-[#A30029] text-[#A30029] ring-1 ring-[#A30029] shadow-xs'
+                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="font-bold">📍 Chỉ CS1 (120 Yên Lãng)</div>
+                    <div className="text-[10px] text-gray-500 font-normal">Khách khu vực Đống Đa</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormBranchId(2)}
+                    className={`p-2.5 rounded-lg border text-left text-[12px] font-semibold transition cursor-pointer ${
+                      formBranchId === 2
+                        ? 'bg-indigo-50 border-indigo-500 text-indigo-700 ring-1 ring-indigo-500 shadow-xs'
+                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="font-bold">📍 Chỉ CS2 (269 Cầu Giấy)</div>
+                    <div className="text-[10px] text-gray-500 font-normal">Khách khu vực Cầu Giấy</div>
+                  </button>
                 </div>
               </div>
 

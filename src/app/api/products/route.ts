@@ -25,10 +25,12 @@ export async function GET(request: NextRequest) {
     const rawSearch = searchParams.get('search') || undefined;
     const search = rawSearch ? sanitizeText(rawSearch, 100) : undefined;
     const isFeatured = searchParams.get('featured') === 'true';
+    const branchParam = searchParams.get('branchId') || searchParams.get('branch');
+    const branchId = branchParam === 'all' ? 'all' : branchParam ? parseInt(branchParam) : undefined;
     const page = searchParams.get('page') ? parseInt(searchParams.get('page')!) : undefined;
     const limit = searchParams.get('limit') ? Math.min(200, Math.max(1, parseInt(searchParams.get('limit')!))) : 200;
 
-    const products = await getProducts({ categoryId, search, isFeatured, page, limit });
+    const products = await getProducts({ categoryId, search, isFeatured, branchId, page, limit });
     return NextResponse.json(
       { success: true, data: products },
       {
@@ -82,6 +84,7 @@ export async function POST(request: NextRequest) {
       isFeatured: body.isFeatured ?? false,
       rating: 5.0,
       prepTime: body.prepTime ? Number(body.prepTime) : 15,
+      branchId: body.branchId ? Number(body.branchId) : null,
       toppings: body.toppings || [],
     });
 

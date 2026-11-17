@@ -318,9 +318,14 @@ function ContactChatContent() {
                   <div className="w-8 h-8 rounded-[6px] bg-red-50 flex items-center justify-center shrink-0 mt-0.5 text-[#A30029]">
                     <MapPin className="w-4 h-4" />
                   </div>
-                  <div>
-                    <strong className="block text-[#181d26]">Địa chỉ quán:</strong>
-                    <span>120 Yên Lãng, Đống Đa, Hà Nội</span>
+                  <div className="space-y-1">
+                    <strong className="block text-[#181d26]">Hệ thống cơ sở NooNee:</strong>
+                    <div className="text-[12px]">
+                      <span className="font-semibold text-[#181d26]">Cơ sở 1:</span> 120 Yên Lãng, Đống Đa, Hà Nội
+                    </div>
+                    <div className="text-[12px]">
+                      <span className="font-semibold text-[#181d26]">Cơ sở 2:</span> 269 Cầu Giấy, Quan Hoa, Cầu Giấy, Hà Nội
+                    </div>
                   </div>
                 </div>
 

@@ -17,8 +17,9 @@ export async function POST(request: NextRequest) {
     }
 
     const authUser = authenticateRequest(request);
+    if (!authUser) return NextResponse.json({ success: false, message: 'Vui lòng đăng nhập để tạo nhóm' }, { status: 401 });
     let hostName = authUser?.username || '';
-    let hostUserId = authUser?.userId || null;
+    let hostUserId = authUser.userId;
 
     try {
       const body = await request.json();

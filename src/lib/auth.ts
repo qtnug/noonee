@@ -2,7 +2,8 @@ import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 import { User } from '@/types';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'noonee-default-secret-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? '' : 'noonee-development-only-secret');
+if (!JWT_SECRET) throw new Error('JWT_SECRET must be configured in production');
 const JWT_EXPIRES_IN = '7d';
 
 export interface JwtPayload {
