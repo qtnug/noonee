@@ -8,7 +8,6 @@ import {
   CiShoppingTag as Tag,
   CiForkAndKnife as UtensilsCrossed,
   CiGift as Gift,
-  CiUser as Users,
   CiStar as Sparkles,
   CiCircleChevLeft as ChevronLeft,
   CiCircleChevRight as ChevronRight,
@@ -22,7 +21,6 @@ import ProductCard from '@/components/ProductCard';
 import { Product, Category } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
-import BranchSelector from '@/components/BranchSelector';
 
 const ITEMS_PER_PAGE = 8; // 4 cột x 2 dòng = 8 món mỗi trang
 
@@ -194,28 +192,6 @@ function MenuPageContent() {
             <p className="text-[14px] text-[#41454d] max-w-2xl leading-relaxed">
               Thực đơn phong phú hơn 50+ món cơm rang vàng ruộm, cơm tấm sườn bì chả, phở bò gia truyền, đồ ăn vặt và đồ uống mát lạnh chuẩn vị.
             </p>
-            <div className="pt-1 flex items-center gap-2 flex-wrap text-[13px]">
-              <span className="text-[#64748b]">Cơ sở đang duyệt:</span>
-              <BranchSelector compact />
-            </div>
-          </div>
-
-          {/* Group order banner & counter (STT 9) */}
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
-            <Link
-              href="/group"
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 hover:border-[#A30029] rounded-[6px] text-[13px] font-semibold text-[#A30029] shadow-xs transition hover:scale-[1.02]"
-            >
-              <Users className="w-4 h-4" />
-              <span>Đặt theo nhóm tiết kiệm</span>
-              <span className="px-1.5 py-0.5 bg-[#A30029] text-white text-[10px] font-extrabold rounded-full">
-                -10%
-              </span>
-            </Link>
-
-            <div className="px-4 py-2.5 bg-white rounded-[6px] border border-[#dddddd] text-[13px] text-[#41454d] shadow-2xs font-medium">
-              Đang hiển thị <strong className="text-[#A30029] font-bold">{filteredProducts.length}</strong> món ăn
-            </div>
           </div>
         </div>
       </div>

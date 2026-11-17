@@ -46,18 +46,28 @@ export default function AddressAutocompleteInput({
   const calcDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const isUserTypingRef = useRef<boolean>(false);
-  const lastCalculatedAddrRef = useRef<string>('');
+  const lastCalculatedKeyRef = useRef<string>('');
+
+  const onDistanceCalculatedRef = useRef(onDistanceCalculated);
+  useEffect(() => {
+    onDistanceCalculatedRef.current = onDistanceCalculated;
+  });
+
+  const onCalculatingChangeRef = useRef(onCalculatingChange);
+  useEffect(() => {
+    onCalculatingChangeRef.current = onCalculatingChange;
+  });
 
   // Calculate distance helper
   const calculateDistance = async (params: { placeId?: string; address?: string }) => {
     if (!params.placeId && (!params.address || !params.address.trim())) {
       setDistanceInfo(null);
-      if (onDistanceCalculated) onDistanceCalculated(null);
+      if (onDistanceCalculatedRef.current) onDistanceCalculatedRef.current(null);
       return;
     }
 
     setIsCalculating(true);
-    if (onCalculatingChange) onCalculatingChange(true);
+    if (onCalculatingChangeRef.current) onCalculatingChangeRef.current(true);
 
     try {
       const res = await fetch('/api/goong/distance', {
@@ -68,15 +78,15 @@ export default function AddressAutocompleteInput({
       const data = await res.json();
       if (data.success && data.data) {
         setDistanceInfo(data.data);
-        if (onDistanceCalculated) {
-          onDistanceCalculated(data.data);
+        if (onDistanceCalculatedRef.current) {
+          onDistanceCalculatedRef.current(data.data);
         }
       }
     } catch (err) {
       console.error('Error calculating distance:', err);
     } finally {
       setIsCalculating(false);
-      if (onCalculatingChange) onCalculatingChange(false);
+      if (onCalculatingChangeRef.current) onCalculatingChangeRef.current(false);
     }
   };
 
@@ -87,25 +97,31 @@ export default function AddressAutocompleteInput({
     }
   }, [value]);
 
-  // Auto-calculate shipping distance on initial mount or when external address prop arrives
+  // Auto-calculate shipping distance on initial mount or when external address/branch prop arrives
   useEffect(() => {
     const trimmed = (value || '').trim();
     if (!trimmed) {
       setDistanceInfo(null);
-      lastCalculatedAddrRef.current = '';
+      lastCalculatedKeyRef.current = '';
+      if (onDistanceCalculatedRef.current) onDistanceCalculatedRef.current(null);
       return;
     }
 
-    const shouldAutoCalc = autoCalculate ?? Boolean(onDistanceCalculated);
+    const calcKey = `${trimmed}___${branchId ?? 'default'}`;
+    if (calcKey === lastCalculatedKeyRef.current) {
+      return; // Already calculated for this address & branch
+    }
+
+    const shouldAutoCalc = autoCalculate ?? Boolean(onDistanceCalculatedRef.current);
     if (
       shouldAutoCalc &&
       trimmed.length >= 3 &&
       !isUserTypingRef.current
     ) {
-      lastCalculatedAddrRef.current = trimmed;
+      lastCalculatedKeyRef.current = calcKey;
       calculateDistance({ address: trimmed });
     }
-  }, [value, autoCalculate, onDistanceCalculated, branchId]);
+  }, [value, autoCalculate, branchId]);
 
   // Handle click outside to close dropdown & cleanup timers on unmount
   useEffect(() => {
@@ -178,12 +194,13 @@ export default function AddressAutocompleteInput({
     }, 280);
 
     // If user types/pastes and stops typing for 1200ms without picking dropdown, auto-calculate
-    const shouldAutoCalc = autoCalculate ?? Boolean(onDistanceCalculated);
+    const shouldAutoCalc = autoCalculate ?? Boolean(onDistanceCalculatedRef.current);
     if (shouldAutoCalc && text.trim().length >= 3) {
       calcDebounceTimerRef.current = setTimeout(() => {
         const trimmed = text.trim();
-        if (trimmed !== lastCalculatedAddrRef.current) {
-          lastCalculatedAddrRef.current = trimmed;
+        const calcKey = `${trimmed}___${branchId ?? 'default'}`;
+        if (calcKey !== lastCalculatedKeyRef.current) {
+          lastCalculatedKeyRef.current = calcKey;
           calculateDistance({ address: trimmed });
         }
       }, 1200);
@@ -194,7 +211,8 @@ export default function AddressAutocompleteInput({
     isUserTypingRef.current = false;
     if (calcDebounceTimerRef.current) clearTimeout(calcDebounceTimerRef.current);
     const selected = p.description || p.main_text;
-    lastCalculatedAddrRef.current = selected.trim();
+    const calcKey = `${selected.trim()}___${branchId ?? 'default'}`;
+    lastCalculatedKeyRef.current = calcKey;
     setInputValue(selected);
     onChange(selected);
     setIsOpen(false);
@@ -205,7 +223,7 @@ export default function AddressAutocompleteInput({
 
   const handleClear = () => {
     isUserTypingRef.current = false;
-    lastCalculatedAddrRef.current = '';
+    lastCalculatedKeyRef.current = '';
     if (calcDebounceTimerRef.current) clearTimeout(calcDebounceTimerRef.current);
     setInputValue('');
     onChange('');
@@ -213,7 +231,7 @@ export default function AddressAutocompleteInput({
     setIsOpen(false);
     setDistanceInfo(null);
     setSelectedIndex(-1);
-    if (onDistanceCalculated) onDistanceCalculated(null);
+    if (onDistanceCalculatedRef.current) onDistanceCalculatedRef.current(null);
   };
 
   // Keyboard navigation
@@ -224,8 +242,9 @@ export default function AddressAutocompleteInput({
         isUserTypingRef.current = false;
         if (calcDebounceTimerRef.current) clearTimeout(calcDebounceTimerRef.current);
         const trimmed = inputValue.trim();
-        if (trimmed !== lastCalculatedAddrRef.current) {
-          lastCalculatedAddrRef.current = trimmed;
+        const calcKey = `${trimmed}___${branchId ?? 'default'}`;
+        if (calcKey !== lastCalculatedKeyRef.current) {
+          lastCalculatedKeyRef.current = calcKey;
           calculateDistance({ address: trimmed });
         }
       }
@@ -246,8 +265,9 @@ export default function AddressAutocompleteInput({
         isUserTypingRef.current = false;
         if (calcDebounceTimerRef.current) clearTimeout(calcDebounceTimerRef.current);
         const trimmed = inputValue.trim();
-        if (trimmed !== lastCalculatedAddrRef.current) {
-          lastCalculatedAddrRef.current = trimmed;
+        const calcKey = `${trimmed}___${branchId ?? 'default'}`;
+        if (calcKey !== lastCalculatedKeyRef.current) {
+          lastCalculatedKeyRef.current = calcKey;
           calculateDistance({ address: trimmed });
         }
         setIsOpen(false);
@@ -261,8 +281,9 @@ export default function AddressAutocompleteInput({
     isUserTypingRef.current = false;
     setTimeout(() => {
       const trimmed = inputValue.trim();
-      if (trimmed && trimmed.length >= 3 && trimmed !== lastCalculatedAddrRef.current) {
-        lastCalculatedAddrRef.current = trimmed;
+      const calcKey = `${trimmed}___${branchId ?? 'default'}`;
+      if (trimmed && trimmed.length >= 3 && calcKey !== lastCalculatedKeyRef.current) {
+        lastCalculatedKeyRef.current = calcKey;
         calculateDistance({ address: trimmed });
       }
     }, 250);
@@ -331,14 +352,12 @@ export default function AddressAutocompleteInput({
                   handleSelectPrediction(p);
                 }}
                 onMouseEnter={() => setSelectedIndex(idx)}
-                className={`px-3.5 py-2.5 cursor-pointer flex items-start gap-2.5 text-left transition ${
-                  isSelected ? 'bg-[#fff1f2] text-[#A30029]' : 'hover:bg-gray-50 text-[#181d26]'
-                }`}
+                className={`px-3.5 py-2.5 cursor-pointer flex items-start gap-2.5 text-left transition ${isSelected ? 'bg-[#fff1f2] text-[#A30029]' : 'hover:bg-gray-50 text-[#181d26]'
+                  }`}
               >
                 <div
-                  className={`mt-0.5 p-1 rounded-full shrink-0 ${
-                    isSelected ? 'bg-[#A30029] text-white' : 'bg-gray-100 text-gray-500'
-                  }`}
+                  className={`mt-0.5 p-1 rounded-full shrink-0 ${isSelected ? 'bg-[#A30029] text-white' : 'bg-gray-100 text-gray-500'
+                    }`}
                 >
                   <MapPin className="w-3.5 h-3.5" />
                 </div>
@@ -369,11 +388,10 @@ export default function AddressAutocompleteInput({
       {/* Compact Distance & Fee Bar */}
       {distanceInfo && !isCalculating && (
         <div
-          className={`flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-3 py-2 rounded-[6px] text-[12px] border transition ${
-            distanceInfo.isOutOfRange || distanceInfo.distanceKm > 15
-              ? 'bg-[#fff1f2] border-[#fecdd3] text-[#A30029]'
-              : 'bg-gray-50 border-gray-200 text-gray-600'
-          }`}
+          className={`flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-3 py-2 rounded-[6px] text-[12px] border transition ${distanceInfo.isOutOfRange || distanceInfo.distanceKm > 15
+            ? 'bg-[#fff1f2] border-[#fecdd3] text-[#A30029]'
+            : 'bg-gray-50 border-gray-200 text-gray-600'
+            }`}
         >
           <div className="flex items-center gap-1.5">
             <Navigation className="w-3.5 h-3.5 text-[#A30029] shrink-0" />

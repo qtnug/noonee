@@ -15,11 +15,12 @@ import {
 } from 'react-icons/ci';
 import { Order } from '@/types';
 import { formatVND, formatDate } from '@/lib/utils';
+import { useAdminBranch } from '@/context/AdminBranchContext';
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [statusFilter, setStatusFilter] = useState('all');
-  const [branchFilter, setBranchFilter] = useState<'all' | '1' | '2'>('all');
+  const { adminBranch: branchFilter, setAdminBranch: setBranchFilter } = useAdminBranch();
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);

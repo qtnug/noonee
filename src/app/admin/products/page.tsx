@@ -21,6 +21,7 @@ import {
 } from 'react-icons/ci';
 import { Product, Category, ProductTopping } from '@/types';
 import { formatVND } from '@/lib/utils';
+import { useAdminBranch } from '@/context/AdminBranchContext';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -29,10 +30,17 @@ export default function AdminProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter & Sorting State
+  const { adminBranch, setAdminBranch } = useAdminBranch();
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<number | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'out_of_stock' | 'featured'>('all');
   const [branchFilter, setBranchFilter] = useState<'all' | '1' | '2' | 'both'>('all');
   const [sortOrder, setSortOrder] = useState<'default' | 'price_asc' | 'price_desc' | 'name_asc'>('default');
+
+  useEffect(() => {
+    if (adminBranch === 'all' || adminBranch === '1' || adminBranch === '2') {
+      setBranchFilter(adminBranch);
+    }
+  }, [adminBranch]);
 
   // Excel Import State
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -884,54 +892,23 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* Branch Assignment Field */}
-              <div className="space-y-1.5 p-3 bg-gray-50/80 rounded-lg border border-gray-200">
-                <label className="font-semibold text-[#181d26] flex items-center gap-1.5">
+              {/* Branch Assignment Field as Dropdown */}
+              <div className="space-y-1">
+                <label className="font-medium text-[#181d26] flex items-center gap-1.5">
                   <span>Cơ sở phục vụ món này</span>
                   <span className="text-[11px] text-gray-500 font-normal">
-                    (Phân bổ theo yêu cầu món ăn khác nhau giữa các cơ sở)
+                    (Phân bổ theo yêu cầu món ăn giữa các cơ sở)
                   </span>
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setFormBranchId(null)}
-                    className={`p-2.5 rounded-lg border text-left text-[12px] font-semibold transition cursor-pointer ${
-                      formBranchId === null
-                        ? 'bg-emerald-50 border-emerald-500 text-emerald-800 ring-1 ring-emerald-500 shadow-xs'
-                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="font-bold">🌿 Cả 2 cơ sở</div>
-                    <div className="text-[10px] text-gray-500 font-normal">Toàn bộ khách đều thấy</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setFormBranchId(1)}
-                    className={`p-2.5 rounded-lg border text-left text-[12px] font-semibold transition cursor-pointer ${
-                      formBranchId === 1
-                        ? 'bg-rose-50 border-[#A30029] text-[#A30029] ring-1 ring-[#A30029] shadow-xs'
-                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="font-bold">📍 Chỉ CS1 (120 Yên Lãng)</div>
-                    <div className="text-[10px] text-gray-500 font-normal">Khách khu vực Đống Đa</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setFormBranchId(2)}
-                    className={`p-2.5 rounded-lg border text-left text-[12px] font-semibold transition cursor-pointer ${
-                      formBranchId === 2
-                        ? 'bg-indigo-50 border-indigo-500 text-indigo-700 ring-1 ring-indigo-500 shadow-xs'
-                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="font-bold">📍 Chỉ CS2 (269 Cầu Giấy)</div>
-                    <div className="text-[10px] text-gray-500 font-normal">Khách khu vực Cầu Giấy</div>
-                  </button>
-                </div>
+                <select
+                  value={formBranchId === null ? '' : formBranchId}
+                  onChange={(e) => setFormBranchId(e.target.value === '' ? null : Number(e.target.value))}
+                  className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
+                >
+                  <option value="">🌿 Cả 2 cơ sở (Phục vụ toàn chuỗi)</option>
+                  <option value="1">📍 Chỉ Cơ sở 1: 120 Yên Lãng</option>
+                  <option value="2">📍 Chỉ Cơ sở 2: 269 Cầu Giấy</option>
+                </select>
               </div>
 
               {/* Image Upload & URL input */}

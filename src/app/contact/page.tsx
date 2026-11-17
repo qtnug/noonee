@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
   CiMapPin as MapPin,
@@ -20,18 +21,6 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { SupportMessage, Order } from '@/types';
 import { formatDate, formatVND } from '@/lib/utils';
-
-// Sample fallback orders if user has no orders or is a guest
-const SAMPLE_ORDERS = [
-  { code: 'NOONEE20260901', title: 'Cơm tấm Sài Gòn đặc biệt', price: 38000, status: 'Đang giao hàng' },
-  { code: 'NOONEE20260902', title: 'Phở bò tái nạm bắp hoa', price: 40000, status: 'Đang chế biến' },
-  { code: 'NOONEE20260903', title: 'Bún bò Huế cố đô', price: 42000, status: 'Đã hoàn thành' },
-  { code: 'NOONEE20260904', title: 'Cơm rang dương châu xá xíu', price: 35000, status: 'Đã hoàn thành' },
-  { code: 'NOONEE20260905', title: 'Gà popcorn giòn lắc phô mai', price: 35000, status: 'Đang giao hàng' },
-  { code: 'NOONEE20260906', title: 'Bánh tráng trộn sốt me', price: 20000, status: 'Đang chế biến' },
-  { code: 'NOONEE20260907', title: 'Trà sữa trân châu đường đen', price: 25000, status: 'Đã hoàn thành' },
-  { code: 'NOONEE20260908', title: 'Trà đào cam sả hạt chia', price: 22000, status: 'Đã hoàn thành' },
-];
 
 const STATUS_LABELS: Record<string, string> = {
   Pending: 'Chờ xác nhận',
@@ -97,11 +86,11 @@ function ContactChatContent() {
     }
   }, [user]);
 
-  // Build the complete dropdown options
+  // Build the complete dropdown options (Only genuine user orders)
   const dropdownOptions: DropdownItem[] = React.useMemo(() => {
     const list: DropdownItem[] = [];
 
-    // 1. User's own orders (if logged in)
+    // 1. User's own real orders (if logged in)
     if (userOrders.length > 0) {
       userOrders.forEach((o) => {
         const c = o.orderCode || (o as any).code;
@@ -139,18 +128,6 @@ function ContactChatContent() {
         isUserOrder: true,
       });
     }
-
-    // 4. Sample/demo orders (so the dropdown ALWAYS has items to choose from)
-    SAMPLE_ORDERS.forEach((s) => {
-      if (!list.some((item) => item.code.toLowerCase() === s.code.toLowerCase())) {
-        list.push({
-          code: s.code,
-          label: `#${s.code} • ${s.title} • ${formatVND(s.price)}`,
-          status: s.status,
-          isUserOrder: false,
-        });
-      }
-    });
 
     return list;
   }, [userOrders, urlOrderCode, orderCode]);
@@ -417,7 +394,13 @@ function ContactChatContent() {
                     onChange={(e) => handleDropdownChange(e.target.value)}
                     className="flex-1 h-9 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[12px] sm:text-[13px] font-medium text-[#181d26] focus:outline-none focus:border-[#A30029] focus:ring-1 focus:ring-[#A30029] cursor-pointer shadow-2xs truncate"
                   >
-                    <option value="">-- Bấm để chọn mã đơn hàng --</option>
+                    <option value="">
+                      {!user
+                        ? '-- Đăng nhập để chọn đơn hàng của bạn --'
+                        : userOrders.length === 0
+                          ? '-- Bạn chưa có đơn hàng nào --'
+                          : '-- Bấm để chọn đơn hàng của bạn --'}
+                    </option>
                     {dropdownOptions.map((opt) => (
                       <option key={opt.code} value={opt.code}>
                         {opt.label}
@@ -443,21 +426,35 @@ function ContactChatContent() {
                   </div>
                   <div className="max-w-md space-y-1.5">
                     <h3 className="text-base sm:text-lg font-bold text-[#0f172a]">
-                      Vui lòng chọn mã đơn hàng từ menu trên
+                      Vui lòng chọn đơn hàng cần hỗ trợ
                     </h3>
                     <p className="text-[13px] text-[#555a64] leading-relaxed">
-                      Để nhân viên CSKH tra cứu đúng đơn và hỗ trợ bạn nhanh nhất, bạn vui lòng bấm vào menu <strong className="text-[#A30029]">"Chọn mã đơn"</strong> ở trên trước khi nhắn tin.
+                      {!user
+                        ? 'Bạn chưa đăng nhập. Vui lòng đăng nhập để xem danh sách các đơn bạn đã đặt, hoặc tự nhập mã đơn hàng của bạn.'
+                        : userOrders.length === 0
+                          ? 'Tài khoản của bạn hiện chưa có đơn hàng nào. Bạn có thể tự nhập mã đơn nếu có để kết nối CSKH.'
+                          : 'Vui lòng bấm vào menu "Chọn mã đơn" ở trên để chọn đơn hàng bạn cần hỗ trợ trước khi gửi tin nhắn.'}
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setShowCustomModal(true)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white border border-[#dddddd] hover:border-[#A30029] text-[#181d26] hover:text-[#A30029] text-[12px] font-semibold shadow-2xs transition cursor-pointer"
-                  >
-                    <Edit className="w-3.5 h-3.5 text-[#A30029]" />
-                    <span>Hoặc nhập mã đơn của bạn</span>
-                  </button>
+                  <div className="flex items-center gap-2 flex-wrap justify-center">
+                    {!user && (
+                      <Link
+                        href="/login?redirect=/contact"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#A30029] text-white hover:bg-[#850021] text-[12px] font-semibold shadow-2xs transition cursor-pointer"
+                      >
+                        Đăng nhập tài khoản
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomModal(true)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white border border-[#dddddd] hover:border-[#A30029] text-[#181d26] hover:text-[#A30029] text-[12px] font-semibold shadow-2xs transition cursor-pointer"
+                    >
+                      <Edit className="w-3.5 h-3.5 text-[#A30029]" />
+                      <span>Nhập mã đơn của bạn</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
                 /* ── CHAT MESSAGES AREA (Active when order is confirmed) ── */
@@ -495,13 +492,12 @@ function ContactChatContent() {
                           </div>
 
                           <div
-                            className={`max-w-md sm:max-w-lg p-3 rounded-[8px] text-[13px] leading-relaxed shadow-2xs ${
-                              isAdmin
-                                ? 'bg-white border border-[#dddddd] text-[#181d26] rounded-tl-xs'
-                                : m.isComplaint
+                            className={`max-w-md sm:max-w-lg p-3 rounded-[8px] text-[13px] leading-relaxed shadow-2xs ${isAdmin
+                              ? 'bg-white border border-[#dddddd] text-[#181d26] rounded-tl-xs'
+                              : m.isComplaint
                                 ? 'bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] rounded-tr-xs font-medium'
                                 : 'bg-[#A30029] text-white rounded-tr-xs'
-                            }`}
+                              }`}
                           >
                             {m.isComplaint && (
                               <div className="flex items-center gap-1 text-[11px] font-bold text-[#A30029] mb-1">

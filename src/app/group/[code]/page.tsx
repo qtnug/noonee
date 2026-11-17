@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import QRCode from 'qrcode';
@@ -31,6 +31,7 @@ import {
 import { GroupOrder, GroupMember, GroupMemberItem, Product, ProductTopping } from '@/types';
 import { formatVND } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { useBranch } from '@/context/BranchContext';
 import { calculateGroupDiscount, MIN_GROUP_MEMBERS, MAX_GROUP_MEMBERS } from '@/lib/groupOrder';
 
 export default function GroupOrderRoomPage({
@@ -43,6 +44,7 @@ export default function GroupOrderRoomPage({
   const rawCode = (routeParams?.code as string) || params?.code || '';
   const code = rawCode.toUpperCase();
   const { user, getAuthHeader } = useAuth();
+  const { currentBranch } = useBranch();
 
   const [group, setGroup] = useState<GroupOrder | null>(null);
   const [loading, setLoading] = useState(true);
@@ -145,9 +147,9 @@ export default function GroupOrderRoomPage({
     }
   }, [group, loading, myMemberId, user, code]);
 
-  // Fetch products for dish picker
+  // Fetch products for dish picker according to selected branch
   useEffect(() => {
-    fetch('/api/products')
+    fetch(`/api/products?branch=${currentBranch.id}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.success && Array.isArray(data.data)) {
@@ -155,7 +157,7 @@ export default function GroupOrderRoomPage({
         }
       })
       .catch(() => {});
-  }, []);
+  }, [currentBranch.id]);
 
   // Generate QR Code
   useEffect(() => {
@@ -530,14 +532,15 @@ export default function GroupOrderRoomPage({
               Danh sách món từng thành viên ({group.members?.length || 0})
             </h2>
 
-            {/* Prominent Add Food Button for Current User (Requirement 4) */}
+            {/* Prominent Add Food Button for Current User */}
             {group.status === 'active' && myMemberId && (
               <button
+                type="button"
                 onClick={() => setShowFoodPicker(true)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#A30029] to-[#f43f5e] hover:from-[#850021] hover:to-[#e11d48] text-white font-extrabold text-[13px] sm:text-[14px] rounded-[6px] shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-[#A30029]/30"
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#A30029] hover:bg-[#850021] text-white font-bold text-[13px] sm:text-[14px] rounded-lg shadow-sm hover:shadow active:scale-95 transition-all cursor-pointer"
               >
-                <Plus className="w-4 h-4 stroke-[3]" />
-                <span>+ THÊM MÓN CHO TÔI</span>
+                <Plus className="w-4 h-4 stroke-[2.5]" />
+                <span>Thêm món cho tôi</span>
               </button>
             )}
           </div>
@@ -600,22 +603,8 @@ export default function GroupOrderRoomPage({
                   </div>
 
                   {/* Member Items */}
-                  <div className="pt-2">
-                    {(!member.items || member.items.length === 0) ? (
-                      <div className="flex items-center justify-between py-1">
-                        <p className="text-[12px] text-[#9aa0a6] italic">
-                          Chưa chọn món nào...
-                        </p>
-                        {isMe && group.status === 'active' && (
-                          <button
-                            onClick={() => setShowFoodPicker(true)}
-                            className="text-[11px] font-bold text-[#A30029] hover:underline cursor-pointer"
-                          >
-                            + Chọn món ngay
-                          </button>
-                        )}
-                      </div>
-                    ) : (
+                  {member.items && member.items.length > 0 && (
+                    <div className="pt-2">
                       <div className="space-y-1.5">
                         {member.items.map((it) => (
                           <div
@@ -683,8 +672,8 @@ export default function GroupOrderRoomPage({
                           </div>
                         ))}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -923,9 +912,12 @@ export default function GroupOrderRoomPage({
                   {/* Product List */}
                   <div className="space-y-3">
                     {products
-                      .filter((p) =>
-                        p.name.toLowerCase().includes(productSearch.toLowerCase())
-                      )
+                      .filter((p) => {
+                        if (p.branchId !== null && p.branchId !== undefined && p.branchId !== currentBranch.id) {
+                          return false;
+                        }
+                        return p.name.toLowerCase().includes(productSearch.toLowerCase());
+                      })
                       .map((p) => (
                         <div
                           key={p.id}

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   CiStar as Sparkles,
   CiCircleRemove as X,
@@ -191,6 +192,7 @@ function renderFormattedInline(text: string) {
 }
 
 export default function AIChatBot() {
+  const pathname = usePathname();
   const { addToCart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -201,8 +203,108 @@ export default function AIChatBot() {
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
   const [menuProducts, setMenuProducts] = useState<Product[]>([]);
 
+  // Dragging state
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
+  const buttonContainerRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const hasMovedRef = useRef(false);
+  const dragStartRef = useRef<{ startX: number; startY: number; btnX: number; btnY: number }>({
+    startX: 0,
+    startY: 0,
+    btnX: 0,
+    btnY: 0,
+  });
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Drag handlers for mouse & touch
+  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0) return;
+    isDraggingRef.current = true;
+    hasMovedRef.current = false;
+    setShowTooltip(false);
+
+    const el = buttonContainerRef.current;
+    const rect = el
+      ? el.getBoundingClientRect()
+      : { left: window.innerWidth - 72, top: window.innerHeight - 80 };
+
+    dragStartRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      btnX: rect.left,
+      btnY: rect.top,
+    };
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch { }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!isDraggingRef.current) return;
+    const dx = e.clientX - dragStartRef.current.startX;
+    const dy = e.clientY - dragStartRef.current.startY;
+
+    if (Math.hypot(dx, dy) > 4) {
+      hasMovedRef.current = true;
+    }
+
+    if (hasMovedRef.current) {
+      const btnSize = 56;
+      const margin = 12;
+      const newX = Math.max(
+        margin,
+        Math.min(window.innerWidth - btnSize - margin, dragStartRef.current.btnX + dx)
+      );
+      const newY = Math.max(
+        margin,
+        Math.min(window.innerHeight - btnSize - margin, dragStartRef.current.btnY + dy)
+      );
+      setPosition({ x: newX, y: newY });
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch { }
+
+    if (!hasMovedRef.current) {
+      setIsOpen((prev) => !prev);
+    }
+  };
+
+  // Popup position relative to button if dragged
+  const popupStyle = useMemo(() => {
+    if (!position) return undefined;
+    const winW = typeof window !== 'undefined' ? window.innerWidth : 400;
+    const winH = typeof window !== 'undefined' ? window.innerHeight : 700;
+    const isRight = position.x > winW / 2;
+    const isBottom = position.y > winH / 2;
+    const popupW = Math.min(winW - 24, 410);
+    const popupH = Math.min(winH - 100, 590);
+
+    const left = isRight
+      ? Math.max(12, position.x + 56 - popupW)
+      : Math.min(winW - popupW - 12, position.x);
+    const top = isBottom
+      ? Math.max(12, position.y - popupH - 12)
+      : Math.min(winH - popupH - 12, position.y + 68);
+
+    return {
+      position: 'fixed' as const,
+      left: `${left}px`,
+      top: `${top}px`,
+      width: `${popupW}px`,
+      height: `${popupH}px`,
+      right: 'auto',
+      bottom: 'auto',
+    };
+  }, [position]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -396,12 +498,31 @@ export default function AIChatBot() {
     }, 2500);
   };
 
+  // Hide AI button and chat on all admin pages
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <>
-      {/* ================= PINNED CORNER BUTTON ================= */}
-      <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40 flex items-center select-none">
-        {/* Greeting Tooltip */}
-        {!isOpen && showTooltip && (
+      {/* ================= PINNED/DRAGGABLE CORNER BUTTON ================= */}
+      <div
+        ref={buttonContainerRef}
+        style={
+          position
+            ? {
+              position: 'fixed',
+              left: `${position.x}px`,
+              top: `${position.y}px`,
+              zIndex: 40,
+            }
+            : undefined
+        }
+        className={`${position ? '' : 'fixed bottom-20 md:bottom-6 right-4 md:right-6'
+          } z-40 flex items-center select-none touch-none`}
+      >
+        {/* Greeting Tooltip (hidden if dragged away from default or opened) */}
+        {!isOpen && showTooltip && !position && (
           <div className="hidden sm:flex items-center gap-2 mr-3 bg-white text-[#1f2937] text-xs font-medium px-3.5 py-2 rounded-full shadow-lg border border-[#fecdd3] animate-bounce duration-1000">
             <Sparkles className="w-3.5 h-3.5 text-[#A30029] shrink-0" />
             <span>Hôm nay ăn gì? Bấm để hỏi quán nhé!</span>
@@ -419,16 +540,19 @@ export default function AIChatBot() {
           </div>
         )}
 
-        {/* Floating Pinned Button */}
+        {/* Draggable Floating Button */}
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label={isOpen ? 'Đóng tư vấn' : 'Mở tư vấn món ăn'}
-          className={`relative group flex items-center justify-center rounded-full shadow-xl transition-all duration-300 cursor-pointer ${
-            isOpen
-              ? 'w-12 h-12 bg-gray-800 text-white hover:bg-gray-900'
-              : 'w-14 h-14 bg-gradient-to-tr from-[#A30029] via-[#f03d52] to-[#ff5b4f] text-white hover:scale-105 active:scale-95 shadow-[#A30029]/30'
-          }`}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          aria-label={isOpen ? 'Đóng tư vấn' : 'Mở tư vấn món ăn (Kéo để di chuyển)'}
+          title={isOpen ? 'Đóng tư vấn' : 'NooNee (Bấm để mở, kéo để di chuyển vị trí)'}
+          className={`relative group flex items-center justify-center rounded-full shadow-xl transition-shadow cursor-grab active:cursor-grabbing select-none touch-none ${isOpen
+            ? 'w-12 h-12 bg-gray-800 text-white hover:bg-gray-900'
+            : 'w-14 h-14 bg-gradient-to-tr from-[#A30029] via-[#f03d52] to-[#ff5b4f] text-white hover:scale-105 active:scale-95 shadow-[#A30029]/30'
+            }`}
         >
           {!isOpen && (
             <span className="absolute -inset-1 rounded-full bg-[#A30029] opacity-30 animate-ping pointer-events-none" />
@@ -452,7 +576,11 @@ export default function AIChatBot() {
       {/* ================= CHATBOT POPUP WINDOW ================= */}
       {isOpen && (
         <div
-          className="fixed bottom-24 md:bottom-20 right-4 md:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[410px] h-[590px] max-h-[calc(100dvh-7.5rem)] bg-white rounded-2xl shadow-2xl border border-[#fed7aa]/60 sm:border-[#fecdd3] flex flex-col overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-5"
+          style={popupStyle}
+          className={`${popupStyle
+            ? ''
+            : 'fixed bottom-24 md:bottom-20 right-4 md:right-6 w-[calc(100vw-2rem)] sm:w-[410px] h-[590px] max-h-[calc(100dvh-7.5rem)]'
+            } z-50 bg-white rounded-2xl shadow-2xl border border-[#fed7aa]/60 sm:border-[#fecdd3] flex flex-col overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-5`}
           role="dialog"
           aria-label="NooNee"
         >
@@ -512,16 +640,14 @@ export default function AIChatBot() {
                 )}
 
                 <div
-                  className={`flex flex-col ${
-                    msg.role === 'user' ? 'items-end max-w-[82%]' : 'items-start max-w-[88%]'
-                  }`}
+                  className={`flex flex-col ${msg.role === 'user' ? 'items-end max-w-[82%]' : 'items-start max-w-[88%]'
+                    }`}
                 >
                   <div
-                    className={`px-3.5 py-2.5 rounded-2xl shadow-xs text-sm ${
-                      msg.role === 'user'
-                        ? 'bg-[#A30029] text-white rounded-tr-xs'
-                        : 'bg-white border border-[#eaeaea] text-[#1f2937] rounded-tl-xs'
-                    }`}
+                    className={`px-3.5 py-2.5 rounded-2xl shadow-xs text-sm ${msg.role === 'user'
+                      ? 'bg-[#A30029] text-white rounded-tr-xs'
+                      : 'bg-white border border-[#eaeaea] text-[#1f2937] rounded-tl-xs'
+                      }`}
                   >
                     <MarkdownText content={msg.content} />
 

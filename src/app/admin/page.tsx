@@ -22,6 +22,7 @@ import {
 } from 'react-icons/ci';
 import { formatVND } from '@/lib/utils';
 import { Order } from '@/types';
+import { useAdminBranch } from '@/context/AdminBranchContext';
 import {
   PieChart,
   Pie,
@@ -40,7 +41,7 @@ export default function AdminOverviewPage() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<'today' | 'week' | 'month' | 'quarter' | 'all'>('week');
-  const [selectedBranch, setSelectedBranch] = useState<'all' | '1' | '2'>('all');
+  const { adminBranch: selectedBranch, setAdminBranch: setSelectedBranch } = useAdminBranch();
   const [updatingCode, setUpdatingCode] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 

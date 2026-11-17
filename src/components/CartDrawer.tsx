@@ -12,7 +12,6 @@ import {
 import { useCart } from '@/context/CartContext';
 import { useBranch } from '@/context/BranchContext';
 import { formatVND } from '@/lib/utils';
-import BranchSelector from '@/components/BranchSelector';
 
 export default function CartDrawer() {
   const { cart, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart, totalPrice, totalItems } = useCart();
@@ -59,14 +58,11 @@ export default function CartDrawer() {
           </div>
 
           {/* Active Branch Notice */}
-          <div className="bg-[#FFFAF0] px-4 py-2 border-b border-[#ebdcd0] flex items-center justify-between gap-2 text-[12px]">
-            <div className="flex items-center gap-1.5 text-gray-700 truncate">
-              <span className="w-2 h-2 rounded-full bg-[#A30029] shrink-0" />
-              <span className="truncate">
-                Giao từ: <strong className="text-[#A30029]">{currentBranch.shortName}</strong>
-              </span>
-            </div>
-            <BranchSelector compact />
+          <div className="bg-[#FFFAF0] px-4 py-2 border-b border-[#ebdcd0] flex items-center gap-1.5 text-[12px] text-gray-700">
+            <span className="w-2 h-2 rounded-full bg-[#A30029] shrink-0" />
+            <span className="truncate">
+              Giao từ: <strong className="text-[#A30029]">{currentBranch.shortName}</strong> ({currentBranch.address})
+            </span>
           </div>
 
           {/* Body Items */}

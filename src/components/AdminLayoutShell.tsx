@@ -18,6 +18,7 @@ import {
   CiLogout as LogOut,
 } from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
+import { useAdminBranch } from '@/context/AdminBranchContext';
 import AdminHeaderUser from '@/components/AdminHeaderUser';
 
 export default function AdminLayoutShell({ children }: { children: React.ReactNode }) {
@@ -25,6 +26,13 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
   const [hasUnreadComplaint, setHasUnreadComplaint] = useState(false);
   const pathname = usePathname();
   const { logout } = useAuth();
+  const { adminBranch, setAdminBranch } = useAdminBranch();
+
+  const chromeTabs: { id: 'all' | '1' | '2'; title: string; icon: string }[] = [
+    { id: 'all', title: 'Tất cả cơ sở', icon: '🏢' },
+    { id: '1', title: 'CS1: 120 Yên Lãng', icon: '📍' },
+    { id: '2', title: 'CS2: 269 Cầu Giấy', icon: '📍' },
+  ];
 
   React.useEffect(() => {
     const checkSupport = async () => {
@@ -203,9 +211,9 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
 
       {/* 3. Main Workspace Container */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Header */}
-        <header className="h-16 bg-white border-b border-[#dddddd] px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 sticky top-0 z-20">
-          <div className="flex items-center gap-3">
+        {/* Top Header with Chrome-Style Tabs */}
+        <header className="h-16 bg-[#f8fafc] border-b border-[#dddddd] px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4 sticky top-0 z-20">
+          <div className="flex items-center gap-2.5 shrink-0">
             {/* Mobile Hamburger Toggle */}
             <button
               onClick={() => setMobileDrawerOpen(true)}
@@ -215,18 +223,48 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
               <Menu className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-[#006400] animate-pulse" />
-              <span className="text-[12px] sm:text-[13px] font-medium text-[#181d26]">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-[#006400] animate-pulse shrink-0" />
+              <span className="text-[12px] sm:text-[13px] font-medium text-[#181d26] whitespace-nowrap">
                 Hệ thống trực tuyến
               </span>
-              <span className="text-[12px] text-[#9297a0] hidden xl:inline">
+              <span className="text-[12px] text-[#9297a0] hidden 2xl:inline whitespace-nowrap">
                 • CSDL Cloud & Cổng thanh toán ổn định
               </span>
             </div>
           </div>
 
-          <AdminHeaderUser />
+          {/* Chrome-Style Branch Tabs */}
+          <div className="flex items-end self-end h-full pt-2 overflow-x-auto no-scrollbar gap-1 min-w-0" role="tablist">
+            {chromeTabs.map((tab) => {
+              const isActive = adminBranch === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setAdminBranch(tab.id)}
+                  className={`group relative flex items-center gap-1.5 px-3 sm:px-4 py-2 text-[12px] sm:text-[13px] rounded-t-lg transition-all cursor-pointer whitespace-nowrap select-none ${
+                    isActive
+                      ? 'bg-white text-[#181d26] font-bold border-t-2 border-t-[#A30029] border-x border-[#dddddd] -mb-[1px] shadow-2xs z-10'
+                      : 'bg-[#eaedf1] hover:bg-[#dfe3e7] text-[#555a64] font-medium border-t border-transparent hover:text-[#181d26]'
+                  }`}
+                  title={`Chuyển xem dữ liệu: ${tab.title}`}
+                >
+                  <span className="text-[13px]">{tab.icon}</span>
+                  <span className="truncate">{tab.title}</span>
+                  {isActive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#A30029] shrink-0" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="shrink-0">
+            <AdminHeaderUser />
+          </div>
         </header>
 
         {/* Main Content Area */}

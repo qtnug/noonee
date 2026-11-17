@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -31,7 +31,6 @@ import { MembershipTierInfo } from '@/lib/membership';
 import AddressAutocompleteInput from '@/components/AddressAutocompleteInput';
 import { DistanceCalculationResult } from '@/lib/goong';
 import { useBranch } from '@/context/BranchContext';
-import { getBranchById } from '@/lib/branches';
 
 function CheckoutContent() {
   const router = useRouter();
@@ -40,7 +39,7 @@ function CheckoutContent() {
 
   const { cart, totalPrice, clearCart } = useCart();
   const { user, isLoading, getAuthHeader } = useAuth();
-  const { currentBranch, selectBranch, allBranches } = useBranch();
+  const { currentBranch } = useBranch();
 
   const [groupOrder, setGroupOrder] = useState<GroupOrder | null>(null);
   const [isLoadingGroup, setIsLoadingGroup] = useState(false);
@@ -327,6 +326,15 @@ function CheckoutContent() {
   const [distanceData, setDistanceData] = useState<DistanceCalculationResult | null>(null);
   const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
   const isOutOfRange = Boolean(distanceData && (distanceData.isOutOfRange || distanceData.distanceKm > 15));
+
+  const handleDistanceCalculated = useCallback((dist: DistanceCalculationResult | null) => {
+    setDistanceData(dist);
+    setIsCalculatingDistance(false);
+  }, []);
+
+  const handleCalculatingChange = useCallback((isCalc: boolean) => {
+    setIsCalculatingDistance(isCalc);
+  }, []);
 
   const baseShippingFee = distanceData ? distanceData.shippingFee : 15000;
   const memberShippingDiscount = tierInfo ? Math.min(baseShippingFee, tierInfo.shippingDiscount) : 0;
@@ -643,52 +651,12 @@ function CheckoutContent() {
                   </div>
                 </div>
 
-                {/* Branch Selection & Preparation Source */}
-                <div className="p-3.5 bg-rose-50/50 border border-rose-200/80 rounded-xl space-y-2">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#A30029] animate-pulse shrink-0" />
-                      <span className="text-[13px] font-bold text-gray-900">
-                        Cơ sở chuẩn bị & giao đơn:
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {allBranches.map((b) => (
-                        <button
-                          key={b.id}
-                          type="button"
-                          onClick={() => selectBranch(b.id)}
-                          className={`px-2.5 py-1 text-[11px] font-bold rounded-lg border transition cursor-pointer ${
-                            b.id === currentBranch.id
-                              ? 'bg-[#A30029] text-white border-[#A30029] shadow-xs'
-                              : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                          }`}
-                        >
-                          {b.shortName}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <p className="text-[12px] text-gray-600">
-                    📍 {currentBranch.address} • Hotline: {currentBranch.phone}
-                  </p>
-
-                  {/* Smart Nearest Branch Recommendation if user is closer to the other branch */}
-                  {distanceData?.nearestBranchId && distanceData.nearestBranchId !== currentBranch.id && (
-                    <div className="mt-2 pt-2 border-t border-rose-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-amber-50/80 p-2.5 rounded-lg border border-amber-200 text-amber-900 text-[12px]">
-                      <span>
-                        💡 <strong>Gợi ý:</strong> Địa chỉ của bạn gần hơn với{' '}
-                        <strong>{getBranchById(distanceData.nearestBranchId).name}</strong>.
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => selectBranch(distanceData.nearestBranchId!)}
-                        className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded text-[11px] shrink-0 transition cursor-pointer"
-                      >
-                        Chuyển sang cơ sở này
-                      </button>
-                    </div>
-                  )}
+                {/* Branch Origin Info (Display only, no switching) */}
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-700 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#A30029] shrink-0" />
+                  <span>
+                    Giao từ: <strong className="text-gray-900 font-semibold">{currentBranch.name}</strong> ({currentBranch.address})
+                  </span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -703,11 +671,8 @@ function CheckoutContent() {
                         setDistanceData(null);
                       }
                     }}
-                    onDistanceCalculated={(dist) => {
-                      setDistanceData(dist);
-                      setIsCalculatingDistance(false);
-                    }}
-                    onCalculatingChange={(isCalc) => setIsCalculatingDistance(isCalc)}
+                    onDistanceCalculated={handleDistanceCalculated}
+                    onCalculatingChange={handleCalculatingChange}
                     branchId={currentBranch.id}
                     required
                   />

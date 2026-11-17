@@ -1,6 +1,7 @@
 import React from 'react';
 import AdminGuard from '@/components/AdminGuard';
 import AdminLayoutShell from '@/components/AdminLayoutShell';
+import { AdminBranchProvider } from '@/context/AdminBranchContext';
 
 export const metadata = {
   title: 'Quản trị hệ thống NooNee - Workspace',
@@ -13,7 +14,9 @@ export default function AdminLayout({
 }) {
   return (
     <AdminGuard>
-      <AdminLayoutShell>{children}</AdminLayoutShell>
+      <AdminBranchProvider>
+        <AdminLayoutShell>{children}</AdminLayoutShell>
+      </AdminBranchProvider>
     </AdminGuard>
   );
 }
