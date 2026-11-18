@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   CiCircleCheck as ShieldCheck,
   CiLock as Lock,
@@ -13,12 +14,39 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import HypotrochoidLoader from '@/components/HypotrochoidLoader';
 
+const MANAGER_ALLOWED_PATHS = ['/admin', '/admin/orders', '/admin/products'];
+const STAFF_ALLOWED_PATHS = ['/admin/orders'];
+
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
   const { user, login, logout, isLoading } = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isPortalUser =
+    Boolean(user) && (user?.role === 'admin' || user?.role === 'manager' || user?.role === 'staff');
+
+  const isRouteAllowed = React.useMemo(() => {
+    if (!user) return false;
+    if (user.role === 'admin') return true;
+    if (user.role === 'manager') return MANAGER_ALLOWED_PATHS.includes(pathname);
+    if (user.role === 'staff') return STAFF_ALLOWED_PATHS.includes(pathname);
+    return false;
+  }, [user, pathname]);
+
+  useEffect(() => {
+    if (isLoading || !user || !isPortalUser) return;
+    if (!isRouteAllowed) {
+      if (user.role === 'staff') {
+        router.replace('/admin/orders');
+      } else if (user.role === 'manager') {
+        router.replace('/admin');
+      }
+    }
+  }, [isLoading, user, isPortalUser, isRouteAllowed, router]);
 
   // 1. Loading state
   if (isLoading) {
@@ -32,18 +60,28 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
     );
   }
 
-  // 2. User is logged in AND is admin -> Render Admin UI
-  if (user && user.role === 'admin') {
+  // 2. User is logged in with portal role -> Render Admin UI (or redirect if route restricted)
+  if (user && isPortalUser) {
+    if (!isRouteAllowed) {
+      return (
+        <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-4">
+          <HypotrochoidLoader
+            size={90}
+            label="Đang chuyển về khu vực được phân quyền..."
+          />
+        </div>
+      );
+    }
     return <>{children}</>;
   }
 
-  // 3. User is NOT logged in or is not admin -> Show Admin Login Form
+  // 3. User is NOT logged in or is customer -> Show Admin Login Form
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
     if (!username.trim() || !password) {
-      setErrorMsg('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu quản trị');
+      setErrorMsg('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu');
       return;
     }
 
@@ -63,11 +101,17 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
         throw new Error(data.message || 'Đăng nhập không thành công');
       }
 
-      if (data.user.role !== 'admin') {
-        throw new Error('Tài khoản này không có quyền Quản trị viên (Admin)');
+      const role = data.user?.role;
+      if (role !== 'admin' && role !== 'manager' && role !== 'staff') {
+        throw new Error('Tài khoản khách hàng không có quyền truy cập trang quản trị');
       }
 
       login(data.user);
+      if (role === 'staff') {
+        router.replace('/admin/orders');
+      } else {
+        router.replace('/admin');
+      }
     } catch (err: any) {
       setErrorMsg(err.message || 'Có lỗi xảy ra khi xác thực');
     } finally {

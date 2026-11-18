@@ -37,7 +37,9 @@ function LoginContent() {
   // Prevent logged in users from visiting login/register page
   useEffect(() => {
     if (user) {
-      if (user.role === 'admin') {
+      if (user.role === 'staff') {
+        router.replace('/admin/orders');
+      } else if (user.role === 'admin' || user.role === 'manager') {
         router.replace('/admin');
       } else {
         router.replace('/');
@@ -72,7 +74,9 @@ function LoginContent() {
       }
 
       login(data.user);
-      if (data.user.role === 'admin') {
+      if (data.user.role === 'staff') {
+        router.push('/admin/orders');
+      } else if (data.user.role === 'admin' || data.user.role === 'manager') {
         router.push('/admin');
       } else {
         router.push('/');

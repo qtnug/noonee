@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
-import { User } from '@/types';
+import { User, UserRole } from '@/types';
+import { getUserById } from '@/lib/db';
 
 const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? '' : 'noonee-development-only-secret');
 if (!JWT_SECRET) throw new Error('JWT_SECRET must be configured in production');
@@ -9,7 +10,12 @@ const JWT_EXPIRES_IN = '7d';
 export interface JwtPayload {
   userId: number;
   username: string;
-  role: 'admin' | 'customer';
+  role: UserRole;
+  branchId?: number | null;
+}
+
+export function isPortalRole(role?: string | null): boolean {
+  return role === 'admin' || role === 'manager' || role === 'staff';
 }
 
 /**
@@ -20,6 +26,7 @@ export function generateToken(user: User): string {
     userId: user.id,
     username: user.username,
     role: user.role,
+    branchId: user.branchId ?? null,
   };
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
@@ -75,14 +82,51 @@ export function requireAuth(request: NextRequest): JwtPayload {
 }
 
 /**
- * Require admin role - returns user payload or throws
+ * Require Super Admin (Tổng quản lý) role - returns user payload or throws
  */
 export function requireAdmin(request: NextRequest): JwtPayload {
   const payload = requireAuth(request);
   if (payload.role !== 'admin') {
-    throw new AuthError('Bạn không có quyền truy cập chức năng này (yêu cầu quyền Admin)', 403);
+    throw new AuthError('Bạn không có quyền truy cập chức năng này (yêu cầu quyền Tổng quản lý)', 403);
   }
   return payload;
+}
+
+/**
+ * Require Manager or Super Admin role
+ */
+export function requireManagerOrAdmin(request: NextRequest): JwtPayload {
+  const payload = requireAuth(request);
+  if (payload.role !== 'admin' && payload.role !== 'manager') {
+    throw new AuthError('Bạn không có quyền thực hiện thao tác này (yêu cầu quyền Quản lý trở lên)', 403);
+  }
+  return payload;
+}
+
+/**
+ * Require any internal portal role (admin, manager, staff)
+ */
+export function requirePortalRole(request: NextRequest): JwtPayload {
+  const payload = requireAuth(request);
+  if (!isPortalRole(payload.role)) {
+    throw new AuthError('Tài khoản này không có quyền truy cập cổng quản trị', 403);
+  }
+  return payload;
+}
+
+/**
+ * Resolve live user record from DB (ensuring account is not locked/deleted and role/branchId are fresh)
+ */
+export async function resolveLiveUser(request: NextRequest): Promise<User> {
+  const payload = requireAuth(request);
+  const liveUser = await getUserById(payload.userId);
+  if (!liveUser) {
+    throw new AuthError('Tài khoản không còn tồn tại trong hệ thống', 401);
+  }
+  if (liveUser.isActive === false) {
+    throw new AuthError('Tài khoản của bạn hiện đang bị tạm khóa', 403);
+  }
+  return liveUser;
 }
 
 /**

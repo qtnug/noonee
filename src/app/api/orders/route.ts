@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrders, createOrder, getProducts, hasUserPaidFirstVietqr, getUserSpendingStats, getGroupOrderByCode, completeGroupOrder, getCouponByCode } from '@/lib/db';
-import { generateOrderCode } from '@/lib/utils';
+import { generateOrderCode, maskPhoneNumber } from '@/lib/utils';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
-import { requireAuth, requireAdmin, authenticateRequest, AuthError } from '@/lib/auth';
+import { requireAuth, resolveLiveUser, AuthError } from '@/lib/auth';
 import { validateCoupon } from '@/lib/coupons';
 import { getMembershipTier } from '@/lib/membership';
 import { calculateGroupDiscount } from '@/lib/groupOrder';
@@ -11,30 +11,48 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const authUser = authenticateRequest(request);
-    if (!authUser) {
-      return NextResponse.json({ success: false, message: 'Vui lòng đăng nhập để xem danh sách đơn hàng' }, { status: 401 });
+    let liveUser;
+    try {
+      liveUser = await resolveLiveUser(request);
+    } catch (authErr) {
+      if (authErr instanceof AuthError) {
+        return NextResponse.json({ success: false, message: authErr.message }, { status: authErr.status });
+      }
+      throw authErr;
     }
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || undefined;
     const search = searchParams.get('search') || undefined;
     const branchParam = searchParams.get('branchId') || searchParams.get('branch');
-    const branchId = branchParam && branchParam !== 'all' ? parseInt(branchParam) : undefined;
+    let branchId = branchParam && branchParam !== 'all' ? parseInt(branchParam) : undefined;
     const userIdParam = searchParams.get('userId');
     const page = searchParams.get('page') ? parseInt(searchParams.get('page')!) : undefined;
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
 
     let targetUserId: number | undefined;
+    const isPersonalLookup = userIdParam && parseInt(userIdParam) === liveUser.id;
 
-    if (authUser.role === 'admin') {
+    if (liveUser.role === 'admin') {
       targetUserId = userIdParam ? parseInt(userIdParam) : undefined;
+    } else if ((liveUser.role === 'manager' || liveUser.role === 'staff') && !isPersonalLookup) {
+      targetUserId = undefined;
+      branchId = liveUser.branchId || 1;
     } else {
-      // Regular customer can only see their own orders
-      targetUserId = authUser.userId;
+      // Regular customer (or staff viewing personal orders) can only see their own orders
+      targetUserId = liveUser.id;
     }
 
-    const orders = await getOrders({ status, search, userId: targetUserId, branchId, page, limit });
+    let orders = await getOrders({ status, search, userId: targetUserId, branchId, page, limit });
+
+    // Staff only sees customer name, delivery address, and partially masked phone number
+    if (liveUser.role === 'staff' && !isPersonalLookup) {
+      orders = orders.map((o) => ({
+        ...o,
+        customerPhone: maskPhoneNumber(o.customerPhone),
+      }));
+    }
+
     return NextResponse.json({ success: true, data: orders });
   } catch (error: any) {
     console.error('Error fetching orders:', error);

@@ -22,6 +22,7 @@ import {
 } from 'react-icons/ci';
 import { formatVND } from '@/lib/utils';
 import { Order } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 import { useAdminBranch } from '@/context/AdminBranchContext';
 import {
   PieChart,
@@ -38,9 +39,11 @@ import {
 } from 'recharts';
 
 export default function AdminOverviewPage() {
+  const { user, isAdmin, isManager } = useAuth();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState<'today' | 'week' | 'month' | 'quarter' | 'all'>('week');
+  const [periodState, setPeriod] = useState<'today' | 'week' | 'month' | 'quarter' | 'all'>('week');
+  const period = isManager ? 'today' : periodState;
   const { adminBranch: selectedBranch } = useAdminBranch();
   const [updatingCode, setUpdatingCode] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -144,13 +147,15 @@ export default function AdminOverviewPage() {
             <UtensilsCrossed className="w-4 h-4" />
             <span>Thêm món mới</span>
           </Link>
-          <Link
-            href="/admin/diagnostics"
-            className="h-9 sm:h-10 px-3 sm:px-4 bg-white hover:bg-[#f8fafc] text-[#181d26] border border-[#dddddd] text-[12px] sm:text-[13px] font-medium rounded-[6px] flex items-center gap-1.5 transition"
-          >
-            <Activity className="w-4 h-4 text-[#006400]" />
-            <span>CSDL & Chẩn đoán</span>
-          </Link>
+          {isAdmin && (
+            <Link
+              href="/admin/diagnostics"
+              className="h-9 sm:h-10 px-3 sm:px-4 bg-white hover:bg-[#f8fafc] text-[#181d26] border border-[#dddddd] text-[12px] sm:text-[13px] font-medium rounded-[6px] flex items-center gap-1.5 transition"
+            >
+              <Activity className="w-4 h-4 text-[#006400]" />
+              <span>CSDL & Chẩn đoán</span>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -162,7 +167,7 @@ export default function AdminOverviewPage() {
         </div>
       )}
 
-      {/* Time Period Filter Bar (Tuần / Tháng / Quý / Hôm nay / Tất cả) */}
+      {/* Time Period Filter Bar (Admin: all periods; Manager: Today only) */}
       <div className="bg-white p-3 sm:p-4 rounded-[10px] border border-[#dddddd] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-[13px] font-semibold text-[#181d26]">
           <Calendar className="w-4 h-4 text-[#A30029]" />
@@ -170,26 +175,32 @@ export default function AdminOverviewPage() {
           <span className="text-[#A30029] font-bold">({periodLabels[period]})</span>
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-          {(['today', 'week', 'month', 'quarter', 'all'] as const).map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 text-[12px] rounded-lg transition whitespace-nowrap cursor-pointer ${
-                period === p
-                  ? 'bg-[#A30029] text-white shadow-xs font-bold'
-                  : 'bg-gray-100 hover:bg-gray-200 text-[#475569] font-medium'
-              }`}
-            >
-              {p === 'today' && 'Hôm nay'}
-              {p === 'week' && 'Tuần này'}
-              {p === 'month' && 'Tháng này'}
-              {p === 'quarter' && 'Quý này'}
-              {p === 'all' && 'Toàn thời gian'}
-            </button>
-          ))}
-        </div>
+        {isAdmin ? (
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+            {(['today', 'week', 'month', 'quarter', 'all'] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPeriod(p)}
+                className={`px-3 py-1.5 text-[12px] rounded-lg transition whitespace-nowrap cursor-pointer ${
+                  period === p
+                    ? 'bg-[#A30029] text-white shadow-xs font-bold'
+                    : 'bg-gray-100 hover:bg-gray-200 text-[#475569] font-medium'
+                }`}
+              >
+                {p === 'today' && 'Hôm nay'}
+                {p === 'week' && 'Tuần này'}
+                {p === 'month' && 'Tháng này'}
+                {p === 'quarter' && 'Quý này'}
+                {p === 'all' && 'Toàn thời gian'}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <span className="px-3 py-1.5 text-[12px] rounded-lg bg-[#A30029] text-white font-bold self-start sm:self-auto">
+            Doanh thu ngày hôm nay
+          </span>
+        )}
       </div>
 
       {/* Chain Branch Breakdown Comparison (Displayed when All Branches is selected) */}

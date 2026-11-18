@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import cloudinary from '@/lib/cloudinary';
-import { requireAdmin, AuthError } from '@/lib/auth';
+import { resolveLiveUser, AuthError } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
     try {
-      requireAdmin(request);
+      const liveUser = await resolveLiveUser(request);
+      if (liveUser.role !== 'admin' && liveUser.role !== 'manager') {
+        return NextResponse.json(
+          { success: false, message: 'Bạn không có quyền tải ảnh lên' },
+          { status: 403 }
+        );
+      }
     } catch (authErr) {
       if (authErr instanceof AuthError) {
         return NextResponse.json({ success: false, message: authErr.message }, { status: authErr.status });

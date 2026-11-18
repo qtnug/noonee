@@ -9,6 +9,9 @@ interface AuthContextType {
   login: (user: User) => void;
   logout: () => void;
   isAdmin: boolean;
+  isManager: boolean;
+  isStaff: boolean;
+  isPortalUser: boolean;
   isLoading: boolean;
   getAuthHeader: () => Record<string, string>;
 }
@@ -54,6 +57,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         isAdmin: user?.role === 'admin',
+        isManager: user?.role === 'manager',
+        isStaff: user?.role === 'staff',
+        isPortalUser: user?.role === 'admin' || user?.role === 'manager' || user?.role === 'staff',
         isLoading,
         getAuthHeader,
       }}

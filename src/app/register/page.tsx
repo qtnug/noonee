@@ -13,7 +13,13 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (user) {
-      router.replace(user.role === 'admin' ? '/admin' : '/');
+      if (user.role === 'staff') {
+        router.replace('/admin/orders');
+      } else if (user.role === 'admin' || user.role === 'manager') {
+        router.replace('/admin');
+      } else {
+        router.replace('/');
+      }
     } else {
       router.replace('/login?mode=register');
     }

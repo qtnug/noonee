@@ -9,7 +9,10 @@ export default function AdminLoginPage() {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user && user.role === 'admin') {
+    if (!user) return;
+    if (user.role === 'staff') {
+      router.replace('/admin/orders');
+    } else if (user.role === 'admin' || user.role === 'manager') {
       router.replace('/admin');
     }
   }, [user, router]);

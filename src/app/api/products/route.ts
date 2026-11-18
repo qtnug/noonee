@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getProducts, createProduct } from '@/lib/db';
-import { requireAdmin, AuthError, authErrorResponse } from '@/lib/auth';
+import { resolveLiveUser, AuthError } from '@/lib/auth';
 import { generateSlug } from '@/lib/utils';
 import { checkRateLimit, getClientIp, getRateLimitHeaders } from '@/lib/rateLimit';
 import { sanitizeText } from '@/lib/security';
@@ -56,13 +56,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let liveUser;
     try {
-      requireAdmin(request);
+      liveUser = await resolveLiveUser(request);
     } catch (authErr) {
       if (authErr instanceof AuthError) {
         return NextResponse.json({ success: false, message: authErr.message }, { status: authErr.status });
       }
       throw authErr;
+    }
+
+    if (liveUser.role !== 'admin' && liveUser.role !== 'manager') {
+      return NextResponse.json(
+        { success: false, message: 'Bạn không có quyền thêm món ăn mới' },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
@@ -73,6 +81,11 @@ export async function POST(request: NextRequest) {
     const cleanName = sanitizeText(body.name, 150);
     const cleanDesc = sanitizeText(body.description || '', 1000);
     const slug = body.slug || generateSlug(cleanName);
+    const resolvedBranchId =
+      liveUser.role === 'manager'
+        ? (liveUser.branchId || 1)
+        : (body.branchId ? Number(body.branchId) : null);
+
     const newProduct = await createProduct({
       categoryId: Number(body.categoryId),
       name: cleanName,
@@ -84,7 +97,7 @@ export async function POST(request: NextRequest) {
       isFeatured: body.isFeatured ?? false,
       rating: 5.0,
       prepTime: body.prepTime ? Number(body.prepTime) : 15,
-      branchId: body.branchId ? Number(body.branchId) : null,
+      branchId: resolvedBranchId,
       toppings: body.toppings || [],
     });
 

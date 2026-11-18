@@ -21,9 +21,11 @@ import {
 } from 'react-icons/ci';
 import { Product, Category, ProductTopping } from '@/types';
 import { formatVND } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 import { useAdminBranch } from '@/context/AdminBranchContext';
 
 export default function AdminProductsPage() {
+  const { isAdmin } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -452,21 +454,23 @@ export default function AdminProductsPage() {
             <span>Xuất Excel</span>
           </button>
 
-          {/* Import Excel Button */}
-          <button
-            type="button"
-            onClick={() => {
-              setParsedImportData([]);
-              setImportFileName('');
-              setImportStatusMessage(null);
-              setIsImportModalOpen(true);
-            }}
-            className="h-9 sm:h-10 px-3 sm:px-3.5 bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 hover:border-blue-500 font-medium text-[12px] sm:text-[13px] rounded-[6px] flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
-            title="Tải lên file Excel (.xlsx / .csv) để nhập món ăn hàng loạt"
-          >
-            <FileUp className="w-4 h-4" />
-            <span>Nhập Excel</span>
-          </button>
+          {/* Import Excel Button (Super Admin only) */}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => {
+                setParsedImportData([]);
+                setImportFileName('');
+                setImportStatusMessage(null);
+                setIsImportModalOpen(true);
+              }}
+              className="h-9 sm:h-10 px-3 sm:px-3.5 bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 hover:border-blue-500 font-medium text-[12px] sm:text-[13px] rounded-[6px] flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
+              title="Tải lên file Excel (.xlsx / .csv) để nhập món ăn hàng loạt"
+            >
+              <FileUp className="w-4 h-4" />
+              <span>Nhập Excel</span>
+            </button>
+          )}
 
           {/* Add Product Button */}
           <button
@@ -683,18 +687,20 @@ export default function AdminProductsPage() {
                     <td className="py-3.5 px-4 text-right space-x-2">
                       <button
                         onClick={() => openEditModal(p)}
-                        className="p-1.5 text-[#41454d] hover:text-[#181d26] hover:bg-[#f8fafc] rounded-[4px] transition border border-[#dddddd]"
+                        className="p-1.5 text-[#41454d] hover:text-[#181d26] hover:bg-[#f8fafc] rounded-[4px] transition border border-[#dddddd] cursor-pointer"
                         title="Chỉnh sửa món"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
-                      <button
-                        onClick={() => handleDelete(p.id)}
-                        className="p-1.5 text-[#A30029] hover:bg-[#fff1f2] rounded-[4px] transition border border-[#dddddd]"
-                        title="Xóa món"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleDelete(p.id)}
+                          className="p-1.5 text-[#A30029] hover:bg-[#fff1f2] rounded-[4px] transition border border-[#dddddd] cursor-pointer"
+                          title="Xóa món"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -822,19 +828,21 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* Branch Assignment Field as Dropdown */}
-              <div className="space-y-1">
-                <label className="font-medium text-[#181d26]">Cơ sở phục vụ</label>
-                <select
-                  value={formBranchId === null ? '' : formBranchId}
-                  onChange={(e) => setFormBranchId(e.target.value === '' ? null : Number(e.target.value))}
-                  className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
-                >
-                  <option value="">Cả 2 cơ sở</option>
-                  <option value="1">Cơ sở 1: 120 Yên Lãng</option>
-                  <option value="2">Cơ sở 2: 269 Cầu Giấy</option>
-                </select>
-              </div>
+              {/* Branch Assignment Field as Dropdown (Locked for Branch Manager) */}
+              {isAdmin && (
+                <div className="space-y-1">
+                  <label className="font-medium text-[#181d26]">Cơ sở phục vụ</label>
+                  <select
+                    value={formBranchId === null ? '' : formBranchId}
+                    onChange={(e) => setFormBranchId(e.target.value === '' ? null : Number(e.target.value))}
+                    className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
+                  >
+                    <option value="">Cả 2 cơ sở</option>
+                    <option value="1">Cơ sở 1: 120 Yên Lãng</option>
+                    <option value="2">Cơ sở 2: 269 Cầu Giấy</option>
+                  </select>
+                </div>
+              )}
 
               {/* Image Upload & URL input */}
               <div className="space-y-2">

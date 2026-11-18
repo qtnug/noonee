@@ -11,8 +11,15 @@ import Link from 'next/link';
 export default function AdminHeaderUser() {
   const { user, logout } = useAuth();
 
+  const roleLabel =
+    user?.role === 'admin'
+      ? 'Tổng quản lý'
+      : user?.role === 'manager'
+      ? 'Quản lý'
+      : 'Nhân viên';
+
   return (
-    <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
       <Link
         href="/"
         className="hidden md:inline-flex items-center gap-1.5 text-[12px] text-[#41454d] hover:text-[#A30029] font-medium bg-[#f8fafc] px-3 py-1.5 rounded-[6px] border border-[#dddddd] transition"
@@ -21,10 +28,14 @@ export default function AdminHeaderUser() {
         <span>Trang bán hàng</span>
       </Link>
 
-      <span className="text-[12px] sm:text-[13px] text-[#41454d] truncate max-w-[100px] sm:max-w-none">
-        <span className="hidden sm:inline">Quản trị viên: </span>
-        <strong className="text-[#181d26] font-medium">{user?.fullName || user?.username || 'Admin'}</strong>
-      </span>
+      <div className="flex items-center gap-1.5 text-[12px] sm:text-[13px] text-[#41454d] truncate max-w-[140px] sm:max-w-none">
+        <span className="hidden sm:inline-block px-2 py-0.5 rounded-[4px] bg-[#fff1f2] text-[#A30029] border border-[#fecdd3] text-[11px] font-semibold">
+          {roleLabel}
+        </span>
+        <strong className="text-[#181d26] font-medium truncate">
+          {user?.fullName || user?.username || 'Admin'}
+        </strong>
+      </div>
 
       <button
         onClick={logout}

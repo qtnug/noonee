@@ -1,6 +1,6 @@
 import sql from 'mssql';
 import bcrypt from 'bcryptjs';
-import { Category, Product, Order, OrderItem, User, Review, SupportMessage, GroupOrder, GroupMember, GroupMemberItem, Coupon } from '@/types';
+import { Category, Product, Order, OrderItem, User, UserRole, Review, SupportMessage, GroupOrder, GroupMember, GroupMemberItem, Coupon } from '@/types';
 import { generateGroupCode, computeGroupOrderStats, MIN_GROUP_MEMBERS, MAX_GROUP_MEMBERS } from '@/lib/groupOrder';
 
 function parseToppingsField(raw: any): any[] {
@@ -135,6 +135,20 @@ async function ensureSchemaColumns(pool: any) {
 
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'branchName')
         ALTER TABLE Orders ADD branchName NVARCHAR(150) DEFAULT N'NooNee - Cơ sở 120 Yên Lãng';
+
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'branchId')
+        ALTER TABLE Users ADD branchId INT NULL;
+
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'isActive')
+        ALTER TABLE Users ADD isActive BIT DEFAULT 1 WITH VALUES;
+
+      DECLARE @roleCheckConstraint NVARCHAR(200);
+      SELECT TOP 1 @roleCheckConstraint = cc.name
+      FROM sys.check_constraints cc
+      INNER JOIN sys.columns col ON cc.parent_object_id = col.object_id AND cc.parent_column_id = col.column_id
+      WHERE cc.parent_object_id = OBJECT_ID('Users') AND col.name = 'role';
+      IF @roleCheckConstraint IS NOT NULL
+        EXEC('ALTER TABLE Users DROP CONSTRAINT [' + @roleCheckConstraint + ']');
 
       IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'GroupOrders')
       BEGIN
@@ -595,6 +609,11 @@ export async function getProducts(options?: {
   const page = options?.page || 1;
   const limit = options?.limit || 200;
   return result.slice((page - 1) * limit, page * limit);
+}
+
+export async function getProductById(id: number): Promise<Product | null> {
+  const all = await getAllProductsCached();
+  return all.find((p) => p.id === id) || null;
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -1600,6 +1619,15 @@ export async function checkDatabaseHealth(): Promise<{
 // USER & AUTHENTICATION (Cloud SQL Server)
 // ==========================================
 
+function normalizeUserRow(row: any): User {
+  return {
+    ...row,
+    branchId: row.branchId !== undefined && row.branchId !== null ? Number(row.branchId) : null,
+    isActive: row.isActive === undefined || row.isActive === null ? true : Boolean(row.isActive),
+    walletBalance: Number(row.walletBalance || 0),
+  };
+}
+
 export async function getUserByUsername(username: string): Promise<User | null> {
   try {
     const pool = await getCloudPool();
@@ -1607,19 +1635,19 @@ export async function getUserByUsername(username: string): Promise<User | null> 
       const req = pool.request();
       req.input('username', sql.NVarChar(50), username);
       const res = await req.query(`
-        SELECT id, username, fullName, email, phone, address, role, CAST(ISNULL(walletBalance, 0) AS BIGINT) AS walletBalance, createdAt
+        SELECT id, username, fullName, email, phone, address, role, branchId, ISNULL(isActive, 1) AS isActive, CAST(ISNULL(walletBalance, 0) AS BIGINT) AS walletBalance, createdAt
         FROM Users
         WHERE username = @username
       `);
       if (res.recordset && res.recordset.length > 0) {
-        return res.recordset[0];
+        return normalizeUserRow(res.recordset[0]);
       }
     }
   } catch (err) {
     console.error('Error querying user from cloud:', err);
   }
   const u = inMemoryUsers.find((u) => u.username === username);
-  if (u) { const { password, ...safeU } = u as any; return safeU as any; }
+  if (u) { const { password, ...safeU } = u as any; return normalizeUserRow(safeU); }
   return null;
 }
 
@@ -1630,18 +1658,19 @@ export async function getUserByUsernameWithPassword(username: string): Promise<U
       const req = pool.request();
       req.input('username', sql.NVarChar(50), username);
       const res = await req.query(`
-        SELECT id, username, password, fullName, email, phone, address, role, CAST(ISNULL(walletBalance, 0) AS BIGINT) AS walletBalance, createdAt
+        SELECT id, username, password, fullName, email, phone, address, role, branchId, ISNULL(isActive, 1) AS isActive, CAST(ISNULL(walletBalance, 0) AS BIGINT) AS walletBalance, createdAt
         FROM Users
         WHERE username = @username
       `);
       if (res.recordset && res.recordset.length > 0) {
-        return res.recordset[0];
+        return normalizeUserRow(res.recordset[0]);
       }
     }
   } catch (err) {
     console.error('Error querying user from cloud:', err);
   }
-  return inMemoryUsers.find((u) => u.username === username) || null;
+  const u = inMemoryUsers.find((u) => u.username === username);
+  return u ? normalizeUserRow(u) : null;
 }
 
 export async function createUser(data: {
@@ -1651,9 +1680,13 @@ export async function createUser(data: {
   phone?: string;
   address?: string;
   email?: string;
-  role?: 'admin' | 'customer';
+  role?: UserRole;
+  branchId?: number | null;
+  isActive?: boolean;
 }): Promise<User> {
-  const role = data.role || 'customer';
+  const role: UserRole = data.role || 'customer';
+  const branchId = data.branchId !== undefined && data.branchId !== null ? Number(data.branchId) : null;
+  const isActive = data.isActive === undefined ? true : Boolean(data.isActive);
   try {
     const pool = await getCloudPool();
     if (pool) {
@@ -1666,14 +1699,16 @@ export async function createUser(data: {
       req.input('address', sql.NVarChar(255), data.address || '');
       req.input('email', sql.NVarChar(100), data.email || null);
       req.input('role', sql.NVarChar(20), role);
+      req.input('branchId', sql.Int, branchId);
+      req.input('isActive', sql.Bit, isActive ? 1 : 0);
 
       const res = await req.query(`
-        INSERT INTO Users (username, password, fullName, phone, address, email, role, walletBalance)
-        OUTPUT INSERTED.id, INSERTED.username, INSERTED.fullName, INSERTED.phone, INSERTED.address, INSERTED.email, INSERTED.role, CAST(ISNULL(INSERTED.walletBalance, 0) AS BIGINT) AS walletBalance, INSERTED.createdAt
-        VALUES (@username, @password, @fullName, @phone, @address, @email, @role, 0)
+        INSERT INTO Users (username, password, fullName, phone, address, email, role, branchId, isActive, walletBalance)
+        OUTPUT INSERTED.id, INSERTED.username, INSERTED.fullName, INSERTED.phone, INSERTED.address, INSERTED.email, INSERTED.role, INSERTED.branchId, ISNULL(INSERTED.isActive, 1) AS isActive, CAST(ISNULL(INSERTED.walletBalance, 0) AS BIGINT) AS walletBalance, INSERTED.createdAt
+        VALUES (@username, @password, @fullName, @phone, @address, @email, @role, @branchId, @isActive, 0)
       `);
       if (res.recordset && res.recordset[0]) {
-        return res.recordset[0];
+        return normalizeUserRow(res.recordset[0]);
       }
     }
   } catch (err) {
@@ -1689,6 +1724,8 @@ export async function createUser(data: {
     address: data.address || '',
     email: data.email || null,
     role,
+    branchId,
+    isActive,
     walletBalance: 0,
     createdAt: new Date().toISOString(),
   };
@@ -1713,19 +1750,19 @@ export async function getUserById(userId: number): Promise<User | null> {
       const req = pool.request();
       req.input('id', sql.Int, userId);
       const res = await req.query(`
-        SELECT id, username, fullName, email, phone, address, role, CAST(ISNULL(walletBalance, 0) AS BIGINT) AS walletBalance, createdAt
+        SELECT id, username, fullName, email, phone, address, role, branchId, ISNULL(isActive, 1) AS isActive, CAST(ISNULL(walletBalance, 0) AS BIGINT) AS walletBalance, createdAt
         FROM Users
         WHERE id = @id
       `);
       if (res.recordset && res.recordset.length > 0) {
-        return res.recordset[0];
+        return normalizeUserRow(res.recordset[0]);
       }
     }
   } catch (err) {
     console.error('Error querying user by id from cloud:', err);
   }
   const u = inMemoryUsers.find((u) => u.id === userId);
-  if (u) { const { password, ...safeU } = u as any; return safeU as any; }
+  if (u) { const { password, ...safeU } = u as any; return normalizeUserRow(safeU); }
   return null;
 }
 
@@ -1736,18 +1773,19 @@ export async function getUserByIdWithPassword(userId: number): Promise<User | nu
       const req = pool.request();
       req.input('id', sql.Int, userId);
       const res = await req.query(`
-        SELECT id, username, password, fullName, email, phone, address, role, CAST(ISNULL(walletBalance, 0) AS BIGINT) AS walletBalance, createdAt
+        SELECT id, username, password, fullName, email, phone, address, role, branchId, ISNULL(isActive, 1) AS isActive, CAST(ISNULL(walletBalance, 0) AS BIGINT) AS walletBalance, createdAt
         FROM Users
         WHERE id = @id
       `);
       if (res.recordset && res.recordset.length > 0) {
-        return res.recordset[0];
+        return normalizeUserRow(res.recordset[0]);
       }
     }
   } catch (err) {
     console.error('Error querying user by id from cloud:', err);
   }
-  return inMemoryUsers.find((u) => u.id === userId) || null;
+  const u = inMemoryUsers.find((u) => u.id === userId);
+  return u ? normalizeUserRow(u) : null;
 }
 
 export async function getUserSpendingStats(userId: number): Promise<{
@@ -1910,11 +1948,11 @@ export async function updateUserProfile(
         SET fullName = COALESCE(NULLIF(@fullName, ''), fullName),
             phone = COALESCE(NULLIF(@phone, ''), phone),
             address = COALESCE(NULLIF(@address, ''), address)
-        OUTPUT INSERTED.id, INSERTED.username, INSERTED.fullName, INSERTED.email, INSERTED.phone, INSERTED.address, INSERTED.role, CAST(ISNULL(INSERTED.walletBalance, 0) AS BIGINT) AS walletBalance, INSERTED.createdAt
+        OUTPUT INSERTED.id, INSERTED.username, INSERTED.fullName, INSERTED.email, INSERTED.phone, INSERTED.address, INSERTED.role, INSERTED.branchId, ISNULL(INSERTED.isActive, 1) AS isActive, CAST(ISNULL(INSERTED.walletBalance, 0) AS BIGINT) AS walletBalance, INSERTED.createdAt
         WHERE id = @userId
       `);
       if (res.recordset && res.recordset[0]) {
-        return res.recordset[0];
+        return normalizeUserRow(res.recordset[0]);
       }
     }
   } catch (err) {
@@ -1929,6 +1967,153 @@ export async function updateUserProfile(
     return inMem;
   }
   return null;
+}
+
+export async function getInternalUsers(): Promise<User[]> {
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const res = await pool.request().query(`
+        SELECT id, username, fullName, email, phone, address, role, branchId, ISNULL(isActive, 1) AS isActive, CAST(ISNULL(walletBalance, 0) AS BIGINT) AS walletBalance, createdAt
+        FROM Users
+        WHERE role IN ('admin', 'manager', 'staff')
+        ORDER BY
+          CASE role
+            WHEN 'admin' THEN 1
+            WHEN 'manager' THEN 2
+            WHEN 'staff' THEN 3
+            ELSE 4
+          END ASC,
+          id DESC
+      `);
+      if (res.recordset) {
+        return res.recordset.map(normalizeUserRow);
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching internal users:', err);
+  }
+  return inMemoryUsers
+    .filter((u) => u.role === 'admin' || u.role === 'manager' || u.role === 'staff')
+    .map((u) => {
+      const { password, ...safeU } = u as any;
+      return normalizeUserRow(safeU);
+    });
+}
+
+export async function updateInternalUser(
+  userId: number,
+  data: {
+    fullName?: string;
+    phone?: string;
+    email?: string | null;
+    password?: string;
+    role?: 'admin' | 'manager' | 'staff';
+    branchId?: number | null;
+    isActive?: boolean;
+  }
+): Promise<User | null> {
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('userId', sql.Int, userId);
+      const setClauses: string[] = [];
+
+      if (data.fullName !== undefined) {
+        req.input('fullName', sql.NVarChar(100), data.fullName.trim());
+        setClauses.push('fullName = @fullName');
+      }
+      if (data.phone !== undefined) {
+        req.input('phone', sql.NVarChar(20), data.phone.trim());
+        setClauses.push('phone = @phone');
+      }
+      if (data.email !== undefined) {
+        req.input('email', sql.NVarChar(100), data.email ? data.email.trim() : null);
+        setClauses.push('email = @email');
+      }
+      if (data.role !== undefined) {
+        req.input('role', sql.NVarChar(20), data.role);
+        setClauses.push('role = @role');
+      }
+      if (data.branchId !== undefined) {
+        req.input('branchId', sql.Int, data.branchId !== null ? Number(data.branchId) : null);
+        setClauses.push('branchId = @branchId');
+      }
+      if (data.isActive !== undefined) {
+        req.input('isActive', sql.Bit, data.isActive ? 1 : 0);
+        setClauses.push('isActive = @isActive');
+      }
+      if (data.password && data.password.trim().length > 0) {
+        const hashedPassword = await bcrypt.hash(data.password.trim(), 12);
+        req.input('password', sql.NVarChar(255), hashedPassword);
+        setClauses.push('password = @password');
+      }
+
+      if (setClauses.length === 0) {
+        return await getUserById(userId);
+      }
+
+      const res = await req.query(`
+        UPDATE Users
+        SET ${setClauses.join(', ')}
+        OUTPUT INSERTED.id, INSERTED.username, INSERTED.fullName, INSERTED.email, INSERTED.phone, INSERTED.address, INSERTED.role, INSERTED.branchId, ISNULL(INSERTED.isActive, 1) AS isActive, CAST(ISNULL(INSERTED.walletBalance, 0) AS BIGINT) AS walletBalance, INSERTED.createdAt
+        WHERE id = @userId
+      `);
+      if (res.recordset && res.recordset[0]) {
+        return normalizeUserRow(res.recordset[0]);
+      }
+    }
+  } catch (err) {
+    console.error('Error updating internal user:', err);
+    throw err;
+  }
+
+  const inMem = inMemoryUsers.find((u) => u.id === userId);
+  if (inMem) {
+    if (data.fullName !== undefined) inMem.fullName = data.fullName;
+    if (data.phone !== undefined) inMem.phone = data.phone;
+    if (data.email !== undefined) inMem.email = data.email;
+    if (data.role !== undefined) inMem.role = data.role;
+    if (data.branchId !== undefined) inMem.branchId = data.branchId;
+    if (data.isActive !== undefined) inMem.isActive = data.isActive;
+    if (data.password && data.password.trim()) {
+      (inMem as any).password = await bcrypt.hash(data.password.trim(), 12);
+    }
+    const { password, ...safeU } = inMem as any;
+    return normalizeUserRow(safeU);
+  }
+  return null;
+}
+
+export async function deleteInternalUser(userId: number): Promise<boolean> {
+  try {
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('userId', sql.Int, userId);
+      await req.query(`
+        UPDATE Orders SET userId = NULL WHERE userId = @userId;
+        IF EXISTS (SELECT * FROM sys.tables WHERE name = 'SupportMessages')
+          UPDATE SupportMessages SET userId = NULL WHERE userId = @userId;
+        IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Reviews')
+          UPDATE Reviews SET userId = NULL WHERE userId = @userId;
+        IF EXISTS (SELECT * FROM sys.tables WHERE name = 'GroupOrders')
+          UPDATE GroupOrders SET hostUserId = NULL WHERE hostUserId = @userId;
+        DELETE FROM Users WHERE id = @userId AND role IN ('staff', 'manager');
+      `);
+      return true;
+    }
+  } catch (err) {
+    console.error('Error deleting internal user:', err);
+    throw err;
+  }
+  const idx = inMemoryUsers.findIndex((u) => u.id === userId && (u.role === 'staff' || u.role === 'manager'));
+  if (idx !== -1) {
+    inMemoryUsers.splice(idx, 1);
+    return true;
+  }
+  return false;
 }
 
 // ==========================================

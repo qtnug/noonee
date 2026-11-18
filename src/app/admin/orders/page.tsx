@@ -14,10 +14,12 @@ import {
   CiRedo as Loader2,
 } from 'react-icons/ci';
 import { Order } from '@/types';
-import { formatVND, formatDate } from '@/lib/utils';
+import { formatVND, formatDate, maskPhoneNumber } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 import { useAdminBranch } from '@/context/AdminBranchContext';
 
 export default function AdminOrdersPage() {
+  const { isStaff } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [statusFilter, setStatusFilter] = useState('all');
   const { adminBranch: branchFilter } = useAdminBranch();
@@ -26,11 +28,33 @@ export default function AdminOrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
+  // Order Detail Modal state
+  const [detailModalOrder, setDetailModalOrder] = useState<Order | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
   // Cancellation Modal state
   const [cancelModalOrder, setCancelModalOrder] = useState<Order | null>(null);
   const [cancelReasonInput, setCancelReasonInput] = useState('');
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelError, setCancelError] = useState('');
+
+  const openOrderDetail = async (order: Order) => {
+    setDetailModalOrder(order);
+    if (!order.items || order.items.length === 0) {
+      setLoadingDetail(true);
+      try {
+        const res = await fetch(`/api/orders/${order.orderCode}`);
+        const data = await res.json();
+        if (data.success && data.data) {
+          setDetailModalOrder(data.data);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingDetail(false);
+      }
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -172,7 +196,7 @@ export default function AdminOrdersPage() {
           <Search className="w-4 h-4 text-[#9297a0] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
-            placeholder="Tìm theo mã đơn, khách, SĐT..."
+            placeholder={isStaff ? 'Tìm theo mã đơn, tên khách...' : 'Tìm theo mã đơn, khách, SĐT...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full h-10 pl-10 pr-4 text-[13px] bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#A30029] text-[#181d26]"
@@ -232,9 +256,13 @@ export default function AdminOrdersPage() {
                 {paginatedOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-[#f8fafc] transition">
                     <td className="py-3.5 px-4 font-mono font-medium text-[#181d26]">
-                      <Link href={`/orders/${order.orderCode}`} className="hover:underline">
+                      <button
+                        type="button"
+                        onClick={() => openOrderDetail(order)}
+                        className="hover:underline hover:text-[#A30029] cursor-pointer text-left"
+                      >
                         #{order.orderCode}
-                      </Link>
+                      </button>
                       {order.groupCode && (
                         <span className="inline-block mt-0.5 text-[10px] font-semibold px-1.5 py-0.2 rounded bg-[#fee2e2] text-[#A30029] border border-[#fecdd3]">
                           Đơn nhóm #{order.groupCode}
@@ -259,7 +287,9 @@ export default function AdminOrdersPage() {
                     )}
                     <td className="py-3.5 px-4 max-w-xs">
                       <div className="font-medium text-[#181d26]">{order.customerName}</div>
-                      <div className="text-[#9297a0] text-[12px]">{order.customerPhone}</div>
+                      <div className="text-[#9297a0] text-[12px]">
+                        {isStaff ? maskPhoneNumber(order.customerPhone) : order.customerPhone}
+                      </div>
                       <div className="text-[#41454d] text-[12px] truncate">{order.deliveryAddress}</div>
                       {order.notes && (
                         <div className="text-[11px] text-[#A30029] italic truncate">Ghi chú: {order.notes}</div>
@@ -416,13 +446,14 @@ export default function AdminOrdersPage() {
                       </div>
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <Link
-                        href={`/orders/${order.orderCode}`}
-                        className="p-1.5 text-[#41454d] hover:text-[#181d26] hover:bg-[#f8fafc] rounded-[6px] inline-flex items-center transition border border-[#dddddd]"
+                      <button
+                        type="button"
+                        onClick={() => openOrderDetail(order)}
+                        className="p-1.5 text-[#41454d] hover:text-[#A30029] hover:bg-[#fff1f2] rounded-[6px] inline-flex items-center transition border border-[#dddddd] hover:border-[#fecdd3] cursor-pointer"
                         title="Xem chi tiết đơn hàng"
                       >
                         <Eye className="w-4 h-4" />
-                      </Link>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -496,7 +527,8 @@ export default function AdminOrdersPage() {
                   <span>Hủy đơn hàng #{cancelModalOrder.orderCode}</span>
                 </h3>
                 <p className="text-[13px] text-[#41454d] mt-0.5">
-                  Khách: <strong>{cancelModalOrder.customerName}</strong> ({cancelModalOrder.customerPhone})
+                  Khách: <strong>{cancelModalOrder.customerName}</strong> (
+                  {isStaff ? maskPhoneNumber(cancelModalOrder.customerPhone) : cancelModalOrder.customerPhone})
                 </p>
               </div>
               <button
@@ -598,6 +630,190 @@ export default function AdminOrdersPage() {
                 ) : (
                   <span>Xác nhận hủy đơn</span>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order Detail Modal (Keeps Staff/Manager/Admin inside Admin Workspace) */}
+      {detailModalOrder && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setDetailModalOrder(null)}
+        >
+          <div
+            className="bg-white rounded-[12px] shadow-xl border border-[#dddddd] max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 py-4 border-b border-[#dddddd] flex items-center justify-between bg-[#f8fafc]">
+              <div>
+                <h3 className="text-[16px] font-bold text-[#181d26]">
+                  Chi tiết đơn hàng #{detailModalOrder.orderCode}
+                </h3>
+                <p className="text-[12px] text-[#9297a0]">
+                  Đặt lúc {formatDate(detailModalOrder.createdAt)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDetailModalOrder(null)}
+                className="text-[#9297a0] hover:text-[#181d26] p-1.5 rounded hover:bg-gray-100 text-base font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto space-y-4 text-[13px]">
+              {/* Customer & Delivery Info */}
+              <div className="p-4 rounded-[8px] bg-[#f8fafc] border border-[#dddddd] space-y-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <span className="text-[#9297a0]">Người nhận: </span>
+                    <strong className="text-[#181d26]">{detailModalOrder.customerName}</strong>
+                  </div>
+                  <div>
+                    <span className="text-[#9297a0]">Số điện thoại: </span>
+                    <strong className="text-[#181d26] font-mono">
+                      {isStaff
+                        ? maskPhoneNumber(detailModalOrder.customerPhone)
+                        : detailModalOrder.customerPhone}
+                    </strong>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[#9297a0]">Địa chỉ giao: </span>
+                  <span className="text-[#181d26] font-medium">{detailModalOrder.deliveryAddress}</span>
+                </div>
+                {detailModalOrder.notes && (
+                  <div className="pt-1 text-[#A30029] italic">
+                    Ghi chú đơn: &quot;{detailModalOrder.notes}&quot;
+                  </div>
+                )}
+              </div>
+
+              {/* Ordered Dishes */}
+              <div className="space-y-2">
+                <h4 className="font-semibold text-[#181d26]">Danh sách món đặt</h4>
+                {loadingDetail ? (
+                  <div className="py-8 text-center text-[#9297a0] flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#A30029]" />
+                    <span>Đang tải chi tiết món ăn...</span>
+                  </div>
+                ) : detailModalOrder.items && detailModalOrder.items.length > 0 ? (
+                  <div className="border border-[#dddddd] rounded-[8px] divide-y divide-[#dddddd]">
+                    {detailModalOrder.items.map((it: any, idx: number) => {
+                      const name = it.productName || it.product?.name || 'Món ăn';
+                      const qty = Number(it.quantity || 1);
+                      const unit = Number(it.price || it.itemPrice || it.product?.price || 0);
+                      const lineTotal = Number(it.total || unit * qty);
+                      let parsedTops: any[] = [];
+                      if (Array.isArray(it.selectedToppings)) {
+                        parsedTops = it.selectedToppings;
+                      } else if (typeof it.toppings === 'string' && it.toppings.trim()) {
+                        try {
+                          const parsed = JSON.parse(it.toppings);
+                          if (Array.isArray(parsed)) parsedTops = parsed;
+                        } catch {
+                          // plain text fallback
+                        }
+                      }
+                      return (
+                        <div key={idx} className="p-3 flex items-start justify-between gap-3">
+                          <div className="space-y-0.5">
+                            <div className="font-medium text-[#181d26]">
+                              <span className="text-[#A30029] font-bold mr-1.5">{qty}x</span>
+                              {name}
+                            </div>
+                            {parsedTops.length > 0 && (
+                              <div className="text-[11px] text-[#41454d]">
+                                Topping: {parsedTops.map((t: any) => t.name || t).join(', ')}
+                              </div>
+                            )}
+                            {it.note && (
+                              <div className="text-[11px] text-amber-700 italic">
+                                Ghi chú món: {it.note}
+                              </div>
+                            )}
+                          </div>
+                          <div className="font-semibold text-[#181d26] shrink-0">
+                            {formatVND(lineTotal)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-[#9297a0] border border-[#dddddd] rounded-[8px]">
+                    Không có dữ liệu chi tiết món.
+                  </div>
+                )}
+              </div>
+
+              {/* Totals */}
+              <div className="pt-2 border-t border-[#dddddd] space-y-1">
+                {detailModalOrder.shippingFee ? (
+                  <div className="flex justify-between text-[#41454d]">
+                    <span>Phí giao hàng</span>
+                    <span>{formatVND(detailModalOrder.shippingFee)}</span>
+                  </div>
+                ) : null}
+                {detailModalOrder.discountAmount ? (
+                  <div className="flex justify-between text-[#A30029]">
+                    <span>Giảm giá</span>
+                    <span>-{formatVND(detailModalOrder.discountAmount)}</span>
+                  </div>
+                ) : null}
+                <div className="flex justify-between text-[15px] font-bold text-[#181d26] pt-1">
+                  <span>Tổng cộng</span>
+                  <span className="text-[#A30029]">{formatVND(detailModalOrder.totalAmount)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-5 py-3.5 border-t border-[#dddddd] bg-[#f8fafc] flex items-center justify-end gap-2">
+              {detailModalOrder.status === 'Pending' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleStatusChange(detailModalOrder.orderCode, 'Processing');
+                    setDetailModalOrder(null);
+                  }}
+                  className="px-4 py-2 bg-[#A30029] hover:bg-[#850021] text-white text-[13px] font-semibold rounded-[6px] transition cursor-pointer"
+                >
+                  Xác nhận &amp; Vào bếp
+                </button>
+              )}
+              {detailModalOrder.status === 'Processing' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleStatusChange(detailModalOrder.orderCode, 'Delivering');
+                    setDetailModalOrder(null);
+                  }}
+                  className="px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-semibold rounded-[6px] transition cursor-pointer"
+                >
+                  Giao hàng
+                </button>
+              )}
+              {detailModalOrder.status === 'Delivering' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleStatusChange(detailModalOrder.orderCode, 'Completed', 'Paid');
+                    setDetailModalOrder(null);
+                  }}
+                  className="px-4 py-2 bg-[#16a34a] hover:bg-[#15803d] text-white text-[13px] font-semibold rounded-[6px] transition cursor-pointer"
+                >
+                  Hoàn tất đơn
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setDetailModalOrder(null)}
+                className="px-4 py-2 bg-white border border-[#dddddd] hover:bg-gray-50 text-[#41454d] text-[13px] font-medium rounded-[6px] transition cursor-pointer"
+              >
+                Đóng
               </button>
             </div>
           </div>

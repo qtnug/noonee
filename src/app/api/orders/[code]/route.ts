@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrderByCode, updateOrderStatus, cancelOrder } from '@/lib/db';
-import { authenticateRequest, requireAdmin, AuthError } from '@/lib/auth';
+import { resolveLiveUser, isPortalRole, AuthError } from '@/lib/auth';
+import { maskPhoneNumber } from '@/lib/utils';
 import { OrderStatus } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -12,13 +13,52 @@ export async function GET(
   { params }: { params: { code: string } }
 ) {
   try {
-    const authUser = authenticateRequest(request);
-    if (!authUser) return NextResponse.json({ success: false, message: 'Vui lòng đăng nhập' }, { status: 401 });
+    let liveUser;
+    try {
+      liveUser = await resolveLiveUser(request);
+    } catch (authErr) {
+      if (authErr instanceof AuthError) {
+        return NextResponse.json({ success: false, message: authErr.message }, { status: authErr.status });
+      }
+      throw authErr;
+    }
+
     const order = await getOrderByCode(params.code);
     if (!order) {
       return NextResponse.json({ success: false, message: 'Không tìm thấy đơn hàng' }, { status: 404 });
     }
-    if (authUser.role !== 'admin' && order.userId !== authUser.userId) return NextResponse.json({ success: false, message: 'Không có quyền xem đơn hàng' }, { status: 403 });
+
+    const orderBranch = order.branchId || 1;
+    const isOwnOrder = order.userId === liveUser.id;
+
+    if (liveUser.role === 'admin') {
+      return NextResponse.json({ success: true, data: order });
+    }
+
+    if (liveUser.role === 'manager' || liveUser.role === 'staff') {
+      const assignedBranch = liveUser.branchId || 1;
+      if (!isOwnOrder && orderBranch !== assignedBranch) {
+        return NextResponse.json(
+          { success: false, message: 'Đơn hàng này thuộc cơ sở khác, bạn không có quyền xem' },
+          { status: 403 }
+        );
+      }
+      if (liveUser.role === 'staff' && !isOwnOrder) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            ...order,
+            customerPhone: maskPhoneNumber(order.customerPhone),
+          },
+        });
+      }
+      return NextResponse.json({ success: true, data: order });
+    }
+
+    if (!isOwnOrder) {
+      return NextResponse.json({ success: false, message: 'Không có quyền xem đơn hàng' }, { status: 403 });
+    }
+
     return NextResponse.json({ success: true, data: order });
   } catch (error: any) {
     console.error('Error fetching order by code:', error);
@@ -31,7 +71,16 @@ export async function PATCH(
   { params }: { params: { code: string } }
 ) {
   try {
-    const authUser = authenticateRequest(request);
+    let liveUser;
+    try {
+      liveUser = await resolveLiveUser(request);
+    } catch (authErr) {
+      if (authErr instanceof AuthError) {
+        return NextResponse.json({ success: false, message: authErr.message }, { status: authErr.status });
+      }
+      throw authErr;
+    }
+
     const body = await request.json();
     const { status, paymentStatus, cancelReason, action } = body;
 
@@ -39,19 +88,19 @@ export async function PATCH(
     if (!existingOrder) {
       return NextResponse.json({ success: false, message: 'Không tìm thấy đơn hàng' }, { status: 404 });
     }
-    if (!authUser) return NextResponse.json({ success: false, message: 'Vui lòng đăng nhập' }, { status: 401 });
+
+    const orderBranch = existingOrder.branchId || 1;
+    const hasBranchAccess =
+      liveUser.role === 'admin' ||
+      ((liveUser.role === 'manager' || liveUser.role === 'staff') && orderBranch === (liveUser.branchId || 1));
 
     // Cancellation request
     if (status === 'Cancelled' || action === 'cancel') {
-      // If user is authenticated, check ownership (or admin)
-      if (authUser) {
-        if (authUser.role !== 'admin' && existingOrder.userId !== authUser.userId) {
-          return NextResponse.json({ success: false, message: 'Bạn không có quyền hủy đơn hàng này' }, { status: 403 });
-        }
+      if (!hasBranchAccess && existingOrder.userId !== liveUser.id) {
+        return NextResponse.json({ success: false, message: 'Bạn không có quyền hủy đơn hàng này' }, { status: 403 });
       }
 
-      const isAdmin = authUser?.role === 'admin';
-      const result = await cancelOrder(params.code, cancelReason || 'Hủy theo yêu cầu', isAdmin);
+      const result = await cancelOrder(params.code, cancelReason || 'Hủy theo yêu cầu', hasBranchAccess);
       if (!result.success) {
         return NextResponse.json({ success: false, message: result.message }, { status: 400 });
       }
@@ -62,10 +111,10 @@ export async function PATCH(
       });
     }
 
-    // Changing status (Processing, Delivering, Completed) requires Admin
-    if (!authUser || authUser.role !== 'admin') {
+    // Changing status (Processing, Delivering, Completed) requires Admin, Manager, or Staff of that branch
+    if (!isPortalRole(liveUser.role) || !hasBranchAccess) {
       return NextResponse.json(
-        { success: false, message: 'Chỉ Quản trị viên mới có quyền thay đổi trạng thái đơn hàng' },
+        { success: false, message: 'Bạn không có quyền duyệt hoặc cập nhật đơn hàng của cơ sở này' },
         { status: 403 }
       );
     }

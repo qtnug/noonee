@@ -386,14 +386,14 @@ export default function Navbar() {
                       <span>Đơn hàng của tôi</span>
                     </Link>
 
-                    {user.role === 'admin' && (
+                    {(user.role === 'admin' || user.role === 'manager' || user.role === 'staff') && (
                       <Link
-                        href="/admin"
+                        href={user.role === 'staff' ? '/admin/orders' : '/admin'}
                         onClick={() => setUserMenuOpen(false)}
                         className="flex items-center gap-2.5 px-4 py-2 text-[#A30029] hover:bg-[#fff1f2] transition font-semibold border-t border-[#f1f5f9] mt-1 pt-2"
                       >
                         <CiCircleCheck className="w-4 h-4 text-[#A30029] stroke-1" />
-                        <span>Trang quản trị (Admin)</span>
+                        <span>Trang quản trị</span>
                       </Link>
                     )}
                   </div>

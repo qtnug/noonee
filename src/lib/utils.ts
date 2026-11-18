@@ -47,3 +47,14 @@ export function generateOrderCode(): string {
   const random8Digits = Math.floor(10000000 + Math.random() * 90000000).toString();
   return `NOONEE${random8Digits}`;
 }
+
+export function maskPhoneNumber(phone?: string | null): string {
+  if (!phone) return '***';
+  const cleaned = String(phone).trim();
+  if (cleaned.length <= 4) return '****';
+  if (cleaned.length <= 7) {
+    return cleaned.slice(0, 2) + '***' + cleaned.slice(-2);
+  }
+  return cleaned.slice(0, 3) + '****' + cleaned.slice(-3);
+}
+

@@ -1,3 +1,5 @@
+export type UserRole = 'admin' | 'manager' | 'staff' | 'customer';
+
 export interface User {
   id: number;
   username: string;
@@ -5,7 +7,9 @@ export interface User {
   email?: string | null;
   phone?: string | null;
   address?: string | null;
-  role: 'admin' | 'customer';
+  role: UserRole;
+  branchId?: number | null;
+  isActive?: boolean;
   walletBalance?: number;
   token?: string;
   createdAt?: string;

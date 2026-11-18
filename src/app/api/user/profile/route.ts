@@ -43,6 +43,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (user.isActive === false && authUser.userId === targetUserId) {
+      const lockedRes = NextResponse.json(
+        { success: false, message: 'Tài khoản của bạn đã bị tạm khóa' },
+        { status: 403 }
+      );
+      lockedRes.cookies.delete('auth_token');
+      return lockedRes;
+    }
+
     const { password, ...safeUser } = user as any;
     const tier = getMembershipTier(stats.totalSpent);
 

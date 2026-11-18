@@ -17,6 +17,7 @@ import {
   CiCircleChevLeft as ArrowLeft,
   CiLogout as LogOut,
   CiCircleChevDown as ChevronDown,
+  CiUser as Users,
 } from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
 import { useAdminBranch } from '@/context/AdminBranchContext';
@@ -26,10 +27,11 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [hasUnreadComplaint, setHasUnreadComplaint] = useState(false);
   const pathname = usePathname();
-  const { logout } = useAuth();
-  const { adminBranch, setAdminBranch } = useAdminBranch();
+  const { user, logout } = useAuth();
+  const { adminBranch, setAdminBranch, canSwitchBranch } = useAdminBranch();
 
   React.useEffect(() => {
+    if (user?.role !== 'admin') return;
     const checkSupport = async () => {
       try {
         const res = await fetch('/api/support');
@@ -43,17 +45,60 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
     checkSupport();
     const interval = setInterval(checkSupport, 6000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user?.role]);
 
-  const links = [
-    { name: 'Tổng quan hệ thống', href: '/admin', icon: LayoutDashboard },
-    { name: 'Quản lý đơn hàng', href: '/admin/orders', icon: ShoppingBag },
-    { name: 'Khiếu nại & Hỗ trợ KH', href: '/admin/support', icon: MessageSquare },
-    { name: 'Thực đơn & Món ăn', href: '/admin/products', icon: UtensilsCrossed },
-    { name: 'Danh mục món ăn', href: '/admin/categories', icon: Layers },
-    { name: 'Kho Voucher ưu đãi', href: '/admin/coupons', icon: Ticket },
-    { name: 'Chẩn đoán CSDL Cloud', href: '/admin/diagnostics', icon: Activity },
+  const allLinks = [
+    {
+      name: user?.role === 'manager' ? 'Doanh thu hôm nay' : 'Tổng quan hệ thống',
+      href: '/admin',
+      icon: LayoutDashboard,
+      roles: ['admin', 'manager'],
+    },
+    {
+      name: 'Quản lý đơn hàng',
+      href: '/admin/orders',
+      icon: ShoppingBag,
+      roles: ['admin', 'manager', 'staff'],
+    },
+    {
+      name: 'Thực đơn & Món ăn',
+      href: '/admin/products',
+      icon: UtensilsCrossed,
+      roles: ['admin', 'manager'],
+    },
+    {
+      name: 'Quản lý tài khoản',
+      href: '/admin/accounts',
+      icon: Users,
+      roles: ['admin'],
+    },
+    {
+      name: 'Danh mục món ăn',
+      href: '/admin/categories',
+      icon: Layers,
+      roles: ['admin'],
+    },
+    {
+      name: 'Kho Voucher ưu đãi',
+      href: '/admin/coupons',
+      icon: Ticket,
+      roles: ['admin'],
+    },
+    {
+      name: 'Khiếu nại & Hỗ trợ KH',
+      href: '/admin/support',
+      icon: MessageSquare,
+      roles: ['admin'],
+    },
+    {
+      name: 'Chẩn đoán CSDL Cloud',
+      href: '/admin/diagnostics',
+      icon: Activity,
+      roles: ['admin'],
+    },
   ];
+
+  const links = allLinks.filter((item) => user?.role && item.roles.includes(user.role));
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc]">
@@ -229,22 +274,28 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
             </div>
           </div>
 
-          {/* Top Single Branch Selector Dropdown */}
-          <div className="relative min-w-0">
-            <select
-              value={adminBranch}
-              onChange={(e) => setAdminBranch(e.target.value as any)}
-              aria-label="Chọn cơ sở"
-              className="h-9 pl-3 pr-8 bg-white border border-[#dddddd] hover:border-[#A30029] focus:border-[#A30029] focus:outline-none rounded-[6px] text-[13px] font-medium text-[#181d26] cursor-pointer transition appearance-none"
-            >
-              <option value="all">Tất cả cơ sở</option>
-              <option value="1">Cơ sở 1: 120 Yên Lãng</option>
-              <option value="2">Cơ sở 2: 269 Cầu Giấy</option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#9297a0]">
-              <ChevronDown className="w-4 h-4" />
+          {/* Top Single Branch Selector Dropdown (Admin) or Fixed Branch Pill (Manager / Staff) */}
+          {canSwitchBranch ? (
+            <div className="relative min-w-0">
+              <select
+                value={adminBranch}
+                onChange={(e) => setAdminBranch(e.target.value as any)}
+                aria-label="Chọn cơ sở"
+                className="h-9 pl-3 pr-8 bg-white border border-[#dddddd] hover:border-[#A30029] focus:border-[#A30029] focus:outline-none rounded-[6px] text-[13px] font-medium text-[#181d26] cursor-pointer transition appearance-none"
+              >
+                <option value="all">Tất cả cơ sở</option>
+                <option value="1">Cơ sở 1: 120 Yên Lãng</option>
+                <option value="2">Cơ sở 2: 269 Cầu Giấy</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#9297a0]">
+                <ChevronDown className="w-4 h-4" />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="h-9 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[13px] font-medium text-[#181d26] flex items-center whitespace-nowrap">
+              {adminBranch === '2' ? 'Cơ sở 2: 269 Cầu Giấy' : 'Cơ sở 1: 120 Yên Lãng'}
+            </div>
+          )}
 
           <div className="shrink-0">
             <AdminHeaderUser />

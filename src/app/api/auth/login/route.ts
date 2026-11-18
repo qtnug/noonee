@@ -44,6 +44,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (user.isActive === false) {
+      return NextResponse.json(
+        { success: false, message: 'Tài khoản này hiện đang bị tạm khóa. Vui lòng liên hệ Tổng quản lý.' },
+        { status: 403 }
+      );
+    }
+
     const token = generateToken(user);
 
     const response = NextResponse.json({
@@ -57,6 +64,8 @@ export async function POST(request: NextRequest) {
         phone: user.phone,
         address: user.address,
         role: user.role,
+        branchId: user.branchId ?? null,
+        isActive: user.isActive ?? true,
         walletBalance: user.walletBalance,
       },
     });
