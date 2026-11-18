@@ -20,7 +20,7 @@ import { useAdminBranch } from '@/context/AdminBranchContext';
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [statusFilter, setStatusFilter] = useState('all');
-  const { adminBranch: branchFilter, setAdminBranch: setBranchFilter } = useAdminBranch();
+  const { adminBranch: branchFilter } = useAdminBranch();
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -152,7 +152,11 @@ export default function AdminOrdersPage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-normal text-[#181d26]">Quản lý đơn hàng</h1>
           <p className="text-[13px] sm:text-[14px] text-[#41454d] mt-0.5 sm:mt-1">
-            Xem danh sách đơn hàng, cập nhật trạng thái chế biến và giao hàng
+            {branchFilter === 'all'
+              ? 'Tất cả đơn hàng trên toàn hệ thống NooNee (2 cơ sở)'
+              : branchFilter === '1'
+              ? 'Chỉ hiển thị danh sách đơn hàng của Cơ sở 1: 120 Yên Lãng'
+              : 'Chỉ hiển thị danh sách đơn hàng của Cơ sở 2: 269 Cầu Giấy'}
           </p>
         </div>
 
@@ -163,54 +167,6 @@ export default function AdminOrdersPage() {
           <RefreshCw className="w-4 h-4 text-[#9297a0]" />
           <span>Làm mới danh sách</span>
         </button>
-      </div>
-
-      {/* Branch Filter Tabs */}
-      <div className="bg-white p-3 rounded-[10px] border border-[#dddddd] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#A30029]" />
-          <span className="text-[13px] font-bold text-[#181d26]">Cơ sở lọc đơn:</span>
-          <span className="text-[12px] text-[#9297a0]">
-            {branchFilter === 'all'
-              ? '(Tất cả 2 cơ sở)'
-              : branchFilter === '1'
-              ? '(Chỉ CS 120 Yên Lãng)'
-              : '(Chỉ CS 269 Cầu Giấy)'}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1.5 p-1 bg-gray-100 rounded-lg">
-          <button
-            onClick={() => setBranchFilter('all')}
-            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition cursor-pointer ${
-              branchFilter === 'all'
-                ? 'bg-[#A30029] text-white shadow-xs'
-                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
-            }`}
-          >
-            🏢 Cả 2 cơ sở
-          </button>
-          <button
-            onClick={() => setBranchFilter('1')}
-            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition cursor-pointer ${
-              branchFilter === '1'
-                ? 'bg-[#A30029] text-white shadow-xs'
-                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
-            }`}
-          >
-            📍 CS1: 120 Yên Lãng
-          </button>
-          <button
-            onClick={() => setBranchFilter('2')}
-            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition cursor-pointer ${
-              branchFilter === '2'
-                ? 'bg-[#A30029] text-white shadow-xs'
-                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
-            }`}
-          >
-            📍 CS2: 269 Cầu Giấy
-          </button>
-        </div>
       </div>
 
       {/* Filters Bar */}

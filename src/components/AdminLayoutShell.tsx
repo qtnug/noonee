@@ -16,6 +16,7 @@ import {
   CiDiscount1 as Ticket,
   CiCircleChevLeft as ArrowLeft,
   CiLogout as LogOut,
+  CiCircleChevDown as ChevronDown,
 } from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
 import { useAdminBranch } from '@/context/AdminBranchContext';
@@ -27,12 +28,6 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
   const pathname = usePathname();
   const { logout } = useAuth();
   const { adminBranch, setAdminBranch } = useAdminBranch();
-
-  const chromeTabs: { id: 'all' | '1' | '2'; title: string; icon: string }[] = [
-    { id: 'all', title: 'Tất cả cơ sở', icon: '🏢' },
-    { id: '1', title: 'CS1: 120 Yên Lãng', icon: '📍' },
-    { id: '2', title: 'CS2: 269 Cầu Giấy', icon: '📍' },
-  ];
 
   React.useEffect(() => {
     const checkSupport = async () => {
@@ -234,32 +229,27 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
             </div>
           </div>
 
-          {/* Chrome-Style Branch Tabs */}
-          <div className="flex items-end self-end h-full pt-2 overflow-x-auto no-scrollbar gap-1 min-w-0" role="tablist">
-            {chromeTabs.map((tab) => {
-              const isActive = adminBranch === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={() => setAdminBranch(tab.id)}
-                  className={`group relative flex items-center gap-1.5 px-3 sm:px-4 py-2 text-[12px] sm:text-[13px] rounded-t-lg transition-all cursor-pointer whitespace-nowrap select-none ${
-                    isActive
-                      ? 'bg-white text-[#181d26] font-bold border-t-2 border-t-[#A30029] border-x border-[#dddddd] -mb-[1px] shadow-2xs z-10'
-                      : 'bg-[#eaedf1] hover:bg-[#dfe3e7] text-[#555a64] font-medium border-t border-transparent hover:text-[#181d26]'
-                  }`}
-                  title={`Chuyển xem dữ liệu: ${tab.title}`}
-                >
-                  <span className="text-[13px]">{tab.icon}</span>
-                  <span className="truncate">{tab.title}</span>
-                  {isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#A30029] shrink-0" />
-                  )}
-                </button>
-              );
-            })}
+          {/* Top Single Branch Selector Dropdown */}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="hidden sm:flex items-center gap-1.5 text-[12px] font-bold text-gray-700 whitespace-nowrap">
+              <span className="w-2 h-2 rounded-full bg-[#A30029] animate-pulse" />
+              <span>Cơ sở làm việc:</span>
+            </div>
+            <div className="relative">
+              <select
+                value={adminBranch}
+                onChange={(e) => setAdminBranch(e.target.value as any)}
+                aria-label="Chọn cơ sở làm việc"
+                className="h-10 pl-3 pr-8 bg-white border-2 border-[#A30029]/30 hover:border-[#A30029] focus:border-[#A30029] focus:ring-2 focus:ring-[#A30029]/20 rounded-lg text-[13px] font-bold text-gray-900 cursor-pointer shadow-xs transition appearance-none"
+              >
+                <option value="all">🏢 Tất cả cơ sở (Toàn chuỗi)</option>
+                <option value="1">📍 Cơ sở 1: 120 Yên Lãng</option>
+                <option value="2">📍 Cơ sở 2: 269 Cầu Giấy</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#A30029]">
+                <ChevronDown className="w-4 h-4 stroke-2" />
+              </div>
+            </div>
           </div>
 
           <div className="shrink-0">

@@ -1427,7 +1427,12 @@ export async function getAdminStats(
         FROM Orders
         WHERE ${dateCondition} AND ${branchCondition}
       `);
-      const prodRes = await pool.request().query('SELECT COUNT(*) AS cnt FROM Products');
+      let prodBranchCondition = '1=1';
+      if (branchId && branchId !== 'all') {
+        const bId = Number(branchId);
+        prodBranchCondition = `(branchId = ${bId} OR branchId IS NULL)`;
+      }
+      const prodRes = await pool.request().query(`SELECT COUNT(*) AS cnt FROM Products WHERE ${prodBranchCondition}`);
       const recentRes = await pool.request().query(`
         SELECT TOP 10 id, orderCode, customerName, customerPhone, CAST(totalAmount AS BIGINT) AS totalAmount, 
                paymentMethod, paymentStatus, status, ISNULL(branchId, 1) AS branchId, ISNULL(branchName, N'NooNee - Cơ sở 120 Yên Lãng') AS branchName, createdAt
@@ -1500,8 +1505,8 @@ export async function getAdminStats(
     }
   } catch (e) { console.error('Admin stats error:', e); }
   
-  const allOrders = await getOrders();
-  const products = await getProducts();
+  const allOrders = await getOrders({ branchId });
+  const products = await getProducts({ branchId });
   const filteredOrders = cutoffDate ? allOrders.filter(o => new Date(o.createdAt) >= cutoffDate!) : allOrders;
 
   const totalRevenue = filteredOrders.reduce((sum, o) => (o.paymentStatus === 'Paid' ? sum + o.totalAmount : sum), 0);

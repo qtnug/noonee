@@ -41,7 +41,7 @@ export default function AdminOverviewPage() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<'today' | 'week' | 'month' | 'quarter' | 'all'>('week');
-  const { adminBranch: selectedBranch, setAdminBranch: setSelectedBranch } = useAdminBranch();
+  const { adminBranch: selectedBranch } = useAdminBranch();
   const [updatingCode, setUpdatingCode] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -162,56 +162,51 @@ export default function AdminOverviewPage() {
         </div>
       )}
 
-      {/* Branch Filter & Navigation Tabs */}
-      <div className="bg-white p-3 sm:p-4 rounded-[10px] border border-[#dddddd] shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#A30029] animate-pulse" />
-          <span className="text-[13px] font-bold text-[#181d26]">Cơ sở hiển thị:</span>
-          <span className="text-[12px] text-[#9297a0]">
-            {selectedBranch === 'all'
-              ? '(Toàn chuỗi 2 cơ sở)'
-              : selectedBranch === '1'
-              ? '(Cơ sở 1: 120 Yên Lãng)'
-              : '(Cơ sở 2: 269 Cầu Giấy)'}
+      {/* Active Branch Context Banner (No buttons - Controlled via top header dropdown) */}
+      {selectedBranch !== 'all' ? (
+        <div className="bg-white p-3.5 sm:p-4 rounded-[10px] border border-[#dddddd] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-rose-50 text-[#A30029] flex items-center justify-center font-bold text-lg border border-rose-200 shrink-0">
+              {selectedBranch === '1' ? '1' : '2'}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-[15px] font-bold text-[#181d26]">
+                  {selectedBranch === '1' ? 'Cơ sở 1: 120 Yên Lãng' : 'Cơ sở 2: 269 Cầu Giấy'}
+                </h2>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                  Dữ liệu riêng biệt
+                </span>
+              </div>
+              <p className="text-[12px] text-gray-500 mt-0.5">
+                {selectedBranch === '1'
+                  ? '📍 120 Yên Lãng, Đống Đa, Hà Nội • Hotline: 0987.654.321'
+                  : '📍 269 Cầu Giấy, Cầu Giấy, Hà Nội • Hotline: 0987.654.322'}
+              </p>
+            </div>
+          </div>
+          <span className="text-[12px] text-gray-400 italic">
+            Đang hiển thị dữ liệu của cơ sở này
           </span>
         </div>
-
-        <div className="flex items-center gap-1.5 p-1 bg-gray-100 rounded-lg overflow-x-auto no-scrollbar">
-          <button
-            type="button"
-            onClick={() => setSelectedBranch('all')}
-            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition whitespace-nowrap cursor-pointer ${
-              selectedBranch === 'all'
-                ? 'bg-[#A30029] text-white shadow-xs'
-                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
-            }`}
-          >
-            🏢 Cả 2 cơ sở (Tổng quan)
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedBranch('1')}
-            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition whitespace-nowrap cursor-pointer ${
-              selectedBranch === '1'
-                ? 'bg-[#A30029] text-white shadow-xs'
-                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
-            }`}
-          >
-            📍 CS1: 120 Yên Lãng
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedBranch('2')}
-            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition whitespace-nowrap cursor-pointer ${
-              selectedBranch === '2'
-                ? 'bg-[#A30029] text-white shadow-xs'
-                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
-            }`}
-          >
-            📍 CS2: 269 Cầu Giấy
-          </button>
+      ) : (
+        <div className="bg-gradient-to-r from-rose-50/50 via-white to-amber-50/50 p-3.5 sm:p-4 rounded-[10px] border border-gray-200 shadow-2xs flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">🏢</span>
+            <div>
+              <h2 className="text-[15px] font-bold text-[#181d26]">
+                Toàn bộ hệ thống NooNee (2 cơ sở)
+              </h2>
+              <p className="text-[12px] text-gray-500">
+                Tổng hợp số liệu từ CS1 (120 Yên Lãng) và CS2 (269 Cầu Giấy)
+              </p>
+            </div>
+          </div>
+          <span className="text-[11px] font-bold bg-[#A30029] text-white px-2.5 py-1 rounded-md shadow-2xs">
+            Tổng quan chuỗi
+          </span>
         </div>
-      </div>
+      )}
 
       {/* Time Period Filter Bar (Tuần / Tháng / Quý / Hôm nay / Tất cả) */}
       <div className="bg-white p-3 sm:p-4 rounded-[10px] border border-[#dddddd] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -261,13 +256,6 @@ export default function AdminOverviewPage() {
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-bold bg-rose-50 text-[#A30029] border border-rose-200">
                   📍 Cơ sở 1: 120 Yên Lãng (Đống Đa)
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedBranch('1')}
-                  className="text-[11px] font-bold text-[#A30029] hover:underline cursor-pointer"
-                >
-                  Lọc cơ sở này →
-                </button>
               </div>
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
@@ -291,13 +279,6 @@ export default function AdminOverviewPage() {
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
                   📍 Cơ sở 2: 269 Cầu Giấy (Cầu Giấy)
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedBranch('2')}
-                  className="text-[11px] font-bold text-indigo-700 hover:underline cursor-pointer"
-                >
-                  Lọc cơ sở này →
-                </button>
               </div>
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>

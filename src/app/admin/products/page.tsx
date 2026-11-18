@@ -30,17 +30,10 @@ export default function AdminProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter & Sorting State
-  const { adminBranch, setAdminBranch } = useAdminBranch();
+  const { adminBranch } = useAdminBranch();
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<number | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'out_of_stock' | 'featured'>('all');
-  const [branchFilter, setBranchFilter] = useState<'all' | '1' | '2' | 'both'>('all');
   const [sortOrder, setSortOrder] = useState<'default' | 'price_asc' | 'price_desc' | 'name_asc'>('default');
-
-  useEffect(() => {
-    if (adminBranch === 'all' || adminBranch === '1' || adminBranch === '2') {
-      setBranchFilter(adminBranch);
-    }
-  }, [adminBranch]);
 
   // Excel Import State
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -148,7 +141,7 @@ export default function AdminProductsPage() {
     setFormName('');
     setFormPrice(50000);
     setFormPrepTime(15);
-    setFormBranchId(null);
+    setFormBranchId(adminBranch === 'all' ? null : Number(adminBranch));
     setFormImage('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80');
     setFormDesc('');
     setFormAvailable(true);
@@ -419,9 +412,8 @@ export default function AdminProductsPage() {
       if (selectedCategoryFilter !== 'all' && p.categoryId !== selectedCategoryFilter) {
         return false;
       }
-      if (branchFilter === '1' && p.branchId !== 1) return false;
-      if (branchFilter === '2' && p.branchId !== 2) return false;
-      if (branchFilter === 'both' && p.branchId !== null && p.branchId !== undefined) return false;
+      if (adminBranch === '1' && p.branchId === 2) return false;
+      if (adminBranch === '2' && p.branchId === 1) return false;
       if (statusFilter === 'available' && !p.isAvailable) return false;
       if (statusFilter === 'out_of_stock' && p.isAvailable) return false;
       if (statusFilter === 'featured' && !p.isFeatured) return false;
@@ -444,7 +436,11 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-normal text-[#181d26]">Thực đơn & Món ăn</h1>
           <p className="text-[13px] sm:text-[14px] text-[#41454d] mt-0.5 sm:mt-1">
-            Tổng cộng {products.length} món ăn đang có trong thực đơn quán
+            {adminBranch === 'all'
+              ? `Toàn bộ ${products.length} món ăn trên hệ thống 2 cơ sở`
+              : adminBranch === '1'
+              ? `Thực đơn phục vụ tại Cơ sở 1: 120 Yên Lãng (${filtered.length} món)`
+              : `Thực đơn phục vụ tại Cơ sở 2: 269 Cầu Giấy (${filtered.length} món)`}
           </p>
         </div>
 
@@ -483,70 +479,6 @@ export default function AdminProductsPage() {
           >
             <Plus className="w-4 h-4" />
             <span>Thêm món mới</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Branch Tabs Filter */}
-      <div className="bg-white p-3 sm:p-3.5 rounded-[10px] border border-[#dddddd] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#A30029]" />
-          <span className="text-[13px] font-bold text-[#181d26]">Cơ sở áp dụng món:</span>
-          <span className="text-[12px] text-[#9297a0]">
-            {branchFilter === 'all'
-              ? '(Tất cả món trong hệ thống)'
-              : branchFilter === '1'
-              ? '(Chỉ bán tại CS 120 Yên Lãng)'
-              : branchFilter === '2'
-              ? '(Chỉ bán tại CS 269 Cầu Giấy)'
-              : '(Món bán chung cả 2 cơ sở)'}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1.5 p-1 bg-gray-100 rounded-lg overflow-x-auto no-scrollbar">
-          <button
-            type="button"
-            onClick={() => { setBranchFilter('all'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition whitespace-nowrap cursor-pointer ${
-              branchFilter === 'all'
-                ? 'bg-[#A30029] text-white shadow-xs'
-                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
-            }`}
-          >
-            Tất cả món ({products.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => { setBranchFilter('1'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition whitespace-nowrap cursor-pointer ${
-              branchFilter === '1'
-                ? 'bg-[#A30029] text-white shadow-xs'
-                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
-            }`}
-          >
-            📍 Chỉ CS1 (120 Yên Lãng)
-          </button>
-          <button
-            type="button"
-            onClick={() => { setBranchFilter('2'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition whitespace-nowrap cursor-pointer ${
-              branchFilter === '2'
-                ? 'bg-[#A30029] text-white shadow-xs'
-                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
-            }`}
-          >
-            📍 Chỉ CS2 (269 Cầu Giấy)
-          </button>
-          <button
-            type="button"
-            onClick={() => { setBranchFilter('both'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 rounded-md text-[12px] font-bold transition whitespace-nowrap cursor-pointer ${
-              branchFilter === 'both'
-                ? 'bg-[#A30029] text-white shadow-xs'
-                : 'text-[#475569] hover:text-[#0f172a] hover:bg-white/60'
-            }`}
-          >
-            🌿 Dùng chung 2 CS
           </button>
         </div>
       </div>
