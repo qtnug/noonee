@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   CiCircleRemove as X,
   CiTrash as Trash2,
@@ -27,184 +28,210 @@ export default function CartDrawer() {
     }
   }, [isCartOpen]);
 
-  if (!isCartOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-[#181d26]/40 transition-opacity"
-        onClick={() => setIsCartOpen(false)}
-      />
+    <AnimatePresence>
+      {isCartOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            className="absolute inset-0 bg-[#181d26]/45 backdrop-blur-xs"
+            onClick={() => setIsCartOpen(false)}
+          />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
-        <div className="w-screen max-w-md bg-white border-l border-[#dddddd] shadow-2xl flex flex-col">
-          {/* Header */}
-          <div className="h-14 sm:h-16 px-4 sm:px-6 border-b border-[#dddddd] flex items-center justify-between bg-white">
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-[#A30029]" />
-              <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
-                Giỏ hàng <span className="text-[13px] font-normal text-[#9297a0]">({totalItems} món)</span>
-              </h2>
-            </div>
-            <button
-              onClick={() => setIsCartOpen(false)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-[#fff1f2] text-[#41454d] hover:text-[#A30029] rounded-[6px] border border-gray-200 hover:border-red-200 transition cursor-pointer active:scale-95 text-[13px] font-medium"
-              aria-label="Đóng giỏ hàng"
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10 pointer-events-none">
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 320 }}
+              className="w-screen max-w-md bg-white border-l border-[#dddddd] shadow-2xl flex flex-col pointer-events-auto"
             >
-              <span>Đóng</span>
-              <X className="w-4 h-4 text-current" />
-            </button>
-          </div>
-
-          {/* Active Branch Notice */}
-          <div className="bg-[#FFFAF0] px-4 py-2 border-b border-[#ebdcd0] flex items-center gap-1.5 text-[12px] text-gray-700">
-            <span className="w-2 h-2 rounded-full bg-[#A30029] shrink-0" />
-            <span className="truncate">
-              Giao từ: <strong className="text-[#A30029]">{currentBranch.shortName}</strong> ({currentBranch.address})
-            </span>
-          </div>
-
-          {/* Body Items */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 divide-y divide-[#dddddd]">
-            {cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center py-16">
-                <div className="w-14 h-14 rounded-[12px] bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] flex items-center justify-center mb-4">
-                  <ShoppingBag className="w-7 h-7" />
+              {/* Header */}
+              <div className="h-14 sm:h-16 px-4 sm:px-6 border-b border-[#dddddd] flex items-center justify-between bg-white">
+                <div className="flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5 text-[#A30029]" />
+                  <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
+                    Giỏ hàng <span className="text-[13px] font-normal text-[#9297a0]">({totalItems} món)</span>
+                  </h2>
                 </div>
-                <h3 className="text-[16px] font-medium text-[#181d26] mb-1">Giỏ hàng của bạn đang trống</h3>
-                <p className="text-[13px] text-[#41454d] max-w-xs mb-6">
-                  Khám phá thực đơn món ngon và thêm món ăn yêu thích vào giỏ.
-                </p>
-                <Link
-                  href="/menu"
+                <button
                   onClick={() => setIsCartOpen(false)}
-                  className="px-6 py-2.5 bg-[#A30029] hover:bg-[#850021] text-white rounded-[6px] text-[14px] font-medium transition inline-block text-center"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-[#fff1f2] text-[#41454d] hover:text-[#A30029] rounded-[6px] border border-gray-200 hover:border-red-200 transition cursor-pointer active:scale-95 text-[13px] font-medium"
+                  aria-label="Đóng giỏ hàng"
                 >
-                  Xem thực đơn
-                </Link>
+                  <span>Đóng</span>
+                  <X className="w-4 h-4 text-current" />
+                </button>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {cart.map((item) => (
-                  <div key={item.cartItemId} className="pt-4 first:pt-0 flex gap-4 items-start border-b border-[#dddddd] pb-4 last:border-0 last:pb-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={item.product.image}
-                      alt={item.product.name}
-                      className="w-16 h-16 rounded-[6px] object-cover bg-[#f8fafc] shrink-0 border border-[#dddddd]"
-                    />
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <h4 className="text-[14px] font-medium text-[#181d26] truncate">
-                        {item.product.name}
-                      </h4>
 
-                      {/* Toppings Badges */}
-                      {item.selectedToppings && item.selectedToppings.length > 0 && (
-                        <div className="flex flex-wrap gap-1 text-[11px] text-[#41454d]">
-                          {item.selectedToppings.map((t) => (
-                            <span
-                              key={t.id}
-                              className="px-1.5 py-0.5 rounded bg-[#fff1f2] text-[#A30029] border border-[#fecdd3]"
-                            >
-                              +{t.name} ({formatVND(t.price)})
-                            </span>
-                          ))}
-                        </div>
-                      )}
+              {/* Active Branch Notice */}
+              <div className="bg-[#FFFAF0] px-4 py-2 border-b border-[#ebdcd0] flex items-center gap-1.5 text-[12px] text-gray-700">
+                <span className="w-2 h-2 rounded-full bg-[#A30029] shrink-0" />
+                <span className="truncate">
+                  Giao từ: <strong className="text-[#A30029]">{currentBranch.shortName}</strong> ({currentBranch.address})
+                </span>
+              </div>
 
-                      {/* Item Note */}
-                      {item.note && (
-                        <p className="text-[11px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 line-clamp-1 italic">
-                          &quot;{item.note}&quot;
-                        </p>
-                      )}
-
-                      <p className="text-[13px] font-bold text-[#A30029]">
-                        {formatVND(item.itemPrice || item.product.price)}
-                      </p>
-
-                      {/* Quantity Controls */}
-                      <div className="flex items-center gap-2 pt-1">
-                        <div className="flex items-center border border-[#dddddd] rounded-[6px] bg-white h-7 px-1">
-                          <button
-                            onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}
-                            className="p-1 hover:text-[#A30029] text-[#41454d] transition cursor-pointer"
-                          >
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="px-2 text-[12px] font-semibold text-[#181d26]">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
-                            className="p-1 hover:text-[#A30029] text-[#41454d] transition cursor-pointer"
-                          >
-                            <Plus className="w-3 h-3" />
-                          </button>
-                        </div>
-                        <button
-                          onClick={() => removeFromCart(item.cartItemId)}
-                          className="p-1 text-[#9297a0] hover:text-[#A30029] transition cursor-pointer"
-                          title="Xóa món"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+              {/* Body Items */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 divide-y divide-[#dddddd]">
+                {cart.length === 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="h-full flex flex-col items-center justify-center text-center py-16"
+                  >
+                    <div className="w-14 h-14 rounded-[12px] bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] flex items-center justify-center mb-4 animate-float">
+                      <ShoppingBag className="w-7 h-7" />
                     </div>
-                    <div className="text-right">
-                      <span className="text-[14px] font-bold text-[#181d26]">
-                        {formatVND((item.itemPrice || item.product.price) * item.quantity)}
-                      </span>
+                    <h3 className="text-[16px] font-medium text-[#181d26] mb-1">Giỏ hàng của bạn đang trống</h3>
+                    <p className="text-[13px] text-[#41454d] max-w-xs mb-6">
+                      Khám phá thực đơn món ngon và thêm món ăn yêu thích vào giỏ.
+                    </p>
+                    <Link
+                      href="/menu"
+                      onClick={() => setIsCartOpen(false)}
+                      className="btn-shine px-6 py-2.5 bg-[#A30029] hover:bg-[#850021] text-white rounded-[8px] text-[14px] font-semibold transition inline-block text-center shadow-xs hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      Xem thực đơn
+                    </Link>
+                  </motion.div>
+                ) : (
+                  <div className="space-y-4">
+                    <AnimatePresence initial={false}>
+                      {cart.map((item) => (
+                        <motion.div
+                          key={item.cartItemId}
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, x: 30, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="pt-4 first:pt-0 flex gap-4 items-start border-b border-[#dddddd] pb-4 last:border-0 last:pb-0"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={item.product.image}
+                            alt={item.product.name}
+                            className="w-16 h-16 rounded-[8px] object-cover bg-[#f8fafc] shrink-0 border border-[#dddddd]"
+                          />
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <h4 className="text-[14px] font-medium text-[#181d26] truncate">
+                              {item.product.name}
+                            </h4>
+
+                            {/* Toppings Badges */}
+                            {item.selectedToppings && item.selectedToppings.length > 0 && (
+                              <div className="flex flex-wrap gap-1 text-[11px] text-[#41454d]">
+                                {item.selectedToppings.map((t) => (
+                                  <span
+                                    key={t.id}
+                                    className="px-1.5 py-0.5 rounded bg-[#fff1f2] text-[#A30029] border border-[#fecdd3]"
+                                  >
+                                    +{t.name} ({formatVND(t.price)})
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Item Note */}
+                            {item.note && (
+                              <p className="text-[11px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 line-clamp-1 italic">
+                                &quot;{item.note}&quot;
+                              </p>
+                            )}
+
+                            <p className="text-[13px] font-bold text-[#A30029]">
+                              {formatVND(item.itemPrice || item.product.price)}
+                            </p>
+
+                            {/* Quantity Controls */}
+                            <div className="flex items-center gap-2 pt-1">
+                              <div className="flex items-center border border-[#dddddd] rounded-[6px] bg-white h-7 px-1">
+                                <button
+                                  onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}
+                                  className="p-1 hover:text-[#A30029] text-[#41454d] transition cursor-pointer active:scale-90"
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <span className="px-2 text-[12px] font-semibold text-[#181d26]">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
+                                  className="p-1 hover:text-[#A30029] text-[#41454d] transition cursor-pointer active:scale-90"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                              <button
+                                onClick={() => removeFromCart(item.cartItemId)}
+                                className="p-1 text-[#9297a0] hover:text-[#A30029] transition cursor-pointer active:scale-90"
+                                title="Xóa món"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[14px] font-bold text-[#181d26]">
+                              {formatVND((item.itemPrice || item.product.price) * item.quantity)}
+                            </span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Checkout */}
+              {cart.length > 0 && (
+                <div className="p-4 sm:p-6 border-t border-[#dddddd] bg-[#f8fafc] space-y-3 sm:space-y-4">
+                  <div className="space-y-1.5 text-[13px]">
+                    <div className="flex justify-between text-[#41454d]">
+                      <span>Tạm tính</span>
+                      <span className="font-medium text-[#181d26]">{formatVND(totalPrice)}</span>
+                    </div>
+                    <div className="flex justify-between text-[16px] font-bold text-[#181d26] pt-2 border-t border-[#dddddd]">
+                      <span>Tổng thanh toán</span>
+                      <span className="text-[#A30029] text-lg">{formatVND(totalPrice)}</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <Link
+                      href="/cart"
+                      onClick={() => setIsCartOpen(false)}
+                      className="h-11 flex items-center justify-center border border-[#A30029] bg-white text-[#A30029] text-[14px] font-semibold rounded-[8px] hover:bg-[#fff1f2] active:scale-[0.98] transition"
+                    >
+                      Xem giỏ hàng
+                    </Link>
+                    <Link
+                      href="/checkout"
+                      onClick={() => setIsCartOpen(false)}
+                      className="btn-shine h-11 flex items-center justify-center bg-[#A30029] hover:bg-[#850021] text-white text-[14px] font-semibold rounded-[8px] shadow-xs active:scale-[0.98] transition"
+                    >
+                      Thanh toán
+                    </Link>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsCartOpen(false)}
+                    className="w-full py-2 text-center text-[13px] font-medium text-[#555a64] hover:text-[#A30029] transition cursor-pointer flex items-center justify-center gap-1"
+                  >
+                    <span>← Tiếp tục chọn món khác</span>
+                  </button>
+                </div>
+              )}
+            </motion.div>
           </div>
-
-          {/* Footer Checkout */}
-          {cart.length > 0 && (
-            <div className="p-4 sm:p-6 border-t border-[#dddddd] bg-[#f8fafc] space-y-3 sm:space-y-4">
-              <div className="space-y-1.5 text-[13px]">
-                <div className="flex justify-between text-[#41454d]">
-                  <span>Tạm tính</span>
-                  <span className="font-medium text-[#181d26]">{formatVND(totalPrice)}</span>
-                </div>
-                <div className="flex justify-between text-[16px] font-bold text-[#181d26] pt-2 border-t border-[#dddddd]">
-                  <span>Tổng thanh toán</span>
-                  <span className="text-[#A30029] text-lg">{formatVND(totalPrice)}</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                <Link
-                  href="/cart"
-                  onClick={() => setIsCartOpen(false)}
-                  className="h-11 flex items-center justify-center border border-[#A30029] bg-white text-[#A30029] text-[14px] font-semibold rounded-[6px] hover:bg-[#fff1f2] transition"
-                >
-                  Xem giỏ hàng
-                </Link>
-                <Link
-                  href="/checkout"
-                  onClick={() => setIsCartOpen(false)}
-                  className="h-11 flex items-center justify-center bg-[#A30029] hover:bg-[#850021] text-white text-[14px] font-semibold rounded-[6px] shadow-xs transition"
-                >
-                  Thanh toán
-                </Link>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsCartOpen(false)}
-                className="w-full py-2 text-center text-[13px] font-medium text-[#555a64] hover:text-[#A30029] transition cursor-pointer flex items-center justify-center gap-1"
-              >
-                <span>← Tiếp tục chọn món khác</span>
-              </button>
-            </div>
-          )}
         </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }

@@ -38,6 +38,14 @@ export default function Navbar() {
   const [hasUnreadSupport, setHasUnreadSupport] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number>(user?.walletBalance || 0);
   const [isCartBumping, setIsCartBumping] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     if (totalItems > 0) {
@@ -128,7 +136,13 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-[#FFFAF0]/95 backdrop-blur-md border-b border-[#ebdcd0] shadow-2xs">
+    <header
+      className={`sticky top-0 z-40 transition-all duration-300 border-b ${
+        isScrolled
+          ? 'bg-white/90 backdrop-blur-xl border-[#e6d6c8] shadow-[0_6px_24px_-6px_rgba(15,23,42,0.08)]'
+          : 'bg-[#FFFAF0]/90 backdrop-blur-md border-[#ebdcd0]/80'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 lg:gap-4">
         {/* Left: Brand Wordmark */}
         <div className="flex items-center gap-6 shrink-0">

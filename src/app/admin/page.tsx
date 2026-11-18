@@ -250,7 +250,7 @@ export default function AdminOverviewPage() {
       {/* Metric Cards Grid (2-cols on mobile, 4-cols on lg) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {/* Total Revenue */}
-        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-1.5 sm:space-y-2">
+        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] hover:border-[#fecdd3] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 space-y-1.5 sm:space-y-2">
           <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
             <span>Doanh thu ({periodLabels[period]})</span>
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#181d26] flex items-center justify-center">
@@ -267,7 +267,7 @@ export default function AdminOverviewPage() {
         </div>
 
         {/* Total Orders */}
-        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-1.5 sm:space-y-2">
+        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] hover:border-[#fecdd3] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 space-y-1.5 sm:space-y-2">
           <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
             <span>Tổng đơn ({periodLabels[period]})</span>
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#181d26] flex items-center justify-center">
@@ -283,7 +283,7 @@ export default function AdminOverviewPage() {
         </div>
 
         {/* Average Order Value (AOV) */}
-        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-1.5 sm:space-y-2">
+        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] hover:border-[#fecdd3] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 space-y-1.5 sm:space-y-2">
           <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
             <span>TB / Đơn (AOV)</span>
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#f8fafc] border border-[#dddddd] text-[#181d26] flex items-center justify-center">
@@ -299,7 +299,7 @@ export default function AdminOverviewPage() {
         </div>
 
         {/* Live Active Orders */}
-        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-1.5 sm:space-y-2">
+        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] hover:border-[#fecdd3] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 space-y-1.5 sm:space-y-2">
           <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
             <span>Đang xử lý / Giao</span>
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] flex items-center justify-center">

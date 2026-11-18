@@ -57,7 +57,7 @@ export default async function HomePage() {
               <div className="mt-5 sm:mt-6 xl:mt-7 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
                 <Link
                   href="/menu"
-                  className="inline-flex items-center justify-center bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white font-bold text-[15px] sm:text-[16px] px-7 sm:px-8 py-3 sm:py-3.5 rounded-xl shadow-md shadow-red-500/20 transition duration-200 hover:scale-[1.02] active:scale-[0.98] text-center"
+                  className="btn-shine inline-flex items-center justify-center bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white font-bold text-[15px] sm:text-[16px] px-7 sm:px-8 py-3 sm:py-3.5 rounded-xl shadow-md shadow-red-500/20 transition duration-200 hover:scale-[1.02] active:scale-[0.98] text-center"
                 >
                   Khám phá thực đơn
                 </Link>

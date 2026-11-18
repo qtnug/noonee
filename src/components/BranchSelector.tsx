@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useBranch } from '@/context/BranchContext';
 import { CiLocationOn, CiCircleChevDown } from 'react-icons/ci';
 
@@ -49,37 +50,45 @@ export default function BranchSelector({ compact = false }: BranchSelectorProps)
       </button>
 
       {/* Popover Dropdown - Only 2 branch buttons with address */}
-      {isOpen && (
-        <div className="absolute left-0 sm:left-auto sm:right-0 mt-1.5 w-[280px] sm:w-[320px] bg-white rounded-xl shadow-xl border border-gray-200 p-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150 space-y-2">
-          {allBranches.map((branch) => {
-            const isSelected = branch.id === currentBranch.id;
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.16, ease: 'easeOut' }}
+            className="absolute left-0 sm:left-auto sm:right-0 mt-1.5 w-[280px] sm:w-[320px] bg-white rounded-xl shadow-xl border border-gray-200 p-2 z-50 space-y-2"
+          >
+            {allBranches.map((branch) => {
+              const isSelected = branch.id === currentBranch.id;
 
-            return (
-              <button
-                key={branch.id}
-                type="button"
-                onClick={() => {
-                  selectBranch(branch.id);
-                  setIsOpen(false);
-                }}
-                className={`w-full p-2.5 rounded-lg text-left transition cursor-pointer flex flex-col gap-0.5 ${
-                  isSelected
-                    ? 'border-2 border-[#A30029] bg-red-50/50 shadow-xs'
-                    : 'border border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                <span className={`text-[13px] font-bold ${isSelected ? 'text-[#A30029]' : 'text-gray-900'}`}>
-                  {branch.name}
-                </span>
-                <span className="text-[12px] text-gray-600 flex items-center gap-1">
-                  <CiLocationOn className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                  <span className="truncate">{branch.address}</span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+              return (
+                <button
+                  key={branch.id}
+                  type="button"
+                  onClick={() => {
+                    selectBranch(branch.id);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full p-2.5 rounded-lg text-left transition-all duration-150 cursor-pointer flex flex-col gap-0.5 active:scale-[0.99] ${
+                    isSelected
+                      ? 'border-2 border-[#A30029] bg-red-50/50 shadow-xs'
+                      : 'border border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className={`text-[13px] font-bold ${isSelected ? 'text-[#A30029]' : 'text-gray-900'}`}>
+                    {branch.name}
+                  </span>
+                  <span className="text-[12px] text-gray-600 flex items-center gap-1">
+                    <CiLocationOn className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className="truncate">{branch.address}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   CiCircleRemove as X,
   CiCirclePlus as Plus,
@@ -80,7 +81,7 @@ export default function ProductOptionsModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!mounted || !isOpen) return null;
+  if (!mounted) return null;
 
   const toggleTopping = (topping: ProductTopping) => {
     setSelectedToppings((prev) => {
@@ -124,14 +125,24 @@ export default function ProductOptionsModal({
   };
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs transition-opacity"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white w-full sm:max-w-lg rounded-t-[20px] sm:rounded-[16px] border border-[#dddddd] shadow-2xl flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden animate-in fade-in slide-in-from-bottom-8 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/55 backdrop-blur-xs"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 36, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.97 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 360 }}
+            className="bg-white w-full sm:max-w-lg rounded-t-[20px] sm:rounded-[16px] border border-[#dddddd] shadow-2xl flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
         {/* Mobile Drag Indicator Bar */}
         <div className="sm:hidden flex items-center justify-center pt-2.5 pb-1 bg-white">
           <div className="w-10 h-1 bg-gray-300 rounded-full" />
@@ -318,15 +329,17 @@ export default function ProductOptionsModal({
               type="button"
               onClick={handleBuyNow}
               disabled={!product.isAvailable || isSubmitting}
-              className={`flex-1 h-11 px-3 rounded-[10px] text-[13px] sm:text-[14px] font-semibold transition flex items-center justify-center gap-1.5 shadow-sm bg-[#A30029] hover:bg-[#850021] active:bg-[#6e001b] text-white cursor-pointer disabled:opacity-50`}
+              className="btn-shine flex-1 h-11 px-3 rounded-[10px] text-[13px] sm:text-[14px] font-semibold transition flex items-center justify-center gap-1.5 shadow-sm bg-[#A30029] hover:bg-[#850021] active:scale-[0.98] text-white cursor-pointer disabled:opacity-50"
             >
               <Zap className="w-4 h-4" />
               <span>Mua ngay • {formatVND(totalPrice)}</span>
             </button>
           </div>
         </div>
-      </div>
-    </div>,
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
     document.body
   );
 }

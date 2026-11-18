@@ -16,7 +16,7 @@ import {
   CiRedo as Loader2,
   CiCircleCheck as CheckCircle2,
 } from 'react-icons/ci';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import ProductCard from '@/components/ProductCard';
 import { Product, Category } from '@/types';
 import { useAuth } from '@/context/AuthContext';
@@ -100,6 +100,12 @@ function MenuPageContent() {
     if (initialSearch) setSearchQuery(initialSearch);
     if (initialDeal) setOnlyDeals(true);
   }, [initialCategory, initialSearch, initialDeal]);
+
+  const branchProductsCount = useMemo(() => {
+    return products.filter(
+      (p) => p.branchId === null || p.branchId === undefined || p.branchId === currentBranch.id
+    ).length;
+  }, [products, currentBranch.id]);
 
   const filteredProducts = useMemo(() => {
     let list = [...products];
@@ -295,30 +301,47 @@ function MenuPageContent() {
                 setSelectedCategory(null);
                 setOnlyDeals(false);
               }}
-              className={`h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition cursor-pointer ${
+              className={`relative h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition-colors cursor-pointer ${
                 selectedCategory === null && !onlyDeals
-                  ? 'bg-[#A30029] text-white shadow-xs'
+                  ? 'text-white'
                   : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
               }`}
             >
-              Tất cả món ({products.length})
+              {selectedCategory === null && !onlyDeals && (
+                <motion.span
+                  layoutId="menuCategoryPill"
+                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                  className="absolute inset-0 bg-[#A30029] rounded-lg shadow-xs"
+                />
+              )}
+              <span className="relative z-10">Tất cả món ({branchProductsCount})</span>
             </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  setSelectedCategory(cat.id);
-                  setOnlyDeals(false);
-                }}
-                className={`h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition cursor-pointer ${
-                  selectedCategory === cat.id && !onlyDeals
-                    ? 'bg-[#A30029] text-white shadow-xs'
-                    : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const isActive = selectedCategory === cat.id && !onlyDeals;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setSelectedCategory(cat.id);
+                    setOnlyDeals(false);
+                  }}
+                  className={`relative h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition-colors cursor-pointer ${
+                    isActive
+                      ? 'text-white'
+                      : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.span
+                      layoutId="menuCategoryPill"
+                      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                      className="absolute inset-0 bg-[#A30029] rounded-lg shadow-xs"
+                    />
+                  )}
+                  <span className="relative z-10">{cat.name}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -370,23 +393,31 @@ function MenuPageContent() {
               )}
             </div>
 
-            {/* Grid 4 columns x 2 rows (8 items) with scroll reveal effect */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 min-h-[380px]">
-              {currentProducts.map((product, idx) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-20px' }}
-                  transition={{ duration: 0.35, delay: (idx % 4) * 0.06, ease: 'easeOut' }}
-                >
-                  <ProductCard
-                    product={product}
-                    badgeText={product.isFeatured ? 'Nổi bật' : 'Món ngon'}
-                  />
-                </motion.div>
-              ))}
-            </div>
+            {/* Grid 4 columns x 2 rows (8 items) with smooth filter/page transition */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${selectedCategory ?? 'all'}-${onlyDeals}-${sortBy}-${currentPage}-${currentBranch.id}`}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
+                className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 min-h-[380px]"
+              >
+                {currentProducts.map((product, idx) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.28, delay: (idx % 4) * 0.045, ease: 'easeOut' }}
+                  >
+                    <ProductCard
+                      product={product}
+                      badgeText={product.isFeatured ? 'Nổi bật' : 'Món ngon'}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
 
             {/* Pagination Controls Bar */}
             {totalPages > 1 && (
