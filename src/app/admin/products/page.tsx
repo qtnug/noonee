@@ -436,11 +436,7 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-normal text-[#181d26]">Thực đơn & Món ăn</h1>
           <p className="text-[13px] sm:text-[14px] text-[#41454d] mt-0.5 sm:mt-1">
-            {adminBranch === 'all'
-              ? `Toàn bộ ${products.length} món ăn trên hệ thống 2 cơ sở`
-              : adminBranch === '1'
-              ? `Thực đơn phục vụ tại Cơ sở 1: 120 Yên Lãng (${filtered.length} món)`
-              : `Thực đơn phục vụ tại Cơ sở 2: 269 Cầu Giấy (${filtered.length} món)`}
+            Tổng cộng {filtered.length} món ăn đang hiển thị
           </p>
         </div>
 
@@ -608,7 +604,7 @@ export default function AdminProductsPage() {
                 <tr>
                   <th className="py-3 px-4">Món ăn</th>
                   <th className="py-3 px-4">Danh mục</th>
-                  <th className="py-3 px-4">Cơ sở phục vụ</th>
+                  {adminBranch === 'all' && <th className="py-3 px-4">Cơ sở phục vụ</th>}
                   <th className="py-3 px-4">Đơn giá</th>
                   <th className="py-3 px-4">Nổi bật</th>
                   <th className="py-3 px-4">Trạng thái bán</th>
@@ -643,21 +639,23 @@ export default function AdminProductsPage() {
                         <span>{p.prepTime || 15} phút</span>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      {p.branchId === 1 ? (
-                        <span className="px-2 py-0.5 rounded-[4px] bg-rose-50 text-[#A30029] border border-rose-200 text-[11px] font-bold">
-                          CS1 120 Yên Lãng
-                        </span>
-                      ) : p.branchId === 2 ? (
-                        <span className="px-2 py-0.5 rounded-[4px] bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold">
-                          CS2 269 Cầu Giấy
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-[4px] bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
-                          Cả 2 cơ sở
-                        </span>
-                      )}
-                    </td>
+                    {adminBranch === 'all' && (
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        {p.branchId === 1 ? (
+                          <span className="px-2 py-0.5 rounded-[4px] bg-[#f8fafc] text-[#333840] border border-[#dddddd] text-[11px] font-medium">
+                            120 Yên Lãng
+                          </span>
+                        ) : p.branchId === 2 ? (
+                          <span className="px-2 py-0.5 rounded-[4px] bg-[#f8fafc] text-[#333840] border border-[#dddddd] text-[11px] font-medium">
+                            269 Cầu Giấy
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-[4px] bg-[#f8fafc] text-[#333840] border border-[#dddddd] text-[11px] font-medium">
+                            Cả 2 cơ sở
+                          </span>
+                        )}
+                      </td>
+                    )}
                     <td className="py-3.5 px-4 font-semibold text-[#181d26]">
                       {formatVND(p.price)}
                     </td>
@@ -826,20 +824,15 @@ export default function AdminProductsPage() {
 
               {/* Branch Assignment Field as Dropdown */}
               <div className="space-y-1">
-                <label className="font-medium text-[#181d26] flex items-center gap-1.5">
-                  <span>Cơ sở phục vụ món này</span>
-                  <span className="text-[11px] text-gray-500 font-normal">
-                    (Phân bổ theo yêu cầu món ăn giữa các cơ sở)
-                  </span>
-                </label>
+                <label className="font-medium text-[#181d26]">Cơ sở phục vụ</label>
                 <select
                   value={formBranchId === null ? '' : formBranchId}
                   onChange={(e) => setFormBranchId(e.target.value === '' ? null : Number(e.target.value))}
                   className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[13px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                 >
-                  <option value="">🌿 Cả 2 cơ sở (Phục vụ toàn chuỗi)</option>
-                  <option value="1">📍 Chỉ Cơ sở 1: 120 Yên Lãng</option>
-                  <option value="2">📍 Chỉ Cơ sở 2: 269 Cầu Giấy</option>
+                  <option value="">Cả 2 cơ sở</option>
+                  <option value="1">Cơ sở 1: 120 Yên Lãng</option>
+                  <option value="2">Cơ sở 2: 269 Cầu Giấy</option>
                 </select>
               </div>
 

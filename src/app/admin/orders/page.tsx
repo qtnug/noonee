@@ -152,11 +152,7 @@ export default function AdminOrdersPage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-normal text-[#181d26]">Quản lý đơn hàng</h1>
           <p className="text-[13px] sm:text-[14px] text-[#41454d] mt-0.5 sm:mt-1">
-            {branchFilter === 'all'
-              ? 'Tất cả đơn hàng trên toàn hệ thống NooNee (2 cơ sở)'
-              : branchFilter === '1'
-              ? 'Chỉ hiển thị danh sách đơn hàng của Cơ sở 1: 120 Yên Lãng'
-              : 'Chỉ hiển thị danh sách đơn hàng của Cơ sở 2: 269 Cầu Giấy'}
+            Theo dõi, tiếp nhận và cập nhật trạng thái đơn hàng thời gian thực
           </p>
         </div>
 
@@ -223,7 +219,7 @@ export default function AdminOrdersPage() {
               <thead className="bg-[#f8fafc] border-b border-[#dddddd] text-[#9297a0] font-medium uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="py-3 px-4">Mã đơn</th>
-                  <th className="py-3 px-4">Cơ sở</th>
+                  {branchFilter === 'all' && <th className="py-3 px-4">Cơ sở</th>}
                   <th className="py-3 px-4">Khách hàng & Địa chỉ</th>
                   <th className="py-3 px-4">Tổng tiền</th>
                   <th className="py-3 px-4">Phương thức</th>
@@ -248,17 +244,19 @@ export default function AdminOrdersPage() {
                         {formatDate(order.createdAt)}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      {order.branchId === 2 ? (
-                        <span className="px-2 py-0.5 rounded-[4px] bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold">
-                          CS 269 Cầu Giấy
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-[4px] bg-rose-50 text-[#A30029] border border-rose-200 text-[11px] font-bold">
-                          CS 120 Yên Lãng
-                        </span>
-                      )}
-                    </td>
+                    {branchFilter === 'all' && (
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        {order.branchId === 2 ? (
+                          <span className="px-2 py-0.5 rounded-[4px] bg-[#f8fafc] text-[#333840] border border-[#dddddd] text-[11px] font-medium">
+                            269 Cầu Giấy
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-[4px] bg-[#f8fafc] text-[#333840] border border-[#dddddd] text-[11px] font-medium">
+                            120 Yên Lãng
+                          </span>
+                        )}
+                      </td>
+                    )}
                     <td className="py-3.5 px-4 max-w-xs">
                       <div className="font-medium text-[#181d26]">{order.customerName}</div>
                       <div className="text-[#9297a0] text-[12px]">{order.customerPhone}</div>

@@ -230,25 +230,19 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
           </div>
 
           {/* Top Single Branch Selector Dropdown */}
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="hidden sm:flex items-center gap-1.5 text-[12px] font-bold text-gray-700 whitespace-nowrap">
-              <span className="w-2 h-2 rounded-full bg-[#A30029] animate-pulse" />
-              <span>Cơ sở làm việc:</span>
-            </div>
-            <div className="relative">
-              <select
-                value={adminBranch}
-                onChange={(e) => setAdminBranch(e.target.value as any)}
-                aria-label="Chọn cơ sở làm việc"
-                className="h-10 pl-3 pr-8 bg-white border-2 border-[#A30029]/30 hover:border-[#A30029] focus:border-[#A30029] focus:ring-2 focus:ring-[#A30029]/20 rounded-lg text-[13px] font-bold text-gray-900 cursor-pointer shadow-xs transition appearance-none"
-              >
-                <option value="all">🏢 Tất cả cơ sở (Toàn chuỗi)</option>
-                <option value="1">📍 Cơ sở 1: 120 Yên Lãng</option>
-                <option value="2">📍 Cơ sở 2: 269 Cầu Giấy</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#A30029]">
-                <ChevronDown className="w-4 h-4 stroke-2" />
-              </div>
+          <div className="relative min-w-0">
+            <select
+              value={adminBranch}
+              onChange={(e) => setAdminBranch(e.target.value as any)}
+              aria-label="Chọn cơ sở"
+              className="h-9 pl-3 pr-8 bg-white border border-[#dddddd] hover:border-[#A30029] focus:border-[#A30029] focus:outline-none rounded-[6px] text-[13px] font-medium text-[#181d26] cursor-pointer transition appearance-none"
+            >
+              <option value="all">Tất cả cơ sở</option>
+              <option value="1">Cơ sở 1: 120 Yên Lãng</option>
+              <option value="2">Cơ sở 2: 269 Cầu Giấy</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#9297a0]">
+              <ChevronDown className="w-4 h-4" />
             </div>
           </div>
 

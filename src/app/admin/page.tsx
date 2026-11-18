@@ -162,52 +162,6 @@ export default function AdminOverviewPage() {
         </div>
       )}
 
-      {/* Active Branch Context Banner (No buttons - Controlled via top header dropdown) */}
-      {selectedBranch !== 'all' ? (
-        <div className="bg-white p-3.5 sm:p-4 rounded-[10px] border border-[#dddddd] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-rose-50 text-[#A30029] flex items-center justify-center font-bold text-lg border border-rose-200 shrink-0">
-              {selectedBranch === '1' ? '1' : '2'}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-[15px] font-bold text-[#181d26]">
-                  {selectedBranch === '1' ? 'Cơ sở 1: 120 Yên Lãng' : 'Cơ sở 2: 269 Cầu Giấy'}
-                </h2>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                  Dữ liệu riêng biệt
-                </span>
-              </div>
-              <p className="text-[12px] text-gray-500 mt-0.5">
-                {selectedBranch === '1'
-                  ? '📍 120 Yên Lãng, Đống Đa, Hà Nội • Hotline: 0987.654.321'
-                  : '📍 269 Cầu Giấy, Cầu Giấy, Hà Nội • Hotline: 0987.654.322'}
-              </p>
-            </div>
-          </div>
-          <span className="text-[12px] text-gray-400 italic">
-            Đang hiển thị dữ liệu của cơ sở này
-          </span>
-        </div>
-      ) : (
-        <div className="bg-gradient-to-r from-rose-50/50 via-white to-amber-50/50 p-3.5 sm:p-4 rounded-[10px] border border-gray-200 shadow-2xs flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <span className="text-xl">🏢</span>
-            <div>
-              <h2 className="text-[15px] font-bold text-[#181d26]">
-                Toàn bộ hệ thống NooNee (2 cơ sở)
-              </h2>
-              <p className="text-[12px] text-gray-500">
-                Tổng hợp số liệu từ CS1 (120 Yên Lãng) và CS2 (269 Cầu Giấy)
-              </p>
-            </div>
-          </div>
-          <span className="text-[11px] font-bold bg-[#A30029] text-white px-2.5 py-1 rounded-md shadow-2xs">
-            Tổng quan chuỗi
-          </span>
-        </div>
-      )}
-
       {/* Time Period Filter Bar (Tuần / Tháng / Quý / Hôm nay / Tất cả) */}
       <div className="bg-white p-3 sm:p-4 rounded-[10px] border border-[#dddddd] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-[13px] font-semibold text-[#181d26]">
@@ -240,33 +194,29 @@ export default function AdminOverviewPage() {
 
       {/* Chain Branch Breakdown Comparison (Displayed when All Branches is selected) */}
       {selectedBranch === 'all' && stats?.branchBreakdown && (
-        <div className="bg-gradient-to-r from-rose-50/60 via-white to-indigo-50/60 p-4 sm:p-5 rounded-xl border border-gray-200 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-[14px] font-bold text-gray-900 flex items-center gap-2">
-              <span>📊 Phân bổ doanh thu & đơn hàng giữa 2 cơ sở</span>
-              <span className="text-[11px] font-normal text-gray-500">({periodLabels[period]})</span>
+        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
+            <h3 className="text-[15px] font-semibold text-[#181d26]">
+              Phân bổ doanh thu & đơn hàng ({periodLabels[period]})
             </h3>
-            <span className="text-[11px] font-medium text-gray-500">Cập nhật tự động</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Branch 1 Card */}
-            <div className="p-4 bg-white rounded-lg border border-rose-200 shadow-2xs space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-bold bg-rose-50 text-[#A30029] border border-rose-200">
-                  📍 Cơ sở 1: 120 Yên Lãng (Đống Đa)
-                </span>
+            <div className="p-4 bg-[#f8fafc] rounded-[8px] border border-[#dddddd] space-y-2">
+              <div className="text-[13px] font-semibold text-[#181d26]">
+                Cơ sở 1: 120 Yên Lãng
               </div>
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
-                  <span className="text-[11px] text-gray-500 block">Doanh thu CS1</span>
-                  <span className="text-[18px] font-bold text-[#A30029]">
+                  <span className="text-[11px] text-[#9297a0] block">Doanh thu</span>
+                  <span className="text-[18px] font-semibold text-[#A30029]">
                     {formatVND(stats.branchBreakdown.branch1?.revenue || 0)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[11px] text-gray-500 block">Đơn hàng hoàn tất</span>
-                  <span className="text-[18px] font-bold text-gray-800">
+                  <span className="text-[11px] text-[#9297a0] block">Tổng đơn</span>
+                  <span className="text-[18px] font-semibold text-[#181d26]">
                     {stats.branchBreakdown.branch1?.orders || 0} đơn
                   </span>
                 </div>
@@ -274,22 +224,20 @@ export default function AdminOverviewPage() {
             </div>
 
             {/* Branch 2 Card */}
-            <div className="p-4 bg-white rounded-lg border border-indigo-200 shadow-2xs space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                  📍 Cơ sở 2: 269 Cầu Giấy (Cầu Giấy)
-                </span>
+            <div className="p-4 bg-[#f8fafc] rounded-[8px] border border-[#dddddd] space-y-2">
+              <div className="text-[13px] font-semibold text-[#181d26]">
+                Cơ sở 2: 269 Cầu Giấy
               </div>
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
-                  <span className="text-[11px] text-gray-500 block">Doanh thu CS2</span>
-                  <span className="text-[18px] font-bold text-indigo-700">
+                  <span className="text-[11px] text-[#9297a0] block">Doanh thu</span>
+                  <span className="text-[18px] font-semibold text-[#A30029]">
                     {formatVND(stats.branchBreakdown.branch2?.revenue || 0)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[11px] text-gray-500 block">Đơn hàng hoàn tất</span>
-                  <span className="text-[18px] font-bold text-gray-800">
+                  <span className="text-[11px] text-[#9297a0] block">Tổng đơn</span>
+                  <span className="text-[18px] font-semibold text-[#181d26]">
                     {stats.branchBreakdown.branch2?.orders || 0} đơn
                   </span>
                 </div>
@@ -566,7 +514,7 @@ export default function AdminOverviewPage() {
             <thead>
               <tr className="border-b border-[#dddddd] text-[#9297a0] uppercase tracking-wider font-medium text-[11px]">
                 <th className="pb-3">Mã đơn</th>
-                <th className="pb-3">Cơ sở</th>
+                {selectedBranch === 'all' && <th className="pb-3">Cơ sở</th>}
                 <th className="pb-3">Khách hàng</th>
                 <th className="pb-3">Số tiền</th>
                 <th className="pb-3">Phương thức</th>
@@ -583,17 +531,19 @@ export default function AdminOverviewPage() {
                       #{order.orderCode}
                     </Link>
                   </td>
-                  <td className="py-3.5">
-                    {order.branchId === 2 ? (
-                      <span className="px-2 py-0.5 rounded-[4px] bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold whitespace-nowrap">
-                        CS 269 Cầu Giấy
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-[4px] bg-rose-50 text-[#A30029] border border-rose-200 text-[11px] font-bold whitespace-nowrap">
-                        CS 120 Yên Lãng
-                      </span>
-                    )}
-                  </td>
+                  {selectedBranch === 'all' && (
+                    <td className="py-3.5">
+                      {order.branchId === 2 ? (
+                        <span className="px-2 py-0.5 rounded-[4px] bg-[#f8fafc] text-[#333840] border border-[#dddddd] text-[11px] font-medium whitespace-nowrap">
+                          269 Cầu Giấy
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-[4px] bg-[#f8fafc] text-[#333840] border border-[#dddddd] text-[11px] font-medium whitespace-nowrap">
+                          120 Yên Lãng
+                        </span>
+                      )}
+                    </td>
+                  )}
                   <td className="py-3.5">
                     <span className="font-medium text-[#181d26] block">{order.customerName}</span>
                     <span className="text-[#9297a0] text-[12px]">{order.customerPhone}</span>
