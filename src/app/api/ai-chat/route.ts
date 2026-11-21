@@ -60,15 +60,13 @@ export async function POST(request: NextRequest) {
     const menuSummary = await getFoodMenuSummaryForPrompt();
     const allProducts = await getFoodMenuItems();
 
-    // LLM7 (https://llm7.io) OpenAI-compatible configuration
-    const baseUrl = process.env.LLM7_BASE_URL || 'https://api.llm7.io/v1';
-    const modelName = process.env.LLM_MODEL_NAME || 'fast';
+    // LLM7 (https://llm7.io) OpenAI-compatible configuration (server-only env vars)
+    const baseUrl = (process.env.LLM7_BASE_URL || 'https://api.llm7.io/v1').trim();
+    const modelName = (process.env.LLM_MODEL_NAME || 'fast').trim();
     const rawKey =
       process.env.LLM7_API_KEY ||
       process.env.LLM_API_KEY ||
       process.env.LLM7_TOKEN ||
-      process.env.API_KEY ||
-      process.env.NEXT_PUBLIC_LLM7_API_KEY ||
       '';
 
     const apiKey = rawKey.trim().replace(/^["']|["']$/g, '');

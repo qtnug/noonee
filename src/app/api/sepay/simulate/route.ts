@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateOrderStatus, getOrderByCode } from '@/lib/db';
+import { isPaymentSimulationEnabled } from '@/lib/sepay';
 
 export async function POST(request: NextRequest) {
   try {
-    // Allow payment simulation unless explicitly disabled
-    if (process.env.NODE_ENV !== 'development' || process.env.DISABLE_PAYMENT_SIMULATION === 'true') {
+    // Allow payment simulation only in non-production when NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION=true
+    if (!isPaymentSimulationEnabled()) {
       return NextResponse.json(
-        { success: false, message: 'Chức năng giả lập thanh toán đã bị vô hiệu hóa' },
+        {
+          success: false,
+          message:
+            'Chức năng giả lập thanh toán đang tắt (cần chạy môi trường local dev với NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION=true)',
+        },
         { status: 403 }
       );
     }

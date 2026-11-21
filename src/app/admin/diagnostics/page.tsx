@@ -132,59 +132,77 @@ export default function AdminDiagnosticsPage() {
               </div>
               <div>
                 <h2 className="text-[13px] sm:text-[14px] font-semibold text-[#181d26] leading-tight">Cơ sở dữ liệu Microsoft SQL Server</h2>
-                <span className="text-[11px] text-[#9297a0]">Lưu trữ đám mây Cloud ASP.NET</span>
+                <span className="text-[11px] text-[#9297a0]">Kết nối theo cấu hình SQLSERVER_*</span>
               </div>
             </div>
-            <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-[4px] bg-[#f0fdf4] text-[#15803d] text-[11px] sm:text-[12px] font-medium border border-[#bbf7d0] shrink-0">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Đang kết nối tốt</span>
-              <span className="sm:hidden">Kết nối tốt</span>
-            </span>
+            {healthData?.database?.connected ? (
+              <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-[4px] bg-[#f0fdf4] text-[#15803d] text-[11px] sm:text-[12px] font-medium border border-[#bbf7d0] shrink-0">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Đang kết nối tốt</span>
+                <span className="sm:hidden">Kết nối tốt</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-[4px] bg-amber-50 text-amber-800 text-[11px] sm:text-[12px] font-medium border border-amber-200 shrink-0">
+                <Clock className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Dự phòng bộ nhớ</span>
+                <span className="sm:hidden">Dự phòng</span>
+              </span>
+            )}
           </div>
 
           <div className="space-y-2 sm:space-y-2.5 text-[12px] sm:text-[13px]">
             <div className="flex justify-between py-1 border-b border-[#dddddd] gap-2">
               <span className="text-[#41454d]">Động cơ CSDL (Engine):</span>
-              <strong className="text-[#181d26] font-medium">{healthData?.database?.engine || 'SQL Server 2025'}</strong>
+              <strong className="text-[#181d26] font-medium">{healthData?.database?.engine || 'Đang kiểm tra...'}</strong>
             </div>
 
             <div className="flex flex-col sm:flex-row sm:justify-between py-1 border-b border-[#dddddd] gap-0.5 sm:gap-2">
-              <span className="text-[#41454d]">Máy chủ Cloud Host:</span>
+              <span className="text-[#41454d]">Máy chủ SQL Host:</span>
               <strong className="text-[#181d26] font-mono font-medium text-[11px] sm:text-[12px] break-all">
-                db68391.public.databaseasp.net:1433
+                {healthData?.database?.host || 'Chưa cấu hình'}
               </strong>
             </div>
 
             <div className="flex justify-between py-1 border-b border-[#dddddd] gap-2">
               <span className="text-[#41454d]">Tên Database:</span>
               <strong className="text-[#181d26] font-mono font-medium">
-                {healthData?.database?.database || 'db68391'}
+                {healthData?.database?.databaseName || healthData?.database?.database || 'Chưa cấu hình'}
               </strong>
             </div>
 
             <div className="flex justify-between py-1 border-b border-[#dddddd] gap-2">
               <span className="text-[#41454d]">Danh mục món (Categories):</span>
-              <span className="font-medium text-[#181d26]">{healthData?.database?.categoryCount || 4} danh mục</span>
+              <span className="font-medium text-[#181d26]">{healthData?.database?.categoryCount ?? 0} danh mục</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-[#dddddd] gap-2">
               <span className="text-[#41454d]">Món ăn thực đơn (Products):</span>
-              <span className="font-medium text-[#181d26]">{healthData?.database?.productCount || 11} món</span>
+              <span className="font-medium text-[#181d26]">{healthData?.database?.productCount ?? 0} món</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-[#dddddd] gap-2">
               <span className="text-[#41454d]">Đơn hàng hệ thống (Orders):</span>
-              <span className="font-medium text-[#181d26]">{healthData?.database?.orderCount || 1} đơn</span>
+              <span className="font-medium text-[#181d26]">{healthData?.database?.orderCount ?? 0} đơn</span>
             </div>
           </div>
 
-          <div className="bg-[#f8fafc] p-3 sm:p-3.5 rounded-[6px] border border-[#dddddd] text-[12px] text-[#333840] space-y-1">
-            <div className="font-medium text-[#15803d] flex items-center gap-1.5">
+          <div
+            className={`p-3 sm:p-3.5 rounded-[6px] border text-[12px] space-y-1 ${
+              healthData?.database?.connected
+                ? 'bg-[#f8fafc] border-[#dddddd] text-[#333840]'
+                : 'bg-amber-50/70 border-amber-200 text-amber-900'
+            }`}
+          >
+            <div
+              className={`font-medium flex items-center gap-1.5 ${
+                healthData?.database?.connected ? 'text-[#15803d]' : 'text-amber-800'
+              }`}
+            >
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>Trạng thái kết nối:</span>
             </div>
             <p className="leading-relaxed text-gray-600">
-              {healthData?.database?.details || 'Kết nối thành công tới máy chủ SQL Server Cloud. Dữ liệu được đồng bộ liên tục.'}
+              {healthData?.database?.details || 'Đang kiểm tra trạng thái kết nối cơ sở dữ liệu...'}
             </p>
           </div>
         </div>
@@ -201,28 +219,36 @@ export default function AdminDiagnosticsPage() {
                 <span className="text-[11px] text-[#9297a0]">Tự động xác nhận chuyển khoản ngân hàng</span>
               </div>
             </div>
-            <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-[4px] bg-[#f0fdf4] text-[#15803d] text-[11px] sm:text-[12px] font-medium border border-[#bbf7d0] shrink-0">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Sẵn sàng hoạt động</span>
-              <span className="sm:hidden">Sẵn sàng</span>
-            </span>
+            {healthData?.sepay?.configured ? (
+              <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-[4px] bg-[#f0fdf4] text-[#15803d] text-[11px] sm:text-[12px] font-medium border border-[#bbf7d0] shrink-0">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Sẵn sàng hoạt động</span>
+                <span className="sm:hidden">Sẵn sàng</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-[4px] bg-amber-50 text-amber-800 text-[11px] sm:text-[12px] font-medium border border-amber-200 shrink-0">
+                <Clock className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Chưa cấu hình đủ</span>
+                <span className="sm:hidden">Thiếu cấu hình</span>
+              </span>
+            )}
           </div>
 
           <div className="space-y-2 sm:space-y-2.5 text-[12px] sm:text-[13px]">
             <div className="flex justify-between py-1 border-b border-[#dddddd] gap-2">
               <span className="text-[#41454d]">Ngân hàng nhận tiền:</span>
-              <strong className="text-[#181d26] font-medium">{healthData?.sepay?.bank || 'MB (Ngân hàng Quân Đội)'}</strong>
+              <strong className="text-[#181d26] font-medium">{healthData?.sepay?.bank || 'Chưa cấu hình'}</strong>
             </div>
 
             <div className="flex justify-between py-1 border-b border-[#dddddd] gap-2">
               <span className="text-[#41454d]">Số tài khoản thụ hưởng:</span>
-              <strong className="font-mono font-medium text-[#181d26]">{healthData?.sepay?.account || '0822123346'}</strong>
+              <strong className="font-mono font-medium text-[#181d26]">{healthData?.sepay?.account || 'Chưa cấu hình'}</strong>
             </div>
 
             <div className="flex flex-col sm:flex-row sm:justify-between py-1 border-b border-[#dddddd] gap-0.5 sm:gap-2">
               <span className="text-[#41454d]">Tên chủ tài khoản:</span>
               <strong className="text-[#181d26] font-medium uppercase text-[11px] sm:text-[12px] break-all">
-                {process.env.SEPAY_ACCOUNT_NAME || 'HOANG KHOI NGUYEN - QUAN AN NOONEE'}
+                {healthData?.sepay?.accountName || 'Chưa cấu hình'}
               </strong>
             </div>
 
@@ -235,23 +261,38 @@ export default function AdminDiagnosticsPage() {
               <span className="text-[#41454d]">Chế độ thanh toán:</span>
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-medium bg-[#f0fdf4] text-[#15803d] border border-[#bbf7d0]">
-                  Giao dịch thực tế (MB Bank)
+                  {healthData?.sepay?.mode || 'Live'}
                 </span>
-                <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                  Sandbox
-                </span>
+                {healthData?.sepay?.webhookConfigured && (
+                  <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Webhook đã bảo mật
+                  </span>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Clean Ready Status (No warning) */}
-          <div className="bg-[#f0fdf4] p-3 sm:p-3.5 rounded-[6px] border border-[#bbf7d0] text-[12px] text-[#15803d] space-y-1">
+          <div
+            className={`p-3 sm:p-3.5 rounded-[6px] border text-[12px] space-y-1 ${
+              healthData?.sepay?.configured
+                ? 'bg-[#f0fdf4] border-[#bbf7d0] text-[#15803d]'
+                : 'bg-amber-50 border-amber-200 text-amber-900'
+            }`}
+          >
             <div className="font-semibold flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 shrink-0" />
-              <span>Hệ thống thanh toán đã kích hoạt hoàn tất:</span>
+              <span>
+                {healthData?.sepay?.configured
+                  ? 'Hệ thống thanh toán đã kích hoạt hoàn tất:'
+                  : 'Cần bổ sung cấu hình SePay trong .env.local:'}
+              </span>
             </div>
-            <p className="leading-relaxed text-[#166534]">
-              Hệ thống đã hỗ trợ song song cả chuyển khoản ngân hàng thực tế qua mã VietQR và chế độ Sandbox để kiểm thử nhận đơn tức thì.
+            <p className="leading-relaxed">
+              {healthData?.sepay?.configured
+                ? healthData?.sepay?.simulationEnabled
+                  ? 'Đang bật chế độ Sandbox (local) song song với VietQR để kiểm thử đơn hàng.'
+                  : 'Đang chạy chế độ Live nhận giao dịch thực tế qua VietQR và Webhook SePay.'
+                : 'Kiểm tra lại SEPAY_BANK_NAME, SEPAY_BANK_ACCOUNT, SEPAY_ACCOUNT_NAME và SEPAY_API_TOKEN trong .env.local.'}
             </p>
           </div>
         </div>

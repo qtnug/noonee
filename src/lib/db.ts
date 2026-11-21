@@ -1576,6 +1576,8 @@ export async function getAdminStats(
 export async function checkDatabaseHealth(): Promise<{
   connected: boolean;
   engine: string;
+  host: string;
+  databaseName: string;
   database: string;
   categoryCount: number;
   productCount: number;
@@ -1590,14 +1592,17 @@ export async function checkDatabaseHealth(): Promise<{
       const orderRes = await pool.request().query('SELECT COUNT(*) AS cnt FROM Orders');
 
       const cfg = getDatabaseConfig();
+      const hostDisplay = cfg.port ? `${cfg.server}:${cfg.port}` : cfg.server;
       return {
         connected: true,
         engine: 'Microsoft SQL Server',
-        database: `${cfg.database} @ ${cfg.server}`,
+        host: hostDisplay,
+        databaseName: cfg.database || 'Configured DB',
+        database: `${cfg.database || 'Configured DB'} @ ${cfg.server}`,
         categoryCount: catRes.recordset[0]?.cnt || 0,
         productCount: prodRes.recordset[0]?.cnt || 0,
         orderCount: orderRes.recordset[0]?.cnt || 0,
-        details: `Kết nối thành công tới CSDL SQL Server: ${cfg.server} (DB: ${cfg.database}, User: ${cfg.user})`
+        details: `Kết nối thành công tới máy chủ SQL Server (${cfg.server}). Dữ liệu đang được đồng bộ trực tiếp.`
       };
     }
   } catch (err: any) {
@@ -1607,11 +1612,13 @@ export async function checkDatabaseHealth(): Promise<{
   return {
     connected: false,
     engine: 'In-Memory Fallback',
+    host: 'Chưa cấu hình / Chế độ cục bộ',
+    databaseName: 'FoodOrderingDB (Hybrid)',
     database: 'FoodOrderingDB (Hybrid)',
     categoryCount: inMemoryCategories.length,
     productCount: inMemoryProducts.length,
     orderCount: inMemoryOrders.length,
-    details: 'Mất kết nối CSDL, đang hoạt động qua lớp đệm dự phòng hybrid.'
+    details: 'Chưa kết nối SQL Server (chưa cấu hình biến SQLSERVER_* trong .env.local hoặc máy chủ không phản hồi). Hệ thống đang dùng dữ liệu dự phòng trong bộ nhớ.'
   };
 }
 

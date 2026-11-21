@@ -3,9 +3,16 @@ import { NextRequest } from 'next/server';
 import { User, UserRole } from '@/types';
 import { getUserById } from '@/lib/db';
 
-const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? '' : 'noonee-development-only-secret');
-if (!JWT_SECRET) throw new Error('JWT_SECRET must be configured in production');
 const JWT_EXPIRES_IN = '7d';
+
+function getJwtSecret(): string {
+  const secret = (process.env.JWT_SECRET || '').trim();
+  if (secret) return secret;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET must be configured in production');
+  }
+  return 'noonee-development-only-secret';
+}
 
 export interface JwtPayload {
   userId: number;
@@ -28,7 +35,7 @@ export function generateToken(user: User): string {
     role: user.role,
     branchId: user.branchId ?? null,
   };
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: JWT_EXPIRES_IN });
 }
 
 /**
@@ -36,7 +43,7 @@ export function generateToken(user: User): string {
  */
 export function verifyToken(token: string): JwtPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JwtPayload;
+    return jwt.verify(token, getJwtSecret()) as JwtPayload;
   } catch {
     return null;
   }

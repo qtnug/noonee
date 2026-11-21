@@ -31,11 +31,47 @@ export default function PaymentPage() {
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [paymentConfig, setPaymentConfig] = useState<{
+    bankName: string;
+    accountNo: string;
+    accountName: string;
+    simulationEnabled: boolean;
+  }>({
+    bankName: '',
+    accountNo: '',
+    accountName: '',
+    simulationEnabled: false,
+  });
+  const [loadingPaymentConfig, setLoadingPaymentConfig] = useState(true);
   const [isPaid, setIsPaid] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const [isCancelling, setIsCancelling] = useState(false);
   const cancellingRef = useRef(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/payment-config', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data.success && data.data) {
+          setPaymentConfig({
+            bankName: data.data.bankName || '',
+            accountNo: data.data.accountNo || '',
+            accountName: data.data.accountName || '',
+            simulationEnabled: Boolean(data.data.simulationEnabled),
+          });
+        }
+      })
+      .catch((err) => console.error('Lỗi tải cấu hình thanh toán:', err))
+      .finally(() => {
+        if (isMounted) setLoadingPaymentConfig(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -268,9 +304,11 @@ export default function PaymentPage() {
         <VietQRCode
           orderCode={order.orderCode}
           amount={order.totalAmount}
-          bankName={process.env.SEPAY_BANK_NAME || 'MB'}
-          accountNo={process.env.SEPAY_BANK_ACCOUNT || '0822123346'}
-          accountName={process.env.SEPAY_ACCOUNT_NAME || 'HOANG KHOI NGUYEN - QUAN AN NOONEE'}
+          bankName={paymentConfig.bankName}
+          accountNo={paymentConfig.accountNo}
+          accountName={paymentConfig.accountName}
+          simulationEnabled={paymentConfig.simulationEnabled}
+          loadingConfig={loadingPaymentConfig}
           isPaid={isPaid || order.paymentStatus === 'Paid'}
           onPaymentSuccess={() => {
             setIsPaid(true);

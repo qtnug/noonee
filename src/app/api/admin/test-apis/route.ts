@@ -132,8 +132,10 @@ export async function GET(request: NextRequest) {
   // 3. Test Sepay VietQR Payment Gateway
   if (!target || target === 'sepay') {
     const start = Date.now();
-    const bank = process.env.SEPAY_BANK_NAME;
-    const acc = process.env.SEPAY_BANK_ACCOUNT;
+    const bank = (process.env.SEPAY_BANK_NAME || '').trim();
+    const acc = (process.env.SEPAY_BANK_ACCOUNT || '').trim();
+    const token = (process.env.SEPAY_API_TOKEN || '').trim();
+    const hasValidToken = Boolean(token && token !== 'demo_sepay_token');
 
     if (bank && acc) {
       try {
@@ -144,10 +146,12 @@ export async function GET(request: NextRequest) {
           id: 'sepay',
           name: 'Cổng thanh toán Sepay (VietQR)',
           category: 'Payment Gateway',
-          status: 'online',
+          status: hasValidToken ? 'online' : 'warning',
           latencyMs: latency,
           statusCode: res.status,
-          details: `Cổng thanh toán VietQR sẵn sàng (Ngân hàng: ${bank}).`,
+          details: hasValidToken
+            ? `Cổng thanh toán VietQR & Webhook sẵn sàng (Ngân hàng: ${bank}).`
+            : `VietQR hiển thị được (${bank}) nhưng chưa cấu hình SEPAY_API_TOKEN cho webhook tự động xác nhận.`,
           endpoint: 'api.vietqr.io',
           lastTested: new Date().toLocaleTimeString('vi-VN'),
         });
@@ -181,8 +185,19 @@ export async function GET(request: NextRequest) {
   // 4. Test Cloudinary Media API
   if (!target || target === 'cloudinary') {
     const start = Date.now();
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-    if (cloudName) {
+    let cloudName = (process.env.CLOUDINARY_CLOUD_NAME || '').trim();
+    if (!cloudName && process.env.CLOUDINARY_URL) {
+      const match = process.env.CLOUDINARY_URL.match(/@([^/?#]+)/);
+      if (match?.[1]) {
+        cloudName = match[1].trim();
+      }
+    }
+    const hasSecretCreds = Boolean(
+      process.env.CLOUDINARY_URL ||
+        (cloudName && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)
+    );
+
+    if (cloudName && hasSecretCreds) {
       try {
         const cloudPingUrl = `https://res.cloudinary.com/${cloudName}/image/upload/sample.jpg`;
         const res = await fetch(cloudPingUrl, { method: 'HEAD' });
@@ -218,7 +233,7 @@ export async function GET(request: NextRequest) {
         category: 'Media CDN',
         status: 'warning',
         latencyMs: 0,
-        details: 'Chưa cấu hình CLOUDINARY_CLOUD_NAME trong .env.local.',
+        details: 'Chưa cấu hình đầy đủ CLOUDINARY_CLOUD_NAME / API_KEY / API_SECRET (hoặc CLOUDINARY_URL) trong .env.local.',
         endpoint: 'Cloudinary CDN',
         lastTested: new Date().toLocaleTimeString('vi-VN'),
       });
