@@ -56,6 +56,7 @@ export interface Product {
   image: string;
   isAvailable: boolean;
   isFeatured: boolean;
+  soldCount?: number;
   rating: number;
   prepTime?: number;
   toppings?: ProductTopping[];

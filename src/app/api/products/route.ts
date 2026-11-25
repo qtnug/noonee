@@ -24,7 +24,9 @@ export async function GET(request: NextRequest) {
     const categoryId = searchParams.get('categoryId') ? parseInt(searchParams.get('categoryId')!) : undefined;
     const rawSearch = searchParams.get('search') || undefined;
     const search = rawSearch ? sanitizeText(rawSearch, 100) : undefined;
-    const isFeatured = searchParams.get('featured') === 'true';
+    const isFeatured =
+      searchParams.get('featured') === 'true' ||
+      searchParams.get('isFeatured') === 'true';
     const branchParam = searchParams.get('branchId') || searchParams.get('branch');
     const branchId = branchParam === 'all' ? 'all' : branchParam ? parseInt(branchParam) : undefined;
     const page = searchParams.get('page') ? parseInt(searchParams.get('page')!) : undefined;
@@ -35,7 +37,9 @@ export async function GET(request: NextRequest) {
       { success: true, data: products },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+          'Cache-Control': isFeatured
+            ? 'no-store, max-age=0'
+            : 'public, s-maxage=15, stale-while-revalidate=30',
         },
       }
     );

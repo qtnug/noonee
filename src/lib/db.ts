@@ -539,6 +539,30 @@ export async function deleteCategory(id: number): Promise<boolean> {
   return true;
 }
 
+export const TOP_FEATURED_LIMIT = 8;
+
+function applyRealSalesRanking(items: Product[]): Product[] {
+  const sorted = [...items].sort((a, b) => {
+    const diff = (b.soldCount || 0) - (a.soldCount || 0);
+    if (diff !== 0) return diff;
+    const ratingDiff = (b.rating || 0) - (a.rating || 0);
+    if (ratingDiff !== 0) return ratingDiff;
+    return a.id - b.id;
+  });
+
+  let featuredAssigned = 0;
+  return sorted.map((p) => {
+    const sold = Number(p.soldCount) || 0;
+    const isTopPurchased = sold > 0 && featuredAssigned < TOP_FEATURED_LIMIT;
+    if (isTopPurchased) featuredAssigned++;
+    return {
+      ...p,
+      soldCount: sold,
+      isFeatured: isTopPurchased,
+    };
+  });
+}
+
 export async function getAllProductsCached(): Promise<Product[]> {
   const now = Date.now();
   if (productsCache && (now - productsCache.timestamp) < CACHE_TTL_MS) {
@@ -551,31 +575,54 @@ export async function getAllProductsCached(): Promise<Product[]> {
       const query = `
         SELECT p.id, p.categoryId, c.name AS categoryName, p.name, p.slug, p.description, 
                CAST(p.price AS INT) AS price, p.image, p.isAvailable, p.isFeatured, 
-               CAST(p.rating AS FLOAT) AS rating, ISNULL(p.prepTime, 15) AS prepTime, p.toppings, p.branchId, p.createdAt 
+               CAST(p.rating AS FLOAT) AS rating, ISNULL(p.prepTime, 15) AS prepTime, p.toppings, p.branchId, p.createdAt,
+               ISNULL(s.soldCount, 0) AS soldCount
         FROM Products p WITH (NOLOCK)
         LEFT JOIN Categories c WITH (NOLOCK) ON p.categoryId = c.id
-        ORDER BY p.isFeatured DESC, p.id ASC
+        LEFT JOIN (
+          SELECT oi.productId, CAST(SUM(oi.quantity) AS INT) AS soldCount
+          FROM OrderItems oi WITH (NOLOCK)
+          INNER JOIN Orders o WITH (NOLOCK) ON oi.orderId = o.id
+          WHERE o.status <> 'Cancelled'
+          GROUP BY oi.productId
+        ) s ON p.id = s.productId
+        ORDER BY ISNULL(s.soldCount, 0) DESC, p.rating DESC, p.id ASC
       `;
       const result = await pool.request().query(query);
       if (result.recordset && result.recordset.length > 0) {
-        const mapped = result.recordset.map((r: any) => ({
+        const rawMapped: Product[] = result.recordset.map((r: any) => ({
           ...r,
           prepTime: r.prepTime || 15,
           branchId: r.branchId !== undefined && r.branchId !== null ? Number(r.branchId) : null,
           toppings: parseToppingsField(r.toppings),
           isAvailable: Boolean(r.isAvailable),
-          isFeatured: Boolean(r.isFeatured),
+          soldCount: Number(r.soldCount) || 0,
+          isFeatured: false,
         }));
-        productsCache = { data: mapped, timestamp: now };
-        return mapped;
+        const ranked = applyRealSalesRanking(rawMapped);
+        productsCache = { data: ranked, timestamp: now };
+        return ranked;
       }
     }
   } catch (err) {
     console.error('Error querying products from cloud:', err);
   }
 
-  productsCache = { data: inMemoryProducts, timestamp: now };
-  return inMemoryProducts;
+  // Fallback in-memory: tính lượt mua thật từ inMemoryOrders chưa hủy
+  const memSoldMap = new Map<number, number>();
+  for (const ord of inMemoryOrders) {
+    if (ord.status === 'Cancelled' || !Array.isArray(ord.items)) continue;
+    for (const it of ord.items) {
+      if (it.productId) {
+        memSoldMap.set(it.productId, (memSoldMap.get(it.productId) || 0) + (Number(it.quantity) || 0));
+      }
+    }
+  }
+  const rankedMem = applyRealSalesRanking(
+    inMemoryProducts.map((p) => ({ ...p, soldCount: memSoldMap.get(p.id) || 0 }))
+  );
+  productsCache = { data: rankedMem, timestamp: now };
+  return rankedMem;
 }
 
 export async function getProducts(options?: {
@@ -617,38 +664,10 @@ export async function getProductById(id: number): Promise<Product | null> {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  try {
-    const pool = await getCloudPool();
-    if (pool) {
-      const req = pool.request();
-      req.input('slug', sql.NVarChar(150), slug);
-      const res = await req.query(`
-        SELECT p.id, p.categoryId, c.name AS categoryName, p.name, p.slug, p.description, 
-               CAST(p.price AS INT) AS price, p.image, p.isAvailable, p.isFeatured, 
-               CAST(p.rating AS FLOAT) AS rating, ISNULL(p.prepTime, 15) AS prepTime, p.toppings, p.branchId, p.createdAt 
-        FROM Products p 
-        LEFT JOIN Categories c ON p.categoryId = c.id
-        WHERE p.slug = @slug
-      `);
-      if (res.recordset && res.recordset[0]) {
-        const row = res.recordset[0];
-        let parsedToppings = parseToppingsField(row.toppings);
-        return {
-          ...row,
-          prepTime: row.prepTime || 15,
-          branchId: row.branchId !== undefined && row.branchId !== null ? Number(row.branchId) : null,
-          toppings: parsedToppings,
-          isAvailable: Boolean(row.isAvailable),
-          isFeatured: Boolean(row.isFeatured),
-        };
-      }
-    }
-  } catch (err) {
-    console.error('Error fetching product by slug from cloud:', err);
-  }
-
-
-  return inMemoryProducts.find(p => p.slug === slug) || null;
+  const all = await getAllProductsCached();
+  const cached = all.find((p) => p.slug === slug);
+  if (cached) return cached;
+  return null;
 }
 
 export async function createProduct(data: Omit<Product, 'id'>): Promise<Product> {
@@ -934,6 +953,7 @@ export async function createOrder(data: {
           }
         }
         await transaction.commit();
+        invalidateProductsCache();
         inMemoryOrders.unshift(newOrder);
         
         // Update in-memory user wallet if needed
@@ -1166,7 +1186,10 @@ export async function updateOrderStatus(
 
       const result = await req.query(sqlQuery);
       const updated = (result.rowsAffected?.[0] || 0) > 0;
-      if (updated) updateLocal();
+      if (updated) {
+        updateLocal();
+        invalidateProductsCache();
+      }
       return updated;
     }
   } catch (err) {
@@ -1320,6 +1343,7 @@ export async function cancelOrder(orderCode: string, cancelReason: string, allow
           if ((walletRes.rowsAffected?.[0] || 0) !== 1) throw new Error('Wallet refund could not be committed');
         }
         await tx.commit();
+        invalidateProductsCache();
         const local = inMemoryOrders.find(o => o.orderCode === cleanCode);
         if (local) {
           local.status = 'Cancelled';
@@ -1460,37 +1484,27 @@ export async function getAdminStats(
         ORDER BY id DESC
       `);
 
-      // Orders for calculating top products
-      const allPeriodOrdersRes = await pool.request().query(`
-        SELECT id, totalAmount, paymentStatus, status, items, ISNULL(branchId, 1) AS branchId, createdAt
-        FROM Orders
-        WHERE ${dateCondition} AND ${branchCondition}
+      // Top 5 sản phẩm bán chạy theo dữ liệu mua thật trong OrderItems
+      const orderDateCond = dateCondition.replace(/createdAt/g, 'o.createdAt');
+      const orderBranchCond = branchCondition.replace(/branchId/g, 'o.branchId');
+      const topProductsRes = await pool.request().query(`
+        SELECT TOP 5
+          oi.productName AS name,
+          CAST(SUM(oi.quantity) AS INT) AS quantity,
+          CAST(SUM(oi.total) AS BIGINT) AS revenue
+        FROM OrderItems oi
+        INNER JOIN Orders o ON oi.orderId = o.id
+        WHERE o.status <> 'Cancelled'
+          AND ${orderDateCond}
+          AND ${orderBranchCond}
+        GROUP BY oi.productName
+        ORDER BY quantity DESC, revenue DESC
       `);
-      
-      const ordersList = allPeriodOrdersRes.recordset || [];
-      const topProductsMap: Record<string, { name: string; quantity: number; revenue: number }> = {};
-
-      ordersList.forEach((o: any) => {
-        try {
-          const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
-          if (Array.isArray(items)) {
-            items.forEach((item: any) => {
-              const name = item.product?.name || item.name || 'Món ăn';
-              const qty = Number(item.quantity) || 1;
-              const price = Number(item.itemPrice || item.product?.price || 0);
-              if (!topProductsMap[name]) {
-                topProductsMap[name] = { name, quantity: 0, revenue: 0 };
-              }
-              topProductsMap[name].quantity += qty;
-              topProductsMap[name].revenue += price * qty;
-            });
-          }
-        } catch (e) {}
-      });
-
-      const topProducts = Object.values(topProductsMap)
-        .sort((a, b) => b.quantity - a.quantity)
-        .slice(0, 5);
+      const topProducts = (topProductsRes.recordset || []).map((r: any) => ({
+        name: r.name,
+        quantity: Number(r.quantity) || 0,
+        revenue: Number(r.revenue) || 0,
+      }));
 
       const totalRevenue = Number(res.recordset[0]?.totalRevenue || 0);
       const totalOrders = Number(res.recordset[0]?.totalOrders || 0);
@@ -3082,3 +3096,149 @@ export async function incrementCouponUsage(code: string): Promise<boolean> {
   return false;
 }
 
+
+// ============================================================================
+// GIỎ HÀNG THEO TÀI KHOẢN (Cart & CartItems)
+// Mỗi tài khoản (Users.id) sở hữu đúng 1 giỏ hàng trong bảng Cart.
+// ============================================================================
+
+export interface StoredCartItem {
+  cartItemId: string;
+  productId: number;
+  quantity: number;
+  selectedToppings: { id: string | number; name: string; price: number }[];
+  note: string;
+}
+
+// Fallback khi không kết nối được SQL Server (chỉ dùng cho môi trường dev)
+const inMemoryCarts = new Map<number, StoredCartItem[]>();
+
+let cartTablesPromise: Promise<void> | null = null;
+async function ensureCartTables(pool: any): Promise<void> {
+  if (!pool) return;
+  if (cartTablesPromise) return cartTablesPromise;
+  cartTablesPromise = (async () => {
+    try {
+      await pool.request().query(`
+        IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Cart')
+        BEGIN
+          CREATE TABLE Cart (
+            id INT IDENTITY(1,1) PRIMARY KEY,
+            userId INT NOT NULL,
+            createdAt DATETIME NOT NULL DEFAULT GETDATE(),
+            updatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+            CONSTRAINT UQ_Cart_UserId UNIQUE (userId),
+            CONSTRAINT FK_Cart_Users FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE
+          );
+        END;
+
+        IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'CartItems')
+        BEGIN
+          CREATE TABLE CartItems (
+            id INT IDENTITY(1,1) PRIMARY KEY,
+            cartId INT NOT NULL,
+            cartItemId NVARCHAR(255) NOT NULL,
+            productId INT NOT NULL,
+            quantity INT NOT NULL DEFAULT 1,
+            selectedToppings NVARCHAR(MAX) NULL,
+            note NVARCHAR(500) NULL,
+            createdAt DATETIME NOT NULL DEFAULT GETDATE(),
+            updatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+            CONSTRAINT CK_CartItems_Quantity CHECK (quantity >= 1 AND quantity <= 99),
+            CONSTRAINT UQ_CartItems_Cart_Key UNIQUE (cartId, cartItemId),
+            CONSTRAINT FK_CartItems_Cart FOREIGN KEY (cartId) REFERENCES Cart(id) ON DELETE CASCADE
+          );
+          CREATE INDEX IX_CartItems_CartId ON CartItems(cartId);
+        END;
+      `);
+    } catch (err: any) {
+      cartTablesPromise = null;
+      console.warn('Cart schema check note:', err.message);
+      throw err;
+    }
+  })();
+  return cartTablesPromise;
+}
+
+/**
+ * Lấy danh sách món trong giỏ hàng đã lưu của tài khoản
+ */
+export async function getUserCartItems(userId: number): Promise<StoredCartItem[]> {
+  const pool = await getCloudPool();
+  if (!pool) {
+    return inMemoryCarts.get(userId) || [];
+  }
+  await ensureCartTables(pool);
+
+  const req = pool.request();
+  req.input('userId', sql.Int, userId);
+  const res = await req.query(`
+    SELECT ci.cartItemId, ci.productId, ci.quantity, ci.selectedToppings, ci.note
+    FROM CartItems ci
+    INNER JOIN Cart c ON ci.cartId = c.id
+    WHERE c.userId = @userId
+    ORDER BY ci.id ASC
+  `);
+
+  return (res.recordset || []).map((r: any) => ({
+    cartItemId: String(r.cartItemId),
+    productId: Number(r.productId),
+    quantity: Number(r.quantity) || 1,
+    selectedToppings: parseToppingsField(r.selectedToppings),
+    note: r.note || '',
+  }));
+}
+
+/**
+ * Ghi đè toàn bộ giỏ hàng của tài khoản (thực hiện trong 1 transaction)
+ */
+export async function replaceUserCartItems(userId: number, items: StoredCartItem[]): Promise<void> {
+  const pool = await getCloudPool();
+  if (!pool) {
+    inMemoryCarts.set(userId, items.map((i) => ({ ...i })));
+    return;
+  }
+  await ensureCartTables(pool);
+
+  const transaction = new sql.Transaction(pool);
+  await transaction.begin();
+  try {
+    const cartReq = new sql.Request(transaction);
+    cartReq.input('userId', sql.Int, userId);
+    const cartRes = await cartReq.query(`
+      IF NOT EXISTS (SELECT 1 FROM Cart WITH (UPDLOCK, HOLDLOCK) WHERE userId = @userId)
+        INSERT INTO Cart (userId) VALUES (@userId);
+      UPDATE Cart SET updatedAt = GETDATE() WHERE userId = @userId;
+      SELECT id FROM Cart WHERE userId = @userId;
+    `);
+    const cartId = Number(cartRes.recordset?.[0]?.id);
+    if (!cartId) throw new Error('Không thể khởi tạo giỏ hàng cho tài khoản');
+
+    const delReq = new sql.Request(transaction);
+    delReq.input('cartId', sql.Int, cartId);
+    await delReq.query('DELETE FROM CartItems WHERE cartId = @cartId');
+
+    for (const item of items) {
+      const insReq = new sql.Request(transaction);
+      insReq.input('cartId', sql.Int, cartId);
+      insReq.input('cartItemId', sql.NVarChar(255), item.cartItemId);
+      insReq.input('productId', sql.Int, item.productId);
+      insReq.input('quantity', sql.Int, item.quantity);
+      insReq.input('selectedToppings', sql.NVarChar(sql.MAX), JSON.stringify(item.selectedToppings || []));
+      insReq.input('note', sql.NVarChar(500), item.note || null);
+      await insReq.query(`
+        INSERT INTO CartItems (cartId, cartItemId, productId, quantity, selectedToppings, note)
+        VALUES (@cartId, @cartItemId, @productId, @quantity, @selectedToppings, @note)
+      `);
+    }
+
+    await transaction.commit();
+  } catch (err) {
+    try {
+      await transaction.rollback();
+    } catch {
+      // ignore rollback errors
+    }
+    throw err;
+  }
+}

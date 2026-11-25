@@ -665,11 +665,18 @@ export default function AdminProductsPage() {
                     </td>
                     <td className="py-3.5 px-4">
                       {p.isFeatured ? (
-                        <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-medium bg-[#fff1f2] text-[#A30029] border border-[#fecdd3]">
-                          Nổi bật
-                        </span>
+                        <div className="space-y-0.5">
+                          <span className="inline-block px-2 py-0.5 rounded-[4px] text-[11px] font-medium bg-[#fff1f2] text-[#A30029] border border-[#fecdd3]">
+                            Nổi bật
+                          </span>
+                          <div className="text-[11px] text-[#41454d] font-medium">
+                            Đã bán: {p.soldCount || 0}
+                          </div>
+                        </div>
                       ) : (
-                        <span className="text-[#9297a0] text-[12px]">Thường</span>
+                        <span className="text-[#9297a0] text-[12px]">
+                          {p.soldCount ? `Đã bán: ${p.soldCount}` : 'Chưa có lượt mua'}
+                        </span>
                       )}
                     </td>
                     <td className="py-3.5 px-4">
@@ -1001,15 +1008,9 @@ export default function AdminProductsPage() {
                   <span className="font-medium text-[#333840]">Đang phục vụ</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formFeatured}
-                    onChange={(e) => setFormFeatured(e.target.checked)}
-                    className="accent-[#A30029]"
-                  />
-                  <span className="font-medium text-[#333840]">Món ăn nổi bật (Trang chủ)</span>
-                </label>
+                <span className="text-[12px] text-[#64748b] italic">
+                  * Nhãn &ldquo;Nổi bật&rdquo; được tự động xét theo Top món có lượt mua thực tế cao nhất
+                </span>
               </div>
 
               <div className="pt-4 border-t border-[#dddddd] flex justify-end gap-2.5">

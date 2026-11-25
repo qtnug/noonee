@@ -104,6 +104,11 @@ export default function ProductCard({
             <span className="text-[14px] sm:text-[16px] font-extrabold text-[#A30029] block leading-tight truncate">
               {formatVND(product.price)}
             </span>
+            {typeof product.soldCount === 'number' && product.soldCount > 0 && (
+              <span className="text-[10px] sm:text-[11px] font-medium text-[#64748b] block mt-0.5">
+                Đã bán {product.soldCount}
+              </span>
+            )}
           </div>
 
           <button

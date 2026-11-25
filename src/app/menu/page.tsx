@@ -134,6 +134,8 @@ function MenuPageContent() {
 
     if (sortBy === 'best-seller') {
       list.sort((a, b) => {
+        const soldDiff = (b.soldCount || 0) - (a.soldCount || 0);
+        if (soldDiff !== 0) return soldDiff;
         if (a.isFeatured !== b.isFeatured) return b.isFeatured ? 1 : -1;
         return (b.rating || 0) - (a.rating || 0);
       });

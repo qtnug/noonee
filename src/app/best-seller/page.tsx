@@ -29,18 +29,14 @@ export default function BestSellerPage() {
   useEffect(() => {
     const fetchHotDishes = async () => {
       try {
-        const res = await fetch('/api/products?isFeatured=true');
+        const res = await fetch('/api/products?featured=true', { cache: 'no-store' });
         const data = await res.json();
         if (data.success && Array.isArray(data.data)) {
-          setProducts(data.data);
-        } else {
-          // Fallback to general products
-          const resAll = await fetch('/api/products');
-          const dataAll = await resAll.json();
-          if (dataAll.success && Array.isArray(dataAll.data)) {
-            const sorted = dataAll.data.filter((p: Product) => p.isFeatured || (p.rating && p.rating >= 4.5));
-            setProducts(sorted);
-          }
+          // Chỉ hiển thị các sản phẩm có lượt mua thực tế > 0, xếp giảm dần theo soldCount
+          const realBestSellers = data.data
+            .filter((p: Product) => (p.soldCount || 0) > 0)
+            .sort((a: Product, b: Product) => (b.soldCount || 0) - (a.soldCount || 0));
+          setProducts(realBestSellers);
         }
       } catch (err) {
         console.error('Error fetching best seller products:', err);
@@ -104,6 +100,7 @@ export default function BestSellerPage() {
 
   const filteredProducts = products.filter((p) => {
     if (selectedCategory === 'all') return true;
+    if (selectedCategory === 1) return p.categoryId === 1 || p.categoryId === 4 || p.categoryId === 5;
     return p.categoryId === selectedCategory;
   });
 

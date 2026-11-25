@@ -15,12 +15,9 @@ export default async function HomePage() {
   let bestSellers: any[] = [];
   try {
     allProducts = await getProducts();
-    featuredProducts = allProducts.filter((p) => p.isFeatured);
-    // 8 best sellers: prioritized featured products, padded with popular items
-    bestSellers = [
-      ...featuredProducts,
-      ...allProducts.filter((p) => !p.isFeatured),
-    ].slice(0, 8);
+    // Chỉ hiển thị các sản phẩm có lượt mua thực tế cao nhất (soldCount > 0, đã xếp giảm dần)
+    featuredProducts = allProducts.filter((p) => p.isFeatured && (p.soldCount || 0) > 0);
+    bestSellers = featuredProducts.slice(0, 8);
   } catch (e) {
     console.error('Error loading products for homepage:', e);
   }
@@ -118,31 +115,40 @@ export default async function HomePage() {
                 Món ăn nổi bật
               </h2>
               <p className="text-xs sm:text-sm text-[#677992]">
-                Tuyển chọn các món ăn được yêu thích nhất từ đầu bếp NooNee
+                Các món ăn có lượt đặt mua thực tế cao nhất tại NooNee Food
               </p>
             </div>
             <Link
-              href="/menu"
+              href="/best-seller"
               className="text-[14px] font-bold text-[#A30029] hover:underline flex items-center gap-1 transition shrink-0"
             >
-              <span>Xem tất cả</span>
+              <span>Xem BXH bán chạy</span>
               <CiCircleChevRight className="w-5 h-5" />
             </Link>
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-          {featuredProducts.slice(0, 8).map((product, index) => (
-            <ScrollReveal
-              key={product.id}
-              animation="fade-up"
-              delay={(index % 4) * 80}
-              duration={550}
-            >
-              <ProductCard product={product} badgeText="Nổi bật" />
-            </ScrollReveal>
-          ))}
-        </div>
+        {featuredProducts.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-[#e6dcd2] p-10 text-center text-[#677992] text-sm">
+            Chưa có dữ liệu lượt mua thực tế cho sản phẩm nổi bật.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            {featuredProducts.slice(0, 8).map((product, index) => (
+              <ScrollReveal
+                key={product.id}
+                animation="fade-up"
+                delay={(index % 4) * 80}
+                duration={550}
+              >
+                <ProductCard
+                  product={product}
+                  badgeText={index === 0 ? '🔥 Bán chạy #1' : 'Nổi bật'}
+                />
+              </ScrollReveal>
+            ))}
+          </div>
+        )}
 
         <ScrollReveal animation="zoom-in" delay={120} duration={600} className="mt-10 text-center">
           <Link
