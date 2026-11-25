@@ -1484,26 +1484,219 @@ export async function getAdminStats(
         ORDER BY id DESC
       `);
 
-      // Top 5 sản phẩm bán chạy theo dữ liệu mua thật trong OrderItems
+      // Top 8 sản phẩm bán chạy theo dữ liệu mua thật trong OrderItems
       const orderDateCond = dateCondition.replace(/createdAt/g, 'o.createdAt');
       const orderBranchCond = branchCondition.replace(/branchId/g, 'o.branchId');
-      const topProductsRes = await pool.request().query(`
-        SELECT TOP 5
-          oi.productName AS name,
-          CAST(SUM(oi.quantity) AS INT) AS quantity,
-          CAST(SUM(oi.total) AS BIGINT) AS revenue
-        FROM OrderItems oi
-        INNER JOIN Orders o ON oi.orderId = o.id
-        WHERE o.status <> 'Cancelled'
-          AND ${orderDateCond}
-          AND ${orderBranchCond}
-        GROUP BY oi.productName
-        ORDER BY quantity DESC, revenue DESC
-      `);
+      const prodBranchCondP = prodBranchCondition.replace(/branchId/g, 'p.branchId');
+
+      const [
+        topProductsRes,
+        itemsSoldRes,
+        customersCountRes,
+        topCustomersRes,
+        topRatedRes,
+        lowRatedRes,
+        reviewSummaryRes,
+        recentReviewsRes,
+        paymentBreakdownRes,
+        lowSellingRes,
+      ] = await Promise.all([
+        pool.request().query(`
+          SELECT TOP 8
+            oi.productId,
+            oi.productName AS name,
+            MAX(p.image) AS image,
+            CAST(SUM(oi.quantity) AS INT) AS quantity,
+            COUNT(DISTINCT oi.orderId) AS orderCount,
+            CAST(SUM(oi.total) AS BIGINT) AS revenue
+          FROM OrderItems oi
+          INNER JOIN Orders o ON oi.orderId = o.id
+          LEFT JOIN Products p ON oi.productId = p.id
+          WHERE o.status <> 'Cancelled'
+            AND ${orderDateCond}
+            AND ${orderBranchCond}
+          GROUP BY oi.productId, oi.productName
+          ORDER BY quantity DESC, revenue DESC
+        `),
+        pool.request().query(`
+          SELECT CAST(ISNULL(SUM(oi.quantity), 0) AS INT) AS totalItemsSold
+          FROM OrderItems oi
+          INNER JOIN Orders o ON oi.orderId = o.id
+          WHERE o.status <> 'Cancelled'
+            AND ${orderDateCond}
+            AND ${orderBranchCond}
+        `),
+        pool.request().query(`SELECT COUNT(*) AS cnt FROM Users WHERE role = 'customer'`),
+        pool.request().query(`
+          SELECT TOP 6
+            ISNULL(u.id, 0) AS userId,
+            COALESCE(u.fullName, o.customerName) AS fullName,
+            MAX(u.username) AS username,
+            o.customerPhone AS phone,
+            COUNT(*) AS orderCount,
+            CAST(SUM(o.totalAmount) AS BIGINT) AS totalSpent,
+            MAX(o.createdAt) AS lastOrderAt
+          FROM Orders o
+          LEFT JOIN Users u ON o.userId = u.id
+          WHERE o.status <> 'Cancelled'
+            AND ${orderDateCond}
+            AND ${orderBranchCond}
+          GROUP BY ISNULL(u.id, 0), COALESCE(u.fullName, o.customerName), o.customerPhone
+          ORDER BY orderCount DESC, totalSpent DESC
+        `),
+        pool.request().query(`
+          SELECT TOP 5
+            p.id AS productId,
+            p.name,
+            p.image,
+            CAST(p.price AS INT) AS price,
+            ROUND(AVG(CAST(r.rating AS FLOAT)), 1) AS avgRating,
+            COUNT(r.id) AS reviewCount
+          FROM Reviews r
+          INNER JOIN Products p ON r.productId = p.id
+          WHERE ${prodBranchCondP}
+          GROUP BY p.id, p.name, p.image, p.price
+          HAVING COUNT(r.id) >= 1
+          ORDER BY AVG(CAST(r.rating AS FLOAT)) DESC, COUNT(r.id) DESC
+        `),
+        pool.request().query(`
+          SELECT TOP 5
+            p.id AS productId,
+            p.name,
+            p.image,
+            CAST(p.price AS INT) AS price,
+            ROUND(AVG(CAST(r.rating AS FLOAT)), 1) AS avgRating,
+            COUNT(r.id) AS reviewCount,
+            (SELECT TOP 1 r2.comment FROM Reviews r2 WHERE r2.productId = p.id ORDER BY r2.rating ASC, r2.createdAt DESC) AS sampleComment
+          FROM Reviews r
+          INNER JOIN Products p ON r.productId = p.id
+          WHERE ${prodBranchCondP}
+          GROUP BY p.id, p.name, p.image, p.price
+          HAVING COUNT(r.id) >= 1
+          ORDER BY AVG(CAST(r.rating AS FLOAT)) ASC, COUNT(r.id) DESC
+        `),
+        pool.request().query(`
+          SELECT
+            COUNT(r.id) AS totalReviews,
+            ROUND(ISNULL(AVG(CAST(r.rating AS FLOAT)), 0), 1) AS averageRating,
+            COUNT(CASE WHEN r.rating = 5 THEN 1 END) AS fiveStarCount,
+            COUNT(CASE WHEN r.rating <= 3 THEN 1 END) AS lowStarCount
+          FROM Reviews r
+          INNER JOIN Products p ON r.productId = p.id
+          WHERE ${prodBranchCondP}
+        `),
+        pool.request().query(`
+          SELECT TOP 6
+            r.id,
+            r.productId,
+            p.name AS productName,
+            r.customerName,
+            r.rating,
+            r.comment,
+            r.createdAt
+          FROM Reviews r
+          INNER JOIN Products p ON r.productId = p.id
+          WHERE ${prodBranchCondP}
+          ORDER BY r.createdAt DESC
+        `),
+        pool.request().query(`
+          SELECT
+            paymentMethod AS method,
+            COUNT(*) AS orderCount,
+            CAST(ISNULL(SUM(CASE WHEN paymentStatus = 'Paid' THEN totalAmount ELSE 0 END), 0) AS BIGINT) AS revenue
+          FROM Orders
+          WHERE status <> 'Cancelled' AND ${dateCondition} AND ${branchCondition}
+          GROUP BY paymentMethod
+          ORDER BY orderCount DESC
+        `),
+        pool.request().query(`
+          SELECT TOP 5
+            p.id AS productId,
+            p.name,
+            CAST(p.price AS INT) AS price,
+            ISNULL(s.soldCount, 0) AS soldCount,
+            CAST(ISNULL(p.rating, 5.0) AS FLOAT) AS rating
+          FROM Products p
+          LEFT JOIN (
+            SELECT oi.productId, CAST(SUM(oi.quantity) AS INT) AS soldCount
+            FROM OrderItems oi
+            INNER JOIN Orders o ON oi.orderId = o.id
+            WHERE o.status <> 'Cancelled' AND ${orderDateCond} AND ${orderBranchCond}
+            GROUP BY oi.productId
+          ) s ON p.id = s.productId
+          WHERE p.isAvailable = 1 AND ${prodBranchCondP}
+          ORDER BY ISNULL(s.soldCount, 0) ASC, p.id ASC
+        `),
+      ]);
+
       const topProducts = (topProductsRes.recordset || []).map((r: any) => ({
+        productId: r.productId,
         name: r.name,
+        image: r.image || null,
         quantity: Number(r.quantity) || 0,
+        orderCount: Number(r.orderCount) || 0,
         revenue: Number(r.revenue) || 0,
+      }));
+
+      const topCustomers = (topCustomersRes.recordset || []).map((r: any) => ({
+        userId: Number(r.userId) || 0,
+        fullName: r.fullName,
+        username: r.username || null,
+        phone: r.phone || '',
+        orderCount: Number(r.orderCount) || 0,
+        totalSpent: Number(r.totalSpent) || 0,
+        lastOrderAt: r.lastOrderAt ? new Date(r.lastOrderAt).toISOString() : null,
+      }));
+
+      const topRatedProducts = (topRatedRes.recordset || []).map((r: any) => ({
+        productId: r.productId,
+        name: r.name,
+        image: r.image || null,
+        price: Number(r.price) || 0,
+        avgRating: Number(r.avgRating) || 0,
+        reviewCount: Number(r.reviewCount) || 0,
+      }));
+
+      const lowRatedProducts = (lowRatedRes.recordset || []).map((r: any) => ({
+        productId: r.productId,
+        name: r.name,
+        image: r.image || null,
+        price: Number(r.price) || 0,
+        avgRating: Number(r.avgRating) || 0,
+        reviewCount: Number(r.reviewCount) || 0,
+        sampleComment: r.sampleComment || '',
+      }));
+
+      const revSum = reviewSummaryRes.recordset?.[0] || {};
+      const reviewSummary = {
+        totalReviews: Number(revSum.totalReviews) || 0,
+        averageRating: Number(revSum.averageRating) || 0,
+        fiveStarCount: Number(revSum.fiveStarCount) || 0,
+        lowStarCount: Number(revSum.lowStarCount) || 0,
+      };
+
+      const recentReviews = (recentReviewsRes.recordset || []).map((r: any) => ({
+        id: r.id,
+        productId: r.productId,
+        productName: r.productName,
+        customerName: r.customerName,
+        rating: Number(r.rating) || 5,
+        comment: r.comment,
+        createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : null,
+      }));
+
+      const paymentBreakdown = (paymentBreakdownRes.recordset || []).map((r: any) => ({
+        method: r.method,
+        orderCount: Number(r.orderCount) || 0,
+        revenue: Number(r.revenue) || 0,
+      }));
+
+      const lowSellingProducts = (lowSellingRes.recordset || []).map((r: any) => ({
+        productId: r.productId,
+        name: r.name,
+        price: Number(r.price) || 0,
+        soldCount: Number(r.soldCount) || 0,
+        rating: Number(r.rating) || 5.0,
       }));
 
       const totalRevenue = Number(res.recordset[0]?.totalRevenue || 0);
@@ -1513,8 +1706,17 @@ export async function getAdminStats(
       return {
         ...res.recordset[0],
         totalProducts: prodRes.recordset[0]?.cnt || 0,
+        totalCustomers: Number(customersCountRes.recordset?.[0]?.cnt || 0),
+        totalItemsSold: Number(itemsSoldRes.recordset?.[0]?.totalItemsSold || 0),
         recentOrders: recentRes.recordset || [],
         topProducts,
+        lowSellingProducts,
+        topCustomers,
+        topRatedProducts,
+        lowRatedProducts,
+        reviewSummary,
+        recentReviews,
+        paymentBreakdown,
         averageOrderValue,
         period,
         selectedBranchId: branchId || 'all',

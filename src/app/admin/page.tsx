@@ -19,6 +19,12 @@ import {
   CiMedal as Award,
   CiBowlNoodles as Flame,
   CiCircleCheck as CheckCheck,
+  CiUser as Users,
+  CiStar as Star,
+  CiWarning as AlertTriangle,
+  CiChat1 as MessageSquare,
+  CiCreditCard1 as CreditCard,
+  CiCircleChevDown as TrendingDown,
 } from 'react-icons/ci';
 import { formatVND } from '@/lib/utils';
 import { Order } from '@/types';
@@ -324,6 +330,71 @@ export default function AdminOverviewPage() {
             {stats?.pendingOrders || 0} chờ nấu • {stats?.deliveringOrders || 0} đang giao
           </span>
         </div>
+
+        {/* Total Dishes Sold */}
+        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] hover:border-[#fecdd3] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
+            <span>Số phần ăn đã bán</span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-orange-50 border border-orange-200 text-orange-600 flex items-center justify-center">
+              <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
+          </div>
+          <div className="text-lg sm:text-2xl font-semibold text-[#181d26]">
+            {stats ? `${stats.totalItemsSold || 0} phần` : '...'}
+          </div>
+          <span className="text-[11px] sm:text-[12px] text-[#64748b] truncate block">
+            Trong {stats?.totalProducts || 0} món đang kinh doanh
+          </span>
+        </div>
+
+        {/* Total Registered Customers */}
+        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] hover:border-[#fecdd3] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
+            <span>Khách hàng thành viên</span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center">
+              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
+          </div>
+          <div className="text-lg sm:text-2xl font-semibold text-[#181d26]">
+            {stats ? `${stats.totalCustomers || 0} tài khoản` : '...'}
+          </div>
+          <span className="text-[11px] sm:text-[12px] text-blue-600 font-medium truncate block">
+            {stats?.topCustomers?.length || 0} khách đặt nhiều trong kỳ
+          </span>
+        </div>
+
+        {/* Average Rating */}
+        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] hover:border-[#fecdd3] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
+            <span>Điểm đánh giá TB</span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-amber-50 border border-amber-200 text-amber-500 flex items-center justify-center">
+              <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-amber-400" />
+            </div>
+          </div>
+          <div className="text-lg sm:text-2xl font-semibold text-[#181d26] flex items-baseline gap-1.5">
+            <span>{stats?.reviewSummary?.averageRating ? `${stats.reviewSummary.averageRating} ★` : '...'}</span>
+            <span className="text-[12px] font-normal text-[#9297a0]">/ 5.0</span>
+          </div>
+          <span className="text-[11px] sm:text-[12px] text-amber-600 font-medium truncate block">
+            {stats?.reviewSummary?.totalReviews || 0} lượt đánh giá thực tế
+          </span>
+        </div>
+
+        {/* Review Health (5 star vs <=3 star) */}
+        <div className="bg-white p-4 sm:p-6 rounded-[10px] border border-[#dddddd] hover:border-[#fecdd3] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-[#9297a0] font-medium">
+            <span>Đánh giá cần chú ý</span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[6px] bg-rose-50 border border-rose-200 text-[#A30029] flex items-center justify-center">
+              <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
+          </div>
+          <div className="text-lg sm:text-2xl font-semibold text-[#181d26]">
+            {stats?.reviewSummary ? `${stats.reviewSummary.lowStarCount || 0} phản hồi` : '...'}
+          </div>
+          <span className="text-[11px] sm:text-[12px] text-emerald-600 font-medium truncate block">
+            {stats?.reviewSummary?.fiveStarCount || 0} đánh giá 5★ xuất sắc
+          </span>
+        </div>
       </div>
 
       {/* ── BIỂU ĐỒ PHÂN BỔ TRẠNG THÁI ĐƠN HÀNG + TOP SẢN PHẨM ─────────────── */}
@@ -457,6 +528,298 @@ export default function AdminOverviewPage() {
           )}
         </div>
       </div>
+
+      {/* ── KHÁCH HÀNG ĐẶT NHIỀU NHẤT + THANH TOÁN & MÓN BÁN CHẬM ─────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Top Customers VIP */}
+        <div className="lg:col-span-7 bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-[#A30029]" />
+              <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
+                Khách hàng đặt nhiều nhất ({periodLabels[period]})
+              </h2>
+            </div>
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+              Top VIP
+            </span>
+          </div>
+
+          {stats?.topCustomers && stats.topCustomers.length > 0 ? (
+            <div className="divide-y divide-[#f1f5f9]">
+              {stats.topCustomers.map((cus: any, idx: number) => (
+                <div key={`${cus.userId}-${cus.phone}-${idx}`} className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold shrink-0 ${
+                        idx === 0
+                          ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                          : idx === 1
+                          ? 'bg-slate-100 text-slate-700 border border-slate-300'
+                          : idx === 2
+                          ? 'bg-orange-100 text-orange-700 border border-orange-300'
+                          : 'bg-[#fff1f2] text-[#A30029] border border-[#fecdd3]'
+                      }`}
+                    >
+                      #{idx + 1}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-semibold text-[#181d26] truncate">
+                        {cus.fullName}
+                        {cus.username && (
+                          <span className="text-[11px] font-normal text-[#9297a0] ml-1.5">
+                            @{cus.username}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-[#64748b] truncate">{cus.phone}</div>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="text-[13px] font-bold text-[#A30029] block">
+                      {cus.orderCount} đơn
+                    </span>
+                    <span className="text-[11px] font-medium text-[#475569]">
+                      {formatVND(cus.totalSpent)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-[13px] text-[#9297a0]">
+              Chưa có dữ liệu khách đặt hàng trong kỳ này
+            </div>
+          )}
+        </div>
+
+        {/* Payment Method Breakdown + Slow-moving Dishes */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-5 space-y-3.5">
+            <div className="flex items-center gap-2 pb-2.5 border-b border-[#dddddd]">
+              <CreditCard className="w-4 h-4 text-[#A30029]" />
+              <h2 className="text-[15px] font-semibold text-[#181d26]">
+                Phương thức thanh toán
+              </h2>
+            </div>
+            {stats?.paymentBreakdown && stats.paymentBreakdown.length > 0 ? (() => {
+              const totalPayOrders = stats.paymentBreakdown.reduce((s: number, x: any) => s + x.orderCount, 0) || 1;
+              const methodInfo: Record<string, { label: string; color: string }> = {
+                Sepay: { label: 'Chuyển khoản VietQR (SePay)', color: '#A30029' },
+                COD: { label: 'Tiền mặt (COD)', color: '#f59e0b' },
+                Wallet: { label: 'Ví NooNee', color: '#2563eb' },
+              };
+              return (
+                <div className="space-y-3">
+                  {stats.paymentBreakdown.map((pm: any) => {
+                    const info = methodInfo[pm.method] || { label: pm.method, color: '#64748b' };
+                    const pct = Math.round((pm.orderCount / totalPayOrders) * 100);
+                    return (
+                      <div key={pm.method} className="space-y-1">
+                        <div className="flex items-center justify-between text-[12px]">
+                          <span className="font-medium text-[#181d26]">{info.label}</span>
+                          <span className="text-[#475569] font-semibold">
+                            {pm.orderCount} đơn ({pct}%) • {formatVND(pm.revenue)}
+                          </span>
+                        </div>
+                        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%`, backgroundColor: info.color }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })() : (
+              <p className="text-[12px] text-[#9297a0] text-center py-4">Chưa có dữ liệu</p>
+            )}
+          </div>
+
+          <div className="bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-5 space-y-3">
+            <div className="flex items-center gap-2 pb-2.5 border-b border-[#dddddd]">
+              <TrendingDown className="w-4 h-4 text-slate-500" />
+              <h2 className="text-[15px] font-semibold text-[#181d26]">
+                Món ít lượt đặt (Cần đẩy mạnh)
+              </h2>
+            </div>
+            {stats?.lowSellingProducts && stats.lowSellingProducts.length > 0 ? (
+              <div className="space-y-2">
+                {stats.lowSellingProducts.map((p: any) => (
+                  <div key={p.productId} className="flex items-center justify-between text-[12px] py-1">
+                    <span className="text-[#333840] font-medium truncate pr-2">{p.name}</span>
+                    <span className="shrink-0 px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold text-[11px]">
+                      {p.soldCount} phần
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[12px] text-[#9297a0] text-center py-3">Chưa có dữ liệu</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── MÓN ĐÁNH GIÁ CAO NHẤT vs MÓN ĐÁNH GIÁ THẤP NHẤT ───────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Highest Rated Products */}
+        <div className="bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-amber-500 fill-amber-400" />
+              <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
+                Món ăn được đánh giá cao nhất
+              </h2>
+            </div>
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Chất lượng tốt
+            </span>
+          </div>
+
+          {stats?.topRatedProducts && stats.topRatedProducts.length > 0 ? (
+            <div className="divide-y divide-[#f1f5f9]">
+              {stats.topRatedProducts.map((item: any, idx: number) => (
+                <div key={item.productId} className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {item.image && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-10 h-10 rounded-[6px] object-cover border border-[#dddddd] shrink-0"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-semibold text-[#181d26] truncate">
+                        {idx + 1}. {item.name}
+                      </div>
+                      <div className="text-[11px] text-[#64748b]">
+                        {formatVND(item.price)} • {item.reviewCount} lượt đánh giá
+                      </div>
+                    </div>
+                  </div>
+                  <div className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 font-bold text-[12px]">
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    <span>{Number(item.avgRating).toFixed(1)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-[13px] text-[#9297a0]">
+              Chưa có đánh giá món ăn
+            </div>
+          )}
+        </div>
+
+        {/* Lowest Rated Products */}
+        <div className="bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-[#A30029]" />
+              <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
+                Món ăn đánh giá thấp (Cần cải thiện)
+              </h2>
+            </div>
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#fff1f2] text-[#A30029] border border-[#fecdd3]">
+              Theo dõi bếp
+            </span>
+          </div>
+
+          {stats?.lowRatedProducts && stats.lowRatedProducts.length > 0 ? (
+            <div className="divide-y divide-[#f1f5f9]">
+              {stats.lowRatedProducts.map((item: any) => (
+                <div key={item.productId} className="py-2.5 first:pt-0 last:pb-0 space-y-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      {item.image && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-10 h-10 rounded-[6px] object-cover border border-[#dddddd] shrink-0"
+                        />
+                      )}
+                      <div className="min-w-0">
+                        <div className="text-[13px] font-semibold text-[#181d26] truncate">
+                          {item.name}
+                        </div>
+                        <div className="text-[11px] text-[#64748b]">
+                          {item.reviewCount} lượt đánh giá
+                        </div>
+                      </div>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#fff1f2] border border-[#fecdd3] text-[#A30029] font-bold text-[12px]">
+                      <Star className="w-3.5 h-3.5 fill-[#A30029] text-[#A30029]" />
+                      <span>{Number(item.avgRating).toFixed(1)}</span>
+                    </div>
+                  </div>
+                  {item.sampleComment && (
+                    <p className="text-[11px] text-[#64748b] italic bg-[#f8fafc] px-2.5 py-1.5 rounded border border-[#e2e8f0] line-clamp-1">
+                      &ldquo;{item.sampleComment}&rdquo;
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-[13px] text-[#9297a0]">
+              Chưa có dữ liệu đánh giá thấp
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── ĐÁNH GIÁ GẦN ĐÂY TỪ KHÁCH HÀNG ────────────────────────────────── */}
+      {stats?.recentReviews && stats.recentReviews.length > 0 && (
+        <div className="bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#dddddd]">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-[#A30029]" />
+              <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
+                Phản hồi &amp; Đánh giá mới nhất từ khách hàng
+              </h2>
+            </div>
+            <span className="text-[12px] text-[#64748b]">
+              Tổng {stats?.reviewSummary?.totalReviews || 0} đánh giá
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {stats.recentReviews.map((rev: any) => (
+              <div
+                key={rev.id}
+                className="p-3.5 rounded-[8px] bg-[#f8fafc] border border-[#e2e8f0] flex flex-col justify-between space-y-2"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[13px] font-semibold text-[#181d26] truncate">
+                      {rev.customerName}
+                    </span>
+                    <span
+                      className={`text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                        rev.rating >= 4
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-[#fff1f2] text-[#A30029] border border-[#fecdd3]'
+                      }`}
+                    >
+                      {rev.rating} ★
+                    </span>
+                  </div>
+                  <div className="text-[11px] font-medium text-[#A30029] truncate">
+                    Món: {rev.productName}
+                  </div>
+                  <p className="text-[12px] text-[#475569] leading-relaxed line-clamp-2">
+                    &ldquo;{rev.comment}&rdquo;
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Hiệu suất vận hành */}
       <div className="bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6">
