@@ -1500,6 +1500,7 @@ export async function getAdminStats(
         recentReviewsRes,
         paymentBreakdownRes,
         lowSellingRes,
+        revenueTrendRes,
       ] = await Promise.all([
         pool.request().query(`
           SELECT TOP 8
@@ -1627,6 +1628,31 @@ export async function getAdminStats(
           WHERE p.isAvailable = 1 AND ${prodBranchCondP}
           ORDER BY ISNULL(s.soldCount, 0) ASC, p.id ASC
         `),
+        pool.request().query(
+          period === 'today'
+            ? `
+              SELECT
+                DATEPART(HOUR, createdAt) AS sortKey,
+                RIGHT('0' + CAST(DATEPART(HOUR, createdAt) AS VARCHAR(2)), 2) + 'h' AS label,
+                CAST(ISNULL(SUM(CASE WHEN paymentStatus = 'Paid' AND status <> 'Cancelled' THEN totalAmount ELSE 0 END), 0) AS BIGINT) AS revenue,
+                COUNT(CASE WHEN status <> 'Cancelled' THEN 1 END) AS orders
+              FROM Orders
+              WHERE ${dateCondition} AND ${branchCondition}
+              GROUP BY DATEPART(HOUR, createdAt)
+              ORDER BY sortKey ASC
+            `
+            : `
+              SELECT
+                CONVERT(VARCHAR(10), createdAt, 23) AS sortKey,
+                FORMAT(createdAt, 'dd/MM') AS label,
+                CAST(ISNULL(SUM(CASE WHEN paymentStatus = 'Paid' AND status <> 'Cancelled' THEN totalAmount ELSE 0 END), 0) AS BIGINT) AS revenue,
+                COUNT(CASE WHEN status <> 'Cancelled' THEN 1 END) AS orders
+              FROM Orders
+              WHERE ${dateCondition} AND ${branchCondition}
+              GROUP BY CONVERT(VARCHAR(10), createdAt, 23), FORMAT(createdAt, 'dd/MM')
+              ORDER BY sortKey ASC
+            `
+        ),
       ]);
 
       const topProducts = (topProductsRes.recordset || []).map((r: any) => ({
@@ -1699,6 +1725,13 @@ export async function getAdminStats(
         rating: Number(r.rating) || 5.0,
       }));
 
+      const dailyRevenueTrend = (revenueTrendRes.recordset || []).map((r: any) => ({
+        date: String(r.sortKey),
+        label: String(r.label),
+        revenue: Number(r.revenue) || 0,
+        orders: Number(r.orders) || 0,
+      }));
+
       const totalRevenue = Number(res.recordset[0]?.totalRevenue || 0);
       const totalOrders = Number(res.recordset[0]?.totalOrders || 0);
       const averageOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
@@ -1711,6 +1744,7 @@ export async function getAdminStats(
         recentOrders: recentRes.recordset || [],
         topProducts,
         lowSellingProducts,
+        dailyRevenueTrend,
         topCustomers,
         topRatedProducts,
         lowRatedProducts,

@@ -60,20 +60,26 @@ export async function POST(request: NextRequest) {
     const menuSummary = await getFoodMenuSummaryForPrompt();
     const allProducts = await getFoodMenuItems();
 
-    // LLM7 (https://llm7.io) OpenAI-compatible configuration (server-only env vars)
-    const baseUrl = (process.env.LLM7_BASE_URL || 'https://api.llm7.io/v1').trim();
-    const modelName = (process.env.LLM_MODEL_NAME || 'fast').trim();
-    const rawKey =
-      process.env.LLM7_API_KEY ||
-      process.env.LLM_API_KEY ||
-      process.env.LLM7_TOKEN ||
-      '';
-
-    const apiKey = rawKey.trim().replace(/^["']|["']$/g, '');
+    // Groq (https://console.groq.com) OpenAI-compatible configuration (server-only env vars)
+    const baseUrl = (process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1').trim().replace(/\/+$/, '');
+    const primaryModel = (process.env.GROQ_MODEL || process.env.LLM_MODEL_NAME || 'qwen/qwen3.8-27b').trim();
+    const fallbackModel = 'openai/gpt-oss-120b';
+    const rawKey = (process.env.GROQ_API_KEY || process.env.LLM_API_KEY || '').trim();
+    const apiKey = rawKey.replace(/^["']|["']$/g, '');
 
     console.log(
-      `[NooNee AI] Processing request with LLM7. Model: ${modelName}, HasKey: ${!!apiKey}`
+      `[NooNee AI] Processing request with Groq. Model: ${primaryModel}, HasKey: ${!!apiKey}`
     );
+
+    if (!apiKey) {
+      console.warn('[NooNee AI] Missing GROQ_API_KEY. Using keyword search fallback.');
+      const fallbackItems = await searchFoodsKeyword(lastUserMsg, 2);
+      return NextResponse.json({
+        success: true,
+        reply: 'Dạ quán gợi ý bạn tham khảo món ăn thơm ngon được yêu thích tại NooNee:',
+        recommendedProducts: fallbackItems,
+      });
+    }
 
     // System instruction: strictly concise, practical, 100% hidden model/source
     const systemPrompt = `Bạn là trợ lý tư vấn món của quán ăn NooNee Food.
@@ -88,58 +94,43 @@ QUY TẮC BẮT BUỘC:
 [[RECOMMENDED_FOODS: id1, id2]]
 Ví dụ: [[RECOMMENDED_FOODS: 4, 45]]`;
 
+    const recentMessages = messages.slice(-6);
     const apiMessages = [
       { role: 'system', content: systemPrompt },
-      ...messages.map((m) => ({
+      ...recentMessages.map((m) => ({
         role: m.role === 'assistant' ? 'assistant' : 'user',
-        content: m.content,
+        content: sanitizeText(m.content, 500),
       })),
     ];
 
-    // 1. Determine model and auth credentials based on official LLM7 docs
-    const targetModel = modelName || 'fast';
-    const authHeader = apiKey ? `Bearer ${apiKey}` : 'Bearer unused';
-
-    console.log(`[NooNee AI] Calling LLM7 endpoint: ${baseUrl}/chat/completions (Model: ${targetModel}, HasKey: ${!!apiKey})`);
-
-    let response = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: authHeader,
-      },
-      body: JSON.stringify({
-        model: targetModel,
-        messages: apiMessages,
-        temperature: 0.7,
-        max_tokens: 600,
-      }),
-    });
-
-    // 2. If the custom model returned 401/error (e.g. key missing/expired on host),
-    // automatically fallback to LLM7's free anonymous 'fast' model as documented in docs.llm7.io
-    if (!response.ok && targetModel !== 'fast') {
-      const errText = await response.text();
-      console.warn(`[NooNee AI] Model ${targetModel} returned ${response.status}. Retrying with LLM7 anonymous model 'fast'...`, errText);
-
-      response = await fetch(`${baseUrl}/chat/completions`, {
+    const callGroq = async (model: string) =>
+      fetch(`${baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: 'Bearer unused',
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'fast',
+          model,
           messages: apiMessages,
           temperature: 0.7,
-          max_tokens: 600,
+          max_tokens: 800,
         }),
       });
+
+    console.log(`[NooNee AI] Calling Groq endpoint: ${baseUrl}/chat/completions (Model: ${primaryModel})`);
+    let response = await callGroq(primaryModel);
+
+    // Fallback to lightweight instant model if primary model hits rate limit or transient error
+    if (!response.ok && primaryModel !== fallbackModel) {
+      const errText = await response.text();
+      console.warn(`[NooNee AI] Groq model ${primaryModel} returned ${response.status}. Retrying with ${fallbackModel}...`, errText);
+      response = await callGroq(fallbackModel);
     }
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('[NooNee AI] LLM7 API Error:', response.status, errText);
+      console.error('[NooNee AI] Groq API Error:', response.status, errText);
 
       const fallbackItems = await searchFoodsKeyword(lastUserMsg, 2);
       return NextResponse.json({
@@ -151,7 +142,7 @@ Ví dụ: [[RECOMMENDED_FOODS: 4, 45]]`;
 
     const data = await response.json();
     const msgObj = data.choices?.[0]?.message;
-    let replyText = (msgObj?.content || msgObj?.reasoning_content || '').trim();
+    let replyText = (msgObj?.content || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
     if (!replyText) {
       replyText = 'Dạ quán gợi ý bạn chọn các món ngon bên dưới nhé!';

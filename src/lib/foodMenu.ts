@@ -189,43 +189,29 @@ export async function getFoodMenuItems(): Promise<Product[]> {
 }
 
 /**
- * Build a concise, high-density food menu prompt context for the LLM7 model
+ * Build a compact, token-efficient food menu prompt context for Groq AI
  */
 export async function getFoodMenuSummaryForPrompt(): Promise<string> {
   const products = await getFoodMenuItems();
-  if (!products || products.length === 0) {
+  const available = (products || []).filter((p) => p.isAvailable);
+  if (available.length === 0) {
     return 'Không có dữ liệu thực đơn.';
   }
 
-  const lines: string[] = [
-    '=== THỰC ĐƠN QUÁN NOONEE FOOD (TỪ FOOD.CSV) ===',
-    `Tổng số món: ${products.length} món`,
-    '',
-  ];
-
-  // Group by category
   const groups: Record<string, Product[]> = {};
-  for (const p of products) {
+  for (const p of available) {
     const cat = p.categoryName || 'Khác';
     if (!groups[cat]) groups[cat] = [];
     groups[cat].push(p);
   }
 
+  const lines: string[] = ['THỰC ĐƠN NOONEE (ID:Tên-Giá):'];
   for (const [category, items] of Object.entries(groups)) {
-    lines.push(`--- [Danh mục: ${category}] ---`);
-    for (const item of items) {
-      const statusStr = item.isAvailable ? 'Có sẵn' : 'Tạm hết';
-      const featuredStr = item.isFeatured ? ' [Bán chạy/Hot]' : '';
-      const toppingsStr =
-        item.toppings && item.toppings.length > 0
-          ? ` | Topping kèm: ${item.toppings.map((t) => `${t.name} (+${t.price.toLocaleString('vi-VN')}đ)`).join(', ')}`
-          : '';
-
-      lines.push(
-        `- [ID: ${item.id}] ${item.name} (${item.price.toLocaleString('vi-VN')}đ)${featuredStr} - Trạng thái: ${statusStr}. ${item.description}${toppingsStr}`
-      );
-    }
-    lines.push('');
+    const entries = items.map((item) => {
+      const hot = item.isFeatured ? '*' : '';
+      return `${item.id}:${item.name}${hot}-${Math.round(item.price / 1000)}k`;
+    });
+    lines.push(`[${category}] ${entries.join('; ')}`);
   }
 
   return lines.join('\n');

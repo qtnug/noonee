@@ -362,11 +362,19 @@ export default function AdminDiagnosticsPage() {
                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-semibold shrink-0 ${
                       api.status === 'online'
                         ? 'bg-[#f0fdf4] text-[#15803d] border border-[#bbf7d0]'
+                        : api.status === 'offline'
+                        ? 'bg-[#fff1f2] text-[#A30029] border border-[#fecdd3]'
                         : 'bg-amber-50 text-amber-700 border border-amber-200'
                     }`}
                   >
                     <CheckCircle2 className="w-3 h-3" />
-                    <span>{api.status === 'online' ? 'Sẵn sàng' : 'Cảnh báo'}</span>
+                    <span>
+                      {api.status === 'online'
+                        ? 'Sẵn sàng'
+                        : api.status === 'offline'
+                        ? 'Lỗi kết nối'
+                        : 'Cảnh báo'}
+                    </span>
                   </span>
                 </div>
 

@@ -240,6 +240,78 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // 5. Test Groq AI Chatbot API
+  if (!target || target === 'groq') {
+    const start = Date.now();
+    const baseUrl = (process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1').trim().replace(/\/+$/, '');
+    const model = (process.env.GROQ_MODEL || process.env.LLM_MODEL_NAME || 'qwen/qwen3.8-27b').trim();
+    const rawKey = (process.env.GROQ_API_KEY || process.env.LLM_API_KEY || '').trim();
+    const apiKey = rawKey.replace(/^["']|["']$/g, '');
+
+    if (apiKey) {
+      try {
+        const res = await fetch(`${baseUrl}/models`, {
+          headers: { Authorization: `Bearer ${apiKey}` },
+          cache: 'no-store',
+        });
+        const latency = Date.now() - start;
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && Array.isArray(data.data)) {
+          const modelIds: string[] = data.data.map((m: any) => String(m.id));
+          const hasConfiguredModel = modelIds.includes(model);
+          results.push({
+            id: 'groq',
+            name: 'Groq AI (Trợ lý tư vấn món)',
+            category: 'AI Chatbot',
+            status: hasConfiguredModel ? 'online' : 'warning',
+            latencyMs: latency,
+            statusCode: res.status,
+            details: hasConfiguredModel
+              ? `Kết nối Groq AI ổn định (${modelIds.length} model sẵn sàng). Đang dùng: ${model}.`
+              : `Groq API kết nối được nhưng model "${model}" không nằm trong danh sách khả dụng (${modelIds.slice(0, 3).join(', ')}...).`,
+            endpoint: `${baseUrl}/chat/completions`,
+            lastTested: new Date().toLocaleTimeString('vi-VN'),
+          });
+        } else {
+          results.push({
+            id: 'groq',
+            name: 'Groq AI (Trợ lý tư vấn món)',
+            category: 'AI Chatbot',
+            status: 'offline',
+            latencyMs: latency,
+            statusCode: res.status,
+            details: `Groq API từ chối yêu cầu (HTTP ${res.status}). Kiểm tra lại GROQ_API_KEY trên máy chủ.`,
+            endpoint: `${baseUrl}/models`,
+            lastTested: new Date().toLocaleTimeString('vi-VN'),
+          });
+        }
+      } catch (e: any) {
+        const latency = Date.now() - start;
+        results.push({
+          id: 'groq',
+          name: 'Groq AI (Trợ lý tư vấn món)',
+          category: 'AI Chatbot',
+          status: 'offline',
+          latencyMs: latency,
+          details: 'Không thể kết nối tới máy chủ Groq AI.',
+          endpoint: `${baseUrl}/models`,
+          lastTested: new Date().toLocaleTimeString('vi-VN'),
+        });
+      }
+    } else {
+      results.push({
+        id: 'groq',
+        name: 'Groq AI (Trợ lý tư vấn món)',
+        category: 'AI Chatbot',
+        status: 'warning',
+        latencyMs: 0,
+        details: 'Chưa cấu hình GROQ_API_KEY trong biến môi trường (AI Chat sẽ dùng tìm kiếm từ khóa dự phòng).',
+        endpoint: 'api.groq.com/openai/v1',
+        lastTested: new Date().toLocaleTimeString('vi-VN'),
+      });
+    }
+  }
+
   return NextResponse.json({
     success: true,
     data: results,

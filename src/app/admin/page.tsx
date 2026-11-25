@@ -25,8 +25,11 @@ import {
   CiChat1 as MessageSquare,
   CiCreditCard1 as CreditCard,
   CiCircleChevDown as TrendingDown,
+  CiSaveDown2 as Download,
 } from 'react-icons/ci';
+import * as XLSX from 'xlsx';
 import { formatVND } from '@/lib/utils';
+import { getMembershipTier } from '@/lib/membership';
 import { Order } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { useAdminBranch } from '@/context/AdminBranchContext';
@@ -38,6 +41,8 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -132,6 +137,96 @@ export default function AdminOverviewPage() {
     all: 'Toàn thời gian',
   };
 
+  const handleExportExcel = () => {
+    if (!stats) return;
+    const wb = XLSX.utils.book_new();
+    const branchLabel =
+      selectedBranch === '1'
+        ? 'Cơ sở 1 (120 Yên Lãng)'
+        : selectedBranch === '2'
+        ? 'Cơ sở 2 (269 Cầu Giấy)'
+        : 'Toàn hệ thống';
+
+    const overviewSheet = XLSX.utils.json_to_sheet([
+      { 'Chỉ số': 'Kỳ báo cáo', 'Giá trị': periodLabels[period] || period },
+      { 'Chỉ số': 'Cơ sở áp dụng', 'Giá trị': branchLabel },
+      { 'Chỉ số': 'Tổng doanh thu (VNĐ)', 'Giá trị': stats.totalRevenue || 0 },
+      { 'Chỉ số': 'Tổng đơn hàng', 'Giá trị': stats.totalOrders || 0 },
+      { 'Chỉ số': 'Đơn hoàn thành', 'Giá trị': stats.completedOrders || 0 },
+      { 'Chỉ số': 'Đơn đã hủy', 'Giá trị': stats.cancelledOrders || 0 },
+      { 'Chỉ số': 'Giá trị TB / Đơn (AOV)', 'Giá trị': stats.averageOrderValue || 0 },
+      { 'Chỉ số': 'Tổng phần ăn đã bán', 'Giá trị': stats.totalItemsSold || 0 },
+      { 'Chỉ số': 'Tổng khách hàng thành viên', 'Giá trị': stats.totalCustomers || 0 },
+      { 'Chỉ số': 'Điểm đánh giá trung bình', 'Giá trị': stats.reviewSummary?.averageRating || 0 },
+      { 'Chỉ số': 'Tổng lượt đánh giá', 'Giá trị': stats.reviewSummary?.totalReviews || 0 },
+    ]);
+    XLSX.utils.book_append_sheet(wb, overviewSheet, 'TongQuan');
+
+    if (stats.dailyRevenueTrend?.length) {
+      const trendSheet = XLSX.utils.json_to_sheet(
+        stats.dailyRevenueTrend.map((d: any) => ({
+          'Ngày / Khung giờ': d.label,
+          'Doanh thu (VNĐ)': d.revenue,
+          'Số đơn hợp lệ': d.orders,
+        }))
+      );
+      XLSX.utils.book_append_sheet(wb, trendSheet, 'DoanhThuTheoNgay');
+    }
+
+    if (stats.topProducts?.length) {
+      const prodSheet = XLSX.utils.json_to_sheet(
+        stats.topProducts.map((p: any, i: number) => ({
+          'Hạng': i + 1,
+          'Tên món': p.name,
+          'Số phần đã bán': p.quantity,
+          'Số đơn': p.orderCount || 0,
+          'Doanh thu (VNĐ)': p.revenue,
+        }))
+      );
+      XLSX.utils.book_append_sheet(wb, prodSheet, 'TopMonBanChay');
+    }
+
+    if (stats.topCustomers?.length) {
+      const cusSheet = XLSX.utils.json_to_sheet(
+        stats.topCustomers.map((c: any, i: number) => ({
+          'Hạng': i + 1,
+          'Họ tên': c.fullName,
+          'Tên đăng nhập': c.username || '',
+          'Số điện thoại': c.phone,
+          'Hạng thành viên': getMembershipTier(c.totalSpent).name,
+          'Số đơn': c.orderCount,
+          'Tổng chi tiêu (VNĐ)': c.totalSpent,
+        }))
+      );
+      XLSX.utils.book_append_sheet(wb, cusSheet, 'KhachHangVIP');
+    }
+
+    const reviewRows = [
+      ...(stats.topRatedProducts || []).map((p: any) => ({
+        'Phân loại': 'Đánh giá cao nhất',
+        'Tên món': p.name,
+        'Điểm TB': p.avgRating,
+        'Số đánh giá': p.reviewCount,
+        'Ghi chú': '',
+      })),
+      ...(stats.lowRatedProducts || []).map((p: any) => ({
+        'Phân loại': 'Cần cải thiện',
+        'Tên món': p.name,
+        'Điểm TB': p.avgRating,
+        'Số đánh giá': p.reviewCount,
+        'Ghi chú': p.sampleComment || '',
+      })),
+    ];
+    if (reviewRows.length) {
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reviewRows), 'DanhGiaMonAn');
+    }
+
+    const dateStamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    XLSX.writeFile(wb, `NooNee_BaoCao_${period}_CS${selectedBranch}_${dateStamp}.xlsx`);
+    setToastMessage('Đã xuất file báo cáo Excel (.xlsx) thành công!');
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Welcome & Title */}
@@ -146,6 +241,15 @@ export default function AdminOverviewPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            disabled={!stats}
+            className="h-9 sm:h-10 px-3 sm:px-4 bg-white hover:bg-[#f0fdf4] text-[#15803d] border border-[#bbf7d0] text-[12px] sm:text-[13px] font-medium rounded-[6px] flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+          >
+            <Download className="w-4 h-4" />
+            <span>Xuất Excel</span>
+          </button>
           <Link
             href="/admin/products"
             className="h-9 sm:h-10 px-3 sm:px-4 bg-[#A30029] hover:bg-[#850021] active:bg-[#a60b20] text-white text-[12px] sm:text-[13px] font-medium rounded-[6px] flex items-center gap-1.5 transition shadow-xs"
@@ -397,6 +501,64 @@ export default function AdminOverviewPage() {
         </div>
       </div>
 
+      {/* ── BIỂU ĐỒ XU HƯỚNG DOANH THU THEO NGÀY / GIỜ ────────────────────── */}
+      <div className="bg-white rounded-[10px] border border-[#dddddd] p-4 sm:p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#dddddd]">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-[#A30029]" />
+            <h2 className="text-[15px] sm:text-[16px] font-semibold text-[#181d26]">
+              Xu hướng doanh thu {period === 'today' ? 'theo khung giờ' : 'theo ngày'} ({periodLabels[period]})
+            </h2>
+          </div>
+          <span className="text-[12px] text-[#64748b]">
+            {stats?.dailyRevenueTrend?.length || 0} mốc ghi nhận giao dịch
+          </span>
+        </div>
+
+        {stats?.dailyRevenueTrend && stats.dailyRevenueTrend.length > 0 ? (
+          <ResponsiveContainer width="100%" height={260}>
+            <AreaChart
+              data={stats.dailyRevenueTrend}
+              margin={{ top: 10, right: 16, left: 0, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient id="nooneeRevGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#A30029" stopOpacity={0.28} />
+                  <stop offset="95%" stopColor="#A30029" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#64748b' }} />
+              <YAxis
+                tick={{ fontSize: 11, fill: '#64748b' }}
+                tickFormatter={(v: number) =>
+                  v >= 1000000 ? `${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `${Math.round(v / 1000)}k` : String(v)
+                }
+              />
+              <Tooltip
+                formatter={(value: any, name: any) =>
+                  name === 'revenue' ? [formatVND(Number(value) || 0), 'Doanh thu'] : [`${value} đơn`, 'Số đơn']
+                }
+                labelFormatter={(label: any) => (period === 'today' ? `Khung giờ ${label}` : `Ngày ${label}`)}
+                contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+              />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="#A30029"
+                strokeWidth={2.5}
+                fillOpacity={1}
+                fill="url(#nooneeRevGradient)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="py-10 text-center text-[13px] text-[#9297a0]">
+            Chưa có dữ liệu xu hướng doanh thu trong kỳ này
+          </div>
+        )}
+      </div>
+
       {/* ── BIỂU ĐỒ PHÂN BỔ TRẠNG THÁI ĐƠN HÀNG + TOP SẢN PHẨM ─────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
@@ -547,7 +709,9 @@ export default function AdminOverviewPage() {
 
           {stats?.topCustomers && stats.topCustomers.length > 0 ? (
             <div className="divide-y divide-[#f1f5f9]">
-              {stats.topCustomers.map((cus: any, idx: number) => (
+              {stats.topCustomers.map((cus: any, idx: number) => {
+                const tier = getMembershipTier(cus.totalSpent || 0);
+                return (
                 <div key={`${cus.userId}-${cus.phone}-${idx}`} className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div
@@ -564,10 +728,15 @@ export default function AdminOverviewPage() {
                       #{idx + 1}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-[13px] font-semibold text-[#181d26] truncate">
-                        {cus.fullName}
+                      <div className="text-[13px] font-semibold text-[#181d26] flex items-center gap-1.5 flex-wrap">
+                        <span className="truncate">{cus.fullName}</span>
+                        <span
+                          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border shrink-0 ${tier.bgBadge}`}
+                        >
+                          {tier.badge}
+                        </span>
                         {cus.username && (
-                          <span className="text-[11px] font-normal text-[#9297a0] ml-1.5">
+                          <span className="text-[11px] font-normal text-[#9297a0]">
                             @{cus.username}
                           </span>
                         )}
@@ -584,7 +753,8 @@ export default function AdminOverviewPage() {
                     </span>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="py-8 text-center text-[13px] text-[#9297a0]">
