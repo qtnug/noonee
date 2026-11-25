@@ -3098,8 +3098,8 @@ export async function incrementCouponUsage(code: string): Promise<boolean> {
 
 
 // ============================================================================
-// GIỎ HÀNG THEO TÀI KHOẢN (Cart & CartItems)
-// Mỗi tài khoản (Users.id) sở hữu đúng 1 giỏ hàng trong bảng Cart.
+// GIỎ HÀNG THEO TÀI KHOẢN & CƠ SỞ (Cart & CartItems)
+// Mỗi cặp (userId, branchId) sở hữu 1 giỏ hàng tách biệt trong bảng Cart.
 // ============================================================================
 
 export interface StoredCartItem {
@@ -3110,8 +3110,8 @@ export interface StoredCartItem {
   note: string;
 }
 
-// Fallback khi không kết nối được SQL Server (chỉ dùng cho môi trường dev)
-const inMemoryCarts = new Map<number, StoredCartItem[]>();
+// Fallback khi không kết nối được SQL Server (key = `${userId}_${branchId}`)
+const inMemoryCarts = new Map<string, StoredCartItem[]>();
 
 let cartTablesPromise: Promise<void> | null = null;
 async function ensureCartTables(pool: any): Promise<void> {
@@ -3125,12 +3125,22 @@ async function ensureCartTables(pool: any): Promise<void> {
           CREATE TABLE Cart (
             id INT IDENTITY(1,1) PRIMARY KEY,
             userId INT NOT NULL,
+            branchId INT NOT NULL DEFAULT 1,
             createdAt DATETIME NOT NULL DEFAULT GETDATE(),
             updatedAt DATETIME NOT NULL DEFAULT GETDATE(),
-            CONSTRAINT UQ_Cart_UserId UNIQUE (userId),
+            CONSTRAINT UQ_Cart_User_Branch UNIQUE (userId, branchId),
             CONSTRAINT FK_Cart_Users FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE
           );
         END;
+
+        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Cart') AND name = 'branchId')
+          EXEC('ALTER TABLE Cart ADD branchId INT NOT NULL CONSTRAINT DF_Cart_BranchId DEFAULT 1 WITH VALUES');
+
+        IF EXISTS (SELECT * FROM sys.key_constraints WHERE name = 'UQ_Cart_UserId' AND parent_object_id = OBJECT_ID('Cart'))
+          EXEC('ALTER TABLE Cart DROP CONSTRAINT UQ_Cart_UserId');
+
+        IF NOT EXISTS (SELECT * FROM sys.key_constraints WHERE name = 'UQ_Cart_User_Branch' AND parent_object_id = OBJECT_ID('Cart'))
+          EXEC('ALTER TABLE Cart ADD CONSTRAINT UQ_Cart_User_Branch UNIQUE (userId, branchId)');
 
         IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'CartItems')
         BEGIN
@@ -3161,22 +3171,28 @@ async function ensureCartTables(pool: any): Promise<void> {
 }
 
 /**
- * Lấy danh sách món trong giỏ hàng đã lưu của tài khoản
+ * Lấy danh sách món trong giỏ hàng đã lưu của tài khoản tại cơ sở branchId
  */
-export async function getUserCartItems(userId: number): Promise<StoredCartItem[]> {
+export async function getUserCartItems(
+  userId: number,
+  branchId: number = 1
+): Promise<StoredCartItem[]> {
+  const safeBranch = Number(branchId) === 2 ? 2 : 1;
+  const memKey = `${userId}_${safeBranch}`;
   const pool = await getCloudPool();
   if (!pool) {
-    return inMemoryCarts.get(userId) || [];
+    return inMemoryCarts.get(memKey) || [];
   }
   await ensureCartTables(pool);
 
   const req = pool.request();
   req.input('userId', sql.Int, userId);
+  req.input('branchId', sql.Int, safeBranch);
   const res = await req.query(`
     SELECT ci.cartItemId, ci.productId, ci.quantity, ci.selectedToppings, ci.note
     FROM CartItems ci
     INNER JOIN Cart c ON ci.cartId = c.id
-    WHERE c.userId = @userId
+    WHERE c.userId = @userId AND c.branchId = @branchId
     ORDER BY ci.id ASC
   `);
 
@@ -3190,12 +3206,18 @@ export async function getUserCartItems(userId: number): Promise<StoredCartItem[]
 }
 
 /**
- * Ghi đè toàn bộ giỏ hàng của tài khoản (thực hiện trong 1 transaction)
+ * Ghi đè toàn bộ giỏ hàng của tài khoản tại cơ sở branchId (thực hiện trong 1 transaction)
  */
-export async function replaceUserCartItems(userId: number, items: StoredCartItem[]): Promise<void> {
+export async function replaceUserCartItems(
+  userId: number,
+  items: StoredCartItem[],
+  branchId: number = 1
+): Promise<void> {
+  const safeBranch = Number(branchId) === 2 ? 2 : 1;
+  const memKey = `${userId}_${safeBranch}`;
   const pool = await getCloudPool();
   if (!pool) {
-    inMemoryCarts.set(userId, items.map((i) => ({ ...i })));
+    inMemoryCarts.set(memKey, items.map((i) => ({ ...i })));
     return;
   }
   await ensureCartTables(pool);
@@ -3205,11 +3227,12 @@ export async function replaceUserCartItems(userId: number, items: StoredCartItem
   try {
     const cartReq = new sql.Request(transaction);
     cartReq.input('userId', sql.Int, userId);
+    cartReq.input('branchId', sql.Int, safeBranch);
     const cartRes = await cartReq.query(`
-      IF NOT EXISTS (SELECT 1 FROM Cart WITH (UPDLOCK, HOLDLOCK) WHERE userId = @userId)
-        INSERT INTO Cart (userId) VALUES (@userId);
-      UPDATE Cart SET updatedAt = GETDATE() WHERE userId = @userId;
-      SELECT id FROM Cart WHERE userId = @userId;
+      IF NOT EXISTS (SELECT 1 FROM Cart WITH (UPDLOCK, HOLDLOCK) WHERE userId = @userId AND branchId = @branchId)
+        INSERT INTO Cart (userId, branchId) VALUES (@userId, @branchId);
+      UPDATE Cart SET updatedAt = GETDATE() WHERE userId = @userId AND branchId = @branchId;
+      SELECT id FROM Cart WHERE userId = @userId AND branchId = @branchId;
     `);
     const cartId = Number(cartRes.recordset?.[0]?.id);
     if (!cartId) throw new Error('Không thể khởi tạo giỏ hàng cho tài khoản');

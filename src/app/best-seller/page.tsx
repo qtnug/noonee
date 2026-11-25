@@ -17,9 +17,11 @@ import {
 } from 'react-icons/ci';
 import { Product } from '@/types';
 import { formatVND } from '@/lib/utils';
+import { useBranch } from '@/context/BranchContext';
 import ProductCard from '@/components/ProductCard';
 
 export default function BestSellerPage() {
+  const { currentBranch } = useBranch();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
@@ -27,12 +29,16 @@ export default function BestSellerPage() {
   const [conditionModalCoupon, setConditionModalCoupon] = useState<any | null>(null);
 
   useEffect(() => {
+    let active = true;
     const fetchHotDishes = async () => {
+      setLoading(true);
       try {
-        const res = await fetch('/api/products?featured=true', { cache: 'no-store' });
+        const res = await fetch(
+          `/api/products?featured=true&branchId=${currentBranch.id}`,
+          { cache: 'no-store' }
+        );
         const data = await res.json();
-        if (data.success && Array.isArray(data.data)) {
-          // Chỉ hiển thị các sản phẩm có lượt mua thực tế > 0, xếp giảm dần theo soldCount
+        if (active && data.success && Array.isArray(data.data)) {
           const realBestSellers = data.data
             .filter((p: Product) => (p.soldCount || 0) > 0)
             .sort((a: Product, b: Product) => (b.soldCount || 0) - (a.soldCount || 0));
@@ -41,12 +47,15 @@ export default function BestSellerPage() {
       } catch (err) {
         console.error('Error fetching best seller products:', err);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
     fetchHotDishes();
-  }, []);
+    return () => {
+      active = false;
+    };
+  }, [currentBranch.id]);
 
   const handleSaveCoupon = (code: string) => {
     setSavedCodes((prev) => {

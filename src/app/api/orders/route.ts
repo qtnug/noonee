@@ -111,8 +111,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // SERVER-SIDE PRICE VALIDATION (C8, H17)
-    // Fetch products from database to ensure genuine prices
+    // SERVER-SIDE PRICE & BRANCH VALIDATION (C8, H17)
+    // Fetch products from database to ensure genuine prices and branch availability
+    const targetBranchId = Number(branchId) === 2 ? 2 : 1;
     const dbProducts = await getProducts();
     const validatedItems: {
       productId: number;
@@ -147,6 +148,21 @@ export async function POST(request: NextRequest) {
       if (!dbProduct.isAvailable) {
         return NextResponse.json(
           { success: false, message: `Món "${dbProduct.name}" hiện tạm thời ngưng phục vụ` },
+          { status: 400 }
+        );
+      }
+
+      if (
+        dbProduct.branchId !== null &&
+        dbProduct.branchId !== undefined &&
+        Number(dbProduct.branchId) !== targetBranchId
+      ) {
+        const targetLabel = targetBranchId === 2 ? 'Cơ sở 2 (269 Cầu Giấy)' : 'Cơ sở 1 (120 Yên Lãng)';
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Món "${dbProduct.name}" không phục vụ tại ${targetLabel}. Vui lòng xóa món này khỏi giỏ hàng hoặc chuyển đúng cơ sở.`,
+          },
           { status: 400 }
         );
       }

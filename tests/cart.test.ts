@@ -4,6 +4,8 @@ import {
   generateCartItemId,
   calculateItemPrice,
   normalizeCartItem,
+  isProductAvailableAtBranch,
+  normalizeBranchId,
   MAX_CART_ITEM_QUANTITY,
 } from '../src/lib/cartUtils.ts';
 
@@ -73,4 +75,17 @@ test('UT-03: normalizeCartItem giới hạn số lượng 1..99 và loại bỏ 
   });
   assert.ok(clampedLow);
   assert.equal(clampedLow.quantity, 1);
+});
+
+test('UT-04: isProductAvailableAtBranch và normalizeBranchId kiểm tra đúng phạm vi cơ sở', () => {
+  assert.equal(normalizeBranchId(1), 1);
+  assert.equal(normalizeBranchId('2'), 2);
+  assert.equal(normalizeBranchId(99), 1);
+
+  assert.equal(isProductAvailableAtBranch({ branchId: null }, 1), true);
+  assert.equal(isProductAvailableAtBranch({ branchId: null }, 2), true);
+  assert.equal(isProductAvailableAtBranch({ branchId: 1 }, 1), true);
+  assert.equal(isProductAvailableAtBranch({ branchId: 1 }, 2), false);
+  assert.equal(isProductAvailableAtBranch({ branchId: 2 }, 2), true);
+  assert.equal(isProductAvailableAtBranch({ branchId: 2 }, 1), false);
 });

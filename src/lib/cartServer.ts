@@ -1,18 +1,27 @@
 import type { CartItem, Product, ProductTopping } from '@/types';
 import { getAllProductsCached, StoredCartItem } from '@/lib/db';
-import { generateCartItemId, calculateItemPrice } from '@/lib/cartUtils';
+import {
+  generateCartItemId,
+  calculateItemPrice,
+  isProductAvailableAtBranch,
+  normalizeBranchId,
+} from '@/lib/cartUtils';
 
 export const MAX_CART_LINES = 100;
 export const MAX_ITEM_QUANTITY = 99;
 
 /**
- * Chuẩn hóa danh sách món client gửi lên thành StoredCartItem hợp lệ.
- * - Chỉ nhận món còn tồn tại & đang mở bán
+ * Chuẩn hóa danh sách món client gửi lên thành StoredCartItem hợp lệ cho đúng cơ sở (branchId).
+ * - Chỉ nhận món còn tồn tại, đang mở bán VÀ có phục vụ tại cơ sở branchId
  * - Topping chỉ giữ lại những topping thuộc món đó (lấy tên/giá từ DB, bỏ qua giá client gửi)
  * - Gộp các dòng trùng khóa (cùng món + topping + ghi chú), giới hạn số lượng 1..99
  */
-export async function sanitizeIncomingCart(rawItems: unknown): Promise<StoredCartItem[]> {
+export async function sanitizeIncomingCart(
+  rawItems: unknown,
+  rawBranchId: unknown = 1
+): Promise<StoredCartItem[]> {
   if (!Array.isArray(rawItems)) return [];
+  const branchId = normalizeBranchId(rawBranchId);
   const products = await getAllProductsCached();
   const productMap = new Map<number, Product>(products.map((p) => [Number(p.id), p]));
   const merged = new Map<string, StoredCartItem>();
@@ -22,7 +31,9 @@ export async function sanitizeIncomingCart(rawItems: unknown): Promise<StoredCar
     const r = raw as any;
     const productId = Number(r.productId ?? r.product?.id);
     const product = productMap.get(productId);
-    if (!product || !product.isAvailable) continue;
+    if (!product || !product.isAvailable || !isProductAvailableAtBranch(product, branchId)) {
+      continue;
+    }
 
     const toppings = pickValidToppings(product, r.selectedToppings);
     const note = typeof r.note === 'string' ? r.note.trim().slice(0, 500) : '';
@@ -43,7 +54,10 @@ export async function sanitizeIncomingCart(rawItems: unknown): Promise<StoredCar
 /**
  * Gộp giỏ hàng đã lưu của tài khoản với giỏ hàng khách vãng lai (cộng dồn số lượng nếu trùng khóa)
  */
-export function mergeStoredCarts(serverItems: StoredCartItem[], guestItems: StoredCartItem[]): StoredCartItem[] {
+export function mergeStoredCarts(
+  serverItems: StoredCartItem[],
+  guestItems: StoredCartItem[]
+): StoredCartItem[] {
   const map = new Map<string, StoredCartItem>();
   for (const item of [...serverItems, ...guestItems]) {
     const existing = map.get(item.cartItemId);
@@ -57,16 +71,22 @@ export function mergeStoredCarts(serverItems: StoredCartItem[], guestItems: Stor
 }
 
 /**
- * Chuyển dữ liệu giỏ hàng lưu trong DB thành CartItem đầy đủ thông tin món (giá hiện hành)
+ * Chuyển dữ liệu giỏ hàng lưu trong DB thành CartItem đầy đủ thông tin món cho đúng cơ sở branchId
  */
-export async function hydrateCart(stored: StoredCartItem[]): Promise<CartItem[]> {
+export async function hydrateCart(
+  stored: StoredCartItem[],
+  rawBranchId: unknown = 1
+): Promise<CartItem[]> {
+  const branchId = normalizeBranchId(rawBranchId);
   const products = await getAllProductsCached();
   const productMap = new Map<number, Product>(products.map((p) => [Number(p.id), p]));
   const result: CartItem[] = [];
 
   for (const item of stored) {
     const product = productMap.get(Number(item.productId));
-    if (!product || !product.isAvailable) continue;
+    if (!product || !product.isAvailable || !isProductAvailableAtBranch(product, branchId)) {
+      continue;
+    }
     const toppings = pickValidToppings(product, item.selectedToppings);
     result.push({
       cartItemId: generateCartItemId(product.id, toppings, item.note),

@@ -3,6 +3,26 @@ import type { CartItem, Product, ProductTopping } from '../types';
 export const MAX_CART_ITEM_QUANTITY = 99;
 
 /**
+ * Chuẩn hóa ID cơ sở hợp lệ (1 = CS1 120 Yên Lãng, 2 = CS2 269 Cầu Giấy)
+ */
+export function normalizeBranchId(raw: unknown): number {
+  return Number(raw) === 2 ? 2 : 1;
+}
+
+/**
+ * Kiểm tra món ăn có được phục vụ tại cơ sở branchId hay không
+ * (branchId = null/undefined => phục vụ ở cả 2 cơ sở)
+ */
+export function isProductAvailableAtBranch(
+  product: { branchId?: number | null } | null | undefined,
+  branchId: number
+): boolean {
+  if (!product) return false;
+  if (product.branchId === null || product.branchId === undefined) return true;
+  return Number(product.branchId) === normalizeBranchId(branchId);
+}
+
+/**
  * Tạo khóa định danh dòng giỏ hàng: cùng món + cùng topping (không phân biệt thứ tự) + cùng ghi chú
  */
 export function generateCartItemId(

@@ -18,6 +18,8 @@ import {
 import { Product, ProductTopping } from '@/types';
 import { formatVND } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
+import { useBranch } from '@/context/BranchContext';
+import { isProductAvailableAtBranch } from '@/lib/cartUtils';
 import { useToast } from '@/context/ToastContext';
 
 export function getAvailableToppings(product: Product): ProductTopping[] {
@@ -40,7 +42,9 @@ export default function ProductOptionsModal({
 }: ProductOptionsModalProps) {
   const router = useRouter();
   const { addToCart, setIsCartOpen } = useCart();
+  const { currentBranch, selectBranch } = useBranch();
   const toast = useToast();
+  const isServedAtCurrentBranch = isProductAvailableAtBranch(product, currentBranch.id);
   const [mounted, setMounted] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<ProductTopping[]>([]);
@@ -305,6 +309,25 @@ export default function ProductOptionsModal({
           </div>
 
           {/* Action Buttons: Thêm vào giỏ & Mua ngay */}
+          {!isServedAtCurrentBranch ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-[10px] p-3 flex items-center justify-between gap-2 text-[12px] text-amber-900">
+              <span>
+                Món này chỉ bán tại{' '}
+                <strong>
+                  {product.branchId === 2 ? 'Cơ sở 2 (269 Cầu Giấy)' : 'Cơ sở 1 (120 Yên Lãng)'}
+                </strong>
+              </span>
+              {product.branchId && (
+                <button
+                  type="button"
+                  onClick={() => selectBranch(product.branchId!)}
+                  className="px-3 py-1.5 rounded-lg bg-[#A30029] hover:bg-[#850021] text-white font-semibold shrink-0 cursor-pointer transition"
+                >
+                  Đổi sang CS{product.branchId}
+                </button>
+              )}
+            </div>
+          ) : (
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -335,6 +358,7 @@ export default function ProductOptionsModal({
               <span>Mua ngay • {formatVND(totalPrice)}</span>
             </button>
           </div>
+          )}
         </div>
           </motion.div>
         </motion.div>

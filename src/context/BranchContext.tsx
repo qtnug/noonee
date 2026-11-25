@@ -10,6 +10,7 @@ interface BranchContextType {
   userCoords: { lat: number; lng: number } | null;
   isAutoDetected: boolean;
   isLocating: boolean;
+  isBranchReady: boolean;
   selectBranch: (branchId: number | string) => void;
   detectAndSelectNearest: () => Promise<Branch>;
 }
@@ -21,6 +22,7 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [isAutoDetected, setIsAutoDetected] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [isBranchReady, setIsBranchReady] = useState(false);
 
   // Manual branch selection
   const selectBranch = useCallback((branchId: number | string) => {
@@ -97,6 +99,7 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
         );
       }
     } catch (e) {}
+    setIsBranchReady(true);
   }, []);
 
   return (
@@ -107,6 +110,7 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
         userCoords,
         isAutoDetected,
         isLocating,
+        isBranchReady,
         selectBranch,
         detectAndSelectNearest,
       }}

@@ -15,16 +15,23 @@ import {
 } from 'react-icons/ci';
 import { Product, ProductTopping } from '@/types';
 import { useCart } from '@/context/CartContext';
+import { useBranch } from '@/context/BranchContext';
+import { isProductAvailableAtBranch } from '@/lib/cartUtils';
 import { formatVND } from '@/lib/utils';
 import { getAvailableToppings } from '@/components/ProductOptionsModal';
 
 export default function ProductDetailActions({ product }: { product: Product }) {
   const router = useRouter();
   const { addToCart } = useCart();
+  const { currentBranch, selectBranch } = useBranch();
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<ProductTopping[]>([]);
   const [itemNote, setItemNote] = useState('');
   const [added, setAdded] = useState(false);
+
+  const isServedAtCurrentBranch = isProductAvailableAtBranch(product, currentBranch.id);
+  const requiredBranchLabel =
+    product.branchId === 2 ? 'Cơ sở 2 (269 Cầu Giấy)' : 'Cơ sở 1 (120 Yên Lãng)';
 
   const toppings: ProductTopping[] = getAvailableToppings(product);
 
@@ -131,6 +138,23 @@ export default function ProductDetailActions({ product }: { product: Product }) 
       </div>
 
       {/* 3. QUANTITY & TOTAL PRICE BAR */}
+      {!isServedAtCurrentBranch ? (
+        <div className="bg-amber-50 p-4 rounded-[10px] border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="text-[13px] text-amber-900">
+            Món này chỉ phục vụ tại <strong>{requiredBranchLabel}</strong> (bạn đang chọn{' '}
+            <strong>{currentBranch.shortName}</strong>).
+          </div>
+          {product.branchId && (
+            <button
+              type="button"
+              onClick={() => selectBranch(product.branchId!)}
+              className="h-10 px-4 rounded-[8px] bg-[#A30029] hover:bg-[#850021] text-white font-semibold text-[13px] shrink-0 cursor-pointer transition"
+            >
+              Chuyển sang {product.branchId === 2 ? 'Cơ sở 2' : 'Cơ sở 1'}
+            </button>
+          )}
+        </div>
+      ) : (
       <div className="bg-[#fff1f2]/40 p-4 rounded-[10px] border border-[#fecdd3] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="text-[12px] text-[#41454d]">
@@ -210,6 +234,7 @@ export default function ProductDetailActions({ product }: { product: Product }) 
           </button>
         </div>
       </div>
+      )}
     </div>
   );
 }

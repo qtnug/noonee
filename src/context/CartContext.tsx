@@ -3,7 +3,13 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { Product, CartItem, ProductTopping } from '@/types';
 import { useAuth } from '@/context/AuthContext';
-import { generateCartItemId, normalizeCartItem } from '@/lib/cartUtils';
+import { useBranch } from '@/context/BranchContext';
+import {
+  generateCartItemId,
+  normalizeCartItem,
+  isProductAvailableAtBranch,
+  normalizeBranchId,
+} from '@/lib/cartUtils';
 
 interface CartContextType {
   cart: CartItem[];
@@ -27,32 +33,71 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// Giỏ hàng khách vãng lai (chưa đăng nhập) chỉ lưu ở localStorage
-const GUEST_CART_KEY = 'food_cart';
+const LEGACY_GUEST_CART_KEY = 'food_cart';
+function guestCartKey(branchId: number): string {
+  return `food_cart_branch_${normalizeBranchId(branchId)}`;
+}
 
-function readGuestCart(): CartItem[] {
+function readGuestCart(branchId: number): CartItem[] {
+  const safeBranch = normalizeBranchId(branchId);
   try {
-    const saved = localStorage.getItem(GUEST_CART_KEY);
+    const key = guestCartKey(safeBranch);
+    let saved = localStorage.getItem(key);
+
+    // Di chuyển dữ liệu key cũ (nếu có) về đúng cơ sở hợp lệ rồi xóa key cũ
+    if (!saved) {
+      const legacy = localStorage.getItem(LEGACY_GUEST_CART_KEY);
+      if (legacy) {
+        const parsedLegacy = JSON.parse(legacy);
+        if (Array.isArray(parsedLegacy)) {
+          const validForB1 = (parsedLegacy.map(normalizeCartItem).filter(Boolean) as CartItem[]).filter(
+            (i) => isProductAvailableAtBranch(i.product, 1)
+          );
+          const validForB2 = (parsedLegacy.map(normalizeCartItem).filter(Boolean) as CartItem[]).filter(
+            (i) => i.product.branchId === 2
+          );
+          if (validForB1.length > 0) localStorage.setItem(guestCartKey(1), JSON.stringify(validForB1));
+          if (validForB2.length > 0) localStorage.setItem(guestCartKey(2), JSON.stringify(validForB2));
+        }
+        localStorage.removeItem(LEGACY_GUEST_CART_KEY);
+        saved = localStorage.getItem(key);
+      }
+    }
+
     if (!saved) return [];
     const parsed = JSON.parse(saved);
     if (!Array.isArray(parsed)) return [];
-    return parsed.map(normalizeCartItem).filter(Boolean) as CartItem[];
+    return (parsed.map(normalizeCartItem).filter(Boolean) as CartItem[]).filter((item) =>
+      isProductAvailableAtBranch(item.product, safeBranch)
+    );
   } catch {
     return [];
   }
 }
 
-function clearGuestCart() {
+function clearGuestCartForBranch(branchId: number) {
   try {
-    localStorage.removeItem(GUEST_CART_KEY);
+    localStorage.removeItem(guestCartKey(branchId));
+    localStorage.removeItem(LEGACY_GUEST_CART_KEY);
   } catch {
     // ignore
   }
 }
 
-/** Payload gửi lên server: chỉ gửi mã món, số lượng, topping, ghi chú (giá do server tự tính) */
-function toServerPayload(items: CartItem[]): string {
+function clearAllGuestCarts() {
+  try {
+    localStorage.removeItem(guestCartKey(1));
+    localStorage.removeItem(guestCartKey(2));
+    localStorage.removeItem(LEGACY_GUEST_CART_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+/** Payload gửi lên server kèm branchId */
+function toServerPayload(items: CartItem[], branchId: number): string {
   return JSON.stringify({
+    branchId: normalizeBranchId(branchId),
     items: items.map((i) => ({
       productId: i.product.id,
       quantity: i.quantity,
@@ -66,28 +111,30 @@ function toServerPayload(items: CartItem[]): string {
   });
 }
 
-function parseServerItems(data: unknown): CartItem[] {
+function parseServerItems(data: unknown, branchId: number): CartItem[] {
   if (!Array.isArray(data)) return [];
-  return data.map(normalizeCartItem).filter(Boolean) as CartItem[];
+  return (data.map(normalizeCartItem).filter(Boolean) as CartItem[]).filter((item) =>
+    isProductAvailableAtBranch(item.product, branchId)
+  );
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const { user, isLoading: authLoading } = useAuth();
+  const { currentBranch, isBranchReady } = useBranch();
   const userId = user?.id ?? null;
+  const branchId = normalizeBranchId(currentBranch?.id);
+  const scopeKey = `${userId ?? 'guest'}_${branchId}`;
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  // true khi state giỏ hàng đã khớp với giỏ hàng của tài khoản trên server → bắt đầu đồng bộ
   const [serverSyncReady, setServerSyncReady] = useState(false);
 
-  // undefined = chưa khởi tạo; null = khách vãng lai; number = id tài khoản đã nạp giỏ hàng
-  const loadedForUserRef = useRef<number | null | undefined>(undefined);
-  // payload lần cuối đã lưu thành công lên server (tránh gửi lặp)
+  const loadedScopeRef = useRef<string | undefined>(undefined);
+  const prevUserIdRef = useRef<number | null | undefined>(undefined);
   const lastSyncedPayloadRef = useRef<string>('');
-  // Hàng đợi single-flight: gửi ngay lập tức thay đổi đầu tiên, gộp các thay đổi liên tiếp kế tiếp
   const inFlightSyncRef = useRef<boolean>(false);
-  const queuedSyncRef = useRef<{ payload: string; userId: number } | null>(null);
+  const queuedSyncRef = useRef<{ payload: string; scopeKey: string } | null>(null);
 
   async function flushSyncQueue() {
     if (inFlightSyncRef.current) return;
@@ -104,7 +151,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         keepalive: true,
       });
       const data = await res.json().catch(() => null);
-      if (data?.success && loadedForUserRef.current === next.userId) {
+      if (data?.success && loadedScopeRef.current === next.scopeKey) {
         lastSyncedPayloadRef.current = next.payload;
       }
     } catch (err) {
@@ -117,38 +164,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  function scheduleServerSync(payload: string, targetUserId: number) {
-    queuedSyncRef.current = { payload, userId: targetUserId };
+  function scheduleServerSync(payload: string, targetScopeKey: string) {
+    queuedSyncRef.current = { payload, scopeKey: targetScopeKey };
     void flushSyncQueue();
   }
 
-  // 1. Nạp giỏ hàng mỗi khi trạng thái đăng nhập thay đổi
+  // 1. Nạp giỏ hàng riêng mỗi khi đổi tài khoản HOẶC đổi cơ sở (branchId)
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || !isBranchReady) return;
+    if (loadedScopeRef.current === scopeKey) return;
 
-    const previousUser = loadedForUserRef.current;
-    if (previousUser === userId) return;
-    loadedForUserRef.current = userId;
+    const prevUserId = prevUserIdRef.current;
+    prevUserIdRef.current = userId;
+    loadedScopeRef.current = scopeKey;
     lastSyncedPayloadRef.current = '';
     queuedSyncRef.current = null;
     setServerSyncReady(false);
 
-    // Khách vãng lai
+    // Khách vãng lai: nạp giỏ hàng riêng của cơ sở đang chọn
     if (userId === null) {
-      if (typeof previousUser === 'number') {
-        // Vừa đăng xuất: không giữ lại giỏ hàng của tài khoản trước trên thiết bị này
+      if (typeof prevUserId === 'number') {
         setCart([]);
-        clearGuestCart();
+        clearAllGuestCarts();
       } else {
-        setCart(readGuestCart());
+        setCart(readGuestCart(branchId));
       }
       setIsLoaded(true);
       return;
     }
 
-    // Đã đăng nhập: nạp giỏ hàng của tài khoản (gộp giỏ khách vãng lai nếu có)
+    // Đã đăng nhập: nạp giỏ hàng riêng của (userId, branchId)
     setIsLoaded(false);
-    const guestItems = readGuestCart();
+    const guestItems = readGuestCart(branchId);
 
     (async () => {
       try {
@@ -157,40 +204,39 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             ? await fetch('/api/cart/merge', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: toServerPayload(guestItems),
+                body: toServerPayload(guestItems, branchId),
               })
-            : await fetch('/api/cart', { cache: 'no-store' });
+            : await fetch(`/api/cart?branchId=${branchId}`, { cache: 'no-store' });
         const data = await res.json();
 
-        // Bỏ qua kết quả nếu người dùng đã đổi tài khoản trong lúc chờ
-        if (loadedForUserRef.current !== userId) return;
+        if (loadedScopeRef.current !== scopeKey) return;
 
         if (data?.success) {
-          const items = parseServerItems(data.data);
-          lastSyncedPayloadRef.current = toServerPayload(items);
+          const items = parseServerItems(data.data, branchId);
+          lastSyncedPayloadRef.current = toServerPayload(items, branchId);
           setCart(items);
-          clearGuestCart();
+          clearGuestCartForBranch(branchId);
           setServerSyncReady(true);
         } else {
-          // Không tải được giỏ hàng tài khoản: giữ giỏ tạm, không ghi đè dữ liệu trên server
           setCart(guestItems);
         }
       } catch (err) {
         console.error('Không thể tải giỏ hàng của tài khoản:', err);
-        if (loadedForUserRef.current === userId) setCart(guestItems);
+        if (loadedScopeRef.current === scopeKey) setCart(guestItems);
       } finally {
-        if (loadedForUserRef.current === userId) setIsLoaded(true);
+        if (loadedScopeRef.current === scopeKey) setIsLoaded(true);
       }
     })();
-  }, [authLoading, userId]);
+  }, [authLoading, isBranchReady, scopeKey, userId, branchId]);
 
-  // 2. Lưu giỏ hàng ngay lập tức: khách → localStorage, tài khoản → server (single-flight)
+  // 2. Lưu giỏ hàng theo đúng cơ sở đang chọn
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !isBranchReady) return;
+    if (loadedScopeRef.current !== scopeKey) return;
 
     if (userId === null) {
       try {
-        localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart));
+        localStorage.setItem(guestCartKey(branchId), JSON.stringify(cart));
       } catch {
         // ignore
       }
@@ -198,11 +244,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (!serverSyncReady) return;
-    const payload = toServerPayload(cart);
+    const payload = toServerPayload(cart, branchId);
     if (payload === lastSyncedPayloadRef.current) return;
 
-    scheduleServerSync(payload, userId);
-  }, [cart, userId, isLoaded, serverSyncReady]);
+    scheduleServerSync(payload, scopeKey);
+  }, [cart, userId, branchId, scopeKey, isLoaded, isBranchReady, serverSyncReady]);
 
   const addToCart = (
     product: Product,
@@ -210,6 +256,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     selectedToppings: ProductTopping[] = [],
     note = ''
   ) => {
+    if (!isProductAvailableAtBranch(product, branchId)) {
+      return;
+    }
     const toppingsPrice = selectedToppings.reduce((sum, t) => sum + (t.price || 0), 0);
     const itemPrice = product.price + toppingsPrice;
     const cleanNote = note.trim();
@@ -282,7 +331,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           idx === targetIndex ? { ...item, note: cleanNote } : item
         );
       }
-      // Nếu ghi chú mới trùng với 1 dòng đã có sẵn trong giỏ thì gộp số lượng
       const duplicateIndex = prev.findIndex(
         (item, idx) => idx !== targetIndex && item.cartItemId === nextCartItemId
       );
@@ -306,17 +354,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const clearCart = () => {
     setCart([]);
     if (typeof userId === 'number' && serverSyncReady) {
-      const emptyPayload = toServerPayload([]);
+      const emptyPayload = toServerPayload([], branchId);
       lastSyncedPayloadRef.current = emptyPayload;
       queuedSyncRef.current = null;
-      fetch('/api/cart', { method: 'DELETE', keepalive: true }).catch((err) =>
+      fetch(`/api/cart?branchId=${branchId}`, { method: 'DELETE', keepalive: true }).catch((err) =>
         console.error('Không thể xóa giỏ hàng trên tài khoản:', err)
       );
     }
   };
 
   const restoreCart = (items: CartItem[]) => {
-    setCart(items.map(normalizeCartItem).filter(Boolean) as CartItem[]);
+    const valid = (items.map(normalizeCartItem).filter(Boolean) as CartItem[]).filter((item) =>
+      isProductAvailableAtBranch(item.product, branchId)
+    );
+    setCart(valid);
   };
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);

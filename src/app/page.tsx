@@ -1,23 +1,17 @@
 import React from 'react';
 import Link from 'next/link';
-import { CiCircleChevRight } from 'react-icons/ci';
 import { getProducts } from '@/lib/db';
-import ProductCard from '@/components/ProductCard';
-import BannerSlider from '@/components/BannerSlider';
 import HeroFoodCollage from '@/components/HeroFoodCollage';
 import ScrollReveal from '@/components/ScrollReveal';
+import HomeFeaturedContent from '@/components/HomeFeaturedContent';
 
 export const revalidate = 0; // Dynamic
 
 export default async function HomePage() {
-  let allProducts: any[] = [];
-  let featuredProducts: any[] = [];
-  let bestSellers: any[] = [];
+  let productsWithSales: any[] = [];
   try {
-    allProducts = await getProducts();
-    // Chỉ hiển thị các sản phẩm có lượt mua thực tế cao nhất (soldCount > 0, đã xếp giảm dần)
-    featuredProducts = allProducts.filter((p) => p.isFeatured && (p.soldCount || 0) > 0);
-    bestSellers = featuredProducts.slice(0, 8);
+    const allProducts = await getProducts();
+    productsWithSales = allProducts.filter((p) => (p.soldCount || 0) > 0);
   } catch (e) {
     console.error('Error loading products for homepage:', e);
   }
@@ -101,65 +95,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 2. BEST SELLER CAROUSEL BANNER (Scroll-triggered reveal) */}
-      <ScrollReveal animation="fade-up" duration={800} threshold={0.05}>
-        <BannerSlider bestSellers={bestSellers} />
-      </ScrollReveal>
-
-      {/* 3. FEATURED PRODUCTS (Scroll-triggered reveal with staggered cards) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <ScrollReveal animation="fade-up" duration={600}>
-          <div className="flex items-center justify-between mb-8 pb-3 border-b border-[#dddddd]">
-            <div className="space-y-1">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a]">
-                Món ăn nổi bật
-              </h2>
-              <p className="text-xs sm:text-sm text-[#677992]">
-                Các món ăn có lượt đặt mua thực tế cao nhất tại NooNee Food
-              </p>
-            </div>
-            <Link
-              href="/best-seller"
-              className="text-[14px] font-bold text-[#A30029] hover:underline flex items-center gap-1 transition shrink-0"
-            >
-              <span>Xem BXH bán chạy</span>
-              <CiCircleChevRight className="w-5 h-5" />
-            </Link>
-          </div>
-        </ScrollReveal>
-
-        {featuredProducts.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-[#e6dcd2] p-10 text-center text-[#677992] text-sm">
-            Chưa có dữ liệu lượt mua thực tế cho sản phẩm nổi bật.
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-            {featuredProducts.slice(0, 8).map((product, index) => (
-              <ScrollReveal
-                key={product.id}
-                animation="fade-up"
-                delay={(index % 4) * 80}
-                duration={550}
-              >
-                <ProductCard
-                  product={product}
-                  badgeText={index === 0 ? '🔥 Bán chạy #1' : 'Nổi bật'}
-                />
-              </ScrollReveal>
-            ))}
-          </div>
-        )}
-
-        <ScrollReveal animation="zoom-in" delay={120} duration={600} className="mt-10 text-center">
-          <Link
-            href="/menu"
-            className="inline-flex items-center gap-2 bg-white hover:bg-neutral-50 text-[#A30029] font-bold text-sm sm:text-base px-7 py-3.5 rounded-xl border border-[#A30029]/30 hover:border-[#A30029] shadow-xs transition duration-200 hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <span>Khám phá toàn bộ thực đơn</span>
-            <CiCircleChevRight className="w-5 h-5" />
-          </Link>
-        </ScrollReveal>
-      </section>
+      {/* 2. BEST SELLER BANNER & FEATURED PRODUCTS (Filtered reactively by active branch) */}
+      <HomeFeaturedContent productsWithSales={productsWithSales} />
     </div>
   );
 }
