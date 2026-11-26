@@ -15,9 +15,12 @@ import {
   CiCircleCheck as Check,
   CiStar as Star,
 } from 'react-icons/ci';
+import { MapPin, AlertCircle } from 'lucide-react';
 import { Product } from '@/types';
 import { formatVND } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
+import { useBranch } from '@/context/BranchContext';
+import { isProductAvailableAtBranch } from '@/lib/cartUtils';
 import ProductOptionsModal from '@/components/ProductOptionsModal';
 
 interface Message {
@@ -31,12 +34,26 @@ interface Message {
 interface QuickCategory {
   id: string;
   label: string;
-  filter: (p: Product) => boolean;
-  intro: (name: string, price: string, desc: string) => string;
+  filter: (p: Product, branchId: number) => boolean;
+  intro: (name: string, price: string, desc: string, branchShortName: string) => string;
 }
 
-// Quick suggestions config: Instant random recommendation by category without calling API
+// Quick suggestions config: Instant random recommendation synced to SQL Server & active branch
 const QUICK_CATEGORIES: QuickCategory[] = [
+  {
+    id: 'branch_signature',
+    label: '⭐ Đặc trưng cơ sở',
+    filter: (p, branchId) => p.isAvailable && Number(p.branchId) === branchId,
+    intro: (name, price, desc, branchShortName) =>
+      `Món đặc trưng riêng tại **CS ${branchShortName}**: **${name}** (${price}). ${desc}`,
+  },
+  {
+    id: 'best_seller',
+    label: '🔥 Bán chạy nhất',
+    filter: (p) => p.isAvailable && p.isFeatured,
+    intro: (name, price, desc, branchShortName) =>
+      `Món bán chạy hàng đầu tại **CS ${branchShortName}**: **${name}** (${price}). ${desc}`,
+  },
   {
     id: 'rice',
     label: '🍱 Cơm ngon no bụng',
@@ -54,31 +71,14 @@ const QUICK_CATEGORIES: QuickCategory[] = [
   {
     id: 'tea_juice',
     label: '🥤 Trà sữa & Nước ép',
-    // Specifically selects tea, milk tea, juice, smoothie; STRICTLY excludes coffee, sodas, bottled water, desserts
+    // Selects tea, milk tea, juice, smoothie, and newly added signature drinks; excludes coffee, sodas, water, desserts
     filter: (p) => {
       if (p.categoryId !== 3 || !p.isAvailable) return false;
-      const s = p.slug.toLowerCase();
-      // Exclude coffee
+      const s = (p.slug || '').toLowerCase();
       if (s.includes('ca-phe') || s.includes('bac-xiu') || s.includes('americano')) return false;
-      // Exclude canned sodas and plain water
       if (s.includes('coca') || s.includes('sting') || s.includes('7up') || s.includes('mirinda') || s.includes('nuoc-loc')) return false;
-      // Exclude desserts (chè, sữa chua, tào phớ)
       if (s.includes('che-') || s.includes('sua-chua') || s.includes('tao-pho')) return false;
-      // Include tea, milk tea, juice, smoothie, coconut
-      return (
-        s.includes('tra-sua') ||
-        s.includes('hong-tra') ||
-        s.includes('tra-thai') ||
-        s.includes('milo') ||
-        s.includes('matcha') ||
-        s.includes('cacao') ||
-        s.includes('tra-dao') ||
-        s.includes('tra-chanh') ||
-        s.includes('nuoc-mia') ||
-        s.includes('sinh-to') ||
-        s.includes('nuoc-ep') ||
-        s.includes('nuoc-dua')
-      );
+      return true;
     },
     intro: (name, price, desc) =>
       `Giải khát thanh mát cùng **${name}** (${price}) bạn nhé! ${desc}`,
@@ -95,10 +95,10 @@ const QUICK_CATEGORIES: QuickCategory[] = [
     label: '☕ Cà phê đậm vị',
     filter: (p) => {
       if (p.categoryId !== 3 || !p.isAvailable) return false;
-      const s = p.slug.toLowerCase();
+      const s = (p.slug || '').toLowerCase();
       return s.includes('ca-phe') || s.includes('bac-xiu') || s.includes('americano');
     },
-    intro: (name, price, desc) =>
+    intro: (name, price) =>
       `Tỉnh táo và tràn đầy năng lượng với ly **${name}** (${price}) thơm nồng đậm đà!`,
   },
   {
@@ -106,7 +106,7 @@ const QUICK_CATEGORIES: QuickCategory[] = [
     label: '🍧 Chè & Sữa chua',
     filter: (p) => {
       if (p.categoryId !== 3 || !p.isAvailable) return false;
-      const s = p.slug.toLowerCase();
+      const s = (p.slug || '').toLowerCase();
       return s.includes('che-') || s.includes('sua-chua') || s.includes('tao-pho');
     },
     intro: (name, price, desc) =>
@@ -194,14 +194,32 @@ function renderFormattedInline(text: string) {
 export default function AIChatBot() {
   const pathname = usePathname();
   const { addToCart } = useCart();
+  const { currentBranch, isBranchReady } = useBranch();
+  const activeBranchId = currentBranch.id;
+  const chatStorageKey = `noonee_ai_messages_branch_${activeBranchId}`;
+
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(true);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
   const [menuProducts, setMenuProducts] = useState<Product[]>([]);
+  const activeBranchIdRef = useRef(activeBranchId);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    activeBranchIdRef.current = activeBranchId;
+  }, [activeBranchId]);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ message, type });
+    toastTimerRef.current = setTimeout(() => {
+      setToast(null);
+    }, type === 'error' ? 3200 : 2500);
+  };
 
   // Dragging state
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
@@ -320,66 +338,90 @@ export default function AIChatBot() {
     }
   }, [isOpen, messages]);
 
-  // Load menu products on mount for fast instant random suggestions
+  const createWelcomeMessage = (branchId: number, branchShortName: string): Message => ({
+    id: `welcome_b${branchId}_${Date.now()}`,
+    role: 'assistant',
+    content: `Xin chào bạn! Mình là **NooNee** 🍽️ — đang tư vấn thực đơn tại **CS ${branchShortName}**.\n\nBạn đang thèm món gì, muốn ăn trong tầm giá nào hay muốn thử món đặc trưng của cơ sở này?`,
+    timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+  });
+
+  // Load live SQL Server menu products synced to the currently selected branch
   useEffect(() => {
-    fetch('/api/food-menu')
+    if (!isBranchReady) return;
+    const controller = new AbortController();
+    setMenuProducts([]);
+
+    fetch(`/api/food-menu?branchId=${activeBranchId}`, {
+      cache: 'no-store',
+      signal: controller.signal,
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success && Array.isArray(res.data)) {
           setMenuProducts(res.data);
         }
       })
-      .catch((err) => console.error('Error fetching menu for chatbot:', err));
-  }, []);
+      .catch((err) => {
+        if (err?.name !== 'AbortError') {
+          console.error('Error fetching branch menu for chatbot:', err);
+        }
+      });
 
-  // Load chat history from sessionStorage
+    return () => controller.abort();
+  }, [activeBranchId, isBranchReady]);
+
+  // Load branch-scoped chat history from sessionStorage whenever branch changes
   useEffect(() => {
+    if (!isBranchReady) return;
+    setIsLoading(false);
     try {
-      const saved = sessionStorage.getItem('noonee_ai_messages');
+      const saved = sessionStorage.getItem(chatStorageKey);
       if (saved) {
-        setMessages(JSON.parse(saved));
-      } else {
-        setMessages([
-          {
-            id: 'welcome',
-            role: 'assistant',
-            content:
-              'Xin chào bạn! Mình là **NooNee** 🍽️.\n\nBạn đang thèm món gì, muốn ăn trong tầm giá nào hay cần gợi ý gì hôm nay?',
-            timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-          },
-        ]);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const sanitized: Message[] = parsed.map((m: Message) => ({
+            ...m,
+            recommendedProducts: Array.isArray(m.recommendedProducts)
+              ? m.recommendedProducts.filter(
+                  (p) => p?.isAvailable !== false && isProductAvailableAtBranch(p, activeBranchId)
+                )
+              : m.recommendedProducts,
+          }));
+          setMessages(sanitized);
+          return;
+        }
       }
     } catch {
       // Ignore sessionStorage error
     }
-  }, []);
+    setMessages([createWelcomeMessage(activeBranchId, currentBranch.shortName)]);
+  }, [activeBranchId, chatStorageKey, currentBranch.shortName, isBranchReady]);
 
-  const updateMessages = (newMessages: Message[]) => {
-    setMessages(newMessages);
+  const updateMessages = (newMessages: Message[], targetStorageKey = chatStorageKey) => {
+    if (targetStorageKey === chatStorageKey) {
+      setMessages(newMessages);
+    }
     try {
-      sessionStorage.setItem('noonee_ai_messages', JSON.stringify(newMessages));
+      sessionStorage.setItem(targetStorageKey, JSON.stringify(newMessages));
     } catch {
       // Ignore
     }
   };
 
   const handleResetChat = () => {
-    const defaultWelcome: Message = {
-      id: Date.now().toString(),
-      role: 'assistant',
-      content:
-        'Xin chào bạn! Mình là **NooNee** 🍽️. Bạn cần gợi ý món gì cho bữa ăn hôm nay nào?',
-      timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-    };
+    const defaultWelcome = createWelcomeMessage(activeBranchId, currentBranch.shortName);
     updateMessages([defaultWelcome]);
   };
 
   /**
-   * Handle user typing custom question: calls backend API
+   * Handle user typing custom question: calls backend API synced with SQL Server & active branch
    */
   const handleSendMessage = async () => {
     const query = inputMessage.trim();
     if (!query || isLoading) return;
+
+    const reqBranchId = activeBranchId;
+    const reqStorageKey = chatStorageKey;
 
     setInputMessage('');
 
@@ -391,7 +433,7 @@ export default function AIChatBot() {
     };
 
     const nextHistory = [...messages, userMessage];
-    updateMessages(nextHistory);
+    updateMessages(nextHistory, reqStorageKey);
     setIsLoading(true);
 
     try {
@@ -403,28 +445,53 @@ export default function AIChatBot() {
       const res = await fetch('/api/ai-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiPayload }),
+        body: JSON.stringify({
+          messages: apiPayload,
+          branchId: reqBranchId,
+        }),
       });
 
       const data = await res.json();
 
       if (data.success) {
+        const validRecommended: Product[] = Array.isArray(data.recommendedProducts)
+          ? data.recommendedProducts.filter(
+              (p: Product) => p?.isAvailable !== false && isProductAvailableAtBranch(p, reqBranchId)
+            )
+          : [];
+
         const botMessage: Message = {
           id: `bot_${Date.now()}`,
           role: 'assistant',
           content: data.reply || 'Dạ NooNee gợi ý bạn các món ngon bên dưới nhé!',
-          recommendedProducts: data.recommendedProducts || [],
+          recommendedProducts: validRecommended,
           timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         };
-        updateMessages([...nextHistory, botMessage]);
+        const finalHistory = [...nextHistory, botMessage];
+        try {
+          sessionStorage.setItem(reqStorageKey, JSON.stringify(finalHistory));
+        } catch {
+          // Ignore
+        }
+        if (activeBranchIdRef.current === reqBranchId) {
+          setMessages(finalHistory);
+        }
       } else {
         const errorMsg: Message = {
           id: `bot_err_${Date.now()}`,
           role: 'assistant',
-          content: 'NooNee đang bận chút xíu. Bạn hãy thử lại hoặc xem thực đơn nhé!',
+          content: data.message || 'NooNee đang bận chút xíu. Bạn hãy thử lại hoặc xem thực đơn nhé!',
           timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         };
-        updateMessages([...nextHistory, errorMsg]);
+        const finalHistory = [...nextHistory, errorMsg];
+        try {
+          sessionStorage.setItem(reqStorageKey, JSON.stringify(finalHistory));
+        } catch {
+          // Ignore
+        }
+        if (activeBranchIdRef.current === reqBranchId) {
+          setMessages(finalHistory);
+        }
       }
     } catch (err) {
       console.error('AIChatBot fetch error:', err);
@@ -434,29 +501,34 @@ export default function AIChatBot() {
         content: 'Không thể kết nối lúc này. Vui lòng thử lại sau ít giây nhé!',
         timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
       };
-      updateMessages([...nextHistory, networkErrorMsg]);
+      if (activeBranchIdRef.current === reqBranchId) {
+        updateMessages([...nextHistory, networkErrorMsg], reqStorageKey);
+      }
     } finally {
-      setIsLoading(false);
+      if (activeBranchIdRef.current === reqBranchId) {
+        setIsLoading(false);
+      }
     }
   };
 
   /**
    * Handle quick category pills: DOES NOT CALL API!
-   * Automatically picks a random available dish matching that category filter.
+   * Picks a random available dish from SQL Server matching that category at the active branch.
    */
   const handleQuickCategoryClick = (category: QuickCategory) => {
     if (isLoading) return;
 
-    // Filter available dishes matching this category
-    const candidates = menuProducts.filter(category.filter);
+    const branchAvailableMenu = menuProducts.filter(
+      (p) => p.isAvailable && isProductAvailableAtBranch(p, activeBranchId)
+    );
+    const candidates = branchAvailableMenu.filter((p) => category.filter(p, activeBranchId));
 
     let picked: Product | null = null;
     if (candidates.length > 0) {
       const randomIndex = Math.floor(Math.random() * candidates.length);
       picked = candidates[randomIndex];
-    } else if (menuProducts.length > 0) {
-      // Fallback if specific category was empty
-      picked = menuProducts[Math.floor(Math.random() * menuProducts.length)];
+    } else if (branchAvailableMenu.length > 0) {
+      picked = branchAvailableMenu[Math.floor(Math.random() * branchAvailableMenu.length)];
     }
 
     const userMessage: Message = {
@@ -469,9 +541,14 @@ export default function AIChatBot() {
     let replyText = '';
     if (picked) {
       const formattedPrice = formatVND(picked.price);
-      replyText = category.intro(picked.name, formattedPrice, picked.description || '');
+      replyText = category.intro(
+        picked.name,
+        formattedPrice,
+        picked.description || '',
+        currentBranch.shortName
+      );
     } else {
-      replyText = 'Dạ NooNee đang chuẩn bị món ngon cho bạn, bạn hãy xem thực đơn nhé!';
+      replyText = `Dạ thực đơn tại **CS ${currentBranch.shortName}** đang được tải, bạn thử lại sau giây lát nhé!`;
     }
 
     const botMessage: Message = {
@@ -486,16 +563,21 @@ export default function AIChatBot() {
   };
 
   const handleProductCardAddToCart = (product: Product) => {
+    if (!product.isAvailable || !isProductAvailableAtBranch(product, activeBranchId)) {
+      showToast(
+        `Món "${product.name}" hiện không phục vụ tại CS ${currentBranch.shortName}.`,
+        'error'
+      );
+      return;
+    }
+
     if (product.toppings && product.toppings.length > 0) {
       setModalProduct(product);
       return;
     }
 
     addToCart(product, 1);
-    setToastMessage(`Đã thêm "${product.name}" vào giỏ hàng!`);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 2500);
+    showToast(`Đã thêm "${product.name}" vào giỏ hàng (${currentBranch.shortName})!`, 'success');
   };
 
   // Hide AI button and chat on all admin pages
@@ -592,7 +674,11 @@ export default function AIChatBot() {
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border border-[#A30029] rounded-full" />
               </div>
               <div>
-                <h3 className="font-bold text-sm leading-none">NooNee</h3>
+                <h3 className="font-bold text-sm leading-tight">NooNee</h3>
+                <p className="text-[11px] text-white/90 flex items-center gap-1 mt-0.5 leading-none">
+                  <MapPin className="w-3 h-3 shrink-0" />
+                  <span className="truncate max-w-[210px]">CS {currentBranch.shortName}</span>
+                </p>
               </div>
             </div>
 
@@ -619,10 +705,18 @@ export default function AIChatBot() {
           </div>
 
           {/* Toast Notification */}
-          {toastMessage && (
-            <div className="bg-emerald-600 text-white text-xs px-3 py-1.5 flex items-center justify-center gap-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
-              <Check className="w-3.5 h-3.5 shrink-0" />
-              <span>{toastMessage}</span>
+          {toast && (
+            <div
+              className={`${
+                toast.type === 'error' ? 'bg-amber-600' : 'bg-emerald-600'
+              } text-white text-xs px-3 py-1.5 flex items-center justify-center gap-1.5 animate-in fade-in slide-in-from-top-2 duration-200`}
+            >
+              {toast.type === 'error' ? (
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              ) : (
+                <Check className="w-3.5 h-3.5 shrink-0" />
+              )}
+              <span>{toast.message}</span>
             </div>
           )}
 
@@ -681,7 +775,7 @@ export default function AIChatBot() {
                                 >
                                   {product.name}
                                 </Link>
-                                <div className="flex items-center gap-2 mt-0.5">
+                                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                                   <span className="text-[#A30029] font-bold text-xs">
                                     {formatVND(product.price)}
                                   </span>
@@ -691,9 +785,15 @@ export default function AIChatBot() {
                                       {product.rating}
                                     </span>
                                   )}
+                                  {Number(product.branchId) === activeBranchId && (
+                                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-rose-50 text-[#A30029] border border-rose-200 leading-none">
+                                      Riêng CS này
+                                    </span>
+                                  )}
                                 </div>
                                 <span className="text-[10px] text-gray-500 truncate block">
                                   {product.categoryName}
+                                  {(product.soldCount || 0) > 0 ? ` • Đã bán ${product.soldCount}` : ''}
                                 </span>
                               </div>
 

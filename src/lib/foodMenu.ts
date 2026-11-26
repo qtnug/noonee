@@ -1,8 +1,19 @@
 import fs from 'fs';
 import path from 'path';
-import { Product, ProductTopping } from '@/types';
+import type { Branch, Coupon, Product, ProductTopping } from '@/types';
+import { getAllProductsCached, getCoupons } from '@/lib/db';
+import { BRANCHES, getBranchById } from '@/lib/branches';
+import { normalizeBranchId } from '@/lib/cartUtils';
+import {
+  buildFoodMenuPromptContext,
+  filterActiveCoupons,
+  filterMenuProducts,
+  getOtherBranchExclusiveProducts,
+  pickRecommendedProductsForBranch,
+  scoreAndSearchProducts,
+} from '@/lib/aiMenuUtils';
 
-// Category mapping based on Food.csv data
+// Category mapping fallback based on Food.csv data
 export const CATEGORY_MAP: Record<number, string> = {
   1: 'Cơm',
   2: 'Đồ ăn vặt & Món nhẹ',
@@ -11,16 +22,13 @@ export const CATEGORY_MAP: Record<number, string> = {
   5: 'Phở',
 };
 
-// In-memory cache for parsed menu items
-let cachedProducts: Product[] | null = null;
+// In-memory fallback cache for parsed CSV items (used ONLY if SQL Server is unreachable)
+let cachedCsvProducts: Product[] | null = null;
 
-/**
- * Robust CSV parser that handles:
- * - UTF-8 BOM
- * - Quoted values containing commas
- * - Escaped double quotes ("")
- * - Multiline strings within quotes
- */
+// Short-lived cache for active coupons so AI Chat doesn't hit SQL Server on every single message
+let cachedCoupons: { data: Coupon[]; timestamp: number } | null = null;
+const COUPON_CACHE_TTL_MS = 60000;
+
 function parseCSV(text: string): string[][] {
   const cleanText = text.replace(/^\uFEFF/, '').trim();
   const rows: string[][] = [];
@@ -35,7 +43,7 @@ function parseCSV(text: string): string[][] {
     if (char === '"') {
       if (inQuotes && nextChar === '"') {
         currentVal += '"';
-        i++; // skip escaped quote
+        i++;
       } else {
         inQuotes = !inQuotes;
       }
@@ -44,7 +52,7 @@ function parseCSV(text: string): string[][] {
       currentVal = '';
     } else if ((char === '\r' || char === '\n') && !inQuotes) {
       if (char === '\r' && nextChar === '\n') {
-        i++; // skip CRLF
+        i++;
       }
       currentRow.push(currentVal);
       if (currentRow.length > 1 || (currentRow.length === 1 && currentRow[0] !== '')) {
@@ -65,9 +73,6 @@ function parseCSV(text: string): string[][] {
   return rows;
 }
 
-/**
- * Locate the Food.csv file across potential locations (works locally and deployed)
- */
 function findFoodCsvPath(): string | null {
   const candidates = [
     path.join(process.cwd(), 'Food.csv'),
@@ -91,27 +96,20 @@ function findFoodCsvPath(): string | null {
   return null;
 }
 
-/**
- * Load and parse all products from Food.csv
- */
-export async function getFoodMenuItems(): Promise<Product[]> {
-  if (cachedProducts && cachedProducts.length > 0) {
-    return cachedProducts;
+function loadFoodCsvFallback(): Product[] {
+  if (cachedCsvProducts && cachedCsvProducts.length > 0) {
+    return cachedCsvProducts;
   }
 
   const csvPath = findFoodCsvPath();
   if (!csvPath) {
-    console.error('Food.csv file not found in candidates list');
     return [];
   }
 
   try {
     const content = fs.readFileSync(csvPath, 'utf8');
     const rows = parseCSV(content);
-
-    if (rows.length <= 1) {
-      return [];
-    }
+    if (rows.length <= 1) return [];
 
     const header = rows[0].map((h) => h.trim().toLowerCase());
     const idIdx = header.indexOf('id');
@@ -134,10 +132,7 @@ export async function getFoodMenuItems(): Promise<Product[]> {
       if (!row || row.length === 0) continue;
 
       const rawName = (row[nameIdx] || '').trim();
-      // Skip test items or empty entries
-      if (!rawName || rawName.toLowerCase() === 'test') {
-        continue;
-      }
+      if (!rawName || rawName.toLowerCase() === 'test') continue;
 
       const id = parseInt(row[idIdx] || String(i), 10);
       const categoryId = parseInt(row[catIdIdx] || '1', 10);
@@ -177,94 +172,145 @@ export async function getFoodMenuItems(): Promise<Product[]> {
         rating,
         prepTime,
         toppings,
+        branchId: null,
       });
     }
 
-    cachedProducts = products;
+    cachedCsvProducts = products;
     return products;
   } catch (error) {
-    console.error('Failed to parse Food.csv:', error);
+    console.error('Failed to parse Food.csv fallback:', error);
     return [];
   }
 }
 
 /**
- * Build a compact, token-efficient food menu prompt context for Groq AI
+ * Load all products from SQL Server (primary, synced with Admin & real soldCount/ratings/branches),
+ * falling back to Food.csv only if SQL Server returns no data.
  */
-export async function getFoodMenuSummaryForPrompt(): Promise<string> {
-  const products = await getFoodMenuItems();
-  const available = (products || []).filter((p) => p.isAvailable);
-  if (available.length === 0) {
-    return 'Không có dữ liệu thực đơn.';
+async function loadAllMenuProductsWithSource(): Promise<{
+  products: Product[];
+  source: 'sql' | 'csv';
+}> {
+  try {
+    const dbProducts = await getAllProductsCached();
+    if (Array.isArray(dbProducts) && dbProducts.length > 0) {
+      return { products: dbProducts, source: 'sql' };
+    }
+  } catch (error) {
+    console.warn('[NooNee AI] SQL Server menu load failed, falling back to Food.csv:', error);
   }
 
-  const groups: Record<string, Product[]> = {};
-  for (const p of available) {
-    const cat = p.categoryName || 'Khác';
-    if (!groups[cat]) groups[cat] = [];
-    groups[cat].push(p);
+  return { products: loadFoodCsvFallback(), source: 'csv' };
+}
+
+async function getActiveCouponsSafe(): Promise<Coupon[]> {
+  const now = Date.now();
+  if (cachedCoupons && now - cachedCoupons.timestamp < COUPON_CACHE_TTL_MS) {
+    return cachedCoupons.data;
   }
 
-  const lines: string[] = ['THỰC ĐƠN NOONEE (ID:Tên-Giá):'];
-  for (const [category, items] of Object.entries(groups)) {
-    const entries = items.map((item) => {
-      const hot = item.isFeatured ? '*' : '';
-      return `${item.id}:${item.name}${hot}-${Math.round(item.price / 1000)}k`;
-    });
-    lines.push(`[${category}] ${entries.join('; ')}`);
+  try {
+    const coupons = await getCoupons({ activeOnly: true });
+    const active = filterActiveCoupons(coupons);
+    cachedCoupons = { data: active, timestamp: now };
+    return active;
+  } catch {
+    return cachedCoupons?.data || [];
   }
-
-  return lines.join('\n');
 }
 
 /**
- * Look up products by their IDs
+ * Load menu items from SQL Server (with optional branchId & availableOnly filters)
  */
-export async function findFoodsByIds(ids: number[]): Promise<Product[]> {
-  const products = await getFoodMenuItems();
-  const idSet = new Set(ids);
-  return products.filter((p) => idSet.has(p.id));
+export async function getFoodMenuItems(options?: {
+  branchId?: number | 'all' | null;
+  availableOnly?: boolean;
+}): Promise<Product[]> {
+  const { products } = await loadAllMenuProductsWithSource();
+  return filterMenuProducts(products, options);
+}
+
+export interface ChatbotMenuBundle {
+  branch: Branch;
+  branchId: number;
+  availableProducts: Product[];
+  otherBranchExclusive: { otherBranch: Branch; products: Product[] };
+  activeCoupons: Coupon[];
+  promptContext: string;
+  source: 'sql' | 'csv';
 }
 
 /**
- * Search products by keyword (fuzzy fallback)
+ * Load complete branch-synced SQL Server bundle for AI Chatbot in one step
  */
-export async function searchFoodsKeyword(query: string, limit = 5): Promise<Product[]> {
-  const products = await getFoodMenuItems();
-  const q = query.toLowerCase().trim();
-  if (!q) {
-    // Return top featured
-    return products.filter((p) => p.isAvailable && p.isFeatured).slice(0, limit);
-  }
+export async function getChatbotMenuBundle(branchId?: number | null): Promise<ChatbotMenuBundle> {
+  const safeBranchId = normalizeBranchId(branchId);
+  const branch = getBranchById(safeBranchId);
 
-  const scored = products
-    .map((p) => {
-      let score = 0;
-      const name = p.name.toLowerCase();
-      const desc = p.description.toLowerCase();
-      const cat = (p.categoryName || '').toLowerCase();
+  const [{ products: allProducts, source }, activeCoupons] = await Promise.all([
+    loadAllMenuProductsWithSource(),
+    getActiveCouponsSafe(),
+  ]);
 
-      if (name.includes(q)) score += 10;
-      if (cat.includes(q)) score += 5;
-      if (desc.includes(q)) score += 3;
-      if (p.isFeatured) score += 2;
-      if (!p.isAvailable) score -= 10;
+  const availableProducts = filterMenuProducts(allProducts, {
+    branchId: safeBranchId,
+    availableOnly: true,
+  });
+  const otherBranch =
+    BRANCHES.find((b) => b.id !== safeBranchId) || getBranchById(safeBranchId === 1 ? 2 : 1);
+  const otherBranchExclusive = getOtherBranchExclusiveProducts(allProducts, otherBranch);
+  const promptContext = buildFoodMenuPromptContext({
+    branch,
+    availableProducts,
+    otherBranchExclusive,
+    activeCoupons,
+  });
 
-      // Price matching (e.g. "30k", "40k", "dưới 40k")
-      const priceMatch = q.match(/(\d+)\s*k/);
-      if (priceMatch) {
-        const targetPrice = parseInt(priceMatch[1], 10) * 1000;
-        if (q.includes('dưới') || q.includes('<')) {
-          if (p.price <= targetPrice) score += 4;
-        } else if (Math.abs(p.price - targetPrice) <= 5000) {
-          score += 3;
-        }
-      }
+  return {
+    branch,
+    branchId: safeBranchId,
+    availableProducts,
+    otherBranchExclusive,
+    activeCoupons,
+    promptContext,
+    source,
+  };
+}
 
-      return { product: p, score };
-    })
-    .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score);
+/**
+ * Build a compact, token-efficient food menu prompt context synced to SQL Server & branch
+ */
+export async function getFoodMenuSummaryForPrompt(branchId?: number | null): Promise<string> {
+  const bundle = await getChatbotMenuBundle(branchId);
+  return bundle.promptContext;
+}
 
-  return scored.slice(0, limit).map((s) => s.product);
+/**
+ * Look up available products by their IDs (filtered to the selected branch)
+ */
+export async function findFoodsByIds(
+  ids: number[],
+  branchId?: number | null
+): Promise<Product[]> {
+  const products = await getFoodMenuItems({
+    branchId: branchId ?? undefined,
+    availableOnly: true,
+  });
+  return pickRecommendedProductsForBranch(ids, products, Math.max(4, ids.length));
+}
+
+/**
+ * Search available products by keyword (fuzzy fallback, synced with SQL Server & branch)
+ */
+export async function searchFoodsKeyword(
+  query: string,
+  limit = 5,
+  branchId?: number | null
+): Promise<Product[]> {
+  const products = await getFoodMenuItems({
+    branchId: branchId ?? undefined,
+    availableOnly: true,
+  });
+  return scoreAndSearchProducts(products, query, limit);
 }

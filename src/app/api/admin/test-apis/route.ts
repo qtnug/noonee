@@ -4,6 +4,7 @@ import { getGoongApiKey } from '@/lib/goong';
 import { requireAdmin, AuthError } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
+export const preferredRegion = 'iad1';
 
 export interface ApiTestResult {
   id: string;
@@ -251,7 +252,11 @@ export async function GET(request: NextRequest) {
     if (apiKey) {
       try {
         const res = await fetch(`${baseUrl}/models`, {
-          headers: { Authorization: `Bearer ${apiKey}` },
+          headers: {
+            Accept: 'application/json',
+            'User-Agent': 'NooNeeFood/1.0',
+            Authorization: `Bearer ${apiKey}`,
+          },
           cache: 'no-store',
         });
         const latency = Date.now() - start;
@@ -273,6 +278,8 @@ export async function GET(request: NextRequest) {
             lastTested: new Date().toLocaleTimeString('vi-VN'),
           });
         } else {
+          const region = process.env.VERCEL_REGION || 'local';
+          const cfRay = res.headers.get('cf-ray') || '';
           results.push({
             id: 'groq',
             name: 'Groq AI (Trợ lý tư vấn món)',
@@ -280,7 +287,10 @@ export async function GET(request: NextRequest) {
             status: 'offline',
             latencyMs: latency,
             statusCode: res.status,
-            details: `Groq API từ chối yêu cầu (HTTP ${res.status}). Kiểm tra lại GROQ_API_KEY trên máy chủ.`,
+            details:
+              res.status === 403
+                ? `Groq API từ chối theo vùng/IP (HTTP 403, Region: ${region}${cfRay ? `, cf-ray: ${cfRay}` : ''}). Kiểm tra Function Region trên Vercel (tránh Hong Kong hkg1, chuyển sang iad1).`
+                : `Groq API từ chối yêu cầu (HTTP ${res.status}). Kiểm tra lại GROQ_API_KEY trên máy chủ.`,
             endpoint: `${baseUrl}/models`,
             lastTested: new Date().toLocaleTimeString('vi-VN'),
           });
