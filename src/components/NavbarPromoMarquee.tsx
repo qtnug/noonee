@@ -2,10 +2,16 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { CiShoppingTag, CiCircleCheck } from 'react-icons/ci';
 
 export default function NavbarPromoMarquee() {
+  const pathname = usePathname();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/dine-in')) {
+    return null;
+  }
 
   const handleCopy = (code: string, e: React.MouseEvent) => {
     e.preventDefault();

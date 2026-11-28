@@ -30,8 +30,6 @@ export const BRANCHES: Branch[] = [
   },
 ];
 
-export const DEFAULT_BRANCH_ID = 1;
-
 export function getBranchById(id?: number | string | null): Branch {
   if (!id) return BRANCHES[0];
   const numId = Number(id);
@@ -54,9 +52,9 @@ export function calculateBranchDistanceKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const straightDist = R * c;
   // Multiply by 1.35 factor to reflect real Hanoi road routing
@@ -78,40 +76,6 @@ export function findNearestBranch(userLat: number, userLng: number): {
   return {
     nearestBranch: distances[0].branch,
     distances,
-  };
-}
-
-/**
- * Get branch label and color for badges in UI/Admin
- */
-export function getBranchBadgeInfo(branchId?: number | null) {
-  if (branchId === 1) {
-    return {
-      id: 1,
-      label: 'CS 120 Yên Lãng',
-      fullLabel: 'Cơ sở 1: 120 Yên Lãng (Đống Đa)',
-      shortName: '120 Yên Lãng',
-      badgeClass: 'bg-rose-50 text-[#A30029] border border-rose-200',
-      dotClass: 'bg-[#A30029]',
-    };
-  }
-  if (branchId === 2) {
-    return {
-      id: 2,
-      label: 'CS 269 Cầu Giấy',
-      fullLabel: 'Cơ sở 2: 269 Cầu Giấy (Cầu Giấy)',
-      shortName: '269 Cầu Giấy',
-      badgeClass: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
-      dotClass: 'bg-indigo-600',
-    };
-  }
-  return {
-    id: null,
-    label: 'Cả 2 cơ sở',
-    fullLabel: 'Phục vụ tại cả 2 cơ sở',
-    shortName: 'Toàn chuỗi',
-    badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-    dotClass: 'bg-emerald-600',
   };
 }
 

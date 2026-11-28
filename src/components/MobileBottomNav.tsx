@@ -11,12 +11,10 @@ import {
   CiReceipt,
 } from 'react-icons/ci';
 import { useCart } from '@/context/CartContext';
-import { useAuth } from '@/context/AuthContext';
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const { totalItems, setIsCartOpen } = useCart();
-  const { user } = useAuth();
   const [isCartBumping, setIsCartBumping] = useState(false);
 
   useEffect(() => {
@@ -27,8 +25,8 @@ export default function MobileBottomNav() {
     }
   }, [totalItems]);
 
-  // Hide on admin pages
-  if (pathname.startsWith('/admin')) {
+  // Hide on admin and standalone QR dine-in pages
+  if (pathname.startsWith('/admin') || pathname.startsWith('/dine-in')) {
     return null;
   }
 
@@ -69,9 +67,8 @@ export default function MobileBottomNav() {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex flex-col items-center justify-center h-full relative transition-colors ${
-                item.isActive ? 'text-[#A30029]' : 'text-[#6b7280] hover:text-[#181d26]'
-              }`}
+              className={`flex flex-col items-center justify-center h-full relative transition-colors ${item.isActive ? 'text-[#A30029]' : 'text-[#6b7280] hover:text-[#181d26]'
+                }`}
             >
               <div className="relative">
                 <Icon className={`w-5 h-5 ${item.isActive ? 'stroke-[2.5]' : 'stroke-[1.75]'}`} />
@@ -92,9 +89,8 @@ export default function MobileBottomNav() {
         <button
           type="button"
           onClick={() => setIsCartOpen(true)}
-          className={`flex flex-col items-center justify-center h-full relative transition-all cursor-pointer ${
-            isCartBumping ? 'text-[#A30029] scale-110' : 'text-[#6b7280] hover:text-[#A30029]'
-          }`}
+          className={`flex flex-col items-center justify-center h-full relative transition-all cursor-pointer ${isCartBumping ? 'text-[#A30029] scale-110' : 'text-[#6b7280] hover:text-[#A30029]'
+            }`}
         >
           <div className="relative">
             <CiShoppingBasket className="w-6 h-6 stroke-1" />

@@ -38,11 +38,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { code, subtotal, paymentMethod, userId, cartItems } = body;
+    const { code, subtotal, paymentMethod, cartItems } = body;
     const cleanCode = sanitizeText(code, 50).toUpperCase();
 
     const authUser = authenticateRequest(request);
-    const targetUserId = authUser ? authUser.userId : (userId ? Number(userId) : null);
+    const targetUserId = authUser?.userId ?? null;
 
     let isNewUser = true;
     let userTier = null;

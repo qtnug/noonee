@@ -13,9 +13,9 @@ import {
   CiShoppingBasket as ShoppingBag,
   CiCircleChevDown as ChevronDown,
   CiCircleCheck as Check,
-  CiStar as Star,
+  CiLocationOn as MapPin,
+  CiCircleAlert as AlertCircle,
 } from 'react-icons/ci';
-import { MapPin, AlertCircle } from 'lucide-react';
 import { Product } from '@/types';
 import { formatVND } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
@@ -212,6 +212,12 @@ export default function AIChatBot() {
   useEffect(() => {
     activeBranchIdRef.current = activeBranchId;
   }, [activeBranchId]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -436,22 +442,30 @@ export default function AIChatBot() {
     updateMessages(nextHistory, reqStorageKey);
     setIsLoading(true);
 
-    try {
-      const apiPayload = nextHistory.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
+    const commitReply = (botMessage: Message) => {
+      const finalHistory = [...nextHistory, botMessage];
+      try {
+        sessionStorage.setItem(reqStorageKey, JSON.stringify(finalHistory));
+      } catch {
+        // Ignore
+      }
+      if (activeBranchIdRef.current === reqBranchId) {
+        setMessages(finalHistory);
+      }
+    };
 
+    try {
       const res = await fetch('/api/ai-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: apiPayload,
+          messages: nextHistory.map(({ role, content }) => ({ role, content })),
           branchId: reqBranchId,
         }),
       });
 
       const data = await res.json();
+      const timestamp = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
       if (data.success) {
         const validRecommended: Product[] = Array.isArray(data.recommendedProducts)
@@ -459,51 +473,29 @@ export default function AIChatBot() {
               (p: Product) => p?.isAvailable !== false && isProductAvailableAtBranch(p, reqBranchId)
             )
           : [];
-
-        const botMessage: Message = {
+        commitReply({
           id: `bot_${Date.now()}`,
           role: 'assistant',
           content: data.reply || 'Dạ NooNee gợi ý bạn các món ngon bên dưới nhé!',
           recommendedProducts: validRecommended,
-          timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-        };
-        const finalHistory = [...nextHistory, botMessage];
-        try {
-          sessionStorage.setItem(reqStorageKey, JSON.stringify(finalHistory));
-        } catch {
-          // Ignore
-        }
-        if (activeBranchIdRef.current === reqBranchId) {
-          setMessages(finalHistory);
-        }
+          timestamp,
+        });
       } else {
-        const errorMsg: Message = {
+        commitReply({
           id: `bot_err_${Date.now()}`,
           role: 'assistant',
           content: data.message || 'NooNee đang bận chút xíu. Bạn hãy thử lại hoặc xem thực đơn nhé!',
-          timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-        };
-        const finalHistory = [...nextHistory, errorMsg];
-        try {
-          sessionStorage.setItem(reqStorageKey, JSON.stringify(finalHistory));
-        } catch {
-          // Ignore
-        }
-        if (activeBranchIdRef.current === reqBranchId) {
-          setMessages(finalHistory);
-        }
+          timestamp,
+        });
       }
     } catch (err) {
       console.error('AIChatBot fetch error:', err);
-      const networkErrorMsg: Message = {
+      commitReply({
         id: `bot_err_${Date.now()}`,
         role: 'assistant',
         content: 'Không thể kết nối lúc này. Vui lòng thử lại sau ít giây nhé!',
         timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-      };
-      if (activeBranchIdRef.current === reqBranchId) {
-        updateMessages([...nextHistory, networkErrorMsg], reqStorageKey);
-      }
+      });
     } finally {
       if (activeBranchIdRef.current === reqBranchId) {
         setIsLoading(false);
@@ -580,8 +572,8 @@ export default function AIChatBot() {
     showToast(`Đã thêm "${product.name}" vào giỏ hàng (${currentBranch.shortName})!`, 'success');
   };
 
-  // Hide AI button and chat on all admin pages
-  if (pathname?.startsWith('/admin')) {
+  // Hide AI button and chat on admin and standalone QR dine-in pages
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/dine-in')) {
     return null;
   }
 
@@ -781,7 +773,7 @@ export default function AIChatBot() {
                                   </span>
                                   {product.rating > 0 && (
                                     <span className="text-[10px] text-amber-600 flex items-center gap-0.5">
-                                      <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                                      <Sparkles className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
                                       {product.rating}
                                     </span>
                                   )}

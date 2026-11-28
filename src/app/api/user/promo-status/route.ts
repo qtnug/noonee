@@ -7,16 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const authUser = authenticateRequest(request);
-    const { searchParams } = new URL(request.url);
-    const userIdStr = searchParams.get('userId');
-
-    let userId: number | null = null;
-    if (authUser) {
-      userId = authUser.userId;
-    } else if (userIdStr) {
-      const parsed = parseInt(userIdStr);
-      if (!isNaN(parsed)) userId = parsed;
-    }
+    const userId = authUser?.userId ?? null;
 
     if (!userId) {
       return NextResponse.json({

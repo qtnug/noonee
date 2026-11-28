@@ -100,28 +100,6 @@ export function requireAdmin(request: NextRequest): JwtPayload {
 }
 
 /**
- * Require Manager or Super Admin role
- */
-export function requireManagerOrAdmin(request: NextRequest): JwtPayload {
-  const payload = requireAuth(request);
-  if (payload.role !== 'admin' && payload.role !== 'manager') {
-    throw new AuthError('Bạn không có quyền thực hiện thao tác này (yêu cầu quyền Quản lý trở lên)', 403);
-  }
-  return payload;
-}
-
-/**
- * Require any internal portal role (admin, manager, staff)
- */
-export function requirePortalRole(request: NextRequest): JwtPayload {
-  const payload = requireAuth(request);
-  if (!isPortalRole(payload.role)) {
-    throw new AuthError('Tài khoản này không có quyền truy cập cổng quản trị', 403);
-  }
-  return payload;
-}
-
-/**
  * Resolve live user record from DB (ensuring account is not locked/deleted and role/branchId are fresh)
  */
 export async function resolveLiveUser(request: NextRequest): Promise<User> {
@@ -146,14 +124,4 @@ export class AuthError extends Error {
     this.name = 'AuthError';
     this.status = status;
   }
-}
-
-/**
- * Helper to create error response from AuthError
- */
-export function authErrorResponse(error: unknown) {
-  if (error instanceof AuthError) {
-    return { success: false, message: error.message, status: error.status };
-  }
-  return { success: false, message: 'Lỗi xác thực không xác định', status: 500 };
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCategories, createCategory } from '@/lib/db';
+import { getCategories, createCategory, ensureComboCategory } from '@/lib/db';
 import { requireAdmin, AuthError } from '@/lib/auth';
 import { generateSlug } from '@/lib/utils';
 
@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    await ensureComboCategory();
     const categories = await getCategories();
     return NextResponse.json(
       { success: true, data: categories },

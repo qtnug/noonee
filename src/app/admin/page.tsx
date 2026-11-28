@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   CiDollar as DollarSign,
   CiShoppingBasket as ShoppingBag,
-  CiClock2 as Clock,
   CiDeliveryTruck as Truck,
   CiCircleChevRight as ArrowRight,
   CiCircleChevUp as TrendingUp,
@@ -46,13 +45,11 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Legend,
 } from 'recharts';
 
 export default function AdminOverviewPage() {
-  const { user, isAdmin, isManager } = useAuth();
+  const { isAdmin, isManager } = useAuth();
   const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [periodState, setPeriod] = useState<'today' | 'week' | 'month' | 'quarter' | 'all'>('week');
   const period = isManager ? 'today' : periodState;
   const { adminBranch: selectedBranch } = useAdminBranch();
@@ -68,8 +65,6 @@ export default function AdminOverviewPage() {
       }
     } catch (e) {
       console.error(e);
-    } finally {
-      setLoading(false);
     }
   };
 

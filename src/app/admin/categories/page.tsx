@@ -11,14 +11,10 @@ import {
   CiCircleCheck as Check,
   CiCircleAlert as AlertCircle,
   CiRedo as Loader2,
-  CiForkAndKnife as Utensils,
-  CiCoffeeCup as Coffee,
-  CiStar as Sparkles,
-  CiBurger as Sandwich,
-  CiBowlNoodles as Flame,
   CiGrid31 as Layers,
 } from 'react-icons/ci';
 import { Category, Product } from '@/types';
+import { generateSlug } from '@/lib/utils';
 
 const POPULAR_ICONS = [
   { id: 'BowlFood', label: 'Cơm / Bún / Phở' },
@@ -28,17 +24,6 @@ const POPULAR_ICONS = [
   { id: 'Flame', label: 'Món cay / Món nướng' },
   { id: 'Utensils', label: 'Món ăn chung' },
 ];
-
-function generateSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[đĐ]/g, 'd')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-');
-}
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);

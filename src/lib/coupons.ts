@@ -2,9 +2,6 @@ import { Coupon } from '@/types';
 import { formatVND } from './utils';
 import { MembershipTierName } from './membership';
 
-// Coupons are strictly loaded and managed in database (MSSQL)
-export const AVAILABLE_COUPONS: Coupon[] = [];
-
 // Helper to generate non-guessable random coupon codes
 export function generateRandomCouponCode(prefix: string = 'NOONEE'): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -29,15 +26,7 @@ const TIER_VI_NAME: Record<MembershipTierName, string> = {
   Diamond: 'Kim Cương',
 };
 
-export function getAllCoupons(): Coupon[] {
-  return [];
-}
-
-export function findCouponByCode(code: string): Coupon | undefined {
-  return undefined;
-}
-
-export interface ValidateCouponResult {
+interface ValidateCouponResult {
   valid: boolean;
   message?: string;
   discountAmount: number;
@@ -58,9 +47,7 @@ export function validateCoupon(
     return { valid: false, message: 'Vui lòng nhập mã giảm giá', discountAmount: 0 };
   }
 
-  const coupon = couponsList && couponsList.length > 0
-    ? couponsList.find((c) => c.code.toUpperCase() === code)
-    : findCouponByCode(code);
+  const coupon = couponsList?.find((c) => c.code.toUpperCase() === code);
   if (!coupon) {
     return {
       valid: false,
@@ -183,8 +170,8 @@ export function validateCoupon(
     };
   }
 
-  // Freeship coupons: discountAmount = 0 (handled separately via shippingFee logic)
-  if (coupon.couponType === 'freeship' && coupon.code === 'FREESHIP') {
+  // Full freeship coupons (FREESHIP or discountValue = 0): discountAmount = 0, applied against shippingFee
+  if (coupon.couponType === 'freeship' && (coupon.code === 'FREESHIP' || coupon.discountValue <= 0)) {
     return { valid: true, discountAmount: 0, coupon };
   }
 

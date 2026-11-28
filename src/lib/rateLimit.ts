@@ -10,13 +10,13 @@ interface BlacklistRecord {
   reason: string;
 }
 
-// In-memory stores
+// shortcut: in-memory per-isolate rate limit & IP blacklist (not shared across Vercel serverless instances), upgrade to Redis/Upstash when multi-instance traffic requires global enforcement
 const rateLimitStore = new Map<string, RateLimitRecord>();
 const blacklistStore = new Map<string, BlacklistRecord>();
 
 // Cleanup stale rate-limit entries and expired bans every 2 minutes
 if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
+  const cleanupTimer = setInterval(() => {
     const now = Date.now();
 
     // Clean rate limits
@@ -34,6 +34,7 @@ if (typeof setInterval !== 'undefined') {
       }
     });
   }, 120000);
+  cleanupTimer.unref?.();
 }
 
 /**
@@ -83,13 +84,6 @@ export function isIpBlacklisted(ip: string): { blacklisted: boolean; reason?: st
     reason: record.reason,
     remainingMs: record.expiresAt - now,
   };
-}
-
-/**
- * Remove an IP from the blacklist manually
- */
-export function unblacklistIp(ip: string): boolean {
-  return blacklistStore.delete(ip.trim());
 }
 
 /**

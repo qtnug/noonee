@@ -9,10 +9,7 @@ import {
   CiWarning as AlertTriangle,
   CiShoppingCart as ShoppingCart,
   CiRedo as RefreshCcw,
-  CiCircleCheck as CheckCircle2,
   CiCircleChevRight as ArrowRight,
-  CiHome as Home,
-  CiStar as Sparkles,
   CiCircleCheck as Check,
 } from 'react-icons/ci';
 import VietQRCode from '@/components/VietQRCode';

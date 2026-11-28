@@ -1,11 +1,21 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { checkDatabaseHealth } from '@/lib/db';
 import { getPublicPaymentConfig } from '@/lib/sepay';
+import { authenticateRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const authUser = authenticateRequest(request);
+    // Unauthenticated probes only get minimal liveness status so internal DB/bank info stays private
+    if (!authUser || authUser.role !== 'admin') {
+      return NextResponse.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     const dbHealth = await checkDatabaseHealth();
     const paymentConfig = getPublicPaymentConfig();
     return NextResponse.json({

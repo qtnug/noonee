@@ -8,7 +8,6 @@ import {
   CiShoppingBasket as ShoppingBag,
   CiCircleChevRight as ArrowRight,
   CiUser as UserIcon,
-  CiWarning as ShieldAlert,
   CiCircleChevLeft as ChevronLeft,
   CiCircleChevRight as ChevronRight,
 } from 'react-icons/ci';

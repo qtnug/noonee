@@ -61,6 +61,30 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
       roles: ['admin', 'manager', 'staff'],
     },
     {
+      name: 'Màn hình Bếp (KDS)',
+      href: '/admin/kitchen',
+      icon: Activity,
+      roles: ['admin', 'manager', 'staff'],
+    },
+    {
+      name: 'Order tại bàn (POS)',
+      href: '/admin/pos',
+      icon: UtensilsCrossed,
+      roles: ['admin', 'manager', 'staff'],
+    },
+    {
+      name: 'Quản lý bàn & QR',
+      href: '/admin/tables',
+      icon: Layers,
+      roles: ['admin', 'manager'],
+    },
+    {
+      name: 'Nhật ký Admin (Log)',
+      href: '/admin/logs',
+      icon: ShieldCheck,
+      roles: ['admin', 'manager'],
+    },
+    {
       name: 'Thực đơn & Món ăn',
       href: '/admin/products',
       icon: UtensilsCrossed,

@@ -27,11 +27,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Đơn hàng không tồn tại' }, { status: 404 });
     }
 
-    if (order.status === 'Cancelled') {
-      return NextResponse.json({ success: false, message: 'Không thể thanh toán cho đơn hàng đã bị hủy' }, { status: 400 });
+    if (order.status === 'Cancelled' || order.status === 'Completed') {
+      return NextResponse.json({ success: false, message: 'Không thể cập nhật thanh toán cho đơn đã hủy hoặc đã khóa' }, { status: 400 });
     }
 
-    const updated = await updateOrderStatus(orderCode, 'Pending', 'Paid');
+    const updated = await updateOrderStatus(orderCode, order.status, 'Paid');
     if (!updated) return NextResponse.json({ success: false, message: 'Không cập nhật được thanh toán' }, { status: 500 });
 
     return NextResponse.json({

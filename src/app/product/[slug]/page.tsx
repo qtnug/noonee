@@ -3,9 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
   CiStar as Star,
-  CiCircleCheck as ShieldCheck,
   CiClock2 as Clock,
-  CiForkAndKnife as Utensils,
   CiCircleChevRight as ChevronRight,
 } from 'react-icons/ci';
 import { getProductBySlug, getProducts } from '@/lib/db';

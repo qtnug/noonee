@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import QRCode from 'qrcode';
@@ -17,10 +17,7 @@ import {
   CiForkAndKnife as UtensilsCrossed,
   CiStar as Sparkles,
   CiCircleAlert as AlertCircle,
-  CiClock2 as Clock,
   CiShare2 as Share2,
-  CiCircleChevRight as ChevronRight,
-  CiCircleCheck as ShieldCheck,
   CiCircleRemove as X,
   CiSearch as Search,
   CiExport as ExternalLink,
@@ -28,11 +25,11 @@ import {
   CiRedo as RefreshCw,
   CiUser as UserMinus,
 } from 'react-icons/ci';
-import { GroupOrder, GroupMember, GroupMemberItem, Product, ProductTopping } from '@/types';
+import { GroupOrder, Product, ProductTopping } from '@/types';
 import { formatVND } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useBranch } from '@/context/BranchContext';
-import { calculateGroupDiscount, MIN_GROUP_MEMBERS, MAX_GROUP_MEMBERS } from '@/lib/groupOrder';
+import { calculateGroupDiscount, MIN_GROUP_MEMBERS } from '@/lib/groupOrder';
 
 export default function GroupOrderRoomPage({
   params,
@@ -59,7 +56,6 @@ export default function GroupOrderRoomPage({
 
   // Join Modal (if member not joined yet)
   const [showJoinModal, setShowJoinModal] = useState(false);
-  const [joinNameInput, setJoinNameInput] = useState(user?.fullName || '');
   const [isJoining, setIsJoining] = useState(false);
 
   // Food Picker Modal
@@ -203,7 +199,7 @@ export default function GroupOrderRoomPage({
       return;
     }
 
-    const name = user.fullName || user.username || joinNameInput.trim();
+    const name = user.fullName || user.username;
     if (!name) return;
 
     setIsJoining(true);

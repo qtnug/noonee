@@ -17,7 +17,6 @@ import {
   CiReceipt as FileSpreadsheet,
   CiFileOn as FileUp,
   CiUndo as RotateCcw,
-  CiFilter as Filter,
 } from 'react-icons/ci';
 import { Product, Category, ProductTopping } from '@/types';
 import { formatVND } from '@/lib/utils';

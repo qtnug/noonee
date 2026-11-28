@@ -10,9 +10,6 @@ import {
   CiRedo as RefreshCw,
   CiSearch as Search,
   CiStar as Sparkles,
-  CiCalendar as Calendar,
-  CiUser as Users,
-  CiCircleCheck as ShieldCheck,
   CiRedo as Loader2,
   CiCircleRemove as X,
   CiShuffle as Shuffle,
@@ -91,6 +88,7 @@ export default function AdminCouponsPage() {
     if (categoryExclusive === 'rice') prefix = 'COM';
     else if (categoryExclusive === 'drinks') prefix = 'NUOC';
     else if (categoryExclusive === 'best_seller') prefix = 'HOT';
+    else if (couponType === 'freeship' && discountValue <= 0) prefix = 'FREESHIP';
     else if (discountType === 'percentage') prefix = `P${discountValue}`;
     else prefix = `${Math.round(discountValue / 1000)}K`;
 
@@ -99,7 +97,8 @@ export default function AdminCouponsPage() {
 
   const handleCreateCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !discountValue) {
+    const isFullFreeship = couponType === 'freeship' && Number(discountValue) === 0;
+    if (!name.trim() || Number(discountValue) < 0 || (!isFullFreeship && !Number(discountValue))) {
       setFormError('Vui lòng điền đầy đủ tên và giá trị ưu đãi');
       return;
     }
@@ -404,9 +403,11 @@ export default function AdminCouponsPage() {
 
                       <td className="py-3 px-4">
                         <span className="font-bold text-[#A30029]">
-                          {c.discountType === 'percentage'
-                            ? `-${c.discountValue}%`
-                            : `-${formatVND(c.discountValue)}`}
+                          {isFreeship && c.discountValue <= 0
+                            ? 'Freeship 100%'
+                            : c.discountType === 'percentage'
+                              ? `-${c.discountValue}%`
+                              : `-${formatVND(c.discountValue)}`}
                         </span>
                         {c.maxDiscountAmount && (
                           <span className="block text-[10px] text-gray-400">
@@ -606,15 +607,19 @@ export default function AdminCouponsPage() {
 
                 <div className="space-y-1">
                   <label className="font-semibold text-[#181d26]">
-                    {discountType === 'percentage' ? 'Số % giảm:' : 'Số tiền giảm (VNĐ):'}
+                    {discountType === 'percentage'
+                      ? 'Số % giảm:'
+                      : couponType === 'freeship'
+                        ? 'Số tiền giảm ship (0 = miễn 100%):'
+                        : 'Số tiền giảm (VNĐ):'}
                   </label>
                   <input
                     type="number"
                     required
-                    min={1}
+                    min={couponType === 'freeship' ? 0 : 1}
                     value={discountValue}
                     onChange={(e) => setDiscountValue(Number(e.target.value))}
-                    placeholder={discountType === 'percentage' ? '20' : '20000'}
+                    placeholder={discountType === 'percentage' ? '20' : couponType === 'freeship' ? '0' : '20000'}
                     className="w-full h-10 px-3 bg-white border border-[#dddddd] rounded-[6px] text-[#181d26] focus:outline-none focus:border-[#A30029]"
                   />
                 </div>

@@ -18,7 +18,6 @@ import {
   CiCoffeeCup,
   CiBurger,
   CiPhone,
-  CiCircleQuestion,
   CiWallet,
   CiDiscount1,
 } from 'react-icons/ci';
@@ -121,13 +120,14 @@ export default function Navbar() {
     }
   }, [user, userMenuOpen]);
 
-  // Hide on admin pages
-  if (pathname.startsWith('/admin')) {
+  // Hide on admin and standalone QR dine-in pages
+  if (pathname.startsWith('/admin') || pathname.startsWith('/dine-in')) {
     return null;
   }
 
   const categories = [
     { name: 'Tất cả thực đơn', href: '/menu', icon: CiForkAndKnife, desc: 'Hơn 50+ món ngon chuẩn vị' },
+    { name: 'Combo giá ưu đãi', href: '/menu?combo=true', icon: CiDiscount1, desc: 'Combo tiết kiệm đến 20%' },
     { name: 'Cơm', href: '/menu?categoryId=1', icon: CiForkAndKnife, desc: 'Cơm rang, cơm tấm sườn' },
     { name: 'Bún mì', href: '/menu?categoryId=4', icon: CiBowlNoodles, desc: 'Bún bò Huế, bún trộn, mì xào' },
     { name: 'Phở', href: '/menu?categoryId=5', icon: CiBowlNoodles, desc: 'Phở bò tái nạm gia truyền' },

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Product } from '@/types';
 import { useAuth } from './AuthContext';
 
 interface FavoritesContextType {

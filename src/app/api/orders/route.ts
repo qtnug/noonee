@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrders, createOrder, getProducts, hasUserPaidFirstVietqr, getUserSpendingStats, getGroupOrderByCode, completeGroupOrder, getCouponByCode } from '@/lib/db';
 import { generateOrderCode, maskPhoneNumber } from '@/lib/utils';
+import { normalizeBranchId } from '@/lib/cartUtils';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { requireAuth, resolveLiveUser, AuthError } from '@/lib/auth';
 import { validateCoupon } from '@/lib/coupons';
@@ -27,6 +28,9 @@ export async function GET(request: NextRequest) {
     const branchParam = searchParams.get('branchId') || searchParams.get('branch');
     let branchId = branchParam && branchParam !== 'all' ? parseInt(branchParam) : undefined;
     const userIdParam = searchParams.get('userId');
+    const orderTypeParam = searchParams.get('orderType');
+    const orderType = orderTypeParam === 'online' || orderTypeParam === 'dinein' ? orderTypeParam : undefined;
+    const includeItems = searchParams.get('includeItems') === '1';
     const page = searchParams.get('page') ? parseInt(searchParams.get('page')!) : undefined;
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
 
@@ -43,7 +47,7 @@ export async function GET(request: NextRequest) {
       targetUserId = liveUser.id;
     }
 
-    let orders = await getOrders({ status, search, userId: targetUserId, branchId, page, limit });
+    let orders = await getOrders({ status, search, userId: targetUserId, branchId, orderType, includeItems, page, limit });
 
     // Staff only sees customer name, delivery address, and partially masked phone number
     if (liveUser.role === 'staff' && !isPersonalLookup) {
@@ -113,7 +117,7 @@ export async function POST(request: NextRequest) {
 
     // SERVER-SIDE PRICE & BRANCH VALIDATION (C8, H17)
     // Fetch products from database to ensure genuine prices and branch availability
-    const targetBranchId = Number(branchId) === 2 ? 2 : 1;
+    const targetBranchId = normalizeBranchId(branchId);
     const dbProducts = await getProducts();
     const validatedItems: {
       productId: number;
@@ -123,6 +127,7 @@ export async function POST(request: NextRequest) {
       toppings?: string | null;
       note?: string | null;
     }[] = [];
+    const validatedCouponItems: { categoryId: number; isFeatured: boolean; name: string }[] = [];
 
     let subtotal = 0;
 
@@ -203,76 +208,63 @@ export async function POST(request: NextRequest) {
         toppings: toppingsStr,
         note: it.note ? String(it.note).trim() : null,
       });
+      validatedCouponItems.push({
+        categoryId: dbProduct.categoryId,
+        isFeatured: dbProduct.isFeatured,
+        name: dbProduct.name,
+      });
     }
 
-    // Validate Food Discount Coupon
+    // Validate Food Discount & Freeship Coupons (fetch user promo stats once)
     let discountAmount = 0;
     let validCouponCode: string | null = null;
+    let validFreeshipCode: string | null = null;
+    let freeshipDiscount = 0;
+    let isFullFreeship = false;
 
-    if (couponCode) {
+    if (couponCode || freeshipCouponCode) {
       let isFirstPaid = false;
       let spendingStats = { totalSpent: 0, orderCount: 0 };
       let dbCoupon = null;
+      let dbFreeship = null;
 
       try {
-        const [p1, p2, p3] = await Promise.all([
+        [isFirstPaid, spendingStats, dbCoupon, dbFreeship] = await Promise.all([
           hasUserPaidFirstVietqr(userId),
           getUserSpendingStats(userId),
-          getCouponByCode(couponCode),
+          couponCode ? getCouponByCode(couponCode) : Promise.resolve(null),
+          freeshipCouponCode ? getCouponByCode(freeshipCouponCode) : Promise.resolve(null),
         ]);
-        isFirstPaid = p1;
-        spendingStats = p2;
-        dbCoupon = p3;
       } catch (err: any) {
         console.error('Error fetching coupon or user stats for order creation:', err);
       }
 
       const userTier = getMembershipTier(spendingStats.totalSpent).tier;
       const isNewUser = !isFirstPaid;
-      const validation = validateCoupon(couponCode, subtotal, paymentMethod || 'Sepay', isNewUser, userTier, items, dbCoupon ? [dbCoupon] : []);
-      if (validation.valid) {
+
+      if (couponCode) {
+        const validation = validateCoupon(couponCode, subtotal, paymentMethod || 'Sepay', isNewUser, userTier, validatedCouponItems, dbCoupon ? [dbCoupon] : []);
+        if (!validation.valid) {
+          return NextResponse.json(
+            { success: false, message: `Mã giảm giá "${couponCode}" không hợp lệ: ${validation.message || 'Không đủ điều kiện'}` },
+            { status: 400 }
+          );
+        }
         discountAmount = validation.discountAmount;
         validCouponCode = validation.coupon ? validation.coupon.code : String(couponCode).toUpperCase();
-      } else {
-        return NextResponse.json(
-          { success: false, message: `Mã giảm giá "${couponCode}" không hợp lệ: ${validation.message || 'Không đủ điều kiện'}` },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Validate Freeship Coupon
-    let validFreeshipCode: string | null = null;
-    let freeshipDiscount = 0;
-    if (freeshipCouponCode) {
-      let isFirstPaid2 = false;
-      let spendingStats2 = { totalSpent: 0, orderCount: 0 };
-      let dbFreeship = null;
-
-      try {
-        const [p1, p2, p3] = await Promise.all([
-          hasUserPaidFirstVietqr(userId),
-          getUserSpendingStats(userId),
-          getCouponByCode(freeshipCouponCode),
-        ]);
-        isFirstPaid2 = p1;
-        spendingStats2 = p2;
-        dbFreeship = p3;
-      } catch (err: any) {
-        console.error('Error fetching freeship coupon for order creation:', err);
       }
 
-      const userTier2 = getMembershipTier(spendingStats2.totalSpent).tier;
-      const isNewUser2 = !isFirstPaid2;
-      const freeshipValidation = validateCoupon(freeshipCouponCode, subtotal, paymentMethod || 'Sepay', isNewUser2, userTier2, items, dbFreeship ? [dbFreeship] : []);
-      if (freeshipValidation.valid && freeshipValidation.coupon?.couponType === 'freeship') {
+      if (freeshipCouponCode) {
+        const freeshipValidation = validateCoupon(freeshipCouponCode, subtotal, paymentMethod || 'Sepay', isNewUser, userTier, validatedCouponItems, dbFreeship ? [dbFreeship] : []);
+        if (!freeshipValidation.valid || freeshipValidation.coupon?.couponType !== 'freeship') {
+          return NextResponse.json(
+            { success: false, message: `Mã freeship "${freeshipCouponCode}" không hợp lệ: ${freeshipValidation.message || 'Không đủ điều kiện'}` },
+            { status: 400 }
+          );
+        }
         validFreeshipCode = freeshipValidation.coupon.code;
         freeshipDiscount = freeshipValidation.discountAmount;
-      } else {
-        return NextResponse.json(
-          { success: false, message: `Mã freeship "${freeshipCouponCode}" không hợp lệ: ${freeshipValidation.message || 'Không đủ điều kiện'}` },
-          { status: 400 }
-        );
+        isFullFreeship = validFreeshipCode === 'FREESHIP' || freeshipValidation.coupon.discountValue <= 0;
       }
     }
 
@@ -304,7 +296,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const chosenBranchId = branchId ? Number(branchId) : 1;
+    const chosenBranchId = targetBranchId;
     const chosenBranchName = branchName || (chosenBranchId === 2 ? 'NooNee - Cơ sở 269 Cầu Giấy' : 'NooNee - Cơ sở 120 Yên Lãng');
 
     const { calculateDistanceFromStore } = await import('@/lib/goong');
@@ -317,13 +309,9 @@ export async function POST(request: NextRequest) {
     }
     if (distanceResult.isOutOfRange) return NextResponse.json({ success: false, message: 'Địa chỉ ngoài phạm vi giao hàng' }, { status: 400 });
     const shippingFee = distanceResult.shippingFee;
-    // Apply freeship coupon to shipping fee
-    const isFullFreeship = validFreeshipCode === 'FREESHIP';
     const effectiveShippingDiscount = isFullFreeship ? shippingFee : Math.min(shippingFee, freeshipDiscount);
     const finalShippingFee = Math.max(0, shippingFee - effectiveShippingDiscount);
     const effectiveFoodDiscount = discountAmount; // includes food coupon + group discount
-    // Remove unused variable
-    // Calculate total: subtotal minus all discounts plus effective shipping
     const totalBeforeWallet = Math.max(0, subtotal - effectiveFoodDiscount + finalShippingFee);
 
     // Handle Virtual Wallet Balance Deduction

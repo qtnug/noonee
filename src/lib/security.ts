@@ -84,32 +84,13 @@ const KNOWN_ATTACK_AGENTS = [
   'netsparker',
 ];
 
-const KNOWN_SCRAPERS = [
-  'scrapy',
-  'aiohttp',
-  'httpx',
-  'python-requests',
-  'go-http-client',
-  'curl/',
-  'wget/',
-  'httpclient',
-  'apache-httpclient',
-  'mechanize',
-];
-
 /**
- * Detect if User-Agent belongs to a known exploit tool or scraper
+ * Detect if User-Agent belongs to a known exploit tool or scanner
  */
 export function isMaliciousTool(userAgent: string | null | undefined): boolean {
   if (!userAgent) return false;
   const ua = userAgent.toLowerCase();
   return KNOWN_ATTACK_AGENTS.some((tool) => ua.includes(tool));
-}
-
-export function isAutomatedScraper(userAgent: string | null | undefined): boolean {
-  if (!userAgent) return false;
-  const ua = userAgent.toLowerCase();
-  return KNOWN_SCRAPERS.some((bot) => ua.includes(bot));
 }
 
 /**
@@ -122,7 +103,7 @@ const SQLI_PATTERNS = [
   /(\bwaitfor\b\s+\bdelay\b)/i,
   /(;\s*drop\s+table)/i,
   /('|\%27)\s*(\bor\b|\band\b)\s*('?1'?\s*=\s*'?1'|\d+\s*=\s*\d+)/i,
-  /(--|\/\*)/,
+  /(\s--\s|\/\*[\s\S]*\*\/)/,
 ];
 
 const PATH_TRAVERSAL_PATTERNS = [
@@ -133,7 +114,7 @@ const PATH_TRAVERSAL_PATTERNS = [
 ];
 
 const XSS_PATTERNS = [
-  /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+  /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/i,
   /javascript\s*:/i,
   /onerror\s*=/i,
   /onload\s*=/i,

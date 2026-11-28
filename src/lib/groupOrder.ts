@@ -1,4 +1,4 @@
-import { GroupOrder, GroupMember, GroupMemberItem } from '@/types';
+import { GroupOrder } from '@/types';
 
 export const MIN_GROUP_MEMBERS = 2;
 export const MAX_GROUP_MEMBERS = 10;

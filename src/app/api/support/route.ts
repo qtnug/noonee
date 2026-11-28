@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { orderCode, userId, senderRole, senderName, message, isComplaint } = body;
+    const { orderCode, senderRole, senderName, message, isComplaint } = body;
 
     if (!senderName || !message || !String(message).trim()) {
       return NextResponse.json(
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     const newMsg = await createSupportMessage({
-      orderCode: orderCode ? String(orderCode).trim() : null,
+      orderCode: cleanOrderCode || null,
       userId: resolvedUserId,
       senderRole: resolvedRole,
       senderName: String(senderName).trim(),

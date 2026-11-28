@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Branch } from '@/types';
-import { BRANCHES, DEFAULT_BRANCH_ID, getBranchById, findNearestBranch } from '@/lib/branches';
+import { BRANCHES, getBranchById, findNearestBranch } from '@/lib/branches';
 
 interface BranchContextType {
   currentBranch: Branch;

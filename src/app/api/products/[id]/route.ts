@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getProductById, updateProduct, deleteProduct } from '@/lib/db';
+import { getProductById, updateProduct, deleteProduct, logAdminAction } from '@/lib/db';
 import { resolveLiveUser, AuthError } from '@/lib/auth';
 
 export async function PUT(
@@ -48,6 +48,18 @@ export async function PUT(
     }
 
     const success = await updateProduct(id, body);
+    if (success) {
+      await logAdminAction({
+        adminId: liveUser.id,
+        adminName: liveUser.fullName || liveUser.username,
+        adminRole: liveUser.role,
+        branchId: liveUser.branchId || null,
+        action: 'UPDATE_PRODUCT',
+        targetType: 'Product',
+        targetId: String(id),
+        details: `Cập nhật món #${id}${body.name ? ` (${body.name})` : ''}${body.price !== undefined ? ` - Giá: ${Number(body.price).toLocaleString('vi-VN')}đ` : ''}`,
+      });
+    }
     return NextResponse.json({ success, message: 'Cập nhật món ăn thành công' });
   } catch (error: any) {
     console.error('Error updating product:', error);
@@ -83,6 +95,18 @@ export async function DELETE(
     }
 
     const success = await deleteProduct(id);
+    if (success) {
+      await logAdminAction({
+        adminId: liveUser.id,
+        adminName: liveUser.fullName || liveUser.username,
+        adminRole: liveUser.role,
+        branchId: null,
+        action: 'DELETE_PRODUCT',
+        targetType: 'Product',
+        targetId: String(id),
+        details: `Xóa món ăn #${id}`,
+      });
+    }
     return NextResponse.json({ success, message: 'Đã xóa món ăn thành công' });
   } catch (error: any) {
     console.error('Error deleting product:', error);

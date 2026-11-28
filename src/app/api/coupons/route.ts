@@ -60,9 +60,12 @@ export async function POST(request: NextRequest) {
       code = code.trim().toUpperCase();
     }
 
-    if (!name || !discountValue) {
+    const numericDiscount = Number(discountValue) || 0;
+    const isFullFreeship = couponType === 'freeship' && numericDiscount === 0;
+
+    if (!name || numericDiscount < 0 || (!isFullFreeship && numericDiscount <= 0)) {
       return NextResponse.json(
-        { success: false, message: 'Vui lòng nhập đầy đủ tên mã và giá trị giảm' },
+        { success: false, message: 'Vui lòng nhập đầy đủ tên mã và giá trị giảm hợp lệ' },
         { status: 400 }
       );
     }
@@ -70,9 +73,13 @@ export async function POST(request: NextRequest) {
     const newCoupon: Coupon = {
       code,
       name: name.trim(),
-      description: description ? description.trim() : `Ưu đãi ${discountType === 'percentage' ? discountValue + '%' : discountValue + 'đ'} từ NooNee`,
+      description: description
+        ? description.trim()
+        : isFullFreeship
+          ? 'Miễn phí giao hàng 100% từ NooNee'
+          : `Ưu đãi ${discountType === 'percentage' ? numericDiscount + '%' : numericDiscount + 'đ'} từ NooNee`,
       discountType: discountType === 'percentage' ? 'percentage' : 'fixed',
-      discountValue: Number(discountValue) || 0,
+      discountValue: numericDiscount,
       minOrderAmount: Number(minOrderAmount) || 0,
       maxDiscountAmount: maxDiscountAmount ? Number(maxDiscountAmount) : undefined,
       expiryDate: expiryDate || '2026-12-31',
@@ -84,7 +91,11 @@ export async function POST(request: NextRequest) {
       isActive: true,
       couponType: couponType || 'food_discount',
       createdAt: new Date().toISOString(),
-      badge: discountType === 'percentage' ? `Giảm ${discountValue}%` : `Giảm ${Math.round(discountValue / 1000)}k`,
+      badge: isFullFreeship
+        ? 'Freeship'
+        : discountType === 'percentage'
+          ? `Giảm ${numericDiscount}%`
+          : `Giảm ${Math.round(numericDiscount / 1000)}k`,
     };
 
     const savedCoupon = await createCoupon(newCoupon);

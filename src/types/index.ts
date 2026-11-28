@@ -111,9 +111,36 @@ export interface Order {
   refundStatus?: 'None' | 'Refunded';
   branchId?: number;
   branchName?: string;
+  orderType?: 'online' | 'dinein';
+  tableId?: number | null;
+  tableName?: string | null;
   createdAt: string;
   updatedAt: string;
   items?: OrderItem[];
+}
+
+export interface RestaurantTable {
+  id: number;
+  branchId: number;
+  tableNumber: string;
+  tableName: string;
+  capacity: number;
+  qrToken: string;
+  isActive: boolean;
+  createdAt?: string;
+}
+
+export interface AdminLog {
+  id: number;
+  adminId?: number | null;
+  adminName: string;
+  adminRole: string;
+  branchId?: number | null;
+  action: string;
+  targetType: string;
+  targetId?: string | null;
+  details?: string | null;
+  createdAt: string;
 }
 
 export interface Coupon {
@@ -138,33 +165,6 @@ export interface Coupon {
   createdAt?: string;
   /** Phân loại voucher: 'food_discount' = giảm giá đồ ăn, 'freeship' = miễn/giảm phí giao hàng */
   couponType?: 'food_discount' | 'freeship';
-}
-
-export interface PaymentRecord {
-  id?: number;
-  orderId: number;
-  transactionId?: string;
-  referenceCode: string;
-  amount: number;
-  bankAccount?: string;
-  bankCode?: string;
-  status: 'Pending' | 'Success' | 'Failed';
-  paidAt?: string;
-}
-
-export interface SepayWebhookPayload {
-  id: number;
-  gateway: string;
-  transactionDate: string;
-  accountNumber: string;
-  subAccount?: string;
-  code?: string;
-  content: string;
-  transferType: 'in' | 'out';
-  description?: string;
-  transferAmount: number;
-  referenceCode?: string;
-  accumulated?: number;
 }
 
 export interface Review {

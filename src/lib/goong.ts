@@ -1,16 +1,9 @@
 // Goong.io Map & Distance Service for NooNee Food
 
-import { BRANCHES, getBranchById } from '@/lib/branches';
+import { BRANCHES, calculateBranchDistanceKm, getBranchById } from '@/lib/branches';
 
-export const STORE_ADDRESS = '120 Yên Lãng, Đống Đa, Hà Nội';
-export const STORE_NAME = 'Quán Ăn NooNee (Cơ sở 120 Yên Lãng)';
-export const MAX_DELIVERY_DISTANCE_KM = 15;
-
-// Exact coordinates for 120 Yên Lãng, Thịnh Quang, Đống Đa, Hà Nội
-export const STORE_COORDINATES = {
-  lat: 21.011467,
-  lng: 105.816642,
-};
+const MAX_DELIVERY_DISTANCE_KM = 15;
+const DEFAULT_STORE = BRANCHES[0];
 
 export interface GoongPrediction {
   place_id: string;
@@ -56,30 +49,6 @@ const FALLBACK_HANOI_PLACES: { name: string; address: string; lat: number; lng: 
 ];
 
 /**
- * Standard Haversine formula to compute great-circle distance between two coordinates in km
- */
-export function calculateHaversineDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
-  const R = 6371; // Earth radius in km
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const straightDist = R * c;
-  // Multiply by 1.35 factor to reflect real Hanoi road routing (streets, turns, alleys)
-  return Math.round(straightDist * 1.35 * 10) / 10;
-}
-
-/**
  * Calculate standard delivery shipping fee based on distance in kilometers
  * - Under or equal to 2 km: 15,000 ₫ (base store fee)
  * - From 2 km to 10 km: 15,000 ₫ + 5,000 ₫/km for extra distance
@@ -87,16 +56,8 @@ export function calculateHaversineDistance(
  */
 export function calculateShippingFeeByKm(distanceKm: number): number {
   const d = Math.max(0.1, distanceKm);
-  if (d <= 2) {
-    return 15000;
-  }
-  if (d <= 10) {
-    const extraKm = d - 2;
-    const fee = 15000 + extraKm * 5000;
-    return Math.round(fee / 1000) * 1000;
-  }
-  const extraKm = d - 10;
-  const fee = 55000 + extraKm * 7000;
+  if (d <= 2) return 15000;
+  const fee = d <= 10 ? 15000 + (d - 2) * 5000 : 55000 + (d - 10) * 7000;
   return Math.round(fee / 1000) * 1000;
 }
 
@@ -104,9 +65,7 @@ export function calculateShippingFeeByKm(distanceKm: number): number {
  * Get Goong API Key from environment
  */
 export function getGoongApiKey(): string {
-  return (
-    process.env.GOONG_API_KEY || ''
-  ).trim();
+  return (process.env.GOONG_API_KEY || '').trim();
 }
 
 /**
@@ -123,7 +82,7 @@ export async function searchGoongPlaces(input: string): Promise<GoongPrediction[
       // Focus bias around Hanoi center (Yên Lãng coordinates)
       const url = `https://rsapi.goong.io/Place/AutoComplete?api_key=${apiKey}&input=${encodeURIComponent(
         query
-      )}&location=${STORE_COORDINATES.lat},${STORE_COORDINATES.lng}&limit=7`;
+      )}&location=${DEFAULT_STORE.lat},${DEFAULT_STORE.lng}&limit=7`;
 
       const res = await fetch(url, { next: { revalidate: 60 } });
       const data = await res.json();
@@ -181,9 +140,9 @@ export async function getGoongPlaceDetail(
     const lng = parseFloat(parts[3]);
     const found = FALLBACK_HANOI_PLACES.find((p) => p.lat === lat && p.lng === lng);
     return {
-      lat: lat || STORE_COORDINATES.lat,
-      lng: lng || STORE_COORDINATES.lng,
-      formattedAddress: found?.address || STORE_ADDRESS,
+      lat: lat || DEFAULT_STORE.lat,
+      lng: lng || DEFAULT_STORE.lng,
+      formattedAddress: found?.address || DEFAULT_STORE.address,
     };
   }
 
@@ -294,10 +253,30 @@ export async function calculateDistanceFromStore(params: {
   const distanceToBranches = BRANCHES.map((b) => ({
     branchId: b.id,
     branchName: b.name,
-    distanceKm: calculateHaversineDistance(b.lat, b.lng, destLat!, destLng!),
+    distanceKm: calculateBranchDistanceKm(b.lat, b.lng, destLat!, destLng!),
   })).sort((a, b) => a.distanceKm - b.distanceKm);
 
   const nearestBranchId = distanceToBranches[0].branchId;
+
+  const buildResult = (distanceKm: number, durationMinutes: number, isSimulated: boolean): DistanceCalculationResult => {
+    const totalMin = durationMinutes + 12; // Prep time + transit time
+    return {
+      storeAddress,
+      customerAddress: destAddress || `${distanceKm} km từ ${selectedBranch.shortName}`,
+      distanceKm,
+      distanceText: `${distanceKm} km`,
+      durationMinutes,
+      durationText: `${durationMinutes} phút`,
+      deliveryEstimateText: `${totalMin - 5} - ${totalMin + 5} phút`,
+      shippingFee: calculateShippingFeeByKm(distanceKm),
+      isSimulated,
+      isOutOfRange: distanceKm > MAX_DELIVERY_DISTANCE_KM,
+      branchId: selectedBranch.id,
+      branchName: selectedBranch.name,
+      nearestBranchId,
+      distanceToBranches,
+    };
+  };
 
   // 3. Try Goong Distance Matrix API for real bike driving distance from selected branch
   if (apiKey && destLat && destLng) {
@@ -306,71 +285,18 @@ export async function calculateDistanceFromStore(params: {
       const res = await fetch(dmUrl);
       const data = await res.json();
 
-      if (
-        data.rows &&
-        data.rows[0]?.elements &&
-        data.rows[0].elements[0]?.status === 'OK'
-      ) {
+      if (data.rows?.[0]?.elements?.[0]?.status === 'OK') {
         const elem = data.rows[0].elements[0];
-        const meters = elem.distance?.value || 3000;
-        const seconds = elem.duration?.value || 720;
-        const distanceKm = Math.round((meters / 1000) * 10) / 10;
-        const durationMinutes = Math.max(5, Math.round(seconds / 60));
-        const shippingFee = calculateShippingFeeByKm(distanceKm);
-
-        // Prep time (10-15m) + transit time
-        const totalMin = durationMinutes + 12;
-        const deliveryEstimateText = `${totalMin - 5} - ${totalMin + 5} phút`;
-
-        return {
-          storeAddress,
-          customerAddress: destAddress || `${distanceKm} km từ ${selectedBranch.shortName}`,
-          distanceKm,
-          distanceText: `${distanceKm} km`,
-          durationMinutes,
-          durationText: `${durationMinutes} phút`,
-          deliveryEstimateText,
-          shippingFee,
-          isSimulated: false,
-          isOutOfRange: distanceKm > MAX_DELIVERY_DISTANCE_KM,
-          branchId: selectedBranch.id,
-          branchName: selectedBranch.name,
-          nearestBranchId,
-          distanceToBranches,
-        };
+        const distanceKm = Math.round(((elem.distance?.value || 3000) / 1000) * 10) / 10;
+        const durationMinutes = Math.max(5, Math.round((elem.duration?.value || 720) / 60));
+        return buildResult(distanceKm, durationMinutes, false);
       }
     } catch (err) {
       console.warn('Goong Distance Matrix API error, calculating via coordinates:', err);
     }
   }
 
-  // 4. Fallback calculation using coordinates
-  const distanceKm = calculateHaversineDistance(
-    branchCoords.lat,
-    branchCoords.lng,
-    destLat,
-    destLng
-  );
-  // Average motorbike speed in Hanoi: ~20 km/h -> 3 mins/km
-  const durationMinutes = Math.max(5, Math.round(distanceKm * 3));
-  const shippingFee = calculateShippingFeeByKm(distanceKm);
-  const totalMin = durationMinutes + 12;
-  const deliveryEstimateText = `${totalMin - 5} - ${totalMin + 5} phút`;
-
-  return {
-    storeAddress,
-    customerAddress: destAddress || `${distanceKm} km từ ${selectedBranch.shortName}`,
-    distanceKm,
-    distanceText: `${distanceKm} km`,
-    durationMinutes,
-    durationText: `${durationMinutes} phút`,
-    deliveryEstimateText,
-    shippingFee,
-    isSimulated: true,
-    isOutOfRange: distanceKm > MAX_DELIVERY_DISTANCE_KM,
-    branchId: selectedBranch.id,
-    branchName: selectedBranch.name,
-    nearestBranchId,
-    distanceToBranches,
-  };
+  // 4. Fallback calculation using coordinates (~20 km/h motorbike speed in Hanoi -> 3 mins/km)
+  const distanceKm = calculateBranchDistanceKm(branchCoords.lat, branchCoords.lng, destLat, destLng);
+  return buildResult(distanceKm, Math.max(5, Math.round(distanceKm * 3)), true);
 }

@@ -8,8 +8,8 @@ import { CiPhone, CiMapPin, CiClock2 } from 'react-icons/ci';
 export default function Footer() {
   const pathname = usePathname();
 
-  // Do not render footer in admin pages
-  if (pathname.startsWith('/admin')) {
+  // Do not render footer in admin or standalone QR dine-in pages
+  if (pathname.startsWith('/admin') || pathname.startsWith('/dine-in')) {
     return null;
   }
   return (

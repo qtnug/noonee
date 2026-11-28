@@ -1,7 +1,8 @@
 import sql from 'mssql';
 import bcrypt from 'bcryptjs';
-import { Category, Product, Order, OrderItem, User, UserRole, Review, SupportMessage, GroupOrder, GroupMember, GroupMemberItem, Coupon } from '@/types';
+import { Category, Product, Order, User, UserRole, Review, SupportMessage, GroupOrder, GroupMember, GroupMemberItem, Coupon } from '@/types';
 import { generateGroupCode, computeGroupOrderStats, MIN_GROUP_MEMBERS, MAX_GROUP_MEMBERS } from '@/lib/groupOrder';
+import { isOrderLocked, canUserReviewOrder, matchActiveTableByQr } from '@/lib/orderRules';
 
 function parseToppingsField(raw: any): any[] {
   if (!raw) return [];
@@ -80,7 +81,7 @@ async function ensureSchemaColumns(pool: any) {
   if (schemaPromise) return schemaPromise;
   schemaPromise = (async () => {
     try {
-    await pool.request().query(`
+      await pool.request().query(`
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'toppings')
         ALTER TABLE Products ADD toppings NVARCHAR(MAX) NULL;
 
@@ -194,6 +195,71 @@ async function ensureSchemaColumns(pool: any) {
       BEGIN
         UPDATE Products SET categoryId = @phoId WHERE LOWER(name) LIKE N'%phở%' AND (categoryId = @comId OR categoryId = 1);
       END
+
+      -- Dine-in tables, Admin audit logs & Order channel columns
+      IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'RestaurantTables')
+      BEGIN
+        CREATE TABLE RestaurantTables (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          branchId INT NOT NULL DEFAULT 1,
+          tableNumber NVARCHAR(20) NOT NULL,
+          tableName NVARCHAR(100) NOT NULL,
+          capacity INT NOT NULL DEFAULT 4,
+          qrToken NVARCHAR(64) NOT NULL,
+          isActive BIT NOT NULL DEFAULT 1,
+          createdAt DATETIME NOT NULL DEFAULT GETDATE()
+        );
+      END
+
+      IF NOT EXISTS (SELECT TOP 1 1 FROM RestaurantTables)
+      BEGIN
+        INSERT INTO RestaurantTables (branchId, tableNumber, tableName, capacity, qrToken, isActive) VALUES
+          (1, N'B01', N'Bàn 01 - Tầng 1', 4, N'nn-b1-t01', 1),
+          (1, N'B02', N'Bàn 02 - Tầng 1', 4, N'nn-b1-t02', 1),
+          (1, N'B03', N'Bàn 03 - Cửa sổ', 2, N'nn-b1-t03', 1),
+          (2, N'B01', N'Bàn 01 - Cầu Giấy', 4, N'nn-b2-t01', 1),
+          (2, N'B02', N'Bàn 02 - Cầu Giấy', 6, N'nn-b2-t02', 1);
+      END
+
+      IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AdminLogs')
+      BEGIN
+        CREATE TABLE AdminLogs (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          adminId INT NULL,
+          adminName NVARCHAR(150) NOT NULL,
+          adminRole NVARCHAR(50) NOT NULL,
+          branchId INT NULL,
+          action NVARCHAR(80) NOT NULL,
+          targetType NVARCHAR(50) NOT NULL,
+          targetId NVARCHAR(80) NULL,
+          details NVARCHAR(MAX) NULL,
+          createdAt DATETIME NOT NULL DEFAULT GETDATE()
+        );
+      END
+
+      IF COL_LENGTH('Orders', 'orderType') IS NULL
+        ALTER TABLE Orders ADD orderType NVARCHAR(20) NOT NULL DEFAULT 'online' WITH VALUES;
+      IF COL_LENGTH('Orders', 'tableId') IS NULL
+        ALTER TABLE Orders ADD tableId INT NULL;
+      IF COL_LENGTH('Orders', 'tableName') IS NULL
+        ALTER TABLE Orders ADD tableName NVARCHAR(100) NULL;
+
+      -- Combo giá ưu đãi category + starter discounted combos
+      IF NOT EXISTS (SELECT * FROM Categories WHERE slug = 'combo-gia-uu-dai')
+      BEGIN
+        INSERT INTO Categories (name, slug, description, icon)
+        VALUES (N'Combo giá ưu đãi', 'combo-gia-uu-dai', N'Combo tiết kiệm đến 20% so với gọi lẻ từng món', N'🎁');
+      END
+
+      DECLARE @comboCatId INT = (SELECT TOP 1 id FROM Categories WHERE slug = 'combo-gia-uu-dai');
+      IF @comboCatId IS NOT NULL AND NOT EXISTS (SELECT TOP 1 1 FROM Products WHERE categoryId = @comboCatId)
+      BEGIN
+        INSERT INTO Products (categoryId, name, slug, description, price, image, isAvailable, isFeatured, rating, prepTime)
+        VALUES
+          (@comboCatId, N'Combo Trưa Năng Lượng (1 Người)', 'combo-trua-nang-luong', N'1 Cơm tấm Sài Gòn sườn nướng + 1 Trà đào cam sả mát lạnh (Giá lẻ 63.000đ, tiết kiệm 14.000đ).', 49000, 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80', 1, 1, 5.0, 12),
+          (@comboCatId, N'Combo Đôi Bạn No Bụng (2 Người)', 'combo-doi-ban-no-bung', N'1 Cơm rang Dương Châu + 1 Phở bò tái nạm + 2 Nước ngọt/Trà tắc (Giá lẻ 111.000đ, tiết kiệm 22.000đ).', 89000, 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=800&q=80', 1, 1, 5.0, 15),
+          (@comboCatId, N'Combo Hội Nhóm Tiết Kiệm (4 Người)', 'combo-hoi-nhom-4-nguoi', N'2 Cơm tấm sườn bì chả + 2 Bún/Phở tự chọn + 1 Bánh tráng trộn + 4 Trà đá/Trà tắc (Giá lẻ 210.000đ, tiết kiệm 41.000đ).', 169000, 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?auto=format&fit=crop&w=800&q=80', 1, 1, 5.0, 18);
+      END
     `);
     } catch (err: any) {
       console.warn('Schema check note:', err.message);
@@ -218,9 +284,9 @@ async function getCloudPool(): Promise<any> {
   if (!poolPromise) {
     try {
       poolPromise = (sql as any).connect(config)
-        .then((pool: any) => {
+        .then(async (pool: any) => {
           global._sqlPool = pool;
-          ensureSchemaColumns(pool);
+          await ensureSchemaColumns(pool);
           return pool;
         })
         .catch((err: any) => {
@@ -240,6 +306,7 @@ async function getCloudPool(): Promise<any> {
 
 // In-memory fallback cache
 let inMemoryCategories: Category[] = [
+  { id: 6, name: 'Combo giá ưu đãi', slug: 'combo-gia-uu-dai', description: 'Combo tiết kiệm đến 20% so với gọi lẻ từng món', icon: '🎁' },
   { id: 1, name: 'Cơm', slug: 'com', description: 'Các món cơm tấm, cơm rang thơm ngon nóng hổi, chuẩn vị truyền thống', icon: 'Utensils' },
   { id: 4, name: 'Bún mì', slug: 'bun-mi', description: 'Các món bún bò Huế, bún trộn, mì xào đậm đà hấp dẫn', icon: 'Soup' },
   { id: 5, name: 'Phở', slug: 'pho', description: 'Phở bò, phở gà gia truyền nước dùng thanh ngọt thơm lừng', icon: 'Soup' },
@@ -248,6 +315,51 @@ let inMemoryCategories: Category[] = [
 ];
 
 let inMemoryProducts: Product[] = [
+  {
+    id: 101,
+    categoryId: 6,
+    categoryName: 'Combo giá ưu đãi',
+    name: 'Combo Trưa Năng Lượng (1 Người)',
+    slug: 'combo-trua-nang-luong',
+    description: '1 Cơm tấm Sài Gòn sườn nướng + 1 Trà đào cam sả mát lạnh (Giá lẻ 63.000đ, tiết kiệm 14.000đ).',
+    price: 49000,
+    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+    isAvailable: true,
+    isFeatured: true,
+    rating: 5.0,
+    prepTime: 12,
+    toppings: []
+  },
+  {
+    id: 102,
+    categoryId: 6,
+    categoryName: 'Combo giá ưu đãi',
+    name: 'Combo Đôi Bạn No Bụng (2 Người)',
+    slug: 'combo-doi-ban-no-bung',
+    description: '1 Cơm rang Dương Châu + 1 Phở bò tái nạm + 2 Nước ngọt/Trà tắc (Giá lẻ 111.000đ, tiết kiệm 22.000đ).',
+    price: 89000,
+    image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=800&q=80',
+    isAvailable: true,
+    isFeatured: true,
+    rating: 5.0,
+    prepTime: 15,
+    toppings: []
+  },
+  {
+    id: 103,
+    categoryId: 6,
+    categoryName: 'Combo giá ưu đãi',
+    name: 'Combo Hội Nhóm Tiết Kiệm (4 Người)',
+    slug: 'combo-hoi-nhom-4-nguoi',
+    description: '2 Cơm tấm sườn bì chả + 2 Bún/Phở tự chọn + 1 Bánh tráng trộn + 4 Trà tắc (Giá lẻ 210.000đ, tiết kiệm 41.000đ).',
+    price: 169000,
+    image: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?auto=format&fit=crop&w=800&q=80',
+    isAvailable: true,
+    isFeatured: true,
+    rating: 5.0,
+    prepTime: 18,
+    toppings: []
+  },
   {
     id: 1,
     categoryId: 1,
@@ -375,7 +487,7 @@ let inMemoryProducts: Product[] = [
     slug: 'bun-bo-hue',
     description: 'Bún bò Huế đậm đà chuẩn vị cố đô, nước dùng hầm xương ngọt thanh cay nồng sả ớt, chả cua, thịt bắp bò hoa và tiết mềm thơm ngon.',
     price: 42000,
-    image: '/frames_clean/frame_0001.png',
+    image: 'https://res.cloudinary.com/h2776qfi/image/upload/c_fill,f_auto,g_auto,h_800,q_auto,w_800/v1/noonee_products/m25oftxzunntaud56peg?_a=BAMAAAeE0',
     isAvailable: true,
     isFeatured: true,
     rating: 5.0,
@@ -526,7 +638,7 @@ export async function deleteCategory(id: number): Promise<boolean> {
       const req1 = pool.request();
       req1.input('id', sql.Int, id);
       await req1.query('UPDATE Products SET categoryId = NULL WHERE categoryId = @id');
-      
+
       const req2 = pool.request();
       req2.input('id', sql.Int, id);
       await req2.query('DELETE FROM Categories WHERE id = @id');
@@ -823,6 +935,9 @@ export async function createOrder(data: {
   walletAmountUsed?: number;
   branchId?: number;
   branchName?: string;
+  orderType?: 'online' | 'dinein';
+  tableId?: number | null;
+  tableName?: string | null;
   items: {
     productId: number;
     productName: string;
@@ -856,6 +971,9 @@ export async function createOrder(data: {
     cancelReason: null,
     branchId: chosenBranchId,
     branchName: chosenBranchName,
+    orderType: data.orderType || 'online',
+    tableId: data.tableId || null,
+    tableName: data.tableName || null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     items: data.items.map(item => ({
@@ -885,6 +1003,7 @@ export async function createOrder(data: {
           }
         }
 
+        await ensureDineInAndLogSchema();
         const req = new sql.Request(transaction);
         req.input('code', sql.NVarChar(50), data.orderCode);
         req.input('userId', sql.Int, data.userId || null);
@@ -902,11 +1021,14 @@ export async function createOrder(data: {
         req.input('walletAmount', sql.Decimal(18, 0), data.walletAmountUsed || 0);
         req.input('branchId', sql.Int, chosenBranchId);
         req.input('branchName', sql.NVarChar(150), chosenBranchName);
+        req.input('orderType', sql.NVarChar(20), data.orderType || 'online');
+        req.input('tableId', sql.Int, data.tableId || null);
+        req.input('tableName', sql.NVarChar(100), data.tableName || null);
 
         const orderRes = await req.query(`
-          INSERT INTO Orders (orderCode, userId, customerName, customerPhone, deliveryAddress, notes, totalAmount, shippingFee, discountAmount, couponCode, groupCode, status, paymentMethod, paymentStatus, walletAmountUsed, branchId, branchName)
+          INSERT INTO Orders (orderCode, userId, customerName, customerPhone, deliveryAddress, notes, totalAmount, shippingFee, discountAmount, couponCode, groupCode, status, paymentMethod, paymentStatus, walletAmountUsed, branchId, branchName, orderType, tableId, tableName)
           OUTPUT INSERTED.id
-          VALUES (@code, @userId, @name, @phone, @address, @notes, @amount, @shippingFee, @discount, @coupon, @groupCode, 'Pending', @method, @payStatus, @walletAmount, @branchId, @branchName)
+          VALUES (@code, @userId, @name, @phone, @address, @notes, @amount, @shippingFee, @discount, @coupon, @groupCode, 'Pending', @method, @payStatus, @walletAmount, @branchId, @branchName, @orderType, @tableId, @tableName)
         `);
 
         if (data.groupCode) {
@@ -955,7 +1077,7 @@ export async function createOrder(data: {
         await transaction.commit();
         invalidateProductsCache();
         inMemoryOrders.unshift(newOrder);
-        
+
         // Update in-memory user wallet if needed
         if (data.walletAmountUsed && data.walletAmountUsed > 0 && data.userId) {
           const u = inMemoryUsers.find(u => u.id === data.userId);
@@ -997,6 +1119,9 @@ export async function getOrderByCode(code: string): Promise<Order | null> {
                o.groupCode,
                ISNULL(o.branchId, 1) AS branchId,
                ISNULL(o.branchName, N'NooNee - Cơ sở 120 Yên Lãng') AS branchName,
+               ISNULL(o.orderType, 'online') AS orderType,
+               o.tableId,
+               o.tableName,
                o.createdAt, o.updatedAt
         FROM Orders o
         WHERE o.orderCode = @code
@@ -1029,6 +1154,8 @@ export async function getOrders(filter?: {
   search?: string;
   userId?: number;
   branchId?: number | 'all';
+  orderType?: 'online' | 'dinein' | 'all';
+  includeItems?: boolean;
   page?: number;
   limit?: number;
 }): Promise<Order[]> {
@@ -1047,6 +1174,9 @@ export async function getOrders(filter?: {
                o.groupCode,
                ISNULL(o.branchId, 1) AS branchId,
                ISNULL(o.branchName, N'NooNee - Cơ sở 120 Yên Lãng') AS branchName,
+               ISNULL(o.orderType, 'online') AS orderType,
+               o.tableId,
+               o.tableName,
                o.createdAt, o.updatedAt
         FROM Orders o
         WHERE 1=1
@@ -1066,6 +1196,10 @@ export async function getOrders(filter?: {
         req.input('status', sql.NVarChar(50), filter.status);
         query += ` AND o.status = @status`;
       }
+      if (filter?.orderType && filter.orderType !== 'all') {
+        req.input('orderType', sql.NVarChar(20), filter.orderType);
+        query += ` AND ISNULL(o.orderType, 'online') = @orderType`;
+      }
       if (filter?.branchId && filter.branchId !== 'all') {
         req.input('branchId', sql.Int, Number(filter.branchId));
         if (Number(filter.branchId) === 1) {
@@ -1076,10 +1210,10 @@ export async function getOrders(filter?: {
       }
       if (cleanSearch) {
         req.input('search', sql.NVarChar(100), `%${cleanSearch}%`);
-        query += ` AND (o.orderCode LIKE @search OR o.customerName LIKE @search OR o.customerPhone LIKE @search)`;
+        query += ` AND (o.orderCode LIKE @search OR o.customerName LIKE @search OR o.customerPhone LIKE @search OR o.tableName LIKE @search)`;
       }
       query += ` ORDER BY o.id DESC`;
-      
+
       const page = filter?.page || 1;
       const limit = filter?.limit || 50;
       const offset = (page - 1) * limit;
@@ -1088,10 +1222,28 @@ export async function getOrders(filter?: {
       query += ` OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`;
 
       const result = await req.query(query);
-      if (result.recordset) {
-        return result.recordset;
+      const orders: Order[] = result.recordset || [];
+      if (filter?.includeItems && orders.length > 0) {
+        const ids = orders.map((o) => Number(o.id)).filter((n) => Number.isInteger(n) && n > 0);
+        if (ids.length > 0) {
+          const itemsRes = await pool.request().query(`
+            SELECT id, orderId, productId, productName, CAST(price AS INT) AS price,
+                   quantity, CAST(total AS INT) AS total, note, toppings
+            FROM OrderItems
+            WHERE orderId IN (${ids.join(',')})
+          `);
+          const byOrder = new Map<number, any[]>();
+          for (const it of itemsRes.recordset || []) {
+            const arr = byOrder.get(it.orderId) || [];
+            arr.push(it);
+            byOrder.set(it.orderId, arr);
+          }
+          for (const o of orders) {
+            o.items = byOrder.get(o.id) || [];
+          }
+        }
       }
-      return [];
+      return orders;
     }
   } catch (err) {
     console.error('Error fetching orders from cloud:', err);
@@ -1115,9 +1267,20 @@ export async function getOrders(filter?: {
   if (filter?.status && filter.status !== 'all') {
     res = res.filter(o => o.status === filter.status);
   }
+  if (filter?.orderType && filter.orderType !== 'all') {
+    res = res.filter(o => (o.orderType || 'online') === filter.orderType);
+  }
+  if (filter?.branchId && filter.branchId !== 'all') {
+    res = res.filter(o => (o.branchId || 1) === Number(filter.branchId));
+  }
   if (cleanSearch) {
     const s = cleanSearch.toLowerCase();
-    res = res.filter(o => o.orderCode.toLowerCase().includes(s) || o.customerName.toLowerCase().includes(s) || o.customerPhone.includes(s));
+    res = res.filter(o =>
+      o.orderCode.toLowerCase().includes(s) ||
+      o.customerName.toLowerCase().includes(s) ||
+      o.customerPhone.includes(s) ||
+      (o.tableName || '').toLowerCase().includes(s)
+    );
   }
   const page = filter?.page || 1;
   const limit = filter?.limit || 50;
@@ -1149,8 +1312,8 @@ export async function hasUserPaidFirstVietqr(userId: number): Promise<boolean> {
 }
 
 export async function updateOrderStatus(
-  orderCode: string, 
-  status: string, 
+  orderCode: string,
+  status: string,
   paymentStatus?: string,
   cancelReason?: string
 ): Promise<boolean> {
@@ -1181,7 +1344,7 @@ export async function updateOrderStatus(
         req.input('cancelReason', sql.NVarChar(500), cancelReason);
         sqlQuery += `, cancelReason = @cancelReason`;
       }
-      sqlQuery += ` WHERE orderCode = @code`;
+      sqlQuery += ` WHERE orderCode = @code AND status <> 'Completed'`;
       if (paymentStatus === 'Paid') sqlQuery += ` AND status <> 'Cancelled'`;
 
       const result = await req.query(sqlQuery);
@@ -1197,6 +1360,7 @@ export async function updateOrderStatus(
     return false;
   }
   if (process.env.NODE_ENV !== 'production' && o) {
+    if (isOrderLocked(o.status)) return false;
     updateLocal();
     return true;
   }
@@ -1223,37 +1387,6 @@ export async function getUserWalletBalance(userId: number): Promise<number> {
   }
   const u = inMemoryUsers.find(user => user.id === userId);
   return u?.walletBalance || 0;
-}
-
-export async function deductUserWallet(userId: number, amount: number): Promise<boolean> {
-  if (amount <= 0) return true;
-  try {
-    const pool = await getCloudPool();
-    if (pool) {
-      const req = pool.request();
-      req.input('userId', sql.Int, userId);
-      req.input('amount', sql.Decimal(18, 0), amount);
-      const res = await req.query(`
-        UPDATE Users
-        SET walletBalance = CASE WHEN walletBalance >= @amount THEN walletBalance - @amount ELSE walletBalance END
-        OUTPUT INSERTED.walletBalance
-        WHERE id = @userId AND walletBalance >= @amount
-      `);
-      if (res.recordset && res.recordset.length > 0) {
-        const inMem = inMemoryUsers.find(u => u.id === userId);
-        if (inMem) inMem.walletBalance = Number(res.recordset[0].walletBalance);
-        return true;
-      }
-    }
-  } catch (err) {
-    console.error('Error deducting user wallet in cloud:', err);
-  }
-  const u = inMemoryUsers.find(user => user.id === userId);
-  if (u && (u.walletBalance || 0) >= amount) {
-    u.walletBalance = (u.walletBalance || 0) - amount;
-    return true;
-  }
-  return false;
 }
 
 export async function refundToUserWallet(userId: number, amount: number): Promise<boolean> {
@@ -1773,7 +1906,7 @@ export async function getAdminStats(
       };
     }
   } catch (e) { console.error('Admin stats error:', e); }
-  
+
   const allOrders = await getOrders({ branchId });
   const products = await getProducts({ branchId });
   const filteredOrders = cutoffDate ? allOrders.filter(o => new Date(o.createdAt) >= cutoffDate!) : allOrders;
@@ -1801,7 +1934,7 @@ export async function getAdminStats(
           topProductsMap[name].revenue += price * qty;
         });
       }
-    } catch (e) {}
+    } catch (e) { }
   });
 
   const topProducts = Object.values(topProductsMap)
@@ -2137,7 +2270,7 @@ export async function getUserSpendingStats(userId: number): Promise<{
               const memDiscount = Math.round(memSubtotal * (discountPct / 100));
               groupSpent += Math.max(0, memSubtotal - memDiscount);
             }
-          } catch {}
+          } catch { }
         }
       }
     }
@@ -2412,13 +2545,13 @@ export async function hasUserOrderedProduct(
       if (userId && orderCode) {
         req.input('userId', sql.Int, userId);
         req.input('orderCode', sql.NVarChar(50), orderCode);
-        whereClause = '(o.userId = @userId OR o.orderCode = @orderCode)';
+        whereClause = '(o.userId = @userId AND o.orderCode = @orderCode)';
       } else if (userId) {
         req.input('userId', sql.Int, userId);
         whereClause = 'o.userId = @userId';
       } else if (orderCode) {
         req.input('orderCode', sql.NVarChar(50), orderCode);
-        whereClause = 'o.orderCode = @orderCode';
+        whereClause = '(o.orderCode = @orderCode AND o.userId IS NULL)';
       }
 
       const res = await req.query(`
@@ -2426,7 +2559,7 @@ export async function hasUserOrderedProduct(
         FROM Orders o
         JOIN OrderItems oi ON o.id = oi.orderId
         WHERE oi.productId = @prodId
-          AND o.status <> 'Cancelled'
+          AND o.status = 'Completed'
           AND ${whereClause}
       `);
       return Boolean(res.recordset && res.recordset.length > 0);
@@ -2436,13 +2569,7 @@ export async function hasUserOrderedProduct(
   }
 
   // Fallback in-memory
-  const matchedOrder = inMemoryOrders.find(
-    (o) =>
-      o.status !== 'Cancelled' &&
-      ((userId && o.userId === userId) || (orderCode && o.orderCode === orderCode)) &&
-      o.items?.some((it) => it.productId === productId)
-  );
-  return Boolean(matchedOrder);
+  return inMemoryOrders.some((o) => canUserReviewOrder(o, productId, userId, orderCode));
 }
 
 export async function getUserReview(
@@ -2556,18 +2683,6 @@ export async function upsertReview(data: {
     },
     isUpdate: false,
   };
-}
-
-export async function createReview(data: {
-  productId: number;
-  userId?: number | null;
-  customerName: string;
-  rating: number;
-  comment: string;
-  orderCode?: string | null;
-}): Promise<Review> {
-  const result = await upsertReview(data);
-  return result.review;
 }
 
 // ==========================================
@@ -2947,7 +3062,7 @@ export async function updateGroupMemberItem(
     const noteStr = (itemData.note || '').trim();
 
     // Check if duplicate item (same product, same toppings, same note)
-    const existingIdx = member.items.findIndex(it => 
+    const existingIdx = member.items.findIndex(it =>
       it.productId === itemData.productId &&
       (it.toppings || '') === toppingsStr &&
       (it.note || '') === noteStr
@@ -3312,27 +3427,6 @@ export async function deleteCoupon(code: string): Promise<boolean> {
   return false;
 }
 
-export async function incrementCouponUsage(code: string): Promise<boolean> {
-  const clean = code.trim().toUpperCase();
-  try {
-    const pool = await getCloudPool();
-    if (pool) {
-      const req = pool.request();
-      req.input('code', sql.NVarChar(50), clean);
-      await req.query(`
-        UPDATE Coupons 
-        SET usedCount = ISNULL(usedCount, 0) + 1, updatedAt = GETDATE() 
-        WHERE UPPER(code) = UPPER(@code)
-      `);
-      return true;
-    }
-  } catch (err) {
-    console.error('Error incrementing coupon usage in database:', err);
-  }
-  return false;
-}
-
-
 // ============================================================================
 // GIỎ HÀNG THEO TÀI KHOẢN & CƠ SỞ (Cart & CartItems)
 // Mỗi cặp (userId, branchId) sở hữu 1 giỏ hàng tách biệt trong bảng Cart.
@@ -3499,5 +3593,294 @@ export async function replaceUserCartItems(
       // ignore rollback errors
     }
     throw err;
+  }
+}
+
+// ==========================================
+// DINE-IN TABLES, ADMIN LOGS & COMBO CATEGORY
+// ==========================================
+
+import type { RestaurantTable, AdminLog } from '@/types';
+import crypto from 'crypto';
+
+let dineInSchemaEnsured = false;
+const inMemoryTables: RestaurantTable[] = [
+  { id: 1, branchId: 1, tableNumber: 'B01', tableName: 'Bàn 01 - Tầng 1', capacity: 4, qrToken: 'nn-b1-t01', isActive: true },
+  { id: 2, branchId: 1, tableNumber: 'B02', tableName: 'Bàn 02 - Tầng 1', capacity: 4, qrToken: 'nn-b1-t02', isActive: true },
+  { id: 3, branchId: 2, tableNumber: 'B01', tableName: 'Bàn 01 - Cầu Giấy', capacity: 4, qrToken: 'nn-b2-t01', isActive: true },
+];
+const inMemoryAdminLogs: AdminLog[] = [];
+
+export async function ensureDineInAndLogSchema(): Promise<void> {
+  if (dineInSchemaEnsured) return;
+  try {
+    const pool = await getCloudPool();
+    if (!pool) return;
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='RestaurantTables' AND xtype='U')
+      CREATE TABLE RestaurantTables (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        branchId INT NOT NULL DEFAULT 1,
+        tableNumber NVARCHAR(20) NOT NULL,
+        tableName NVARCHAR(100) NOT NULL,
+        capacity INT NOT NULL DEFAULT 4,
+        qrToken NVARCHAR(64) NOT NULL,
+        isActive BIT NOT NULL DEFAULT 1,
+        createdAt DATETIME NOT NULL DEFAULT GETDATE()
+      );
+      IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='AdminLogs' AND xtype='U')
+      CREATE TABLE AdminLogs (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        adminId INT NULL,
+        adminName NVARCHAR(150) NOT NULL,
+        adminRole NVARCHAR(50) NOT NULL,
+        branchId INT NULL,
+        action NVARCHAR(80) NOT NULL,
+        targetType NVARCHAR(50) NOT NULL,
+        targetId NVARCHAR(80) NULL,
+        details NVARCHAR(MAX) NULL,
+        createdAt DATETIME NOT NULL DEFAULT GETDATE()
+      );
+      IF COL_LENGTH('Orders', 'orderType') IS NULL
+        ALTER TABLE Orders ADD orderType NVARCHAR(20) NOT NULL DEFAULT 'online';
+      IF COL_LENGTH('Orders', 'tableId') IS NULL
+        ALTER TABLE Orders ADD tableId INT NULL;
+      IF COL_LENGTH('Orders', 'tableName') IS NULL
+        ALTER TABLE Orders ADD tableName NVARCHAR(100) NULL;
+    `);
+    dineInSchemaEnsured = true;
+  } catch (err) {
+    console.error('ensureDineInAndLogSchema error:', err);
+  }
+}
+
+export async function logAdminAction(entry: Omit<AdminLog, 'id' | 'createdAt'>): Promise<void> {
+  const local: AdminLog = {
+    id: inMemoryAdminLogs.length + 1,
+    ...entry,
+    createdAt: new Date().toISOString(),
+  };
+  inMemoryAdminLogs.unshift(local);
+  if (inMemoryAdminLogs.length > 500) inMemoryAdminLogs.pop();
+
+  try {
+    await ensureDineInAndLogSchema();
+    const pool = await getCloudPool();
+    if (!pool) return;
+    const req = pool.request();
+    req.input('adminId', sql.Int, entry.adminId ?? null);
+    req.input('adminName', sql.NVarChar(150), entry.adminName);
+    req.input('adminRole', sql.NVarChar(50), entry.adminRole);
+    req.input('branchId', sql.Int, entry.branchId ?? null);
+    req.input('action', sql.NVarChar(80), entry.action);
+    req.input('targetType', sql.NVarChar(50), entry.targetType);
+    req.input('targetId', sql.NVarChar(80), entry.targetId ?? null);
+    req.input('details', sql.NVarChar(sql.MAX), entry.details ?? null);
+    await req.query(`
+      INSERT INTO AdminLogs (adminId, adminName, adminRole, branchId, action, targetType, targetId, details)
+      VALUES (@adminId, @adminName, @adminRole, @branchId, @action, @targetType, @targetId, @details)
+    `);
+  } catch (err) {
+    console.error('logAdminAction error:', err);
+  }
+}
+
+export async function getAdminLogs(branchId?: number | null, limit = 150): Promise<AdminLog[]> {
+  try {
+    await ensureDineInAndLogSchema();
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('limit', sql.Int, limit);
+      let where = '';
+      if (branchId) {
+        req.input('branchId', sql.Int, branchId);
+        where = 'WHERE branchId = @branchId OR branchId IS NULL';
+      }
+      const res = await req.query(`
+        SELECT TOP (@limit) id, adminId, adminName, adminRole, branchId, action, targetType, targetId, details, createdAt
+        FROM AdminLogs
+        ${where}
+        ORDER BY createdAt DESC, id DESC
+      `);
+      return (res.recordset || []).map((r: any) => ({
+        ...r,
+        createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+      }));
+    }
+  } catch (err) {
+    console.error('getAdminLogs error:', err);
+  }
+  return branchId ? inMemoryAdminLogs.filter((l) => !l.branchId || l.branchId === branchId).slice(0, limit) : inMemoryAdminLogs.slice(0, limit);
+}
+
+export async function getTables(branchId?: number | null): Promise<RestaurantTable[]> {
+  try {
+    await ensureDineInAndLogSchema();
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      let where = '';
+      if (branchId) {
+        req.input('branchId', sql.Int, branchId);
+        where = 'WHERE branchId = @branchId';
+      }
+      const res = await req.query(`
+        SELECT id, branchId, tableNumber, tableName, capacity, qrToken, isActive, createdAt
+        FROM RestaurantTables
+        ${where}
+        ORDER BY branchId ASC, tableNumber ASC
+      `);
+      return (res.recordset || []).map((r: any) => ({
+        ...r,
+        isActive: Boolean(r.isActive),
+        createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt || ''),
+      }));
+    }
+  } catch (err) {
+    console.error('getTables error:', err);
+  }
+  return branchId ? inMemoryTables.filter((t) => t.branchId === branchId) : inMemoryTables;
+}
+
+export async function getTableById(id: number): Promise<RestaurantTable | null> {
+  const all = await getTables(null);
+  return all.find((t) => t.id === id) || null;
+}
+
+export async function getTableByParams(branchId: number, tableNumber: string, token?: string | null): Promise<RestaurantTable | null> {
+  const all = await getTables(branchId);
+  return matchActiveTableByQr(all, branchId, tableNumber, token);
+}
+
+export async function createTable(data: { branchId: number; tableNumber: string; tableName: string; capacity?: number }): Promise<RestaurantTable> {
+  const cleanNum = data.tableNumber.trim().toUpperCase();
+  const existing = await getTables(data.branchId);
+  if (existing.some((t) => t.tableNumber.toUpperCase() === cleanNum)) {
+    throw new Error(`Mã bàn "${cleanNum}" đã tồn tại ở cơ sở này`);
+  }
+  const qrToken = `nn-b${data.branchId}-${crypto.randomBytes(4).toString('hex')}`;
+  try {
+    await ensureDineInAndLogSchema();
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('branchId', sql.Int, data.branchId);
+      req.input('tableNumber', sql.NVarChar(20), cleanNum);
+      req.input('tableName', sql.NVarChar(100), data.tableName.trim());
+      req.input('capacity', sql.Int, data.capacity || 4);
+      req.input('qrToken', sql.NVarChar(64), qrToken);
+      const res = await req.query(`
+        INSERT INTO RestaurantTables (branchId, tableNumber, tableName, capacity, qrToken, isActive)
+        OUTPUT INSERTED.*
+        VALUES (@branchId, @tableNumber, @tableName, @capacity, @qrToken, 1)
+      `);
+      const r = res.recordset[0];
+      return { ...r, isActive: Boolean(r.isActive) };
+    }
+  } catch (err) {
+    console.error('createTable error:', err);
+  }
+  const item: RestaurantTable = {
+    id: inMemoryTables.reduce((m, t) => Math.max(m, t.id), 0) + 1,
+    branchId: data.branchId,
+    tableNumber: cleanNum,
+    tableName: data.tableName.trim(),
+    capacity: data.capacity || 4,
+    qrToken,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  };
+  inMemoryTables.push(item);
+  return item;
+}
+
+export async function updateTable(
+  id: number,
+  data: Partial<{ branchId: number; tableNumber: string; tableName: string; capacity: number; isActive: boolean; regenerateQr: boolean }>
+): Promise<boolean> {
+  const current = await getTableById(id);
+  if (!current) return false;
+  const targetBranch = data.branchId !== undefined ? Number(data.branchId) : current.branchId;
+  const cleanNum = data.tableNumber !== undefined ? data.tableNumber.trim().toUpperCase() : undefined;
+  if (cleanNum) {
+    const siblings = await getTables(targetBranch);
+    if (siblings.some((t) => t.id !== id && t.tableNumber.toUpperCase() === cleanNum)) {
+      throw new Error(`Mã bàn "${cleanNum}" đã tồn tại ở cơ sở này`);
+    }
+  }
+  const newToken = data.regenerateQr ? `nn-b${targetBranch}-${crypto.randomBytes(4).toString('hex')}` : undefined;
+  try {
+    await ensureDineInAndLogSchema();
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('id', sql.Int, id);
+      const sets: string[] = [];
+      if (data.branchId !== undefined) { req.input('branchId', sql.Int, targetBranch); sets.push('branchId = @branchId'); }
+      if (cleanNum !== undefined) { req.input('tableNumber', sql.NVarChar(20), cleanNum); sets.push('tableNumber = @tableNumber'); }
+      if (data.tableName !== undefined) { req.input('tableName', sql.NVarChar(100), data.tableName.trim()); sets.push('tableName = @tableName'); }
+      if (data.capacity !== undefined) { req.input('capacity', sql.Int, data.capacity); sets.push('capacity = @capacity'); }
+      if (data.isActive !== undefined) { req.input('isActive', sql.Bit, data.isActive ? 1 : 0); sets.push('isActive = @isActive'); }
+      if (newToken) { req.input('qrToken', sql.NVarChar(64), newToken); sets.push('qrToken = @qrToken'); }
+      if (sets.length === 0) return true;
+      const res = await req.query(`UPDATE RestaurantTables SET ${sets.join(', ')} WHERE id = @id`);
+      return (res.rowsAffected?.[0] || 0) > 0;
+    }
+  } catch (err) {
+    console.error('updateTable error:', err);
+  }
+  const idx = inMemoryTables.findIndex((t) => t.id === id);
+  if (idx >= 0) {
+    inMemoryTables[idx] = {
+      ...inMemoryTables[idx],
+      ...(data.branchId !== undefined ? { branchId: targetBranch } : {}),
+      ...(cleanNum !== undefined ? { tableNumber: cleanNum } : {}),
+      ...(data.tableName !== undefined ? { tableName: data.tableName.trim() } : {}),
+      ...(data.capacity !== undefined ? { capacity: data.capacity } : {}),
+      ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
+      ...(newToken ? { qrToken: newToken } : {}),
+    };
+    return true;
+  }
+  return false;
+}
+
+export async function deleteTable(id: number): Promise<boolean> {
+  try {
+    await ensureDineInAndLogSchema();
+    const pool = await getCloudPool();
+    if (pool) {
+      const req = pool.request();
+      req.input('id', sql.Int, id);
+      const res = await req.query(`DELETE FROM RestaurantTables WHERE id = @id`);
+      return (res.rowsAffected?.[0] || 0) > 0;
+    }
+  } catch (err) {
+    console.error('deleteTable error:', err);
+  }
+  const idx = inMemoryTables.findIndex((t) => t.id === id);
+  if (idx >= 0) {
+    inMemoryTables.splice(idx, 1);
+    return true;
+  }
+  return false;
+}
+
+export async function ensureComboCategory(): Promise<number | null> {
+  try {
+    const pool = await getCloudPool();
+    if (!pool) return null;
+    const existing = await pool.request().query(`SELECT TOP 1 id FROM Categories WHERE slug = 'combo-gia-uu-dai' OR name LIKE N'%Combo%'`);
+    if (existing.recordset?.[0]?.id) return existing.recordset[0].id;
+    const inserted = await pool.request().query(`
+      INSERT INTO Categories (name, slug, description, icon)
+      OUTPUT INSERTED.id
+      VALUES (N'Combo giá ưu đãi', 'combo-gia-uu-dai', N'Combo tiết kiệm hơn so với gọi lẻ từng món', N'🎁')
+    `);
+    return inserted.recordset?.[0]?.id || null;
+  } catch (err) {
+    console.error('ensureComboCategory error:', err);
+    return null;
   }
 }

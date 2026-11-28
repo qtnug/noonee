@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   CiBowlNoodles as Flame,
-  CiStar as Sparkles,
   CiDiscount1 as Ticket,
   CiCircleCheck as Check,
   CiCircleChevRight as ArrowRight,
@@ -16,7 +15,6 @@ import {
   CiCircleRemove as X,
 } from 'react-icons/ci';
 import { Product } from '@/types';
-import { formatVND } from '@/lib/utils';
 import { useBranch } from '@/context/BranchContext';
 import ProductCard from '@/components/ProductCard';
 

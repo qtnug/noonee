@@ -76,16 +76,18 @@ export async function POST(request: NextRequest) {
       `[NooNee AI] Processing request with Groq. Model: ${primaryModel}, HasKey: ${!!apiKey}, Branch: ${branchId} (${bundle.branch.shortName}), MenuCount: ${bundle.availableProducts.length}, Source: ${bundle.source}, Region: ${process.env.VERCEL_REGION || 'local'}`
     );
 
-    if (!apiKey) {
-      console.warn('[NooNee AI] Missing GROQ_API_KEY. Using SQL Server keyword search fallback.');
-      const fallbackItems = scoreAndSearchProducts(bundle.availableProducts, lastUserMsg, 2);
-      return NextResponse.json({
+    const fallbackResponse = () =>
+      NextResponse.json({
         success: true,
         reply: `Dạ tại **CS ${bundle.branch.shortName}**, quán gợi ý bạn tham khảo món ngon đang được yêu thích tại NooNee:`,
-        recommendedProducts: fallbackItems,
+        recommendedProducts: scoreAndSearchProducts(bundle.availableProducts, lastUserMsg, 2),
         branchId,
         branchName: bundle.branch.shortName,
       });
+
+    if (!apiKey) {
+      console.warn('[NooNee AI] Missing GROQ_API_KEY. Using SQL Server keyword search fallback.');
+      return fallbackResponse();
     }
 
     // System instruction: strictly concise, branch-synced with live SQL Server data, 100% hidden model/source
@@ -111,7 +113,7 @@ Ví dụ: [[RECOMMENDED_FOODS: 4, 45]]`;
       })),
     ];
 
-    const callGroq = async (model: string) =>
+    const callGroq = (model: string) =>
       fetch(`${baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
@@ -126,58 +128,60 @@ Ví dụ: [[RECOMMENDED_FOODS: 4, 45]]`;
           temperature: 0.7,
           max_tokens: 800,
         }),
+        signal: AbortSignal.timeout(8000),
       });
 
     console.log(`[NooNee AI] Calling Groq endpoint: ${baseUrl}/chat/completions (Model: ${primaryModel})`);
-    let response = await callGroq(primaryModel);
-
-    // Fallback to secondary model if primary model hits rate limit or transient error
-    if (!response.ok && primaryModel !== fallbackModel) {
-      const errText = await response.text();
-      const cfRay = response.headers.get('cf-ray') || 'none';
-      console.warn(
-        `[NooNee AI] Groq model ${primaryModel} returned ${response.status} (Region: ${process.env.VERCEL_REGION || 'local'}, cf-ray: ${cfRay}). Retrying with ${fallbackModel}...`,
-        errText
-      );
-      response = await callGroq(fallbackModel);
+    let response: Response | null = null;
+    try {
+      response = await callGroq(primaryModel);
+    } catch (err) {
+      console.warn(`[NooNee AI] Groq primary model ${primaryModel} failed/timed out:`, err);
     }
 
-    if (!response.ok) {
-      const errText = await response.text();
-      const cfRay = response.headers.get('cf-ray') || 'none';
-      console.error(
-        `[NooNee AI] Groq API Error: ${response.status} (Region: ${process.env.VERCEL_REGION || 'local'}, cf-ray: ${cfRay})`,
-        errText
-      );
+    // Fallback to secondary model if primary model fails, times out, or hits rate limit
+    if ((!response || !response.ok) && primaryModel !== fallbackModel) {
+      if (response) {
+        const errText = await response.text();
+        const cfRay = response.headers.get('cf-ray') || 'none';
+        console.warn(
+          `[NooNee AI] Groq model ${primaryModel} returned ${response.status} (Region: ${process.env.VERCEL_REGION || 'local'}, cf-ray: ${cfRay}). Retrying with ${fallbackModel}...`,
+          errText
+        );
+      }
+      try {
+        response = await callGroq(fallbackModel);
+      } catch (err) {
+        console.error(`[NooNee AI] Groq fallback model ${fallbackModel} failed/timed out:`, err);
+        response = null;
+      }
+    }
 
-      const fallbackItems = scoreAndSearchProducts(bundle.availableProducts, lastUserMsg, 2);
-      return NextResponse.json({
-        success: true,
-        reply: `Dạ tại **CS ${bundle.branch.shortName}**, quán gợi ý bạn tham khảo món ăn thơm ngon được yêu thích tại NooNee:`,
-        recommendedProducts: fallbackItems,
-        branchId,
-        branchName: bundle.branch.shortName,
-      });
+    if (!response || !response.ok) {
+      if (response) {
+        const errText = await response.text();
+        const cfRay = response.headers.get('cf-ray') || 'none';
+        console.error(
+          `[NooNee AI] Groq API Error: ${response.status} (Region: ${process.env.VERCEL_REGION || 'local'}, cf-ray: ${cfRay})`,
+          errText
+        );
+      }
+      return fallbackResponse();
     }
 
     const data = await response.json();
     const msgObj = data.choices?.[0]?.message;
-    let replyText = (msgObj?.content || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    let replyText = String(msgObj?.content || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+    // Extract [[RECOMMENDED_FOODS: 1, 2]] and strip any malformed/empty tags so they never leak to users
+    const recommendedIds = Array.from(replyText.matchAll(/\[\[RECOMMENDED_FOODS:([^\]]*)\]\]/gi))
+      .flatMap((m) => (m[1] || '').split(','))
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => !isNaN(n));
+    replyText = replyText.replace(/\[\[RECOMMENDED_FOODS:[^\]]*\]\]/gi, '').trim();
 
     if (!replyText) {
       replyText = `Dạ tại **CS ${bundle.branch.shortName}**, quán gợi ý bạn chọn các món ngon bên dưới nhé!`;
-    }
-
-    // Extract [[RECOMMENDED_FOODS: 1, 2]]
-    const foodIdMatches = replyText.match(/\[\[RECOMMENDED_FOODS:\s*([\d,\s]+)\]\]/i);
-    let recommendedIds: number[] = [];
-
-    if (foodIdMatches && foodIdMatches[1]) {
-      recommendedIds = foodIdMatches[1]
-        .split(',')
-        .map((s: string) => parseInt(s.trim(), 10))
-        .filter((n: number) => !isNaN(n));
-      replyText = replyText.replace(/\[\[RECOMMENDED_FOODS:\s*([\d,\s]+)\]\]/i, '').trim();
     }
 
     // Strictly validate IDs against live SQL Server dishes available at the active branch

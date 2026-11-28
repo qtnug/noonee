@@ -96,29 +96,13 @@ export function middleware(request: NextRequest) {
       );
     }
 
-    // Proceed and inject rate-limit and security headers
+    // Proceed and inject rate-limit headers (static security headers are set once in next.config.mjs)
     const response = NextResponse.next();
     Object.entries(rateHeaders).forEach(([k, v]) => response.headers.set(k, v));
-    applySecurityHeaders(response);
     return response;
   }
 
-  // Web page request: apply security headers
-  const response = NextResponse.next();
-  applySecurityHeaders(response);
-  return response;
-}
-
-/**
- * Apply comprehensive security headers
- */
-function applySecurityHeaders(res: NextResponse) {
-  res.headers.set('X-Frame-Options', 'SAMEORIGIN');
-  res.headers.set('X-Content-Type-Options', 'nosniff');
-  res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
-  res.headers.set('X-XSS-Protection', '1; mode=block');
-  res.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  return NextResponse.next();
 }
 
 export const config = {

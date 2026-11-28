@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   CiUser as UserIcon,
@@ -18,15 +18,12 @@ import {
   CiCircleCheck as Check,
   CiCircleAlert as AlertCircle,
   CiRedo as Loader2,
-  CiLock as Lock,
   CiRead as Eye,
   CiImageOff as EyeOff,
   CiClock2 as Clock,
   CiCircleChevRight as ArrowRight,
   CiWallet as Wallet,
   CiDiscount1 as Ticket,
-  CiShoppingTag as Tag,
-  CiBowlNoodles as Flame,
 } from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
@@ -37,7 +34,6 @@ import ProductCard from '@/components/ProductCard';
 import AddressAutocompleteInput from '@/components/AddressAutocompleteInput';
 
 function ProfileContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') || 'tier';
 
@@ -50,7 +46,6 @@ function ProfileContent() {
     tier: MembershipTierInfo;
   } | null>(null);
   const [walletBalance, setWalletBalance] = useState<number>(user?.walletBalance || 0);
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   // Vouchers for vouchers tab (STT 1)
   const [allCoupons, setAllCoupons] = useState<Coupon[]>([]);
@@ -122,13 +117,9 @@ function ProfileContent() {
           }
         } catch (err) {
           console.error('Lỗi tải thông tin chi tiêu:', err);
-        } finally {
-          setIsLoadingStats(false);
         }
       };
       fetchProfileStats();
-    } else {
-      setIsLoadingStats(false);
     }
   }, [user]);
 

@@ -12,9 +12,6 @@ import {
   CiRedo as Loader2,
   CiShoppingTag as Tag,
   CiCircleCheck as CheckCircle,
-  CiCircleChevDown as ChevronDown,
-  CiCircleChevUp as ChevronUp,
-  CiMedal as Award,
   CiWallet as Wallet,
   CiCircleAlert as AlertCircle,
   CiUser as Users,
@@ -71,7 +68,6 @@ function CheckoutContent() {
   const [tierInfo, setTierInfo] = useState<MembershipTierInfo | null>(null);
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [useWallet, setUseWallet] = useState<boolean>(false);
-  const [saveAsDefaultAddress, setSaveAsDefaultAddress] = useState(false);
   const [hpBotTrap, setHpBotTrap] = useState('');
 
   // Fetch active coupons from database
@@ -172,7 +168,6 @@ function CheckoutContent() {
   };
 
   const effectiveTotalPrice = groupOrder ? (groupOrder.subtotal || 0) : totalPrice;
-  const groupDiscountAmount = groupOrder ? (groupOrder.discountAmount || 0) : 0;
 
   const cartProductItems = cart.map((it) => ({
     categoryId: it.product.categoryId,
@@ -213,11 +208,6 @@ function CheckoutContent() {
       return 0;
     });
   }, [allCoupons, effectiveTotalPrice, paymentMethod, isNewUser, tierInfo, cartProductItems]);
-
-  // Combined sorted coupons for modal (food first, then freeship)
-  const sortedCouponsWithDiscount = useMemo(() => {
-    return [...sortedFoodCoupons, ...sortedFreeshipCoupons];
-  }, [sortedFoodCoupons, sortedFreeshipCoupons]);
 
   const bestFoodCoupon = useMemo(() => {
     const first = sortedFoodCoupons[0];

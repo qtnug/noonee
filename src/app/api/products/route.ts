@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getProducts, createProduct } from '@/lib/db';
+import { getProducts, createProduct, logAdminAction } from '@/lib/db';
 import { resolveLiveUser, AuthError } from '@/lib/auth';
 import { generateSlug } from '@/lib/utils';
 import { checkRateLimit, getClientIp, getRateLimitHeaders } from '@/lib/rateLimit';
@@ -103,6 +103,17 @@ export async function POST(request: NextRequest) {
       prepTime: body.prepTime ? Number(body.prepTime) : 15,
       branchId: resolvedBranchId,
       toppings: body.toppings || [],
+    });
+
+    await logAdminAction({
+      adminId: liveUser.id,
+      adminName: liveUser.fullName || liveUser.username,
+      adminRole: liveUser.role,
+      branchId: resolvedBranchId,
+      action: 'CREATE_PRODUCT',
+      targetType: 'Product',
+      targetId: String(newProduct.id),
+      details: `Thêm món "${cleanName}" (${Number(body.price).toLocaleString('vi-VN')}đ)`,
     });
 
     return NextResponse.json({ success: true, data: newProduct }, { status: 201 });

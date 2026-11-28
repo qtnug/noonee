@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   CiCircleRemove as X,
@@ -15,6 +16,7 @@ import { useBranch } from '@/context/BranchContext';
 import { formatVND } from '@/lib/utils';
 
 export default function CartDrawer() {
+  const pathname = usePathname();
   const { cart, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart, totalPrice, totalItems } = useCart();
   const { currentBranch } = useBranch();
 
@@ -27,6 +29,10 @@ export default function CartDrawer() {
       };
     }
   }, [isCartOpen]);
+
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/dine-in')) {
+    return null;
+  }
 
   return (
     <AnimatePresence>

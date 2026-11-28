@@ -1,6 +1,6 @@
 export type MembershipTierName = 'Bronze' | 'Silver' | 'Gold' | 'Diamond';
 
-export interface TierVoucher {
+interface TierVoucher {
   code: string;
   name: string;
   description: string;
@@ -27,7 +27,7 @@ export interface MembershipTierInfo {
   vouchers: TierVoucher[];
 }
 
-export const SILVER_TIER_VOUCHERS: TierVoucher[] = [
+const SILVER_VOUCHERS: TierVoucher[] = [
   {
     code: 'SILVER10',
     name: 'Voucher Hạng Bạc - Giảm 10k',
@@ -39,7 +39,7 @@ export const SILVER_TIER_VOUCHERS: TierVoucher[] = [
   },
 ];
 
-export const GOLD_TIER_VOUCHERS: TierVoucher[] = [
+const GOLD_VOUCHERS: TierVoucher[] = [
   {
     code: 'GOLD25',
     name: 'Voucher Hạng Vàng - Giảm 25k',
@@ -60,7 +60,7 @@ export const GOLD_TIER_VOUCHERS: TierVoucher[] = [
   },
 ];
 
-export const DIAMOND_TIER_VOUCHERS: TierVoucher[] = [
+const DIAMOND_VOUCHERS: TierVoucher[] = [
   {
     code: 'DIAMOND50',
     name: 'Voucher VIP Kim Cương - Giảm 50k',
@@ -81,107 +81,74 @@ export const DIAMOND_TIER_VOUCHERS: TierVoucher[] = [
   },
 ];
 
-export function getMembershipTier(totalSpent: number): MembershipTierInfo {
-  const spent = Math.max(0, Number(totalSpent) || 0);
+type TierSpec = Omit<MembershipTierInfo, 'progress' | 'amountNeeded'>;
 
-  // 1. Bronze: 0 - 499,999đ
-  if (spent < 500000) {
-    const nextSpent = 500000;
-    const progress = Math.min(100, Math.round((spent / nextSpent) * 100));
-    return {
-      tier: 'Bronze',
-      name: 'Thành viên Đồng',
-      badge: '🥉 Hạng Đồng',
-      color: '#b45309',
-      bgBadge: 'bg-amber-100 text-amber-800 border-amber-300',
-      bgGradient: 'from-amber-500/10 via-orange-500/5 to-transparent border-amber-200',
-      minSpent: 0,
-      nextTier: 'Silver',
-      nextSpent,
-      progress,
-      amountNeeded: nextSpent - spent,
-      shippingDiscount: 0,
-      benefits: [
-        'Tích lũy chi tiêu tự động sau mỗi đơn hoàn thành',
-        'Chi tiêu thêm đạt 500.000 ₫ để thăng hạng Bạc và nhận mã giảm giá',
-      ],
-      vouchers: [
-        {
-          code: 'VIETQR20',
-          name: 'Giảm 20% đơn đầu tiên',
-          description: 'Ưu đãi dành cho thành viên mới khi quét mã VietQR',
-          discountType: 'percentage',
-          discountValue: 20,
-          minOrderAmount: 0,
-          badge: 'Khách mới 20%',
-        },
-      ],
-    };
-  }
-
-  // 2. Silver: 500,000 - 1,499,999đ
-  if (spent < 1500000) {
-    const nextSpent = 1500000;
-    const currentBase = 500000;
-    const progress = Math.min(
-      100,
-      Math.max(0, Math.round(((spent - currentBase) / (nextSpent - currentBase)) * 100))
-    );
-    return {
-      tier: 'Silver',
-      name: 'Thành viên Bạc',
-      badge: '🥈 Hạng Bạc',
-      color: '#475569',
-      bgBadge: 'bg-slate-100 text-slate-800 border-slate-300',
-      bgGradient: 'from-slate-500/10 via-gray-500/5 to-transparent border-slate-300',
-      minSpent: 500000,
-      nextTier: 'Gold',
-      nextSpent,
-      progress,
-      amountNeeded: nextSpent - spent,
-      shippingDiscount: 5000, // Giảm 5.000đ ship
-      benefits: [
-        'Giảm 5.000 ₫ phí vận chuyển cho mọi đơn hàng',
-        'Tặng Voucher độc quyền Hạng Bạc (SILVER10: Giảm 10k)',
-        'Ưu tiên xử lý đơn hàng trong giờ cao điểm',
-      ],
-      vouchers: [...SILVER_TIER_VOUCHERS],
-    };
-  }
-
-  // 3. Gold: 1,500,000 - 3,499,999đ
-  if (spent < 3500000) {
-    const nextSpent = 3500000;
-    const currentBase = 1500000;
-    const progress = Math.min(
-      100,
-      Math.max(0, Math.round(((spent - currentBase) / (nextSpent - currentBase)) * 100))
-    );
-    return {
-      tier: 'Gold',
-      name: 'Thành viên Vàng',
-      badge: '🥇 Hạng Vàng',
-      color: '#d97706',
-      bgBadge: 'bg-amber-100 text-amber-900 border-amber-400',
-      bgGradient: 'from-amber-400/20 via-yellow-500/10 to-transparent border-amber-300',
-      minSpent: 1500000,
-      nextTier: 'Diamond',
-      nextSpent,
-      progress,
-      amountNeeded: nextSpent - spent,
-      shippingDiscount: 10000, // Giảm 10.000đ ship
-      benefits: [
-        'Giảm 10.000 ₫ phí vận chuyển cho mọi đơn hàng',
-        'Hưởng toàn bộ voucher Hạng Bạc (SILVER10: Giảm 10k)',
-        'Tặng Voucher độc quyền Hạng Vàng (GOLD25: Giảm 25k, GOLDVIP: Giảm 15%)',
-        'Ưu tiên nhà bếp chế biến nhanh',
-      ],
-      vouchers: [...SILVER_TIER_VOUCHERS, ...GOLD_TIER_VOUCHERS],
-    };
-  }
-
-  // 4. Diamond: 3,500,000đ+
-  return {
+const TIER_SPECS: TierSpec[] = [
+  {
+    tier: 'Bronze',
+    name: 'Thành viên Đồng',
+    badge: '🥉 Hạng Đồng',
+    color: '#b45309',
+    bgBadge: 'bg-amber-100 text-amber-800 border-amber-300',
+    bgGradient: 'from-amber-500/10 via-orange-500/5 to-transparent border-amber-200',
+    minSpent: 0,
+    nextTier: 'Silver',
+    nextSpent: 500000,
+    shippingDiscount: 0,
+    benefits: [
+      'Tích lũy chi tiêu tự động sau mỗi đơn hoàn thành',
+      'Chi tiêu thêm đạt 500.000 ₫ để thăng hạng Bạc và nhận mã giảm giá',
+    ],
+    vouchers: [
+      {
+        code: 'VIETQR20',
+        name: 'Giảm 20% đơn đầu tiên',
+        description: 'Ưu đãi dành cho thành viên mới khi quét mã VietQR',
+        discountType: 'percentage',
+        discountValue: 20,
+        minOrderAmount: 0,
+        badge: 'Khách mới 20%',
+      },
+    ],
+  },
+  {
+    tier: 'Silver',
+    name: 'Thành viên Bạc',
+    badge: '🥈 Hạng Bạc',
+    color: '#475569',
+    bgBadge: 'bg-slate-100 text-slate-800 border-slate-300',
+    bgGradient: 'from-slate-500/10 via-gray-500/5 to-transparent border-slate-300',
+    minSpent: 500000,
+    nextTier: 'Gold',
+    nextSpent: 1500000,
+    shippingDiscount: 5000,
+    benefits: [
+      'Giảm 5.000 ₫ phí vận chuyển cho mọi đơn hàng',
+      'Tặng Voucher độc quyền Hạng Bạc (SILVER10: Giảm 10k)',
+      'Ưu tiên xử lý đơn hàng trong giờ cao điểm',
+    ],
+    vouchers: [...SILVER_VOUCHERS],
+  },
+  {
+    tier: 'Gold',
+    name: 'Thành viên Vàng',
+    badge: '🥇 Hạng Vàng',
+    color: '#d97706',
+    bgBadge: 'bg-amber-100 text-amber-900 border-amber-400',
+    bgGradient: 'from-amber-400/20 via-yellow-500/10 to-transparent border-amber-300',
+    minSpent: 1500000,
+    nextTier: 'Diamond',
+    nextSpent: 3500000,
+    shippingDiscount: 10000,
+    benefits: [
+      'Giảm 10.000 ₫ phí vận chuyển cho mọi đơn hàng',
+      'Hưởng toàn bộ voucher Hạng Bạc (SILVER10: Giảm 10k)',
+      'Tặng Voucher độc quyền Hạng Vàng (GOLD25: Giảm 25k, GOLDVIP: Giảm 15%)',
+      'Ưu tiên nhà bếp chế biến nhanh',
+    ],
+    vouchers: [...SILVER_VOUCHERS, ...GOLD_VOUCHERS],
+  },
+  {
     tier: 'Diamond',
     name: 'Thành viên Kim Cương (VIP)',
     badge: '💎 Hạng Kim Cương',
@@ -191,19 +158,28 @@ export function getMembershipTier(totalSpent: number): MembershipTierInfo {
     minSpent: 3500000,
     nextTier: null,
     nextSpent: 3500000,
-    progress: 100,
-    amountNeeded: 0,
-    shippingDiscount: 25000, // Giảm 25.000đ phí vận chuyển
+    shippingDiscount: 25000,
     benefits: [
       'Giảm ngay 25.000 ₫ phí vận chuyển cho mỗi đơn hàng',
       'Hưởng trọn vẹn toàn bộ voucher các hạng trước (SILVER10, GOLD25, GOLDVIP)',
       'Tặng Voucher VIP độc quyền Kim Cương (DIAMOND50: Giảm 50k, DIAMONDVIP: Giảm 20%)',
       'Ưu tiên giao hàng siêu tốc và hỗ trợ CSKH VIP',
     ],
-    vouchers: [
-      ...SILVER_TIER_VOUCHERS,
-      ...GOLD_TIER_VOUCHERS,
-      ...DIAMOND_TIER_VOUCHERS,
-    ],
+    vouchers: [...SILVER_VOUCHERS, ...GOLD_VOUCHERS, ...DIAMOND_VOUCHERS],
+  },
+];
+
+export function getMembershipTier(totalSpent: number): MembershipTierInfo {
+  const spent = Math.max(0, Number(totalSpent) || 0);
+  const spec = TIER_SPECS.find((t) => t.nextTier === null || spent < t.nextSpent) || TIER_SPECS[TIER_SPECS.length - 1];
+  const progress =
+    spec.nextTier === null
+      ? 100
+      : Math.min(100, Math.max(0, Math.round(((spent - spec.minSpent) / (spec.nextSpent - spec.minSpent)) * 100)));
+
+  return {
+    ...spec,
+    progress,
+    amountNeeded: spec.nextTier === null ? 0 : spec.nextSpent - spent,
   };
 }

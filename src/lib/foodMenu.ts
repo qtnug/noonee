@@ -9,12 +9,10 @@ import {
   filterActiveCoupons,
   filterMenuProducts,
   getOtherBranchExclusiveProducts,
-  pickRecommendedProductsForBranch,
-  scoreAndSearchProducts,
 } from '@/lib/aiMenuUtils';
 
 // Category mapping fallback based on Food.csv data
-export const CATEGORY_MAP: Record<number, string> = {
+const CATEGORY_MAP: Record<number, string> = {
   1: 'Cơm',
   2: 'Đồ ăn vặt & Món nhẹ',
   3: 'Đồ uống & Tráng miệng',
@@ -276,41 +274,4 @@ export async function getChatbotMenuBundle(branchId?: number | null): Promise<Ch
     promptContext,
     source,
   };
-}
-
-/**
- * Build a compact, token-efficient food menu prompt context synced to SQL Server & branch
- */
-export async function getFoodMenuSummaryForPrompt(branchId?: number | null): Promise<string> {
-  const bundle = await getChatbotMenuBundle(branchId);
-  return bundle.promptContext;
-}
-
-/**
- * Look up available products by their IDs (filtered to the selected branch)
- */
-export async function findFoodsByIds(
-  ids: number[],
-  branchId?: number | null
-): Promise<Product[]> {
-  const products = await getFoodMenuItems({
-    branchId: branchId ?? undefined,
-    availableOnly: true,
-  });
-  return pickRecommendedProductsForBranch(ids, products, Math.max(4, ids.length));
-}
-
-/**
- * Search available products by keyword (fuzzy fallback, synced with SQL Server & branch)
- */
-export async function searchFoodsKeyword(
-  query: string,
-  limit = 5,
-  branchId?: number | null
-): Promise<Product[]> {
-  const products = await getFoodMenuItems({
-    branchId: branchId ?? undefined,
-    availableOnly: true,
-  });
-  return scoreAndSearchProducts(products, query, limit);
 }

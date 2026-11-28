@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOrderByCode, updateOrderStatus, cancelOrder } from '@/lib/db';
+import { getOrderByCode, updateOrderStatus, cancelOrder, logAdminAction } from '@/lib/db';
 import { resolveLiveUser, isPortalRole, AuthError } from '@/lib/auth';
 import { maskPhoneNumber } from '@/lib/utils';
 import { OrderStatus } from '@/types';
@@ -94,15 +94,36 @@ export async function PATCH(
       liveUser.role === 'admin' ||
       ((liveUser.role === 'manager' || liveUser.role === 'staff') && orderBranch === (liveUser.branchId || 1));
 
+    // Lock completed orders strictly before any action (cancel or status/payment edit)
+    if (existingOrder.status === 'Completed') {
+      return NextResponse.json(
+        { success: false, message: 'Đơn hàng đã hoàn thành, không thể chỉnh sửa trạng thái' },
+        { status: 400 }
+      );
+    }
+
     // Cancellation request
     if (status === 'Cancelled' || action === 'cancel') {
       if (!hasBranchAccess && existingOrder.userId !== liveUser.id) {
         return NextResponse.json({ success: false, message: 'Bạn không có quyền hủy đơn hàng này' }, { status: 403 });
       }
 
-      const result = await cancelOrder(params.code, cancelReason || 'Hủy theo yêu cầu', hasBranchAccess);
+      const reason = cancelReason || 'Hủy theo yêu cầu';
+      const result = await cancelOrder(params.code, reason, hasBranchAccess);
       if (!result.success) {
         return NextResponse.json({ success: false, message: result.message }, { status: 400 });
+      }
+      if (isPortalRole(liveUser.role) && hasBranchAccess) {
+        await logAdminAction({
+          adminId: liveUser.id,
+          adminName: liveUser.fullName || liveUser.username,
+          adminRole: liveUser.role,
+          branchId: orderBranch,
+          action: 'CANCEL_ORDER',
+          targetType: 'Order',
+          targetId: params.code,
+          details: `Hủy đơn #${params.code} (Lý do: ${reason})`,
+        });
       }
       return NextResponse.json({
         success: true,
@@ -128,6 +149,18 @@ export async function PATCH(
     }
 
     const success = await updateOrderStatus(params.code, status, paymentStatus, cancelReason);
+    if (success) {
+      await logAdminAction({
+        adminId: liveUser.id,
+        adminName: liveUser.fullName || liveUser.username,
+        adminRole: liveUser.role,
+        branchId: orderBranch,
+        action: 'UPDATE_ORDER_STATUS',
+        targetType: 'Order',
+        targetId: params.code,
+        details: `Đổi trạng thái: ${existingOrder.status} -> ${status}${paymentStatus ? ` (Thanh toán: ${paymentStatus})` : ''}`,
+      });
+    }
     return NextResponse.json({ success, message: 'Cập nhật trạng thái đơn hàng thành công' });
   } catch (error: any) {
     console.error('Error updating order status:', error);

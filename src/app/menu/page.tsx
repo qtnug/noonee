@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -13,8 +13,6 @@ import {
   CiCircleChevRight as ChevronRight,
   CiCircleRemove as X,
   CiCircleChevUp as ArrowUp,
-  CiRedo as Loader2,
-  CiCircleCheck as CheckCircle2,
 } from 'react-icons/ci';
 import { AnimatePresence, motion } from 'framer-motion';
 import ProductCard from '@/components/ProductCard';
@@ -29,6 +27,7 @@ function MenuPageContent() {
   const { currentBranch } = useBranch();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('categoryId');
+  const initialCombo = searchParams.get('combo') === 'true';
   const initialSearch = searchParams.get('search') || '';
   const initialDeal = searchParams.get('deal') === 'true';
 
@@ -66,7 +65,7 @@ function MenuPageContent() {
         setCategories(JSON.parse(cachedCat));
         setIsLoading(false);
       }
-    } catch (e) {}
+    } catch (e) { }
 
     async function loadData() {
       try {
@@ -78,13 +77,13 @@ function MenuPageContent() {
           setProducts(prodRes.data);
           try {
             sessionStorage.setItem('noonee_menu_products', JSON.stringify(prodRes.data));
-          } catch (e) {}
+          } catch (e) { }
         }
         if (catRes.success) {
           setCategories(catRes.data);
           try {
             sessionStorage.setItem('noonee_menu_categories', JSON.stringify(catRes.data));
-          } catch (e) {}
+          } catch (e) { }
         }
       } catch (e) {
         console.error('Failed to load menu:', e);
@@ -97,9 +96,13 @@ function MenuPageContent() {
 
   useEffect(() => {
     if (initialCategory) setSelectedCategory(parseInt(initialCategory));
+    else if (initialCombo && categories.length > 0) {
+      const comboCat = categories.find((c) => c.slug === 'combo-gia-uu-dai' || c.name.toLowerCase().includes('combo'));
+      if (comboCat) setSelectedCategory(comboCat.id);
+    }
     if (initialSearch) setSearchQuery(initialSearch);
     if (initialDeal) setOnlyDeals(true);
-  }, [initialCategory, initialSearch, initialDeal]);
+  }, [initialCategory, initialCombo, categories, initialSearch, initialDeal]);
 
   const branchProductsCount = useMemo(() => {
     return products.filter(
@@ -274,11 +277,10 @@ function MenuPageContent() {
             <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
               <button
                 onClick={() => setOnlyDeals(!onlyDeals)}
-                className={`h-11 px-4 rounded-[6px] text-[13px] font-semibold transition flex items-center gap-1.5 border cursor-pointer ${
-                  onlyDeals
-                    ? 'bg-[#A30029] text-white border-[#A30029] shadow-xs'
-                    : 'bg-white text-[#A30029] border-[#fecdd3] hover:bg-[#fff1f2]'
-                }`}
+                className={`h-11 px-4 rounded-[6px] text-[13px] font-semibold transition flex items-center gap-1.5 border cursor-pointer ${onlyDeals
+                  ? 'bg-[#A30029] text-white border-[#A30029] shadow-xs'
+                  : 'bg-white text-[#A30029] border-[#fecdd3] hover:bg-[#fff1f2]'
+                  }`}
               >
                 <Tag className="w-3.5 h-3.5" />
                 <span>Món nổi bật</span>
@@ -303,11 +305,10 @@ function MenuPageContent() {
                 setSelectedCategory(null);
                 setOnlyDeals(false);
               }}
-              className={`relative h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition-colors cursor-pointer ${
-                selectedCategory === null && !onlyDeals
-                  ? 'text-white'
-                  : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
-              }`}
+              className={`relative h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition-colors cursor-pointer ${selectedCategory === null && !onlyDeals
+                ? 'text-white'
+                : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
+                }`}
             >
               {selectedCategory === null && !onlyDeals && (
                 <motion.span
@@ -327,11 +328,10 @@ function MenuPageContent() {
                     setSelectedCategory(cat.id);
                     setOnlyDeals(false);
                   }}
-                  className={`relative h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition-colors cursor-pointer ${
-                    isActive
-                      ? 'text-white'
-                      : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
-                  }`}
+                  className={`relative h-9 px-3.5 sm:px-4 rounded-lg text-xs sm:text-[13px] font-semibold shrink-0 transition-colors cursor-pointer ${isActive
+                    ? 'text-white'
+                    : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
+                    }`}
                 >
                   {isActive && (
                     <motion.span
@@ -458,11 +458,10 @@ function MenuPageContent() {
                         key={pageNum}
                         type="button"
                         onClick={() => handlePageChange(pageNum)}
-                        className={`min-w-9 h-9 px-2.5 rounded-[6px] text-[13px] font-semibold transition cursor-pointer shadow-2xs ${
-                          isCurrent
-                            ? 'bg-[#A30029] text-white shadow-xs'
-                            : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
-                        }`}
+                        className={`min-w-9 h-9 px-2.5 rounded-[6px] text-[13px] font-semibold transition cursor-pointer shadow-2xs ${isCurrent
+                          ? 'bg-[#A30029] text-white shadow-xs'
+                          : 'bg-white border border-[#dddddd] text-[#333840] hover:bg-[#fff1f2] hover:border-[#fecdd3]'
+                          }`}
                       >
                         {pageNum}
                       </button>

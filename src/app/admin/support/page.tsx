@@ -2,14 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  CiChat1 as MessageSquare,
   CiWarning as AlertTriangle,
   CiPaperplane as Send,
-  CiCircleCheck as CheckCircle2,
   CiRedo as RefreshCw,
-  CiUser as User,
   CiShoppingBasket as ShoppingBag,
-  CiClock2 as Clock,
   CiCircleChevLeft as ArrowLeft,
 } from 'react-icons/ci';
 import { SupportMessage } from '@/types';

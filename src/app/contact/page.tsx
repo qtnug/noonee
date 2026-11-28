@@ -16,7 +16,6 @@ import {
   CiEdit as Edit,
   CiRedo as Loader2,
   CiHeadphones as Headphones,
-  CiCircleCheck as CheckCircle,
 } from 'react-icons/ci';
 import { useAuth } from '@/context/AuthContext';
 import { SupportMessage, Order } from '@/types';

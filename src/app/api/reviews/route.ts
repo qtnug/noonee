@@ -9,17 +9,15 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('productId');
-    const userIdParam = searchParams.get('userId');
-    const orderCode = searchParams.get('orderCode') || undefined;
-    
+
     const authUser = authenticateRequest(request);
     const userId = authUser?.userId;
 
-    if (!productId) {
-      return NextResponse.json({ success: false, message: 'Thiếu productId' }, { status: 400 });
+    const prodId = productId ? parseInt(productId, 10) : NaN;
+    if (!Number.isFinite(prodId) || prodId <= 0) {
+      return NextResponse.json({ success: false, message: 'Thiếu hoặc sai productId' }, { status: 400 });
     }
 
-    const prodId = parseInt(productId);
     const reviews = await getReviewsByProduct(prodId);
     const total = reviews.length;
     const avgRating = total > 0
@@ -90,7 +88,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Bạn chỉ có thể đánh giá món ăn sau khi đã đặt và nhận món này tại NooNee.',
+          message: 'Bạn chỉ có thể đánh giá món ăn sau khi đơn hàng chứa món này đã hoàn tất.',
         },
         { status: 403 }
       );

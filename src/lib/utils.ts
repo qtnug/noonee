@@ -1,10 +1,3 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
 export function formatVND(amount: number | string): string {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
   if (isNaN(num)) return '0 ₫';
@@ -28,7 +21,7 @@ export function formatDate(dateStr: string | Date | undefined): string {
   }).format(date);
 }
 
-export function removeVietnameseTones(str: string): string {
+function removeVietnameseTones(str: string): string {
   return str
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')

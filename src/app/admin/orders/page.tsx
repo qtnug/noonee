@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
 import {
   CiShoppingBasket as ShoppingBag,
   CiSearch as Search,
@@ -21,6 +20,7 @@ import { useAdminBranch } from '@/context/AdminBranchContext';
 export default function AdminOrdersPage() {
   const { isStaff } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [channelFilter, setChannelFilter] = useState<'all' | 'online' | 'dinein'>('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const { adminBranch: branchFilter } = useAdminBranch();
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,6 +60,7 @@ export default function AdminOrdersPage() {
     try {
       const query = new URLSearchParams();
       if (statusFilter !== 'all') query.set('status', statusFilter);
+      if (channelFilter !== 'all') query.set('orderType', channelFilter);
       if (branchFilter !== 'all') query.set('branch', branchFilter);
       const cleaned = searchQuery.trim().replace(/^#+/, '');
       if (cleaned) query.set('search', cleaned);
@@ -79,7 +80,7 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     setCurrentPage(1);
     fetchOrders();
-  }, [statusFilter, branchFilter, searchQuery]);
+  }, [statusFilter, channelFilter, branchFilter, searchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(orders.length / pageSize));
   const paginatedOrders = orders.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -113,12 +114,15 @@ export default function AdminOrdersPage() {
         const labels: Record<string, string> = {
           Pending: 'Chờ tiếp nhận',
           Processing: 'Đang nấu',
-          Delivering: 'Đang giao hàng',
-          Completed: 'Đã hoàn thành',
+          Delivering: 'Đang giao / Ra món',
+          Completed: 'Đã hoàn thành (Đã khóa)',
           Cancelled: 'Đã hủy đơn',
         };
         setToastMessage(`Đã cập nhật đơn #${orderCode} sang [${labels[newStatus] || newStatus}]`);
         setTimeout(() => setToastMessage(null), 3000);
+      } else {
+        setToastMessage(data.message || 'Không thể cập nhật đơn hàng');
+        setTimeout(() => setToastMessage(null), 3500);
       }
       fetchOrders();
     } catch (e) {
@@ -187,6 +191,28 @@ export default function AdminOrdersPage() {
           <RefreshCw className="w-4 h-4 text-[#9297a0]" />
           <span>Làm mới danh sách</span>
         </button>
+      </div>
+
+      {/* Channel Separation Tabs: Online vs Restaurant Dine-in */}
+      <div className="flex flex-wrap items-center gap-2">
+        {[
+          { key: 'all' as const, label: 'Tất cả kênh' },
+          { key: 'online' as const, label: 'Đơn Đặt Online (Giao hàng)' },
+          { key: 'dinein' as const, label: 'Đơn Tại Nhà Hàng (QR / POS)' },
+        ].map((ch) => (
+          <button
+            key={ch.key}
+            type="button"
+            onClick={() => setChannelFilter(ch.key)}
+            className={`h-9 px-4 rounded-[8px] text-[13px] font-semibold border transition cursor-pointer ${
+              channelFilter === ch.key
+                ? 'bg-[#181d26] text-white border-[#181d26]'
+                : 'bg-white text-[#41454d] border-[#dddddd] hover:bg-[#f8fafc]'
+            }`}
+          >
+            {ch.label}
+          </button>
+        ))}
       </div>
 
       {/* Filters Bar */}
@@ -263,11 +289,15 @@ export default function AdminOrdersPage() {
                       >
                         #{order.orderCode}
                       </button>
-                      {order.groupCode && (
+                      {order.orderType === 'dinein' ? (
+                        <span className="inline-block mt-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#f3e8ff] text-[#6b21a8] border border-[#e9d5ff]">
+                          Tại bàn · {order.tableName || 'QR'}
+                        </span>
+                      ) : order.groupCode ? (
                         <span className="inline-block mt-0.5 text-[10px] font-semibold px-1.5 py-0.2 rounded bg-[#fee2e2] text-[#A30029] border border-[#fecdd3]">
                           Đơn nhóm #{order.groupCode}
                         </span>
-                      )}
+                      ) : null}
                       <span className="block text-[11px] text-[#9297a0] font-normal">
                         {formatDate(order.createdAt)}
                       </span>
@@ -320,12 +350,14 @@ export default function AdminOrdersPage() {
                     <td className="py-3.5 px-4">
                       <select
                         value={order.paymentStatus}
+                        disabled={order.status === 'Completed' || order.status === 'Cancelled'}
                         onChange={(e) => handleStatusChange(order.orderCode, order.status, e.target.value)}
+                        title={order.status === 'Completed' ? 'Đơn đã hoàn thành, đã khóa chỉnh sửa' : undefined}
                         className={`h-8 px-2 rounded-[6px] text-[12px] font-medium border ${
                           order.paymentStatus === 'Paid'
                             ? 'bg-white text-[#006400] border-[#39bf45]'
                             : 'bg-[#fff1f2] text-[#A30029] border-[#fecdd3]'
-                        }`}
+                        } ${order.status === 'Completed' || order.status === 'Cancelled' ? 'opacity-65 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         <option value="Unpaid">Chưa thu tiền</option>
                         <option value="Paid">Đã thanh toán</option>
@@ -403,7 +435,7 @@ export default function AdminOrdersPage() {
                                   title="Bếp nấu xong, giao Shipper"
                                 >
                                   <Truck className="w-3 h-3" />
-                                  <span>Giao hàng</span>
+                                  <span>{order.orderType === 'dinein' ? 'Ra món' : 'Giao hàng'}</span>
                                 </button>
                                 <button
                                   onClick={() => {
@@ -429,7 +461,11 @@ export default function AdminOrdersPage() {
                                 <span>Hoàn tất</span>
                               </button>
                             )}
-                            {order.status !== 'Pending' && (
+                            {order.status === 'Completed' ? (
+                              <span className="h-7 px-2 inline-flex items-center rounded-[4px] bg-[#f8fafc] border border-[#dddddd] text-[11px] font-medium text-[#64748b]" title="Đơn đã hoàn thành không thể chỉnh sửa trạng thái">
+                                Đã khóa
+                              </span>
+                            ) : order.status !== 'Pending' ? (
                               <select
                                 value={order.status}
                                 onChange={(e) => handleStatusChange(order.orderCode, e.target.value, order.paymentStatus)}
@@ -437,10 +473,10 @@ export default function AdminOrdersPage() {
                                 title="Chuyển trạng thái bếp"
                               >
                                 <option value="Processing">Nấu</option>
-                                <option value="Delivering">Giao</option>
+                                <option value="Delivering">{order.orderType === 'dinein' ? 'Ra món' : 'Giao'}</option>
                                 <option value="Completed">Xong</option>
                               </select>
-                            )}
+                            ) : null}
                           </>
                         )}
                       </div>
