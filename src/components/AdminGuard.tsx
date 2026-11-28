@@ -14,8 +14,16 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import HypotrochoidLoader from '@/components/HypotrochoidLoader';
 
-const MANAGER_ALLOWED_PATHS = ['/admin', '/admin/orders', '/admin/products'];
-const STAFF_ALLOWED_PATHS = ['/admin/orders'];
+const MANAGER_ALLOWED_PATHS = [
+  '/admin',
+  '/admin/orders',
+  '/admin/kitchen',
+  '/admin/pos',
+  '/admin/tables',
+  '/admin/logs',
+  '/admin/products',
+];
+const STAFF_ALLOWED_PATHS = ['/admin/orders', '/admin/kitchen', '/admin/pos'];
 
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
   const { user, login, logout, isLoading } = useAuth();
